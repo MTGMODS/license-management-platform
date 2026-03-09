@@ -17,6 +17,9 @@ class LaunchRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def save(self, launch: LaunchModel):
-        self.db.add(launch)
+    def save(self, version: str, device: str, server_id: str, country: str):
+        new_launch = LaunchModel(version=version, device=device, server_id=server_id, country=country)
+        self.db.add(new_launch)
         self.db.commit()
+        self.db.refresh(new_launch)
+        return new_launch

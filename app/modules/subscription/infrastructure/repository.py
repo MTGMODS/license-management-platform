@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Enum as SQLEnum, DateTime
+from sqlalchemy import Column, Integer, String, Enum as SQLEnum, DateTime, ForeignKey
+from sqlalchemy.sql import func
 from sqlalchemy.orm import Session
 from app.shared.database import Base
 from ..domain.models import Subscription, SubscriptionStatus
@@ -7,11 +8,24 @@ class SubscriptionModel(Base):
     __tablename__ = "subscriptions"
 
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("identity_users.id"), nullable=True)
     key = Column(String, unique=True, index=True, nullable=False)
     duration_days = Column(Integer, nullable=False)
     status = Column(SQLEnum(SubscriptionStatus), default=SubscriptionStatus.NOT_ACTIVATED)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
     activated_at = Column(DateTime, nullable=True)
     expires_at = Column(DateTime, nullable=True)
+
+class ActivationModel(Base):
+    __tablename__ = "subscription_activations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    subscription_id = Column(Integer, ForeignKey("subscriptions.id", ondelete="CASCADE"))
+    device = Column(String, nullable=False)
+    ip_address = Column(String, nullable=True)
+    user_agent = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    last_used_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 class SubscriptionRepository:
     def __init__(self, db: Session):

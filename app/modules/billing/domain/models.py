@@ -8,7 +8,3 @@ class Purchase(BaseModel):
     amount: float
     method: str
     purchased_at: Optional[datetime] = None
-
-    def is_valid_method(self) -> bool:
-        allowed_methods = ["Stars", "FunPay", "Crypto", "Card", "PayPal"]
-        return self.method in allowed_methods
