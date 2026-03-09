@@ -29,7 +29,7 @@ class SubscriptionService:
         return is_valid
     
     def generate_unactivated_key(self, duration: int) -> str:
-        new_key = str(uuid.uuid4()).upper()[:14] # Або твій формат XXXX-XXXX
+        new_key = str(uuid.uuid4()).upper()[:14]
         self.repo.create_subscription(
             key=new_key, 
             duration_days=duration,
@@ -42,15 +42,13 @@ class SubscriptionService:
         if not db_sub or db_sub.status != "WAIT_ACTIVATE":
             return False
         
-        # Розраховуємо дату закінчення
         expires_at = None
         if db_sub.duration_days > 0:
             expires_at = datetime.now() + timedelta(days=db_sub.duration_days)
         
-        # Оновлюємо в базі
         db_sub.user_id = user_id
         db_sub.status = "ACTIVE"
-        db_sub.activated_at = datetime.utcnow() # Додай це поле в модель, якщо треба
+        db_sub.activated_at = datetime.utcnow()
         db_sub.expires_at = expires_at
         
         self.repo.db.commit()
