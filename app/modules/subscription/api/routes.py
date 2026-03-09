@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.shared.database import get_db
@@ -12,10 +12,13 @@ class CheckRequestDTO(BaseModel):
     device: str = Field(..., min_length=2, max_length=100, description="HWID")
 
 @router.post("/check")
-def check_subscription(payload: CheckRequestDTO, db: Session = Depends(get_db)):
+def check_subscription(payload: CheckRequestDTO, request: Request, db: Session = Depends(get_db)):
     try:
+        ip = request.headers.get("X-Forwarded-For", request.client.host)
+        user_agent = request.headers.get("User-Agent", "Unknown")
+
         service = SubscriptionService(db)
-        is_valid = service.check_access(payload.key)
+        is_valid = service.check_access(payload.key, payload.device, ip, user_agent)
         
         if not is_valid:
             raise DomainException(message="Key is invalid or expired", status_code=403, error_code="ACCESS_DENIED")

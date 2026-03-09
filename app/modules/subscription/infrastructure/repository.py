@@ -33,3 +33,22 @@ class SubscriptionRepository:
 
     def get_by_key(self, key: str) -> SubscriptionModel:
         return self.db.query(SubscriptionModel).filter(SubscriptionModel.key == key).first()
+
+    def log_activation(self, subscription_id: int, device: str, ip_address: str, user_agent: str):
+        activation = self.db.query(ActivationModel).filter(
+            ActivationModel.subscription_id == subscription_id,
+            ActivationModel.device == device,
+            ActivationModel.user_agent == user_agent
+        ).first()
+
+        if activation:
+            activation.ip_address = ip_address
+        else:
+            activation = ActivationModel(
+                subscription_id=subscription_id,
+                device=device,
+                ip_address=ip_address,
+                user_agent=user_agent
+            )
+            self.db.add(activation)
+        self.db.commit()

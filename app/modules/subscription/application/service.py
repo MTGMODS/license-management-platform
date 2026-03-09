@@ -6,7 +6,7 @@ class SubscriptionService:
     def __init__(self, db: Session):
         self.repo = SubscriptionRepository(db)
 
-    def check_access(self, key: str) -> bool:
+    def check_access(self, key: str, device: str, ip_address: str, user_agent: str) -> bool:
         db_sub = self.repo.get_by_key(key)
         if not db_sub:
             return False
@@ -19,4 +19,9 @@ class SubscriptionService:
             expires_at=db_sub.expires_at
         )
         
-        return domain_sub.is_valid()
+        is_valid = domain_sub.is_valid()
+        
+        if is_valid:
+            self.repo.log_activation(db_sub.id, device, ip_address, user_agent)
+
+        return is_valid
