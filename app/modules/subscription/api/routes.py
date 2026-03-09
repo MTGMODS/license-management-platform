@@ -28,3 +28,25 @@ def check_subscription(payload: CheckRequestDTO, request: Request, db: Session =
         raise
     except Exception as e:
         raise DomainException(message=str(e), status_code=500, error_code="SUBSCRIPTION_ERROR")
+    
+
+class KeyCreateDTO(BaseModel):
+    duration_days: int = Field(..., ge=-1)
+
+@router.post("/generate", tags=["Subscription"])
+def generate_new_key(payload: KeyCreateDTO, db: Session = Depends(get_db)):
+    service = SubscriptionService(db)
+    new_key = service.generate_unactivated_key(payload.duration_days)
+    return {"status": "success", "key": new_key}
+
+class ActivateKeyDTO(BaseModel):
+    key: str
+    user_id: int
+
+@router.post("/activate", tags=["Subscription"])
+def activate_key(payload: ActivateKeyDTO, db: Session = Depends(get_db)):
+    service = SubscriptionService(db)
+    success = service.activate_key_for_user(payload.key, payload.user_id)
+    if not success:
+        raise DomainException(message="Invalid key or already activated", status_code=400)
+    return {"status": "success", "message": "Subscription activated successfully"}

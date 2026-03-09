@@ -20,6 +20,6 @@ class Subscription(BaseModel):
     def is_valid(self) -> bool:
         if self.status != SubscriptionStatus.ACTIVE:
             return False
-        if self.expires_at and datetime.utcnow() > self.expires_at:
+        if self.expires_at and datetime.now() > self.expires_at:
             return False
         return True

@@ -15,7 +15,7 @@ async def global_exception_handler(request: Request, exc: DomainException):
         content={
             "error_code": exc.error_code,
             "message": exc.message,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now().isoformat(),
             "path": request.url.path
         }
     )

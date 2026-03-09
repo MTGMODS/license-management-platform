@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 from ..infrastructure.repository import SubscriptionRepository
 from ..domain.models import Subscription
+import uuid
+from datetime import datetime, timedelta
 
 class SubscriptionService:
     def __init__(self, db: Session):
@@ -25,3 +27,31 @@ class SubscriptionService:
             self.repo.log_activation(db_sub.id, device, ip_address, user_agent)
 
         return is_valid
+    
+    def generate_unactivated_key(self, duration: int) -> str:
+        new_key = str(uuid.uuid4()).upper()[:14] # Або твій формат XXXX-XXXX
+        self.repo.create_subscription(
+            key=new_key, 
+            duration_days=duration,
+            status="WAIT_ACTIVATE"
+        )
+        return new_key
+
+    def activate_key_for_user(self, key: str, user_id: int) -> bool:
+        db_sub = self.repo.get_by_key(key)
+        if not db_sub or db_sub.status != "WAIT_ACTIVATE":
+            return False
+        
+        # Розраховуємо дату закінчення
+        expires_at = None
+        if db_sub.duration_days > 0:
+            expires_at = datetime.now() + timedelta(days=db_sub.duration_days)
+        
+        # Оновлюємо в базі
+        db_sub.user_id = user_id
+        db_sub.status = "ACTIVE"
+        db_sub.activated_at = datetime.utcnow() # Додай це поле в модель, якщо треба
+        db_sub.expires_at = expires_at
+        
+        self.repo.db.commit()
+        return True

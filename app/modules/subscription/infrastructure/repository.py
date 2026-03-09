@@ -31,6 +31,22 @@ class SubscriptionRepository:
     def __init__(self, db: Session):
         self.db = db
 
+    def create_subscription(self, key: str, duration_days: int, status: SubscriptionStatus) -> SubscriptionModel:
+        db_sub = SubscriptionModel(
+            key=key,
+            duration_days=duration_days,
+            status=status
+        )
+        self.db.add(db_sub)
+        self.db.commit()
+        self.db.refresh(db_sub)
+        return db_sub
+
+    def update_subscription(self, subscription: SubscriptionModel):
+        self.db.add(subscription)
+        self.db.commit()
+        self.db.refresh(subscription)
+
     def get_by_key(self, key: str) -> SubscriptionModel:
         return self.db.query(SubscriptionModel).filter(SubscriptionModel.key == key).first()
 
