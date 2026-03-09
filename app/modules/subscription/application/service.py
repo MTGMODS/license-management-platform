@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from ..infrastructure.repository import SubscriptionRepository
-from ..domain.models import Subscription
+from ..domain.models import Subscription, SubscriptionStatus
 import uuid
 from datetime import datetime, timedelta
 
@@ -33,13 +33,13 @@ class SubscriptionService:
         self.repo.create_subscription(
             key=new_key, 
             duration_days=duration,
-            status="WAIT_ACTIVATE"
+            status=SubscriptionStatus.NOT_ACTIVATED
         )
         return new_key
 
     def activate_key_for_user(self, key: str, user_id: int) -> bool:
         db_sub = self.repo.get_by_key(key)
-        if not db_sub or db_sub.status != "WAIT_ACTIVATE":
+        if not db_sub or db_sub.status != SubscriptionStatus.NOT_ACTIVATED:
             return False
         
         expires_at = None
