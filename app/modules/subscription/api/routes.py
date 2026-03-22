@@ -43,7 +43,7 @@ def check_subscription(payload: CheckRequestDTO, request: Request, db: Session =
 class KeyCreateDTO(BaseModel):
     duration_days: Optional[int] = Field(None, gt=0, description="Duration in days (NULL for forever)")
 
-@router.post("/generate", tags=["Subscription"])
+@router.post("/generate")
 def generate_new_key(payload: KeyCreateDTO, db: Session = Depends(get_db)):
     service = SubscriptionService(db)
     new_key = service.generate_unactivated_key(payload.duration_days)
@@ -53,7 +53,7 @@ class ActivateKeyDTO(BaseModel):
     key: str = Field(..., min_length=19, max_length=19, description="VIP Key", examples=["XXXX-XXXX-XXXX-XXXX"])
     user_id: int
 
-@router.post("/activate", tags=["Subscription"])
+@router.post("/activate")
 def activate_key(payload: ActivateKeyDTO, db: Session = Depends(get_db)):
 
     identity_service = IdentityService(db)
