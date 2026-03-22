@@ -27,7 +27,7 @@ class SubscriptionService:
         if is_valid:
             self.repo.log_activation(db_sub.id, device, ip_address, user_agent)
 
-        return is_valid
+        return db_sub.user_id
     
     def _make_key(self, n=16) -> str:
         raw = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(n))

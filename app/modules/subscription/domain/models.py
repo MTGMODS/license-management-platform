@@ -12,14 +12,16 @@ class SubscriptionStatus(str, Enum):
 class Subscription(BaseModel):
     id: Optional[int] = None
     key: str
-    duration_days: int
+    duration_days: Optional[int] = None
     status: SubscriptionStatus = SubscriptionStatus.NOT_ACTIVATED
     activated_at: Optional[datetime] = None
     expires_at: Optional[datetime] = None
 
     def is_valid(self) -> bool:
+        
         if self.status != SubscriptionStatus.ACTIVE:
             return False
+        
         if self.expires_at:
             exp = self.expires_at
             if exp.tzinfo is None:

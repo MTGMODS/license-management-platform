@@ -20,13 +20,20 @@ def check_subscription(payload: CheckRequestDTO, request: Request, db: Session =
         ip = request.headers.get("X-Forwarded-For", request.client.host)
         user_agent = request.headers.get("User-Agent", "Unknown")
 
-        service = SubscriptionService(db)
-        is_valid = service.check_access(payload.key, payload.device, ip, user_agent)
+        sub_service = SubscriptionService(db)
+        user_id = sub_service.check_access(payload.key, payload.device, ip, user_agent)
         
-        if not is_valid:
+        nickname = None
+        if user_id:
+            identity_service = IdentityService(db)
+            user = identity_service.get_user_by_id(user_id)
+            if user:
+                nickname = user.nickname
+
+        if not user_id:
             raise DomainException(message="Key is invalid or expired", status_code=403, error_code="ACCESS_DENIED")
             
-        return {"valid": True, "message": "Access granted"}
+        return {"valid": True, "message": "Access granted", nickname: nickname}
     except DomainException:
         raise
     except Exception as e:
