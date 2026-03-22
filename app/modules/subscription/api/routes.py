@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.shared.database import get_db
 from app.shared.exceptions import DomainException
+from app.modules.billing.application.service import BillingService
 from ..application.service import SubscriptionService
 
 router = APIRouter(prefix="/api/v1/subscription", tags=["Subscription"])
@@ -45,8 +46,12 @@ class ActivateKeyDTO(BaseModel):
 
 @router.post("/activate", tags=["Subscription"])
 def activate_key(payload: ActivateKeyDTO, db: Session = Depends(get_db)):
-    service = SubscriptionService(db)
-    success = service.activate_key_for_user(payload.key, payload.user_id)
-    if not success:
+    sub_service = SubscriptionService(db)
+    subscription_id = sub_service.activate_key_for_user(payload.key, payload.user_id)
+    if not subscription_id:
         raise DomainException(message="Invalid key or already activated", status_code=400)
+    
+    billing_service = BillingService(db)
+    billing_service.complete_pending_purchase(subscription_id=subscription_id, user_id=payload.user_id)
+
     return {"status": "success", "message": "Subscription activated successfully"}

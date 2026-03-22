@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 from ..infrastructure.repository import SubscriptionRepository
 from ..domain.models import Subscription, SubscriptionStatus
-from app.modules.billing.application.service import BillingService
 import secrets
 import string
 from datetime import datetime, timezone, timedelta
@@ -51,7 +50,7 @@ class SubscriptionService:
     def activate_key_for_user(self, key: str, user_id: int) -> bool:
         db_sub = self.repo.get_by_key(key)
         if not db_sub or db_sub.status != SubscriptionStatus.NOT_ACTIVATED:
-            return False
+            return None
         
         expires_at = None
         if db_sub.duration_days > 0:
@@ -64,7 +63,4 @@ class SubscriptionService:
         
         self.repo.db.commit()
 
-        billing_service = BillingService(self.repo.db)
-        billing_service.complete_pending_purchase(subscription_id=db_sub.id, user_id=user_id)
-
-        return True
+        return db_sub.id

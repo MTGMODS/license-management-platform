@@ -5,6 +5,7 @@ from ..domain.models import Purchase
 
 class BillingService:
     def __init__(self, db: Session):
+        self.db = db
         self.repo = PurchaseRepository(db)
     
     def create_purchase(self, amount: float, method: str, user_id: int = None, subscription_id: int = None, status: str = "COMPLETED") -> Purchase:
@@ -18,7 +19,6 @@ class BillingService:
         )
     
     def complete_pending_purchase(self, subscription_id: int, user_id: int):
-        """Шукає відкладений чек для ключа і закриває його на конкретного юзера"""
         purchase = self.db.query(PurchaseModel).filter(
             PurchaseModel.subscription_id == subscription_id,
             PurchaseModel.status == "PENDING"

@@ -13,8 +13,8 @@ class SubscriptionModel(Base):
     duration_days = Column(Integer, nullable=False)
     status = Column(SQLEnum(SubscriptionStatus), default=SubscriptionStatus.NOT_ACTIVATED)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    activated_at = Column(DateTime, nullable=True)
-    expires_at = Column(DateTime, nullable=True)
+    activated_at = Column(DateTime(timezone=True), nullable=True)
+    expires_at = Column(DateTime(timezone=True), nullable=True)
 
 class ActivationModel(Base):
     __tablename__ = "subscription_activations"
