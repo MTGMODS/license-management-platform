@@ -4,10 +4,10 @@ from typing import Optional
 from pydantic import BaseModel
 
 class SubscriptionStatus(str, Enum):
-    NOT_ACTIVATED = "not_activated"
-    ACTIVE = "active"
-    EXPIRED = "expired"
-    BANNED = "banned"
+    NOT_ACTIVATED = "NOT_ACTIVATED"
+    ACTIVE = "ACTIVE"
+    EXPIRED = "EXPIRED"
+    BANNED = "BANNED"
 
 class Subscription(BaseModel):
     id: Optional[int] = None
@@ -20,6 +20,11 @@ class Subscription(BaseModel):
     def is_valid(self) -> bool:
         if self.status != SubscriptionStatus.ACTIVE:
             return False
-        if self.expires_at and datetime.now(timezone.utc) > self.expires_at:
-            return False
+        if self.expires_at:
+            exp = self.expires_at
+            if exp.tzinfo is None:
+                exp = exp.replace(tzinfo=timezone.utc)
+            if datetime.now(timezone.utc) > exp:
+                return False
+            
         return True
