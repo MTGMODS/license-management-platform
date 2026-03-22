@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 class Purchase(BaseModel):
     id: Optional[int] = None
-    user_id: int
+    user_id: Optional[int] = None
     amount: float
     method: str
     purchased_at: Optional[datetime] = None

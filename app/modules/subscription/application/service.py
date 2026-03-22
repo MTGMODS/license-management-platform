@@ -1,9 +1,10 @@
 from sqlalchemy.orm import Session
 from ..infrastructure.repository import SubscriptionRepository
 from ..domain.models import Subscription, SubscriptionStatus
+from app.modules.billing.application.service import BillingService
 import secrets
 import string
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 
 class SubscriptionService:
     def __init__(self, db: Session):
@@ -54,12 +55,16 @@ class SubscriptionService:
         
         expires_at = None
         if db_sub.duration_days > 0:
-            expires_at = datetime.now() + timedelta(days=db_sub.duration_days)
+            expires_at = datetime.now(timezone.utc) + timedelta(days=db_sub.duration_days)
         
         db_sub.user_id = user_id
-        db_sub.status = "ACTIVE"
-        db_sub.activated_at = datetime.utcnow()
+        db_sub.status = SubscriptionStatus.ACTIVE
+        db_sub.activated_at = datetime.now(timezone.utc)
         db_sub.expires_at = expires_at
         
         self.repo.db.commit()
+
+        billing_service = BillingService(self.repo.db)
+        billing_service.complete_pending_purchase(subscription_id=db_sub.id, user_id=user_id)
+
         return True

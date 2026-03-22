@@ -1,5 +1,5 @@
 from enum import Enum
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 from typing import Optional
 from pydantic import BaseModel
 
@@ -20,6 +20,6 @@ class Subscription(BaseModel):
     def is_valid(self) -> bool:
         if self.status != SubscriptionStatus.ACTIVE:
             return False
-        if self.expires_at and datetime.now() > self.expires_at:
+        if self.expires_at and datetime.now(timezone.utc) > self.expires_at:
             return False
         return True
