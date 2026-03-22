@@ -9,12 +9,15 @@ class UserModel(Base):
     id = Column(Integer, primary_key=True, index=True)
     telegram_id = Column(BigInteger, unique=True, nullable=True)
     discord_id = Column(BigInteger, unique=True, nullable=True)
-    nickname = Column(String, nullable=False)
+    nickname = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class UserRepository:
     def __init__(self, db: Session):
         self.db = db
+
+    def get_by_id(self, user_id: int):
+        return self.db.query(UserModel).filter(UserModel.id == user_id).first()
 
     def get_by_telegram_id(self, tg_id: int):
         return self.db.query(UserModel).filter(UserModel.telegram_id == tg_id).first()

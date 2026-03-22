@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
@@ -9,7 +10,7 @@ from ..application.service import SubscriptionService
 router = APIRouter(prefix="/api/v1/subscription", tags=["Subscription"])
 
 class CheckRequestDTO(BaseModel):
-    key: str = Field(..., min_length=10, max_length=64, description="VIP Key")
+    key: str = Field(..., min_length=19, max_length=19, description="VIP Key", examples=["XXXX-XXXX-XXXX-XXXX"])
     device: str = Field(..., min_length=2, max_length=100, description="HWID")
 
 @router.post("/check")
@@ -41,7 +42,7 @@ def generate_new_key(payload: KeyCreateDTO, db: Session = Depends(get_db)):
     return {"status": "success", "key": new_key}
 
 class ActivateKeyDTO(BaseModel):
-    key: str
+    key: str = Field(..., min_length=19, max_length=19, description="VIP Key", examples=["XXXX-XXXX-XXXX-XXXX"])
     user_id: int
 
 @router.post("/activate", tags=["Subscription"])

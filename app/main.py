@@ -35,7 +35,7 @@ def health_check():
     return {
         "status": "UP",
         "service": "MTG VIP Core",
-        "database": "PostgreSQL Connected",
+        "database": "Connected",
         "version": settings.APP_VERSION,
         "api_version": settings.API_VERSION
     }
