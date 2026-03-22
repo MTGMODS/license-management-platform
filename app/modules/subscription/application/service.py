@@ -53,7 +53,7 @@ class SubscriptionService:
             return None
         
         expires_at = None
-        if db_sub.duration_days > 0:
+        if db_sub.duration_days is not None:
             expires_at = datetime.now(timezone.utc) + timedelta(days=db_sub.duration_days)
         
         db_sub.user_id = user_id

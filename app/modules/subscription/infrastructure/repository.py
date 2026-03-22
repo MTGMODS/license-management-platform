@@ -10,7 +10,7 @@ class SubscriptionModel(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("identity_users.id"), nullable=True)
     key = Column(String, unique=True, index=True, nullable=False)
-    duration_days = Column(Integer, nullable=False)
+    duration_days = Column(Integer, nullable=True)
     status = Column(SQLEnum(SubscriptionStatus), default=SubscriptionStatus.NOT_ACTIVATED)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     activated_at = Column(DateTime(timezone=True), nullable=True)

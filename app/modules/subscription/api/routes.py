@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from app.shared.database import get_db
 from app.shared.exceptions import DomainException
 from app.modules.billing.application.service import BillingService
+from app.modules.identity.application.service import IdentityService
 from ..application.service import SubscriptionService
 
 router = APIRouter(prefix="/api/v1/subscription", tags=["Subscription"])
@@ -33,7 +34,7 @@ def check_subscription(payload: CheckRequestDTO, request: Request, db: Session =
     
 
 class KeyCreateDTO(BaseModel):
-    duration_days: int = Field(..., ge=-1)
+    duration_days: Optional[int] = Field(None, gt=0, description="Duration in days (NULL for forever)")
 
 @router.post("/generate", tags=["Subscription"])
 def generate_new_key(payload: KeyCreateDTO, db: Session = Depends(get_db)):
@@ -47,6 +48,11 @@ class ActivateKeyDTO(BaseModel):
 
 @router.post("/activate", tags=["Subscription"])
 def activate_key(payload: ActivateKeyDTO, db: Session = Depends(get_db)):
+
+    identity_service = IdentityService(db)
+    if not identity_service.get_user_by_id(payload.user_id):
+        raise DomainException(message=f"User {payload.user_id} ID not found.", status_code=404, error_code="USER_NOT_FOUND")
+
     sub_service = SubscriptionService(db)
     subscription_id = sub_service.activate_key_for_user(payload.key, payload.user_id)
     if not subscription_id:
