@@ -5,12 +5,10 @@ from app.shared.exceptions import DomainException, global_exception_handler, val
 from app.shared.config import settings
 
 from app.modules.subscription.infrastructure.repository import SubscriptionModel, ActivationModel
-from app.modules.usage.infrastructure.repository import LaunchModel
 from app.modules.billing.infrastructure.repository import PurchaseModel
 from app.modules.identity.infrastructure.repository import UserModel
 
 from app.modules.subscription.api.routes import router as subscription_router
-from app.modules.usage.api.routes import router as usage_router
 from app.modules.billing.api.routes import router as billing_router
 from app.modules.identity.api.routes import router as identity_router
 
@@ -26,7 +24,6 @@ app.add_exception_handler(DomainException, global_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 app.include_router(subscription_router)
-app.include_router(usage_router)
 app.include_router(billing_router)
 app.include_router(identity_router)
 
