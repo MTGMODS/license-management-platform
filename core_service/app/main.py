@@ -1,3 +1,6 @@
+import uuid
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from app.shared.database import engine, Base
@@ -19,6 +22,18 @@ app = FastAPI(
     description="SaaS System for License Management",
     version=settings.APP_VERSION
 )
+
+class CorrelationIdMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
+        request.state.correlation_id = correlation_id
+        
+        response = await call_next(request)
+
+        response.headers["X-Correlation-ID"] = correlation_id
+        return response
+
+app.add_middleware(CorrelationIdMiddleware)
 
 app.add_exception_handler(DomainException, global_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
