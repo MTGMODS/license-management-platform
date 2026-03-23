@@ -7,9 +7,9 @@ from app.shared.database import engine, Base
 from app.shared.exceptions import DomainException, global_exception_handler, validation_exception_handler
 from app.shared.config import settings
 
-from app.modules.subscription.infrastructure.repository import SubscriptionModel, ActivationModel
-from app.modules.billing.infrastructure.repository import PurchaseModel
-from app.modules.identity.infrastructure.repository import UserModel
+# from app.modules.subscription.infrastructure.repository import SubscriptionModel, ActivationModel
+# from app.modules.billing.infrastructure.repository import PurchaseModel
+# from app.modules.identity.infrastructure.repository import UserModel
 
 from app.modules.subscription.api.routes import router as subscription_router
 from app.modules.billing.api.routes import router as billing_router

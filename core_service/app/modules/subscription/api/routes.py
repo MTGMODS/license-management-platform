@@ -73,12 +73,19 @@ def activate_key(payload: ActivateKeyDTO, db: Session = Depends(get_db)):
     return {"status": "success", "message": "Subscription activated successfully"}
 
 class DownloadModDTO(BaseModel):
-    key: str
+    key: str = Field(..., min_length=19, max_length=19, description="VIP Key", examples=["XXXX-XXXX-XXXX-XXXX"])
     user_id: int
 
 @router.post("/download")
 def download_vip_mod(payload: DownloadModDTO, request: Request, db: Session = Depends(get_db)):
+    
     sub_service = SubscriptionService(db)
+    if not sub_service.validate_for_download(payload.key, payload.user_id):
+        raise DomainException(
+            message="Відмовлено в доступі. Ключ недійсний, закінчився або належить іншому користувачу.", 
+            status_code=403, 
+            error_code="DOWNLOAD_FORBIDDEN"
+        )
    
     correlation_id = getattr(request.state, 'correlation_id', 'unknown')
 

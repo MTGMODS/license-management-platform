@@ -64,3 +64,17 @@ class SubscriptionService:
         self.repo.db.commit()
 
         return db_sub.id
+    
+    def validate_for_download(self, key: str, user_id: int) -> bool:
+        db_sub = self.repo.get_by_key(key)
+        if not db_sub or db_sub.user_id != user_id:
+            return False
+
+        domain_sub = Subscription(
+            id=db_sub.id,
+            key=db_sub.key,
+            duration_days=db_sub.duration_days,
+            status=db_sub.status,
+            expires_at=db_sub.expires_at
+        )
+        return domain_sub.is_valid()
