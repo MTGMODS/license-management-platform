@@ -79,10 +79,6 @@ class SubscriptionRepository:
         self.db.commit()
 
     def create_outbox_event(self, event_type: str, payload: str, commit: bool = False):
-        """
-        Створює запис у таблиці Outbox.
-        commit=False дозволяє зберегти подію в рамках поточної транзакції.
-        """
         outbox_event = OutboxEventModel(
             event_type=event_type,
             payload=payload,
