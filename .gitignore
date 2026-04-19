@@ -1,6 +1,5 @@
 venv/
 **/__pycache__/
 *.pyc
-.env
+*.env
 *.db
-app/.evn
