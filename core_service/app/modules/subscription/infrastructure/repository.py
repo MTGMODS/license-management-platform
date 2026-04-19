@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Enum as SQLEnum, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Enum as SQLEnum, DateTime, ForeignKey, Text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import Session
 from app.shared.database import Base
@@ -26,6 +26,15 @@ class ActivationModel(Base):
     user_agent = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_used_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class OutboxEventModel(Base):
+    __tablename__ = "outbox_events"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    event_type = Column(String, nullable=False)
+    payload = Column(Text, nullable=False)
+    status = Column(String, default="PENDING") # or PROCESSED
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class SubscriptionRepository:
     def __init__(self, db: Session):
@@ -68,3 +77,20 @@ class SubscriptionRepository:
             )
             self.db.add(activation)
         self.db.commit()
+
+    def create_outbox_event(self, event_type: str, payload: str, commit: bool = False):
+        """
+        Створює запис у таблиці Outbox.
+        commit=False дозволяє зберегти подію в рамках поточної транзакції.
+        """
+        outbox_event = OutboxEventModel(
+            event_type=event_type,
+            payload=payload,
+            status="PENDING"
+        )
+        self.db.add(outbox_event)
+        
+        if commit:
+            self.db.commit()
+            
+        return outbox_event
