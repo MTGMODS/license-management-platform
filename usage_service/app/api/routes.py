@@ -13,7 +13,8 @@ async def log_launch(data: LaunchDTO, request: Request, db: AsyncSession = Depen
         raw_ip = request.headers.get("X-Forwarded-For", request.client.host)
         ip = raw_ip.split(",")[0].strip()
 
-        return await UsageService(db).log_launch(
+        service = UsageService(db)
+        return await service.log_launch(
             version=data.version,
             hwid=data.hwid,
             server=data.server,
@@ -23,3 +24,8 @@ async def log_launch(data: LaunchDTO, request: Request, db: AsyncSession = Depen
 
     except Exception as e:
         raise DomainException(message=str(e), status_code=500, error_code="USAGE_ERROR")
+    
+@router.get("/stats/public")
+async def get_public_stats(db: AsyncSession = Depends(get_db)):
+    service = UsageService(db)
+    return await service.get_website_stats()
