@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, select, func, distinct, case, and_
+from sqlalchemy import Column, Integer, String, DateTime, select, func, distinct, case, desc, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func as sql_func
 from datetime import datetime, timedelta, timezone
@@ -52,7 +52,7 @@ class LaunchRepository:
             func.count(case((LaunchModel.launched_at >= d30, LaunchModel.id))).label("l_30d"),
             func.count(case((LaunchModel.launched_at >= d1, LaunchModel.id))).label("l_24h"),
 
-            # Devices (PC) - рахуємо по унікальних користувачах
+            # Devices (PC)
             func.count(distinct(case((LaunchModel.device == 'PC', LaunchModel.hwid)))).label("pc_all"),
             func.count(distinct(case((and_(LaunchModel.device == 'PC', LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label("pc_30d"),
             func.count(distinct(case((and_(LaunchModel.device == 'PC', LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label("pc_24h"),
@@ -64,6 +64,7 @@ class LaunchRepository:
         )
         
         global_res = (await self.db.execute(global_stmt)).first()
+
 
         server_stmt = (
             select(
@@ -92,6 +93,50 @@ class LaunchRepository:
             })
 
 
+
+        country_stmt = (
+            select(
+                func.coalesce(LaunchModel.country, 'UNKNOWN').label("c_code"),
+                func.count(distinct(LaunchModel.hwid)).label("u_all"),
+                func.count(distinct(case((LaunchModel.launched_at >= d30, LaunchModel.hwid)))).label("u_30d"),
+                func.count(distinct(case((LaunchModel.launched_at >= d1, LaunchModel.hwid)))).label("u_24h")
+            )
+            .group_by("c_code")
+            .order_by(desc("u_all"))
+        )
+        
+        country_res = await self.db.execute(country_stmt)
+        all_countries = country_res.all()
+
+        countries_data = []
+        other_stats = {"all_time": 0, "30d": 0, "24h": 0}
+        
+        # TOP 20, all others go to OTHER, UNKNOWN goes to OTHER as well
+        for row in all_countries:
+            if row.c_code == 'UNKNOWN':
+                # Unknown go to OTHER
+                other_stats["all_time"] += row.u_all
+                other_stats["30d"] += row.u_30d
+                other_stats["24h"] += row.u_24h
+                
+            elif len(countries_data) < 20:
+                # If we are still in the top 20, add the country as is
+                countries_data.append({
+                    "code": row.c_code,
+                    "users": {"all_time": row.u_all, "30d": row.u_30d, "24h": row.u_24h}
+                })
+                
+            else:
+                # All countries outside the top 20 go to OTHER
+                other_stats["all_time"] += row.u_all
+                other_stats["30d"] += row.u_30d
+                other_stats["24h"] += row.u_24h
+
+        
+        if other_stats["all_time"] > 0:
+            countries_data.append({"code": "OTHER", "users": other_stats})
+
+
         return {
             "updated_at": now.isoformat(),
             "users": {
@@ -109,5 +154,5 @@ class LaunchRepository:
                 "mobile": {"all_time": global_res.mob_all, "30d": global_res.mob_30d, "24h": global_res.mob_24h}
             },
             "servers": servers_data,
-            "countries": []
+            "countries": countries_data
         }
