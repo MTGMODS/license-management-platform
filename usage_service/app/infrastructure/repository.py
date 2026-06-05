@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, select, func, distinct, case, desc, and_
+from sqlalchemy import Column, Integer, String, DateTime, select, func, distinct, case, text, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func as sql_func
 from datetime import datetime, timedelta, timezone
@@ -102,7 +102,7 @@ class LaunchRepository:
                 func.count(distinct(case((LaunchModel.launched_at >= d1, LaunchModel.hwid)))).label("u_24h")
             )
             .group_by("c_code")
-            .order_by(desc("u_all"))
+            .order_by(text("u_all DESC"))
         )
         
         country_res = await self.db.execute(country_stmt)
