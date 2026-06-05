@@ -30,5 +30,6 @@ async def health_check():
     return {
         "status": "UP",
         "service": "Usage Analytics",
-        "database": "Connected"
+        "version": settings.APP_VERSION,
+        "database": settings.DATABASE_URL.split("://")[0]
     }
