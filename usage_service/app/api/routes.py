@@ -10,7 +10,8 @@ router = APIRouter(prefix="/api/v1/usage", tags=["Usage Analytics"])
 @router.post("/launch")
 async def log_launch(data: LaunchDTO, request: Request, db: AsyncSession = Depends(get_db)):
     try:
-        ip = request.headers.get("X-Forwarded-For", request.client.host)
+        raw_ip = request.headers.get("X-Forwarded-For", request.client.host)
+        ip = raw_ip.split(",")[0].strip()
 
         return await UsageService(db).log_launch(
             version=data.version,
