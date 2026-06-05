@@ -6,7 +6,7 @@ class UsageService:
         self.repo = LaunchRepository(db)
 
     async def log_launch(self, version: str, hwid: str, server: int, device: str, country: str):
-        await self.repo.save(version=version, hwid=hwid, device=device, server_id=server, country=country)
+        await self.repo.save(version=version, hwid=hwid, device=device, server=server, country=country)
         return {"status": "success", "message": "Launch logged"}
 
     async def get_website_stats(self):
