@@ -30,3 +30,9 @@ class User(BaseModel):
 
     def has_any_social_link(self) -> bool:
         return self.telegram_id is not None or self.discord_id is not None
+    
+class TokenResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "Bearer"
+    user: User
