@@ -27,9 +27,10 @@ app.include_router(usage_router)
 
 @app.get("/health", tags=["System"])
 async def health_check():
+    database = settings.DATABASE_POSTGRES_URL if not settings.DEBUG_MODE else settings.DATABASE_URL
     return {
         "status": "UP",
         "service": "Usage Analytics",
         "version": settings.APP_VERSION,
-        "database": settings.DATABASE_URL.split("://")[0]
+        "database": database.split("://")[0]
     }
