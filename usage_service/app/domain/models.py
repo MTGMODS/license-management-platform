@@ -1,10 +1,10 @@
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, AliasChoices
 
 class LaunchDTO(BaseModel):
     version: str = Field(..., max_length=50, description="Product version: example '1.0'")
-    server: int = Field(..., description="Server ID: 1-32 Arizona PC, 101-103 Arizona Mobile, 200 Arizona VC, 301-307 Rodina PC, 401-403 Rodina Mobile, or 0 for unknown")
+    server: int = Field(..., validation_alias=AliasChoices("server", "server_id"), description="Server ID: 1-32 Arizona PC, 101-103 Arizona Mobile, 200 Arizona VC, 301-307 Rodina PC, 401-403 Rodina Mobile, or 0 for unknown")
     device: str = Field(..., description="Device type: 'PC' or 'MOBILE'")
     hwid: str = Field(..., max_length=255)
 
