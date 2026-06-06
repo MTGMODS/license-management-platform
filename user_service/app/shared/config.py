@@ -7,6 +7,10 @@ class Settings(BaseSettings):
     APP_VERSION: str
     DEBUG_MODE: bool
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    JWT_SECRET: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 settings = Settings()
