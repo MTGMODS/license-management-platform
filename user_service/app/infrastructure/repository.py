@@ -1,41 +1,50 @@
-from sqlalchemy import Column, Integer, String, BigInteger, DateTime
+from sqlalchemy import Column, Integer, String, BigInteger, DateTime, Boolean, select
 from sqlalchemy.sql import func
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.shared.database import Base
 
 class UserModel(Base):
-    __tablename__ = "identity_users"
+    __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    telegram_id = Column(BigInteger, unique=True, nullable=True)
-    discord_id = Column(BigInteger, unique=True, nullable=True)
-    nickname = Column(String, nullable=True)
+    telegram_id = Column(BigInteger, unique=True, index=True, nullable=True)
+    discord_id = Column(BigInteger, unique=True, index=True, nullable=True)
+    nickname = Column(String(50), nullable=False, index=True)
+    avatar_url = Column(String, nullable=True)
+    role = Column(String(20), default="USER", nullable=False)
+    is_banned = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    last_login_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
 
 class UserRepository:
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
 
-    def get_by_id(self, user_id: int):
-        return self.db.query(UserModel).filter(UserModel.id == user_id).first()
+    async def get_by_id(self, user_id: int) -> UserModel | None:
+        result = await self.db.execute(select(UserModel).where(UserModel.id == user_id))
+        return result.scalars().first()
 
-    def get_by_telegram_id(self, tg_id: int):
-        return self.db.query(UserModel).filter(UserModel.telegram_id == tg_id).first()
+    async def get_by_telegram_id(self, tg_id: int) -> UserModel | None:
+        result = await self.db.execute(select(UserModel).where(UserModel.telegram_id == tg_id))
+        return result.scalars().first()
 
-    def get_by_discord_id(self, ds_id: int):
-        return self.db.query(UserModel).filter(UserModel.discord_id == ds_id).first()
+    async def get_by_discord_id(self, ds_id: int) -> UserModel | None:
+        result = await self.db.execute(select(UserModel).where(UserModel.discord_id == ds_id))
+        return result.scalars().first()
 
-    def create(self, nickname: str, telegram_id: int = None, discord_id: int = None):
-        new_user = UserModel(nickname=nickname, telegram_id=telegram_id, discord_id=discord_id)
+    async def create(self, nickname: str, telegram_id: int = None, discord_id: int = None, avatar_url: str = None) -> UserModel:
+        new_user = UserModel(
+            nickname=nickname, 
+            telegram_id=telegram_id, 
+            discord_id=discord_id,
+            avatar_url=avatar_url
+        )
         self.db.add(new_user)
-        self.db.commit()
-        self.db.refresh(new_user)
+        await self.db.commit()
+        await self.db.refresh(new_user)
         return new_user
 
-    def update(self, db_user: UserModel, telegram_id: int = None, discord_id: int = None, nickname: str = None):
-        if telegram_id: db_user.telegram_id = telegram_id
-        if discord_id: db_user.discord_id = discord_id
-        if nickname: db_user.nickname = nickname
-        self.db.commit()
-        self.db.refresh(db_user)
-        return db_user
+    async def update(self, user: UserModel) -> UserModel:
+        await self.db.commit()
+        await self.db.refresh(user)
+        return user
