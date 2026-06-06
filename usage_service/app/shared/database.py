@@ -2,11 +2,10 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import declarative_base
 from app.shared.config import settings
 
-engine = create_async_engine(
-    settings.DATABASE_URL, 
-    echo=False, 
-    connect_args={"check_same_thread": False} # SQLite test
-)
+# Use SQLite for don't start PostgreSQL container in debug mode 
+database_url = settings.DATABASE_POSTGRES_URL if not settings.DEBUG_MODE else settings.DATABASE_URL
+
+engine = create_async_engine(database_url, echo=False)
 
 AsyncSessionLocal = async_sessionmaker(
     engine, 
