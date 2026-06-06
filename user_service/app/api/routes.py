@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import BaseModel, Field, model_validator
 from app.shared.database import get_db
 from app.shared.exceptions import DomainException
-from ..application.service import IdentityService
+from app.application.service import IdentityService
 
 router = APIRouter(prefix="/api/v1/identity", tags=["Identity (Users)"])
 

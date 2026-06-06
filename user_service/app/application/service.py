@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from ..infrastructure.repository import UserRepository
-from ..domain.models import User
+from app.infrastructure.repository import UserRepository
+from app.domain.models import User
 from app.shared.exceptions import DomainException
 
 class IdentityService:

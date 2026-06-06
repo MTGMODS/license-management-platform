@@ -11,11 +11,10 @@ from app.relay import outbox_relay_worker
 
 from app.modules.subscription.infrastructure.repository import SubscriptionModel, ActivationModel, OutboxEventModel
 from app.modules.billing.infrastructure.repository import PurchaseModel
-from app.modules.identity.infrastructure.repository import UserModel
+
 
 from app.modules.subscription.api.routes import router as subscription_router
 from app.modules.billing.api.routes import router as billing_router
-from app.modules.identity.api.routes import router as identity_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -42,7 +41,6 @@ app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 app.include_router(subscription_router)
 app.include_router(billing_router)
-app.include_router(identity_router)
 
 @app.get("/health", tags=["System"])
 def health_check():
