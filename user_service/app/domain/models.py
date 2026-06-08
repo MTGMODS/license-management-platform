@@ -2,15 +2,19 @@ from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-class ProviderPayload(BaseModel):
-    provider: str = Field(..., pattern="^(telegram|discord)$", description="Social network provider")
-    provider_id: int = Field(..., description="ID from the social network")
+class SocialIDPayload(BaseModel):
+    telegram_id: Optional[int] = Field(None, description="Telegram ID")
+    discord_id: Optional[int] = Field(None, description="Discord ID")
+
+    @model_validator(mode='after')
+    def check_exactly_one_id(self):
+        if bool(self.telegram_id) == bool(self.discord_id):
+            raise ValueError('Must provide exactly one of: telegram_id or discord_id')
+        return self
+
+class SyncPayload(SocialIDPayload):
     nickname: str = Field(..., min_length=1, max_length=50)
     avatar_url: Optional[str] = None
-
-class LinkPayload(BaseModel):
-    provider: str = Field(..., pattern="^(telegram|discord)$")
-    provider_id: int
 
 class User(BaseModel):
     id: Optional[int] = None
