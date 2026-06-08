@@ -96,7 +96,7 @@ async def telegram_webapp_auth(payload: TelegramAuthPayload, db: AsyncSession = 
         user=user
     )
 
-@router.get("/auth/discord/login", summary="Initiate Discord OAuth2 Flow")
+@router.get("/discord/login", summary="Initiate Discord OAuth2 Flow")
 async def discord_oauth_login():
     url = (
         f"https://discord.com/api/oauth2/authorize"
@@ -107,7 +107,7 @@ async def discord_oauth_login():
     )
     return RedirectResponse(url)
 
-@router.get("/auth/discord/callback", response_model=TokenResponse, summary="Discord OAuth2 Callback Receiver")
+@router.get("/discord/callback", response_model=TokenResponse, summary="Discord OAuth2 Callback Receiver")
 async def discord_oauth_callback(code: str, db: AsyncSession = Depends(get_db)):
     async with httpx.AsyncClient() as client:
         token_data = {
