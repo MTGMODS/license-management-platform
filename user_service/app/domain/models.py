@@ -2,6 +2,10 @@ from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+class TelegramAuthPayload(BaseModel):
+    id_token: Optional[str] = Field(None, description="OIDC JWT token from Telegram Login")
+    init_data: Optional[str] = Field(None, description="Raw initData string from Telegram Mini App")
+
 class SocialIDPayload(BaseModel):
     telegram_id: Optional[int] = Field(None, description="Telegram ID")
     discord_id: Optional[int] = Field(None, description="Discord ID")
