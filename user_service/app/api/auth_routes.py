@@ -10,7 +10,7 @@ from app.domain.models import TokenResponse, RefreshRequest, TelegramAuthPayload
 from app.application.jwt_utils import (create_access_token, create_refresh_token, verify_refresh_token, verify_telegram_oidc, verify_telegram_webapp_hash)
 from app.shared.config import settings
 
-router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
+router = APIRouter(prefix="/api/v1/users/auth", tags=["Authentication"])
 
 @router.get("/telegram/login")
 async def telegram_login_init():
