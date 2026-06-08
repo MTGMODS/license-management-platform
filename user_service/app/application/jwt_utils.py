@@ -1,4 +1,6 @@
-import jwt
+import jwt, hmac, hashlib
+from jwt import PyJWKClient
+from urllib.parse import parse_qsl
 from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -27,12 +29,72 @@ def create_refresh_token(user_id: int) -> str:
     }
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=ALGORITHM)
 
+def verify_refresh_token(token: str) -> int:
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+        token_type = payload.get("type")
+        
+        if user_id is None or token_type != "refresh":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token type or missing payload data"
+            )
+            
+        return int(user_id)
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token has expired")
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+
+# Telegram verification
+
+def verify_telegram_oidc(id_token: str) -> dict | None:
+    try:
+        signing_key = PyJWKClient("https://oauth.telegram.org/.well-known/jwks.json").get_signing_key_from_jwt(id_token)
+        payload = jwt.decode(
+            id_token,
+            signing_key.key,
+            algorithms=["RS256"],
+            audience=str(settings.TELEGRAM_CLIENT_ID), 
+            issuer="https://oauth.telegram.org",
+            leeway=60
+        )
+        return payload
+        
+    except jwt.ExpiredSignatureError as e:
+        print(f"[OIDC Error] Token Expired: {e}")
+    except jwt.InvalidAudienceError as e:
+        print(f"[OIDC Error] Client ID (Audience) != {settings.TELEGRAM_CLIENT_ID}: {e}")
+    except Exception as e:
+        print(f"[OIDC Error] Validation Error ({type(e).__name__}): {e}")
+        
+    return None
+
+def verify_telegram_webapp_hash(init_data: str, bot_token: str) -> bool:
+    try:
+        parsed_data = dict(parse_qsl(init_data, keep_blank_values=True))
+        tg_hash = parsed_data.pop("hash", None)
+        if not tg_hash:
+            return False
+            
+        check_string = "\n".join(f"{k}={v}" for k, v in sorted(parsed_data.items()))
+        
+        secret_key = hmac.new(b"WebAppData", bot_token.encode(), hashlib.sha256).digest()
+        calculated_hash = hmac.new(secret_key, check_string.encode(), hashlib.sha256).hexdigest()
+        
+        return hmac.compare_digest(calculated_hash, tg_hash)
+    except Exception:
+        return False
+    
+# User authentication dependency
+  
 security = HTTPBearer()
 
 def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     try:
-        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
+        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[ALGORITHM])
         user_id = payload.get("sub")
         token_type = payload.get("type")
         
@@ -48,20 +110,3 @@ def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depends(secu
     except jwt.PyJWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     
-def verify_refresh_token(token: str) -> int:
-    try:
-        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
-        user_id = payload.get("sub")
-        token_type = payload.get("type")
-        
-        if user_id is None or token_type != "refresh":
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token type or missing payload data"
-            )
-            
-        return int(user_id)
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token has expired")
-    except jwt.PyJWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
