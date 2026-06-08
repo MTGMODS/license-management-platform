@@ -5,7 +5,8 @@ from fastapi.exceptions import RequestValidationError
 from app.shared.database import engine, Base
 from app.shared.exceptions import DomainException, global_exception_handler, validation_exception_handler
 from app.shared.config import settings
-from app.api.routes import router as auth_router
+from app.api.auth_routes import router as auth_router
+from app.api.user_routes import router as user_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -25,6 +26,7 @@ app.add_exception_handler(DomainException, global_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 app.include_router(auth_router)
+app.include_router(user_router)
 
 @app.get("/health", tags=["System"])
 async def health_check():
