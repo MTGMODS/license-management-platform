@@ -1,6 +1,6 @@
-import httpx, json
+import httpx, json, secrets
 from urllib.parse import parse_qsl
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Request, Response, HTTPException, status 
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -44,13 +44,13 @@ async def telegram_auth_callback(code: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid Telegram OIDC token signature.")
         
     tg_id = int(token_data.get("id"))
-    nickname = token_data.get("preferred_username") or token_data.get("name") or f"tg_{tg_id}"
+    nickname = token_data.get("preferred_username") or token_data.get("name") or tg_id
     avatar_url = token_data.get("picture")
 
     service = AuthService(db)
     user = await service.login_with_telegram(
         telegram_id=tg_id,
-        nickname=nickname,
+        nickname=nickname[:50],
         avatar_url=avatar_url
     )
     
@@ -86,7 +86,7 @@ async def telegram_webapp_auth(payload: TelegramAuthPayload, db: AsyncSession = 
     service = AuthService(db)
     user = await service.login_with_telegram(
         telegram_id=int(tg_id),
-        nickname=nickname,
+        nickname=nickname[:50],
         avatar_url=avatar_url
     )
     
@@ -97,18 +97,35 @@ async def telegram_webapp_auth(payload: TelegramAuthPayload, db: AsyncSession = 
     )
 
 @router.get("/discord/login", summary="Initiate Discord OAuth2 Flow")
-async def discord_oauth_login():
+async def discord_oauth_login(response: Response):
+    state = secrets.token_urlsafe(16)
+    response.set_cookie(
+        key="oauth_state", 
+        value=state, 
+        httponly=True,
+        max_age=300,
+        secure=not settings.DEBUG_MODE,
+        samesite="lax"
+    )
     url = (
         f"https://discord.com/api/oauth2/authorize"
         f"?client_id={settings.DISCORD_CLIENT_ID}"
         f"&redirect_uri={settings.DISCORD_REDIRECT_URI}"
         f"&response_type=code"
         f"&scope=identify"
+        f"&state={state}"
     )
     return RedirectResponse(url)
 
 @router.get("/discord/callback", response_model=TokenResponse, summary="Discord OAuth2 Callback Receiver")
-async def discord_oauth_callback(code: str, db: AsyncSession = Depends(get_db)):
+async def discord_oauth_callback(request: Request, code: str, state: str = None, db: AsyncSession = Depends(get_db)):
+    saved_state = request.cookies.get("oauth_state")
+    if not state or not saved_state or state != saved_state:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="CSRF validation failed. State parameter is missing or invalid."
+        )
+    
     async with httpx.AsyncClient() as client:
         token_data = {
             "client_id": settings.DISCORD_CLIENT_ID,
@@ -133,7 +150,7 @@ async def discord_oauth_callback(code: str, db: AsyncSession = Depends(get_db)):
         discord_profile = profile_res.json()
 
     discord_id = int(discord_profile["id"])
-    nickname = discord_profile["username"]
+    nickname = discord_profile["username"] or discord_id
     avatar_hash = discord_profile.get("avatar")
     
     avatar_url = None
@@ -143,15 +160,17 @@ async def discord_oauth_callback(code: str, db: AsyncSession = Depends(get_db)):
     service = AuthService(db)
     user = await service.login_with_discord(
         discord_id=discord_id,
-        nickname=nickname,
+        nickname=nickname[:50],
         avatar_url=avatar_url
     )
 
-    return TokenResponse(
+    response = TokenResponse(
         access_token=create_access_token(user_id=user.id, role=user.role),
         refresh_token=create_refresh_token(user_id=user.id),
         user=user
     )
+
+    return response
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_access_token(request: RefreshRequest, db: AsyncSession = Depends(get_db)):
