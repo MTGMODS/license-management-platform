@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     DISCORD_CLIENT_SECRET: str
     DISCORD_REDIRECT_URI: str
 
+    # --- Telegram OAuth2 Settings ---
+    TELEGRAM_CLIENT_ID: str
+    TELEGRAM_CLIENT_SECRET: str
+    TELEGRAM_CALLBACK_URL: str
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 settings = Settings()
