@@ -27,9 +27,8 @@ class AuthService:
             db_user.last_login_at = func.now() 
             db_user = await self.repo.update(db_user)
         else:
-            final_nickname = nickname if nickname else str(telegram_id or discord_id)
             db_user = await self.repo.create(
-                nickname=final_nickname,
+                nickname=nickname,
                 telegram_id=telegram_id,
                 discord_id=discord_id,
                 avatar_url=avatar_url
