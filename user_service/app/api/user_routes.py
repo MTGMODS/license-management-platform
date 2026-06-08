@@ -26,7 +26,7 @@ async def link_social_account(payload: SocialIDPayload, current_user_id: int = D
     )
 
 @router.put("/sync", response_model=User)
-async def sync_game_server_data(
+async def worker_sync_nickname_and_avatar_url(
     payload: SyncPayload, 
     db: AsyncSession = Depends(get_db),
     # x_worker_secret: str = Header(None)
