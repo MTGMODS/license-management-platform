@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.shared.database import get_db
 from app.application.service import UserService
-from app.domain.models import SocialIDPayload, SyncPayload, TokenResponse, User
-from app.application.jwt_utils import create_access_token, create_refresh_token, get_current_user_id
+from app.domain.models import SocialIDPayload, SyncPayload, TokenResponse, User , RefreshRequest
+from app.application.jwt_utils import create_access_token, create_refresh_token, get_current_user_id, verify_refresh_token
 
 router = APIRouter(prefix="/api/v1/users", tags=["Users Service"])
 
@@ -53,3 +53,24 @@ async def sync_user_data(payload: SyncPayload, db: AsyncSession = Depends(get_db
         discord_id=payload.discord_id
     )
     return None
+
+@router.post("/refresh", response_model=TokenResponse, summary="Refresh access token using refresh token")
+async def refresh_session(payload: RefreshRequest, db: AsyncSession = Depends(get_db)):
+    user_id = verify_refresh_token(payload.refresh_token)
+    
+    service = UserService(db)
+    user = await service.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User associated with this token not found")
+        
+    if user.is_banned:
+        raise HTTPException(status_code=403, detail="User account is banned")
+
+    new_access_token = create_access_token(user_id=user.id, role=user.role)
+    new_refresh_token = create_refresh_token(user_id=user.id)
+    
+    return TokenResponse(
+        access_token=new_access_token,
+        refresh_token=new_refresh_token,
+        user=user
+    )
