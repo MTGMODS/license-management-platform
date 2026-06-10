@@ -50,7 +50,7 @@ async def telegram_auth_callback(code: str, db: AsyncSession = Depends(get_db)):
     service = AuthService(db)
     user = await service.login_with_telegram(
         telegram_id=tg_id,
-        nickname=nickname[:50],
+        nickname=nickname,
         avatar_url=avatar_url
     )
     
@@ -86,7 +86,7 @@ async def telegram_webapp_auth(payload: TelegramAuthPayload, db: AsyncSession = 
     service = AuthService(db)
     user = await service.login_with_telegram(
         telegram_id=int(tg_id),
-        nickname=nickname[:50],
+        nickname=nickname,
         avatar_url=avatar_url
     )
     
@@ -161,7 +161,7 @@ async def discord_oauth_callback(request: Request, code: str, state: str = None,
     service = AuthService(db)
     user = await service.login_with_discord(
         discord_id=discord_id,
-        nickname=nickname[:50],
+        nickname=nickname,
         avatar_url=avatar_url
     )
 
