@@ -52,18 +52,3 @@ class UserService:
         
         db_user = await self.repo.update(db_user)
         return User.model_validate(db_user)
-
-    async def sync_profile(self, nickname: str, avatar_url: str = None, telegram_id: int = None, discord_id: int = None) -> User:
-        db_user = await self.repo.get_by_telegram_id(telegram_id) if telegram_id else await self.repo.get_by_discord_id(discord_id)
-        if db_user:
-            db_user.nickname = nickname
-            if avatar_url: db_user.avatar_url = avatar_url
-            db_user = await self.repo.update(db_user)
-        else:
-            db_user = await self.repo.create(
-                nickname=nickname,
-                telegram_id=telegram_id,
-                discord_id=discord_id,
-                avatar_url=avatar_url
-            )
-        return User.model_validate(db_user)

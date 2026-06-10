@@ -24,20 +24,3 @@ async def link_social_account(payload: SocialIDPayload, current_user_id: int = D
         telegram_id=payload.telegram_id,
         discord_id=payload.discord_id
     )
-
-@router.put("/sync", response_model=User)
-async def worker_sync_nickname_and_avatar_url(
-    payload: SyncPayload, 
-    db: AsyncSession = Depends(get_db),
-    # x_worker_secret: str = Header(None)
-):
-    # if x_worker_secret != settings.WORKER_SECRET:
-    #     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Worker Secret")
-
-    service = UserService(db)
-    return await service.sync_profile(
-        nickname=payload.nickname,
-        avatar_url=payload.avatar_url,
-        telegram_id=payload.telegram_id,
-        discord_id=payload.discord_id
-    )
