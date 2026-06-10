@@ -14,17 +14,35 @@ router = APIRouter(prefix="/api/v1/users/auth", tags=["Authentication"])
 
 @router.get("/telegram/login")
 async def telegram_login_init():
+    state = secrets.token_urlsafe(16)
     url = (
         "https://oauth.telegram.org/auth"
         f"?client_id={settings.TELEGRAM_CLIENT_ID}"
         f"&redirect_uri={settings.TELEGRAM_CALLBACK_URL}"
         "&response_type=code"
         "&scope=openid%20profile"
+        f"&state={state}"
     )
-    return RedirectResponse(url)
+    response = RedirectResponse(url)
+    response.set_cookie(
+        key="oauth_state", 
+        value=state, 
+        httponly=True, 
+        max_age=300,
+        secure=not settings.DEBUG_MODE, 
+        samesite="lax"
+    )
+    return response
 
 @router.get("/telegram/callback", response_model=TokenResponse)
-async def telegram_auth_callback(code: str, db: AsyncSession = Depends(get_db)):
+async def telegram_auth_callback(request: Request, code: str, state: str = None, db: AsyncSession = Depends(get_db)):
+    saved_state = request.cookies.get("oauth_state")
+    if not state or not saved_state or state != saved_state:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="CSRF validation failed. State parameter is missing or invalid."
+        )
+    
     async with httpx.AsyncClient() as client:
         data = {
             "client_id": settings.TELEGRAM_CLIENT_ID,
@@ -54,11 +72,13 @@ async def telegram_auth_callback(code: str, db: AsyncSession = Depends(get_db)):
         avatar_url=avatar_url
     )
     
-    return TokenResponse(
+    response = TokenResponse(
         access_token=create_access_token(user_id=user.id, role=user.role),
         refresh_token=create_refresh_token(user_id=user.id),
         user=user
     )
+    
+    return response
 
 @router.post("/telegram/webapp", response_model=TokenResponse)
 async def telegram_webapp_auth(payload: TelegramAuthPayload, db: AsyncSession = Depends(get_db)):
