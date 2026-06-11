@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.shared.database import engine, Base
 from app.shared.exceptions import DomainException, global_exception_handler, validation_exception_handler
@@ -25,6 +26,14 @@ app.add_exception_handler(DomainException, global_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 app.include_router(usage_router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost", "http://127.0.0.1", "https://mtgmods.com"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 @app.get("/health", tags=["System"])
 async def health_check():
