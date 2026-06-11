@@ -65,6 +65,6 @@ class UserService:
     
     async def delete_my_account(self, user_id: int):
         db_user = await self._get_active_user(user_id)
-        db_user.status = "DELETED"
+        db_user.status = UserStatus.DELETED
         await self.repo.update(db_user)
         return {"detail": "Account successfully deleted."}
