@@ -1,13 +1,20 @@
 import httpx, json, secrets
 from urllib.parse import parse_qsl
-from fastapi import APIRouter, Depends, Request, Response, HTTPException, status 
+from fastapi import APIRouter, Depends, Request, Response, DomainException, HTTPException, status 
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.shared.database import get_db
 from app.application.auth_service import AuthService
 from app.domain.models import TokenResponse, RefreshRequest, TelegramAuthPayload
-from app.application.jwt_utils import (create_access_token, create_refresh_token, verify_refresh_token, verify_telegram_oidc, verify_telegram_webapp_hash)
+from app.application.jwt_utils import (
+    create_access_token,
+    create_refresh_token,
+    verify_refresh_token,
+    verify_telegram_oidc,
+    verify_telegram_webapp_hash,
+    verify_refresh_token
+)
 from app.shared.config import settings
 
 router = APIRouter(prefix="/api/v1/users/auth", tags=["Authentication"])
@@ -196,16 +203,12 @@ async def discord_oauth_callback(request: Request, code: str, state: str = None,
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_access_token(request: RefreshRequest, db: AsyncSession = Depends(get_db)):
     user_id = verify_refresh_token(request.refresh_token)
-    service = AuthService(db)
-    user = await service.repo.get_by_id(user_id)
     
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    if user.is_banned:
-        raise HTTPException(status_code=403, detail="User is banned")
-
+    service = AuthService(db)
+    db_user = await service.get_valid_user_for_refresh(user_id)
+    
     return TokenResponse(
-        access_token=create_access_token(user_id=user.id, role=user.role),
-        refresh_token=create_refresh_token(user_id=user.id),
-        user=user
+        access_token=create_access_token(user_id=db_user.id, role=db_user.role),
+        refresh_token=create_refresh_token(user_id=db_user.id),
+        user=db_user
     )
