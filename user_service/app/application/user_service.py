@@ -1,20 +1,30 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.repository import UserRepository
-from app.domain.models import User
+from app.domain.models import User, UserStatus
 from app.shared.exceptions import DomainException
 
 class UserService:
     def __init__(self, db: AsyncSession):
         self.repo = UserRepository(db)
 
-    async def get_user_by_id(self, user_id: int) -> User | None:
-        db_user = await self.repo.get_by_id(user_id)
-        return User.model_validate(db_user) if db_user else None
-
-    async def link_social(self, user_id: int, telegram_id: int = None, discord_id: int = None) -> User:
+    async def _get_active_user(self, user_id: int):
         db_user = await self.repo.get_by_id(user_id)
         if not db_user:
             raise DomainException("User not found.", status_code=404, error_code="USER_NOT_FOUND")
+        
+        if db_user.status == UserStatus.BANNED:
+            raise DomainException("This account is banned.", status_code=403, error_code="USER_BANNED")
+        elif db_user.status == UserStatus.DELETED:
+            raise DomainException("This account was deleted.", status_code=403, error_code="USER_DELETED")
+            
+        return db_user
+
+    async def get_user_by_id(self, user_id: int) -> User:
+        db_user = await self._get_active_user(user_id)
+        return User.model_validate(db_user)
+
+    async def link_social(self, user_id: int, telegram_id: int = None, discord_id: int = None) -> User:
+        db_user = await self._get_active_user(user_id)
         
         if db_user.telegram_id is not None and db_user.discord_id is not None:
             raise DomainException(
@@ -52,3 +62,9 @@ class UserService:
         
         db_user = await self.repo.update(db_user)
         return User.model_validate(db_user)
+    
+    async def delete_my_account(self, user_id: int):
+        db_user = await self._get_active_user(user_id)
+        db_user.status = "DELETED"
+        await self.repo.update(db_user)
+        return {"detail": "Account successfully deleted."}
