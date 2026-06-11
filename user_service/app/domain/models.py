@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, model_validator, field_validator
@@ -23,6 +24,11 @@ class SyncPayload(SocialIDPayload):
     nickname: str = Field(..., min_length=1, max_length=50)
     avatar_url: Optional[str] = None
 
+class UserStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    BANNED = "BANNED"
+    DELETED = "DELETED"
+
 class User(BaseModel):
     id: Optional[int] = None
     telegram_id: Optional[str] = None
@@ -30,7 +36,7 @@ class User(BaseModel):
     nickname: str
     avatar_url: Optional[str] = None
     role: str = "USER"
-    is_banned: bool = False
+    status: UserStatus = UserStatus.ACTIVE
     created_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
