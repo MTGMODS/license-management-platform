@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, String, BigInteger, DateTime, Boolean, select
+from sqlalchemy import Column, Integer, String, BigInteger, DateTime, select, Enum as SQLEnum
 from sqlalchemy.sql import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.shared.database import Base
+from app.domain.models import UserStatus
 
 class UserModel(Base):
     __tablename__ = "users"
@@ -12,7 +13,7 @@ class UserModel(Base):
     nickname = Column(String(50), nullable=False, index=True)
     avatar_url = Column(String, nullable=True)
     role = Column(String(20), default="USER", nullable=False)
-    is_banned = Column(Boolean, default=False, nullable=False)
+    status = Column(SQLEnum(UserStatus), default=UserStatus.ACTIVE, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_login_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
 
