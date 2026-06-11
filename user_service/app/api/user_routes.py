@@ -11,10 +11,12 @@ router = APIRouter(prefix="/api/v1/users", tags=["Users Service"])
 @router.get("/me", response_model=User)
 async def get_my_profile(current_user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
     service = UserService(db)
-    user = await service.get_user_by_id(current_user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+    return await service.get_user_by_id(current_user_id)
+
+@router.delete("/me", status_code=status.HTTP_200_OK)
+async def delete_my_account(current_user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
+    service = UserService(db)
+    return await service.delete_my_account(current_user_id)
 
 @router.post("/me/link", response_model=User)
 async def link_social_account(payload: SocialIDPayload, current_user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
