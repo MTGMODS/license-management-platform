@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func
 from app.infrastructure.repository import UserRepository
-from app.domain.models import User
+from app.domain.models import User, UserStatus
 from app.shared.exceptions import DomainException
 
 class AuthService:
@@ -20,8 +20,10 @@ class AuthService:
         safe_nickname = nickname[:50] if nickname else str(telegram_id or discord_id)
     
         if db_user:
-            if db_user.is_banned:
+            if db_user.status == UserStatus.BANNED:
                 raise DomainException("This account is banned.", status_code=403, error_code="USER_BANNED")
+            elif db_user.status == UserStatus.DELETED:
+                raise DomainException("This account was deleted.", status_code=403, error_code="USER_DELETED")
             
             if safe_nickname: db_user.nickname = safe_nickname
             if avatar_url: db_user.avatar_url = avatar_url
@@ -36,3 +38,16 @@ class AuthService:
                 avatar_url=avatar_url
             )
         return User.model_validate(db_user)
+    
+    async def get_valid_user_for_refresh(self, user_id: int):
+        db_user = await self.repo.get_by_id(user_id)
+        
+        if not db_user:
+            raise DomainException("User not found.", status_code=404, error_code="USER_NOT_FOUND")
+            
+        if db_user.status == UserStatus.BANNED:
+            raise DomainException("This account is banned.", status_code=403, error_code="USER_BANNED")
+        elif db_user.status == UserStatus.DELETED:
+            raise DomainException("This account was deleted.", status_code=403, error_code="USER_DELETED")
+            
+        return db_user
