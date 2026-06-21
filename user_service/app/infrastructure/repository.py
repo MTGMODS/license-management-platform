@@ -47,8 +47,6 @@ class UserRepository:
             
         if discord_id:
             stmt = stmt.where(cast(UserModel.discord_id, String).ilike(f"%{discord_id}%"))
-            
-        stmt = stmt.limit(10)
         
         result = await self.db.execute(stmt)
         return result.scalars().all()
