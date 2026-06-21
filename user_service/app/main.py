@@ -8,6 +8,7 @@ from app.shared.exceptions import DomainException, global_exception_handler, val
 from app.shared.config import settings
 from app.api.auth_routes import router as auth_router
 from app.api.user_routes import router as user_router
+from app.api.admin_routes import router as admin_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -28,6 +29,7 @@ app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 app.include_router(auth_router)
 app.include_router(user_router)
+app.include_router(admin_router)
 
 app.add_middleware(
     CORSMiddleware,
