@@ -80,5 +80,7 @@ class UserService:
         return User.model_validate(db_user)
 
     async def search_users_for_admin(self, nickname: str = None, telegram_id: str = None, discord_id: str = None) -> list[User]:
+        if not nickname and not telegram_id and not discord_id:
+            return []
         db_users = await self.repo.search_users(nickname, telegram_id, discord_id)
         return [User.model_validate(user) for user in db_users]

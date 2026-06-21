@@ -35,9 +35,6 @@ class UserRepository:
     
     async def search_users(self, nickname: str = None, telegram_id: str = None, discord_id: str = None) -> list[UserModel]:
         stmt = select(UserModel)
-    
-        if not nickname and not telegram_id and not discord_id:
-            return []
 
         if nickname:
             stmt = stmt.where(UserModel.nickname.ilike(f"%{nickname}%"))
