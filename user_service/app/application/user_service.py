@@ -23,14 +23,6 @@ class UserService:
         db_user = await self._get_active_user(user_id)
         return User.model_validate(db_user)
 
-    async def get_user_for_admin(self, target_user_id: int) -> User:
-        db_user = await self.repo.get_by_id(target_user_id)
-        
-        if not db_user:
-            raise DomainException("User not found.", status_code=404, error_code="USER_NOT_FOUND")
-            
-        return User.model_validate(db_user)
-
     async def link_social(self, user_id: int, telegram_id: int = None, discord_id: int = None) -> User:
         db_user = await self._get_active_user(user_id)
         
@@ -76,3 +68,15 @@ class UserService:
         db_user.status = UserStatus.DELETED
         await self.repo.update(db_user)
         return {"detail": "Account successfully deleted."}
+    
+    async def get_user_for_admin(self, target_user_id: int) -> User:
+        db_user = await self.repo.get_by_id(target_user_id)
+        
+        if not db_user:
+            raise DomainException("User not found.", status_code=404, error_code="USER_NOT_FOUND")
+            
+        return User.model_validate(db_user)
+
+    async def search_users_for_admin(self, nickname: str = None, telegram_id: str = None, discord_id: str = None) -> list[User]:
+        db_users = await self.repo.search_users(nickname, telegram_id, discord_id)
+        return [User.model_validate(user) for user in db_users]
