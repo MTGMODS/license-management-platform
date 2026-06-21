@@ -1,6 +1,6 @@
 import httpx, json, secrets
 from urllib.parse import parse_qsl
-from fastapi import APIRouter, Depends, Request, Response, HTTPException, status 
+from fastapi import APIRouter, Depends, Request, HTTPException, status 
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
