@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.shared.database import get_db
 from app.application.auth_service import AuthService
-from app.domain.models import TokenResponse, RefreshRequest, TelegramAuthPayload
+from app.domain.schemas import TokenResponse, RefreshRequest, TelegramAuthPayload
 from app.application.jwt_utils import (
     create_access_token,
     create_refresh_token,

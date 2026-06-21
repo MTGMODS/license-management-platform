@@ -3,7 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.shared.database import get_db
 from app.application.user_service import UserService
-from app.domain.models import LinkSocialPayload, User
+from app.domain.models import User
+from app.domain.schemas import LinkSocialPayload
 from app.application.jwt_utils import get_current_user_id
 
 router = APIRouter(prefix="/api/v1/users", tags=["Users Service"])
