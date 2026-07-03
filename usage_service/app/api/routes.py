@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.shared.database import get_db
 from app.shared.exceptions import DomainException
@@ -31,6 +31,6 @@ async def log_launch(data: LaunchPayload, request: Request, db: AsyncSession = D
         raise DomainException(message=str(e), status_code=500, error_code="USAGE_ERROR")
     
 @router.get("/stats/public")
-async def get_public_stats(db: AsyncSession = Depends(get_db)):
+async def get_public_stats(background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     service = UsageService(db)
-    return await service.get_website_stats()
+    return await service.get_website_stats(background_tasks)
