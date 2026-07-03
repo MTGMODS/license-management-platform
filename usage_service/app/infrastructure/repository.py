@@ -154,17 +154,17 @@ class LaunchRepository:
 
         timeline_stmt = (
             select(
-                cast(LaunchModel.launched_at, Date).label("dt"),
+                func.date(LaunchModel.launched_at).label("dt"),
                 func.count(distinct(LaunchModel.hwid)).label("u_all"),
                 func.count(LaunchModel.id).label("l_all")
             )
-            .group_by(cast(LaunchModel.launched_at, Date))
-            .order_by(cast(LaunchModel.launched_at, Date))
+            .group_by(func.date(LaunchModel.launched_at))
+            .order_by(func.date(LaunchModel.launched_at))
         )
         timeline_res = await self.db.execute(timeline_stmt)
         timeline_data = [
             {
-                "date": row.dt.isoformat() if row.dt else "Unknown",
+                "date": str(row.dt) if row.dt else "Unknown", 
                 "users": row.u_all,
                 "launches": row.l_all
             }
