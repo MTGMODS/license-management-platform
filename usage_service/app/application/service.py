@@ -36,7 +36,7 @@ class UsageService:
         try:
             stats = await self.repo.get_heavy_public_stats()
             UsageService._cached_stats = stats
-            UsageService._cache_expires_at = datetime.now(timezone.utc) + timedelta(minutes=1)
+            UsageService._cache_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
         finally:
             UsageService._is_generating = False
 
@@ -51,7 +51,7 @@ class UsageService:
                 stats = await repo.get_heavy_public_stats()
                 
                 UsageService._cached_stats = stats
-                UsageService._cache_expires_at = datetime.now(timezone.utc) + timedelta(minutes=1)
+                UsageService._cache_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
                 logger.info("Background stats generation completed.")
                 
         except Exception as e:
