@@ -9,6 +9,7 @@ class LaunchModel(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     version = Column(String, nullable=False)
+    mode = Column(String, index=True, nullable=True)
     device = Column(String, nullable=False)
     hwid = Column(String, index=True, nullable=False)
     server = Column(Integer, index=True, nullable=True)
