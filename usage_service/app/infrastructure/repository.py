@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, select, func, distinct, case, text, and_, cast, Date
+from sqlalchemy import Column, Integer, String, DateTime, select, func, distinct, case, text, and_, cast, Date, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func as sql_func
 from datetime import datetime, timedelta, timezone
@@ -33,14 +33,12 @@ class LaunchRepository:
         await self.db.commit()
         await self.db.refresh(new_launch)
         return new_launch
-    
-    async def get_heavy_public_stats(self):
-        now = datetime.now(timezone.utc)
-        d30 = now - timedelta(days=30)
-        d1 = now - timedelta(hours=24)
-        d1h = now - timedelta(hours=1)
 
-        global_stmt = select(
+
+    # ---- Analytics Methods ----
+
+    async def _get_global(self, d30, d1, d1h):
+        stmt = select(
             func.count(distinct(LaunchModel.hwid)).label("u_all"),
             func.count(distinct(case((LaunchModel.launched_at >= d30, LaunchModel.hwid)))).label("u_30d"),
             func.count(distinct(case((LaunchModel.launched_at >= d1, LaunchModel.hwid)))).label("u_24h"),
@@ -71,12 +69,43 @@ class LaunchRepository:
             func.count(distinct(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label("mob_24h"),
             func.count(distinct(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label("mob_1h"),
         )
-        global_res = (await self.db.execute(global_stmt)).first()
+        res = (await self.db.execute(stmt)).first()
         
-        g_u_all = global_res.u_all if global_res and global_res.u_all > 0 else 1
-        g_l_all = global_res.l_all if global_res and global_res.l_all > 0 else 1
+        g_u_all = res.u_all if res and res.u_all > 0 else 0
+        g_l_all = res.l_all if res and res.l_all > 0 else 0
 
-        server_stmt = (
+        vip_conversion = round((res.vip_all / g_u_all) * 100, 1) if g_u_all > 0 else 0
+        total_devices = res.pc_all + res.mob_all
+        pc_ratio = round((res.pc_all / total_devices) * 100) if total_devices > 0 else 0
+        mob_ratio = 100 - pc_ratio
+
+        global_data = {
+            "metrics": {
+                "vip_conversion": vip_conversion,
+                "pc_ratio": pc_ratio,
+                "mobile_ratio": mob_ratio,
+                "global_launches_per_user": round(g_l_all / g_u_all, 2) if g_u_all > 0 else 0
+            },
+            "users": {
+                "total": {"all_time": res.u_all, "30d": res.u_30d, "24h": res.u_24h, "1h": res.u_1h},
+                "vip": {"all_time": res.vip_all, "30d": res.vip_30d, "24h": res.vip_24h, "1h": res.vip_1h},
+                "free": {"all_time": res.free_all, "30d": res.free_30d, "24h": res.free_24h, "1h": res.free_1h}
+            },
+            "launches": {
+                "all_time": res.l_all,
+                "30d": res.l_30d,
+                "24h": res.l_24h,
+                "1h": res.l_1h
+            },
+            "devices": {
+                "pc": {"all_time": res.pc_all, "30d": res.pc_30d, "24h": res.pc_24h, "1h": res.pc_1h},
+                "mobile": {"all_time": res.mob_all, "30d": res.mob_30d, "24h": res.mob_24h, "1h": res.mob_1h}
+            }
+        }
+        return global_data, g_u_all
+
+    async def _get_servers(self, d30, d1, d1h, g_u_all):
+        stmt = (
             select(
                 LaunchModel.server,
                 func.count(distinct(LaunchModel.hwid)).label("u_all"),
@@ -90,21 +119,22 @@ class LaunchRepository:
             )
             .where(LaunchModel.server != 200)
             .group_by(LaunchModel.server)
-            .order_by(text("u_all DESC"))
+            .order_by(desc("u_all"))
         )
-        server_res = await self.db.execute(server_stmt)
-        servers_data = [
+        res = await self.db.execute(stmt)
+        return [
             {
                 "server": row.server,
-                "share": f"{round((row.u_all / g_u_all) * 100, 1)}%", 
+                "user_share": round((row.u_all / g_u_all) * 100, 1) if g_u_all > 0 else 0,
                 "launches_per_user": round(row.l_all / row.u_all, 2) if row.u_all > 0 else 0,
                 "users": {"all_time": row.u_all, "30d": row.u_30d, "24h": row.u_24h, "1h": row.u_1h},
                 "launches": {"all_time": row.l_all, "30d": row.l_30d, "24h": row.l_24h, "1h": row.l_1h}
             }
-            for row in server_res.all()
+            for row in res.all()
         ]
 
-        country_stmt = (
+    async def _get_countries(self, d30, d1, d1h, g_u_all):
+        stmt = (
             select(
                 func.coalesce(LaunchModel.country, 'UNKNOWN').label("c_code"),
                 func.count(distinct(LaunchModel.hwid)).label("u_all"),
@@ -114,45 +144,70 @@ class LaunchRepository:
                 func.count(LaunchModel.id).label("l_all")
             )
             .group_by("c_code")
-            .order_by(text("u_all DESC"))
+            .order_by(desc("u_all"))
         )
-        country_res = await self.db.execute(country_stmt)
-        countries_data = [
+        res = await self.db.execute(stmt)
+        return [
             {
                 "code": row.c_code,
-                "share": f"{round((row.u_all / g_u_all) * 100, 1)}%",
+                "user_share": round((row.u_all / g_u_all) * 100, 1) if g_u_all > 0 else 0,
                 "launches_per_user": round(row.l_all / row.u_all, 2) if row.u_all > 0 else 0,
                 "users": {"all_time": row.u_all, "30d": row.u_30d, "24h": row.u_24h, "1h": row.u_1h},
-                "launches_total": row.l_all
+                "launches": row.l_all
             }
-            for row in country_res.all()
+            for row in res.all()
         ]
 
-        mode_stmt = (
+    async def _get_factions(self, g_u_all):
+        stmt = (
             select(
                 func.coalesce(LaunchModel.mode, 'none').label("m_name"),
                 func.count(distinct(LaunchModel.hwid)).label("u_all"),
                 func.count(distinct(case((LaunchModel.version.ilike('%VIP%'), LaunchModel.hwid)))).label("vip_all"),
-                func.count(LaunchModel.id).label("l_all") 
+                func.count(LaunchModel.id).label("l_all")
             )
             .where(LaunchModel.mode.notin_(['none', 'unknown']))
             .group_by("m_name")
-            .order_by(text("u_all DESC"))
+            .order_by(desc("u_all"))
         )
-        mode_res = await self.db.execute(mode_stmt)
+        res = await self.db.execute(stmt)
         factions_data = {}
-        for row in mode_res.all():
+        for row in res.all():
             total_u = row.u_all
             factions_data[row.m_name] = {
                 "total_users": total_u,
-                "share": f"{round((total_u / g_u_all) * 100, 1)}%", 
+                "user_share": round((total_u / g_u_all) * 100, 1) if g_u_all > 0 else 0,
                 "launches": row.l_all,
                 "launches_per_user": round(row.l_all / total_u, 2) if total_u > 0 else 0,
                 "vip_users": row.vip_all,
-                "vip_percent": f"{round((row.vip_all / total_u) * 100, 1) if total_u > 0 else 0}%"
+                "vip_percent": round((row.vip_all / total_u) * 100, 1) if total_u > 0 else 0
             }
+        return factions_data
 
-        timeline_stmt = (
+    async def _get_versions(self, g_u_all):
+        stmt = (
+            select(
+                LaunchModel.version,
+                func.count(distinct(LaunchModel.hwid)).label("u_all"),
+                func.count(LaunchModel.id).label("l_all")
+            )
+            .group_by(LaunchModel.version)
+            .order_by(desc("u_all"))
+        )
+        res = await self.db.execute(stmt)
+        return [
+            {
+                "version": row.version,
+                "users": row.u_all,
+                "user_share": round((row.u_all / g_u_all) * 100, 1) if g_u_all > 0 else 0,
+                "launches": row.l_all,
+                "launches_per_user": round(row.l_all / row.u_all, 2) if row.u_all > 0 else 0
+            }
+            for row in res.all()
+        ]
+
+    async def _get_timeline_daily(self):
+        stmt = (
             select(
                 func.date(LaunchModel.launched_at).label("dt"),
                 func.count(distinct(LaunchModel.hwid)).label("u_all"),
@@ -161,17 +216,41 @@ class LaunchRepository:
             .group_by(func.date(LaunchModel.launched_at))
             .order_by(func.date(LaunchModel.launched_at))
         )
-        timeline_res = await self.db.execute(timeline_stmt)
-        timeline_data = [
+        res = await self.db.execute(stmt)
+        return [
             {
-                "date": str(row.dt) if row.dt else "Unknown", 
+                "date": str(row.dt) if row.dt else "Unknown",
                 "users": row.u_all,
                 "launches": row.l_all
             }
-            for row in timeline_res.all()
+            for row in res.all()
         ]
 
-        heatmap_stmt = (
+    async def _get_timeline_hourly(self, d1):
+        stmt = (
+            select(
+                func.date(LaunchModel.launched_at).label("dt"),
+                func.extract('hour', LaunchModel.launched_at).label("hr"),
+                func.count(distinct(LaunchModel.hwid)).label("u_all"),
+                func.count(LaunchModel.id).label("l_all")
+            )
+            .where(LaunchModel.launched_at >= d1)
+            .group_by(func.date(LaunchModel.launched_at), func.extract('hour', LaunchModel.launched_at))
+            .order_by(func.date(LaunchModel.launched_at), func.extract('hour', LaunchModel.launched_at))
+        )
+        res = await self.db.execute(stmt)
+        return [
+            {
+                "date": str(row.dt) if row.dt else "Unknown",
+                "hour": int(row.hr) if row.hr is not None else 0,
+                "users": row.u_all,
+                "launches": row.l_all
+            }
+            for row in res.all()
+        ]
+
+    async def _get_activity_hourly(self):
+        stmt = (
             select(
                 func.extract('hour', LaunchModel.launched_at).label("hr"),
                 func.count(distinct(LaunchModel.hwid)).label("u_all"),
@@ -180,67 +259,77 @@ class LaunchRepository:
             .group_by(func.extract('hour', LaunchModel.launched_at))
             .order_by(func.extract('hour', LaunchModel.launched_at))
         )
-        heatmap_res = await self.db.execute(heatmap_stmt)
-        heatmap_data = [
+        res = await self.db.execute(stmt)
+        return [
             {
                 "hour": int(row.hr) if row.hr is not None else 0,
                 "users": row.u_all,
                 "launches": row.l_all
             }
-            for row in heatmap_res.all()
+            for row in res.all()
         ]
 
-        version_stmt = (
+    async def _get_activity_weekday(self):
+        stmt = (
             select(
-                LaunchModel.version,
+                func.extract('dow', LaunchModel.launched_at).label("dow"),
                 func.count(distinct(LaunchModel.hwid)).label("u_all"),
                 func.count(LaunchModel.id).label("l_all")
             )
-            .group_by(LaunchModel.version)
-            .order_by(text("u_all DESC"))
+            .group_by(func.extract('dow', LaunchModel.launched_at))
+            .order_by(func.extract('dow', LaunchModel.launched_at))
         )
-        version_res = await self.db.execute(version_stmt)
-        version_data = [
+        res = await self.db.execute(stmt)
+        return [
             {
-                "version": row.version,
+                "weekday": int(row.dow) if row.dow is not None else 0,
                 "users": row.u_all,
-                "share": f"{round((row.u_all / g_u_all) * 100, 1)}%",
                 "launches": row.l_all
             }
-            for row in version_res.all()
+            for row in res.all()
         ]
 
-        vip_conversion = round((global_res.vip_all / g_u_all) * 100, 1) if g_u_all > 0 else 0
-        total_devices = global_res.pc_all + global_res.mob_all
-        pc_ratio = round((global_res.pc_all / total_devices) * 100) if total_devices > 0 else 0
-        mob_ratio = 100 - pc_ratio
+    async def get_heavy_public_stats(self):
+        now = datetime.now(timezone.utc)
+        d30 = now - timedelta(days=30)
+        d1 = now - timedelta(hours=24)
+        d1h = now - timedelta(hours=1)
+
+        global_data, g_u_all = await self._get_global(d30, d1, d1h)
+
+        factions = await self._get_factions(g_u_all)
+        servers = await self._get_servers(d30, d1, d1h, g_u_all)
+        countries = await self._get_countries(d30, d1, d1h, g_u_all)
+        versions = await self._get_versions(g_u_all)
+        
+        timeline_daily = await self._get_timeline_daily()
+        timeline_hourly = await self._get_timeline_hourly(d1)
+        
+        activity_hourly = await self._get_activity_hourly()
+        activity_weekday = await self._get_activity_weekday()
 
         return {
             "updated_at": now.isoformat(),
-            "metrics": {
-                "vip_conversion_rate": f"{vip_conversion}%",
-                "pc_mobile_ratio": f"{pc_ratio}% / {mob_ratio}%",
-                "global_launches_per_user": round(g_l_all / g_u_all, 2)
+            "overview": {
+                "metrics": global_data["metrics"],
+                "users": global_data["users"],
+                "launches": global_data["launches"],
+                "devices": global_data["devices"]
             },
-            "users": {
-                "total": {"all_time": global_res.u_all, "30d": global_res.u_30d, "24h": global_res.u_24h, "1h": global_res.u_1h},
-                "vip": {"all_time": global_res.vip_all, "30d": global_res.vip_30d, "24h": global_res.vip_24h, "1h": global_res.vip_1h},
-                "free": {"all_time": global_res.free_all, "30d": global_res.free_30d, "24h": global_res.free_24h, "1h": global_res.free_1h}
+            "distribution": {
+                "factions": factions,
+                "servers": servers,
+                "countries": countries,
+                "versions": versions
             },
-            "launches": {
-                "all_time": global_res.l_all,
-                "30d": global_res.l_30d,
-                "24h": global_res.l_24h,
-                "1h": global_res.l_1h
-            },
-            "devices": {
-                "pc": {"all_time": global_res.pc_all, "30d": global_res.pc_30d, "24h": global_res.pc_24h, "1h": global_res.pc_1h},
-                "mobile": {"all_time": global_res.mob_all, "30d": global_res.mob_30d, "24h": global_res.mob_24h, "1h": global_res.mob_1h}
-            },
-            "factions": factions_data,
-            "servers": servers_data,
-            "countries": countries_data,
-            "versions": version_data,
-            "timeline_daily": timeline_data,
-            "heatmap_hourly": heatmap_data
+            "analytics": {
+                "timeline": {
+                    "daily": timeline_daily,
+                    "hourly": timeline_hourly
+                },
+                "activity": {
+                    "hourly": activity_hourly,
+                    "weekday": activity_weekday
+                }
+            }
         }
