@@ -20,6 +20,7 @@ async def log_launch(data: LaunchPayload, request: Request, db: AsyncSession = D
         service = UsageService(db)
         return await service.log_launch(
             version=data.version,
+            mode=data.mode,
             hwid=data.hwid,
             server=data.server,
             device=data.device,
