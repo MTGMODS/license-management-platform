@@ -119,7 +119,7 @@ class LaunchRepository:
             )
             .where(LaunchModel.server != 200)
             .group_by(LaunchModel.server)
-            .order_by(desc("u_all"))
+            .order_by(LaunchModel.server.asc())
         )
         res = await self.db.execute(stmt)
         return [
