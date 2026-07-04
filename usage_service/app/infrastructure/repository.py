@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, select, func, distinct, case, text, and_, cast, Date, desc
+from sqlalchemy import Column, Integer, String, DateTime, select, func, distinct, case, and_, desc, asc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func as sql_func
 from datetime import datetime, timedelta, timezone
@@ -17,8 +17,38 @@ class LaunchModel(Base):
     launched_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
 class LaunchRepository:
+
+    METRICS_MAP = {
+        "users": func.count(distinct(LaunchModel.hwid)),
+        "launches": func.count(LaunchModel.id),
+        "vip_users": func.count(distinct(case((LaunchModel.version.ilike('%VIP%'), LaunchModel.hwid)))),
+        "free_users": func.count(distinct(case((~LaunchModel.version.ilike('%VIP%'), LaunchModel.hwid)))),
+        "vip_percent": func.coalesce(func.round((func.count(distinct(case((LaunchModel.version.ilike('%VIP%'), LaunchModel.hwid)))) * 100.0) / func.nullif(func.count(distinct(LaunchModel.hwid)), 0), 1), 0),
+        "launches_per_user": func.coalesce(func.round(func.count(LaunchModel.id) * 1.0 / func.nullif(func.count(distinct(LaunchModel.hwid)), 0), 2), 0)
+    }
+
+    GROUPS_MAP = {
+        "server": LaunchModel.server,
+        "country": LaunchModel.country,
+        "mode": func.coalesce(LaunchModel.mode, 'none'),
+        "version": LaunchModel.version,
+        "device": LaunchModel.device,
+        "date": func.date(LaunchModel.launched_at),
+        "hour": func.extract('hour', LaunchModel.launched_at),
+        "weekday": func.extract('dow', LaunchModel.launched_at)
+    }
+
     def __init__(self, db: AsyncSession):
         self.db = db
+        
+        self.FILTERS_MAP = {
+            "server": lambda val: LaunchModel.server == val,
+            "country": lambda val: LaunchModel.country == val,
+            "mode": lambda val: LaunchModel.mode == val,
+            "device": lambda val: LaunchModel.device == val,
+            "version": lambda val: LaunchModel.version == val,
+            "vip": lambda val: LaunchModel.version.ilike('%VIP%') if val else ~LaunchModel.version.ilike('%VIP%')
+        }
 
     async def save(self, version: str, hwid: str, device: str, server: int, country: str, mode: str):
         new_launch = LaunchModel(
@@ -338,57 +368,29 @@ class LaunchRepository:
 
     async def build_explorer_query(self, metrics: list[str], group_by: str, period: str, filters: dict, sort: str, limit: int, offset: int):
         now = datetime.now(timezone.utc)
+        selected_metrics = metrics.copy()
         
-        METRICS_MAP = {
-            "users": func.count(distinct(LaunchModel.hwid)),
-            "launches": func.count(LaunchModel.id),
-            "vip_users": func.count(distinct(case((LaunchModel.version.ilike('%VIP%'), LaunchModel.hwid)))),
-            "free_users": func.count(distinct(case((~LaunchModel.version.ilike('%VIP%'), LaunchModel.hwid)))),
-            "vip_percent": func.coalesce(func.round((func.count(distinct(case((LaunchModel.version.ilike('%VIP%'), LaunchModel.hwid)))) * 100.0) / func.nullif(func.count(distinct(LaunchModel.hwid)), 0), 1), 0),
-            "launches_per_user": func.coalesce(func.round(func.count(LaunchModel.id) * 1.0 / func.nullif(func.count(distinct(LaunchModel.hwid)), 0), 2), 0)
-        }
-
-        GROUPS_MAP = {
-            "server": LaunchModel.server,
-            "country": func.coalesce(LaunchModel.country, 'UNKNOWN'),
-            "mode": func.coalesce(LaunchModel.mode, 'none'),
-            "version": LaunchModel.version,
-            "device": LaunchModel.device,
-            "date": func.date(LaunchModel.launched_at),
-            "hour": func.extract('hour', LaunchModel.launched_at),
-            "weekday": func.extract('dow', LaunchModel.launched_at)
-        }
-
-        FILTERS_MAP = {
-            "server": lambda val: LaunchModel.server == val,
-            "country": lambda val: LaunchModel.country == val,
-            "mode": lambda val: LaunchModel.mode == val,
-            "device": lambda val: LaunchModel.device == val,
-            "version": lambda val: LaunchModel.version == val,
-            "vip": lambda val: LaunchModel.version.ilike('%VIP%') if val else ~LaunchModel.version.ilike('%VIP%')
-        }
-
         sort_key = None
         descending = False
         if sort:
             descending = sort.startswith("-")
             sort_key = sort.lstrip("-")
-            if sort_key in METRICS_MAP and sort_key not in metrics:
-                metrics.append(sort_key)
+            
+            if sort_key in self.METRICS_MAP and sort_key not in selected_metrics:
+                selected_metrics.append(sort_key)
 
         select_cols = []
-        
-        if group_by and group_by in GROUPS_MAP:
-            select_cols.append(GROUPS_MAP[group_by].label(group_by))
+        if group_by and group_by in self.GROUPS_MAP:
+            select_cols.append(self.GROUPS_MAP[group_by].label(group_by))
             
-        valid_metrics_added = False
-        for m in metrics:
-            if m in METRICS_MAP:
-                select_cols.append(METRICS_MAP[m].label(m))
-                valid_metrics_added = True
+        valid_metrics = False
+        for m in selected_metrics:
+            if m in self.METRICS_MAP:
+                select_cols.append(self.METRICS_MAP[m].label(m))
+                valid_metrics = True
                 
-        if not valid_metrics_added:
-            select_cols.append(METRICS_MAP["users"].label("users"))
+        if not valid_metrics:
+            select_cols.append(self.METRICS_MAP["users"].label("users"))
 
         stmt = select(*select_cols)
 
@@ -400,24 +402,38 @@ class LaunchRepository:
             stmt = stmt.where(LaunchModel.launched_at >= now - timedelta(hours=1))
 
         for f_key, f_val in filters.items():
-            if f_key in FILTERS_MAP and f_val is not None:
-                stmt = stmt.where(FILTERS_MAP[f_key](f_val))
+            if f_key in self.FILTERS_MAP and f_val is not None:
+                stmt = stmt.where(self.FILTERS_MAP[f_key](f_val))
 
-        if group_by and group_by in GROUPS_MAP:
-            stmt = stmt.group_by(GROUPS_MAP[group_by])
+        if group_by and group_by in self.GROUPS_MAP:
+            stmt = stmt.group_by(self.GROUPS_MAP[group_by])
 
         if sort_key:
-            allowed_sort_keys = list(METRICS_MAP.keys())
-            if group_by and group_by in GROUPS_MAP:
-                allowed_sort_keys.append(group_by)
+            if sort_key in self.METRICS_MAP:
+                sort_expr = self.METRICS_MAP[sort_key]
+            elif sort_key in self.GROUPS_MAP:
+                sort_expr = self.GROUPS_MAP[sort_key]
+            else:
+                sort_expr = None
 
-            if sort_key in allowed_sort_keys:
+            if sort_expr is not None:
                 if descending:
-                    stmt = stmt.order_by(text(f"{sort_key} DESC"))
+                    stmt = stmt.order_by(sort_expr.desc())
                 else:
-                    stmt = stmt.order_by(text(f"{sort_key} ASC"))
+                    stmt = stmt.order_by(sort_expr.asc())
 
         stmt = stmt.limit(limit).offset(offset)
 
         res = await self.db.execute(stmt)
-        return [dict(row._mapping) for row in res.all()]
+        
+        result_list = []
+        for row in res.all():
+            row_dict = dict(row._mapping)
+            if group_by == "date" and row_dict.get("date"):
+                row_dict["date"] = str(row_dict["date"])
+            elif group_by in ["hour", "weekday"] and row_dict.get(group_by) is not None:
+                row_dict[group_by] = int(row_dict[group_by])
+            result_list.append(row_dict)
+            
+        return result_list
+       
