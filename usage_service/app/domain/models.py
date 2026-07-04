@@ -1,11 +1,11 @@
-from typing import Optional
+from typing import Optional, Annotated
 from datetime import datetime
 from pydantic import BaseModel, Field, field_validator, AliasChoices
 
 class LaunchPayload(BaseModel):
     version: str = Field(..., max_length=20, description="Product version")
     mode: str = Field(..., description="Product work mode")
-    server: int = Field(..., validation_alias=AliasChoices('server', 'server_id'), description="Server ID")
+    server: Annotated[int, Field(validation_alias=AliasChoices('server', 'server_id'), description="Server ID")]
     device: str = Field(..., pattern="^(PC|MOBILE)$", description="Device type: 'PC' / 'MOBILE'")
     hwid: str = Field(..., min_length=5, max_length=255)
 
