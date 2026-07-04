@@ -36,6 +36,15 @@ async def get_public_stats(background_tasks: BackgroundTasks, db: AsyncSession =
     service = UsageService(db)
     return await service.get_website_stats(background_tasks)
 
+@router.get("/stats/query/schema")
+async def get_explorer_schema():
+    return {
+        "metrics": ["users", "launches", "vip_users", "free_users", "vip_percent", "launches_per_user"],
+        "groups": ["server", "country", "mode", "device", "version", "date", "hour", "weekday"],
+        "periods": ["all", "30d", "24h", "1h"],
+        "filters": ["server", "mode", "country", "device", "version", "vip"]
+    }
+
 @router.get("/stats/query")
 async def get_explorer_query(
     metric: str = Query("users", description="Comma-separated: users,launches,vip_users,free_users,vip_percent,launches_per_user"),
