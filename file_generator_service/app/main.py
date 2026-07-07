@@ -1,77 +1,21 @@
-import asyncio
-import os
-import json
-import aiofiles
 import aio_pika
-from fastapi import FastAPI, BackgroundTasks
-from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
 from contextlib import asynccontextmanager
-from datetime import datetime
 
 from app.shared.config import settings
-from app.shared.database import engine, Base, SessionLocal
-from app.models import GeneratedFileModel
+from app.shared.database import engine, Base
+from app.shared.exceptions import DomainException, global_exception_handler, validation_exception_handler
 
-Base.metadata.create_all(bind=engine)
-
-BUILDS_DIR = "builds"
-os.makedirs(BUILDS_DIR, exist_ok=True)
-
-class GenerationPayloadDTO(BaseModel):
-    user_id: int
-    key: str
-    correlation_id: str = "unknown"
-
-async def build_lua_file(payload: GenerationPayloadDTO) -> str:
-    """Генерація файлу із записом у базу даних"""
-    await asyncio.sleep(2) # imitation of build time
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"{payload.user_id}.lua"
-    filepath = os.path.join(BUILDS_DIR, filename)
-    
-    mock_code = f"""-- MTG VIP Helper
--- User ID: {payload.user_id}
--- License Key: {payload.key}
--- Generated at: {timestamp}
-
-print("VIP Helper loaded successfully!")"""
-    
-    async with aiofiles.open(filepath, mode='w') as f:
-        await f.write(mock_code)
-        
-    db = SessionLocal()
-    try:
-        db_log = GeneratedFileModel(
-            key=payload.key,
-            user_id=payload.user_id,
-            filename=filename
-        )
-        db.add(db_log)
-        db.commit()
-        db.refresh(db_log)
-        print(f"[Trace: {payload.correlation_id}] Файл згенеровано та збережено в БД (ID логу: {db_log.id}).")
-    except Exception as e:
-        print(f"[Trace: {payload.correlation_id}] Помилка збереження в БД: {e}")
-    finally:
-        db.close()
-    
-    return f"http://localhost:8001/downloads/{filename}"
-
-async def process_message(message: aio_pika.IncomingMessage):
-    async with message.process():
-        event_dict = json.loads(message.body.decode())
-        
-        if event_dict.get('event_type') == 'FileGenerationRequested':
-            payload = GenerationPayloadDTO(**event_dict['payload'])
-            print(f"[Trace: {payload.correlation_id}] Починаю збірку для юзера {payload.user_id}...")
-            
-            download_url = await build_lua_file(payload)
-            print(f"[Trace: {payload.correlation_id}] ✅ Збірка готова! URL: {download_url}")
-
+from app.api.routes import router as download_router
+from app.infrastructure.messaging import process_message
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    
     try:
         connection = await aio_pika.connect_robust(settings.RABBITMQ_URL)
         channel = await connection.channel()
@@ -86,29 +30,31 @@ async def lifespan(app: FastAPI):
         print(f"[FileGenerator] ❌ Помилка RabbitMQ: {e}")
         yield
 
+app = FastAPI(
+    title="MTG File Generator Service", 
+    version=settings.APP_VERSION,
+    lifespan=lifespan
+)
 
-app = FastAPI(title="File Generator Service", port=8005, lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost", "http://127.0.0.1", "https://mtgmods.com"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
-def remove_file(path: str):
-    if os.path.exists(path):
-        os.remove(path)
-        print(f"[Cleanup] 🧹 Файл знищено: {path}")
+app.add_exception_handler(DomainException, global_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
-@app.get("/downloads/{filename}")
-async def download_file(filename: str, background_tasks: BackgroundTasks):
-    filepath = os.path.join(BUILDS_DIR, filename)
-    
-    if not os.path.exists(filepath):
-        return {"error": "Файл не знайдено або посилання вже недійсне."}
-    
-    background_tasks.add_task(remove_file, filepath)
-    
-    return FileResponse(
-        path=filepath, 
-        filename="Arizona Helper.lua", 
-        media_type="application/octet-stream"
-    )
+app.include_router(download_router)
 
-@app.get("/health")
-def health_check():
-    return {"status": "ok", "service": "file_generator"}
+@app.get("/health", tags=["System"])
+async def health_check():
+    database = settings.DATABASE_POSTGRES_URL if not settings.DEBUG_MODE else settings.DATABASE_URL
+    return {
+        "status": "UP",
+        "service": "File Generator Service",
+        "version": settings.APP_VERSION,
+        "database": database.split("://")[0]
+    }
