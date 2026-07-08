@@ -4,7 +4,7 @@ from fastapi.responses import FileResponse
 from app.application.service import FileGeneratorService, BUILDS_DIR
 from app.shared.exceptions import DomainException
 
-router = APIRouter(tags=["Downloads"])
+router = APIRouter(prefix="/api/v1/files", tags=["Downloads"])
 
 @router.get("/downloads/{filename}")
 async def download_file(filename: str, background_tasks: BackgroundTasks):
