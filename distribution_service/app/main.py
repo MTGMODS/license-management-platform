@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
         yield
 
 app = FastAPI(
-    title="MTG Distribution Service", 
+    title="Distribution Service", 
     version=settings.APP_VERSION,
     lifespan=lifespan
 )

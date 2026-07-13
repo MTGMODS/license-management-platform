@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
 
 app = FastAPI(
-    title="MTG Usage Analytics Service",
+    title="Usage Analytics Service",
     description="Microservice for tracking launches",
     version=settings.APP_VERSION,
     lifespan=lifespan
