@@ -3,4 +3,4 @@ venv/
 *.pyc
 *.env
 *.db
-/distribution_service/builds/
+/distribution_service/app/builds/

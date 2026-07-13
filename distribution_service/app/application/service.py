@@ -2,7 +2,7 @@ import os, re, uuid, aiofiles
 from app.domain.schemas import GenerationPayloadDTO
 
 BUILDS_DIR = "app/builds"
-BASE_TEMPLATE_PATH = "app/files/vip/Arizona Helper.lua" 
+BASE_TEMPLATE_PATH = "app/builds/vip/Arizona Helper.lua" 
 
 os.makedirs(BUILDS_DIR, exist_ok=True)
 
