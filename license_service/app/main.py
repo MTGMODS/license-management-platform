@@ -17,10 +17,8 @@ from app.api.admin_routes import router as admin_router
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
-    print("[License Service] 🚀 License service ")
     yield
-    print("[License Service] 🛑 Stop service...")
+    await engine.dispose()
 
 app = FastAPI(
     title="MTG License Service",
