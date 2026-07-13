@@ -18,7 +18,7 @@ class DownloadRequestDTO(BaseModel):
 
 class PurchaseCreateDTO(BaseModel):
     user_id: Optional[int] = Field(None, gt=0)
-    subscription_id: Optional[int] = Field(None, gt=0)
+    license_id: Optional[int] = Field(None, gt=0)
     amount: float = Field(..., gt=0.0)
     method: str = Field(..., description="Payment method")
     status: str = Field("COMPLETED", description="PENDING or COMPLETED")
