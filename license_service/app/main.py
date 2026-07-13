@@ -51,6 +51,5 @@ async def health_check():
         "status": "UP",
         "service": "License Service",
         "version": settings.APP_VERSION,
-        "api_version": settings.API_VERSION,
         "database": database.split("://")[0]
     }
