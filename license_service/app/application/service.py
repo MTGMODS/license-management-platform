@@ -52,7 +52,7 @@ class LicenseService:
 
     def generate_unactivated_key(self, duration_days: int) -> str:
         for _ in range(5):
-            new_key = _make_key(16)
+            new_key = self._make_key()
             
             if not self.license_repo.get_by_key(new_key):
                 self.license_repo.create_license(
