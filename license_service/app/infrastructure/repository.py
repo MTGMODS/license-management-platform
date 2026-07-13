@@ -12,13 +12,14 @@ class LicenseModel(Base):
     user_id = Column(Integer, index=True, nullable=True)
     key = Column(String, unique=True, index=True, nullable=False)
     duration_days = Column(Integer, nullable=True)
+    max_devices = Column(Integer, default=3, nullable=False)
     status = Column(SQLEnum(LicenseStatus), default=LicenseStatus.NOT_ACTIVATED)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     activated_at = Column(DateTime(timezone=True), nullable=True)
     expires_at = Column(DateTime(timezone=True), nullable=True)
 
     devices = relationship("DeviceModel", back_populates="license", cascade="all, delete-orphan")
-    transactions = relationship("TransactionModel", back_populates="license")
+    transaction = relationship("TransactionModel", back_populates="license", uselist=False)
 
 class DeviceModel(Base):
     __tablename__ = "license_activations"
@@ -44,7 +45,7 @@ class TransactionModel(Base):
     status = Column(String, default="COMPLETED")
     purchased_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    license = relationship("LicenseModel", back_populates="transactions")
+    license = relationship("LicenseModel", back_populates="transaction")
     
 
 class LicenseRepository:
