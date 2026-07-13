@@ -14,7 +14,7 @@ def activate_key(payload: ActivateKeyDTO, db: Session = Depends(get_db)):
     service.complete_pending_purchase(license_id=license_id, user_id=payload.user_id)
     return {"status": "success", "message": "License activated successfully"}
 
-@router.post("/download", discription="Request a download for a license key")
+@router.post("/download", description="Request a download for a license key")
 async def request_download(payload: DownloadRequestDTO, db: Session = Depends(get_db)):
     service = LicenseService(db)
     domain_sub = service.validate_for_download(payload.key, payload.user_id)
