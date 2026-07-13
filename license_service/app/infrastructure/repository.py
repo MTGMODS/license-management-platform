@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum as SQLEnum, select
 from sqlalchemy.sql import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import relationship, selectinload
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.shared.database import Base
 from app.domain.models import LicenseStatus
 
@@ -34,58 +35,50 @@ class TransactionModel(Base):
     payment_method = Column(String, nullable=False)
     status = Column(String, default="COMPLETED")
     purchased_at = Column(DateTime(timezone=True), server_default=func.now())
-
+    
 
 class LicenseRepository:
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
 
-    def get_by_key(self, key: str) -> LicenseModel:
-        return self.db.query(LicenseModel).filter(LicenseModel.key == key).first()
-
-    def create_license(self, key: str, duration_days: int, status: LicenseStatus) -> LicenseModel:
-        db_sub = LicenseModel(
-            key=key,
-            duration_days=duration_days,
-            status=status
+    async def get_by_key(self, key: str) -> LicenseModel:
+        result = await self.db.execute(
+            select(LicenseModel)
+            .options(selectinload(LicenseModel.devices))
+            .filter(LicenseModel.key == key)
         )
+        return result.scalars().first()
+
+    async def create_license(self, key: str, duration_days: int, status: LicenseStatus) -> LicenseModel:
+        db_sub = LicenseModel(key=key, duration_days=duration_days, status=status)
         self.db.add(db_sub)
-        self.db.commit()
-        self.db.refresh(db_sub)
+        await self.db.commit()
+        await self.db.refresh(db_sub)
         return db_sub
         
-    def log_device(self, license_id: int, device: str, ip_address: str, user_agent: str):
-        activation = self.db.query(DeviceModel).filter(
-            DeviceModel.license_id == license_id,
-            DeviceModel.device == device
-        ).first()
+    async def log_device(self, license_id: int, device: str, ip_address: str, user_agent: str):
+        result = await self.db.execute(
+            select(DeviceModel).filter(DeviceModel.license_id == license_id, DeviceModel.device == device)
+        )
+        activation = result.scalars().first()
 
         if activation:
             activation.ip_address = ip_address
             activation.user_agent = user_agent
         else:
-            activation = DeviceModel(
-                license_id=license_id,
-                device=device,
-                ip_address=ip_address,
-                user_agent=user_agent
-            )
+            activation = DeviceModel(license_id=license_id, device=device, ip_address=ip_address, user_agent=user_agent)
             self.db.add(activation)
-        self.db.commit()
+        await self.db.commit()
 
 class TransactionRepository:
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
 
-    def create(self, amount: float, method: str, user_id: int = None, license_id: int = None, status: str = "COMPLETED") -> TransactionModel:
+    async def create(self, amount: float, method: str, user_id: int = None, license_id: int = None, status: str = "COMPLETED") -> TransactionModel:
         purchase = TransactionModel(
-            user_id=user_id, 
-            license_id=license_id, 
-            amount=amount, 
-            payment_method=method,
-            status=status
+            user_id=user_id, license_id=license_id, amount=amount, payment_method=method, status=status
         )
         self.db.add(purchase)
-        self.db.commit()
-        self.db.refresh(purchase)
+        await self.db.commit()
+        await self.db.refresh(purchase)
         return purchase
