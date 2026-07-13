@@ -1,6 +1,8 @@
 from pydantic import BaseModel
+from typing import Optional
+from datetime import datetime
 
 class GenerationPayloadDTO(BaseModel):
     user_id: int
-    key: str
-    correlation_id: str = "unknown"
+    media_id: int
+    expire_date: Optional[datetime] = None
