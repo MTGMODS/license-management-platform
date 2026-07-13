@@ -1,25 +1,24 @@
-from enum import Enum
+import enum
 from datetime import datetime, timezone
 from typing import Optional
 from pydantic import BaseModel
 
-class SubscriptionStatus(str, Enum):
+class LicenseStatus(str, enum.Enum):
     NOT_ACTIVATED = "NOT_ACTIVATED"
     ACTIVE = "ACTIVE"
     EXPIRED = "EXPIRED"
     BANNED = "BANNED"
 
-class Subscription(BaseModel):
+class License(BaseModel):
     id: Optional[int] = None
     key: str
     duration_days: Optional[int] = None
-    status: SubscriptionStatus = SubscriptionStatus.NOT_ACTIVATED
+    status: LicenseStatus = LicenseStatus.NOT_ACTIVATED
     activated_at: Optional[datetime] = None
     expires_at: Optional[datetime] = None
 
     def is_valid(self) -> bool:
-        
-        if self.status != SubscriptionStatus.ACTIVE:
+        if self.status != LicenseStatus.ACTIVE:
             return False
         
         if self.expires_at:
@@ -30,3 +29,11 @@ class Subscription(BaseModel):
                 return False
             
         return True
+
+class Transaction(BaseModel):
+    id: Optional[int] = None
+    user_id: Optional[int] = None
+    amount: float
+    method: str
+    status: str
+    purchased_at: Optional[datetime] = None
