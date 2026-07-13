@@ -7,6 +7,7 @@ from app.domain.models import LicenseStatus
 
 class LicenseModel(Base):
     __tablename__ = "licenses"
+
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, index=True, nullable=True)
     key = Column(String, unique=True, index=True, nullable=False)
@@ -16,8 +17,12 @@ class LicenseModel(Base):
     activated_at = Column(DateTime(timezone=True), nullable=True)
     expires_at = Column(DateTime(timezone=True), nullable=True)
 
+    devices = relationship("DeviceModel", back_populates="license", cascade="all, delete-orphan")
+    transactions = relationship("TransactionModel", back_populates="license")
+
 class DeviceModel(Base):
     __tablename__ = "license_activations"
+
     id = Column(Integer, primary_key=True, index=True)
     license_id = Column(Integer, ForeignKey("licenses.id", ondelete="CASCADE"))
     device = Column(String, nullable=False)
@@ -26,8 +31,11 @@ class DeviceModel(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_used_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
+    license = relationship("LicenseModel", back_populates="devices")
+
 class TransactionModel(Base):
     __tablename__ = "billing_purchases"
+
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, index=True, nullable=True)
     license_id = Column(Integer, ForeignKey("licenses.id"), unique=True, nullable=True)
@@ -35,6 +43,8 @@ class TransactionModel(Base):
     payment_method = Column(String, nullable=False)
     status = Column(String, default="COMPLETED")
     purchased_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    license = relationship("LicenseModel", back_populates="transactions")
     
 
 class LicenseRepository:
