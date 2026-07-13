@@ -22,4 +22,4 @@ async def request_download(payload: DownloadRequestDTO, db: AsyncSession = Depen
     
     await publish_file_generation_event(user_id=payload.user_id, media_id=payload.user_id, expire_date=expire_date)
     
-    return {"status": "processing", "message": "Request received. The download will be prepared and sent to your email shortly."}
+    return {"status": "processing", "message": "Request received, file generation in progress."}
