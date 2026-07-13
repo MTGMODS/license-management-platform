@@ -16,18 +16,18 @@ class DistributionService:
 
         if payload.expire_date:
             expire = payload.expire_date
-            time_bomb = f"if os.time() > os.time{{year={expire.year}, month={expire.month}, day={expire.day}}} then os.remove(thisScript().path) end"
+            time_bomb = f"if os.time() > os.time{{year={expire.year}, month={expire.month}, day={expire.day}, hour={expire.hour}, min={expire.minute}}} then os.remove(thisScript().path) end"
 
-            if " function main" in content:
+            if "\nfunction main" in content:
+                content += f"\n\n{time_bomb}"
+            elif "function main" in content:
                 content = re.sub(
-                    f"function main\(\)", 
-                    f"function main() {time_bomb}; ",
+                    r"(function\s+main\s*\(\s*(?:\.\.\.)?\s*\))",
+                    rf"\1 {time_bomb}; ",
                     content
                 )
-            elif "\nfunction main" in content:
-                content += f"\n\n{time_bomb}"
 
-        download_token = uuid.uuid4().hex[:12]
+        download_token = uuid.uuid4().hex[:10]
         filepath = os.path.join(BUILDS_DIR, f"{download_token}.lua")
         
         async with aiofiles.open(filepath, mode="w", encoding="cp1251") as f:
@@ -36,7 +36,7 @@ class DistributionService:
         print(f"[Build] VIP file ready for User {payload.user_id}. Token: {download_token}")
         
         # return f"https://api.mtgmods.com/api/v1/files/downloads/vip/{download_token}"
-        return f"http://localhost:8005/downloads/vip/{download_token}"
+        return f"http://localhost:8005/api/v1/files/downloads/vip/{download_token}"
 
     @staticmethod
     def remove_file(path: str):
