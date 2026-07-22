@@ -5,7 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.domain.models import LicenseStatus, License
-from app.infrastructure.repository import LicenseRepository, TransactionRepository, TransactionModel
+from app.domain.schemas import GeneratePurchaseDTO
+from app.infrastructure.repository import LicenseRepository, TransactionRepository, TransactionModel, LicenseModel
 from app.shared.exceptions import DomainException
 
 class LicenseService:
@@ -43,21 +44,9 @@ class LicenseService:
         raw = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(n))
         return '-'.join(raw[i:i+4] for i in range(0, n, 4))
 
-    async def generate_unactivated_key(self, duration_days: int) -> str:
-        for _ in range(5):
-            new_key = self._make_key()
-            if not await self.license_repo.get_by_key(new_key):
-                await self.license_repo.create_license(
-                    key=new_key, duration_days=duration_days, status=LicenseStatus.NOT_ACTIVATED
-                )
-                return new_key
-                
-        raise DomainException(message="Failed to generate unique key.", status_code=500)
-
     async def generate_and_bill(self, payload: GeneratePurchaseDTO) -> dict:
         new_key = self._make_key()
         
-        # 1. Створюємо ліцензію
         db_sub = LicenseModel(
             key=new_key, 
             duration_days=payload.duration_days, 
