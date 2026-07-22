@@ -27,7 +27,7 @@ class DistributionService:
                     content
                 )
 
-        file_token = correlation_id.replace("-", "")[:16]
+        file_token = correlation_id.replace("-", "")[:10]
         filepath = os.path.join(BUILDS_DIR, f"{file_token}.lua")
         
         async with aiofiles.open(filepath, mode="w", encoding="cp1251") as f:
