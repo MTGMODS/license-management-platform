@@ -5,9 +5,6 @@ class CheckRequestDTO(BaseModel):
     key: str = Field(..., min_length=19, max_length=19, description="VIP Key")
     device: str = Field(..., min_length=2, max_length=100, description="HWID")
 
-class KeyCreateDTO(BaseModel):
-    duration_days: Optional[int] = Field(None, gt=0, description="Duration in days (NULL for forever)")
-
 class ActivateKeyDTO(BaseModel):
     key: str = Field(..., min_length=19, max_length=19, description="VIP Key")
     user_id: int
@@ -16,12 +13,13 @@ class DownloadRequestDTO(BaseModel):
     key: str = Field(..., min_length=19, max_length=19, description="VIP Key")
     user_id: int
 
-class PurchaseCreateDTO(BaseModel):
-    user_id: Optional[int] = Field(None, gt=0)
-    license_id: Optional[int] = Field(None, gt=0)
-    amount: float = Field(..., gt=0.0)
+class GeneratePurchaseDTO(BaseModel):
+    duration_days: Optional[int] = Field(None, gt=0, description="Days (None = forever)")
+    amount: float = Field(..., ge=0.0, description="Amount purchased")
     method: str = Field(..., description="Payment method")
-    status: str = Field("COMPLETED", description="PENDING or COMPLETED")
+    user_id: Optional[int] = Field(None, description="User (if exists)")
+    status: str = Field("COMPLETED", description="PENDING або COMPLETED")
+    max_devices: int = Field(3, description="Limit of devices")
 
     @field_validator('method')
     def validate_method(cls, v):

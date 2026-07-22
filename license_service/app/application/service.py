@@ -29,10 +29,10 @@ class LicenseService:
 
         existing_devices = [d.device for d in db_sub.devices]
         if device not in existing_devices:
-            if len(existing_devices) >= 3:
+            if len(existing_devices) >= db_sub.max_devices:
                 raise DomainException(
-                    message="Device limit reached (Max 3). Reset HWID in profile.", 
-                    status_code=403, error_code="HWID_LIMIT_REACHED"
+                    message=f"Device limit reached (Max {db_sub.max_devices} for you)",
+                    status_code=403, error_code="DEVICE_LIMIT_REACHED"
                 )
 
         await self.license_repo.log_device(db_sub.id, device, ip_address, user_agent)
@@ -53,6 +53,32 @@ class LicenseService:
                 return new_key
                 
         raise DomainException(message="Failed to generate unique key.", status_code=500)
+
+    async def generate_and_bill(self, payload: GeneratePurchaseDTO) -> dict:
+        new_key = self._make_key()
+        
+        # 1. Створюємо ліцензію
+        db_sub = LicenseModel(
+            key=new_key, 
+            duration_days=payload.duration_days, 
+            status=LicenseStatus.NOT_ACTIVATED,
+            max_devices=payload.max_devices
+        )
+        self.db.add(db_sub)
+        await self.db.flush() 
+
+        tx = TransactionModel(
+            user_id=payload.user_id, 
+            license_id=db_sub.id, 
+            amount=payload.amount, 
+            payment_method=payload.method, 
+            status=payload.status
+        )
+        self.db.add(tx)
+        
+        await self.db.commit()
+        
+        return {"key": new_key, "transaction_id": tx.id}
 
     async def activate_key_for_user(self, key: str, user_id: int) -> int:
         db_sub = await self.license_repo.get_by_key(key)
