@@ -13,7 +13,7 @@ async def process_message(message: aio_pika.IncomingMessage):
             print(f"[RabbitMQ] Task received for User {payload.user_id}")
             
             service = DistributionService()
-            download_url = await service.build_vip_file(payload)
+            download_url = await service.build_vip_file(payload, message.correlation_id)
             print(f"[RabbitMQ] Task completed. URL: {download_url}")
 
             if message.reply_to:

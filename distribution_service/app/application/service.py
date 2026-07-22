@@ -1,4 +1,4 @@
-import os, re, uuid, aiofiles
+import os, re, aiofiles
 from app.domain.schemas import GenerationPayloadDTO
 
 BUILDS_DIR = "app/builds"
@@ -7,7 +7,7 @@ BASE_TEMPLATE_PATH = "app/builds/vip/Arizona Helper.lua"
 os.makedirs(BUILDS_DIR, exist_ok=True)
 
 class DistributionService:
-    async def build_vip_file(self, payload: GenerationPayloadDTO) -> str:
+    async def build_vip_file(self, payload: GenerationPayloadDTO, correlation_id: str) -> str:
         if not os.path.exists(BASE_TEMPLATE_PATH):
             raise RuntimeError(f"Base LUA template is missing at {BASE_TEMPLATE_PATH}")
 
@@ -27,16 +27,16 @@ class DistributionService:
                     content
                 )
 
-        download_token = uuid.uuid4().hex[:10]
-        filepath = os.path.join(BUILDS_DIR, f"{download_token}.lua")
+        file_token = correlation_id.replace("-", "")[:16]
+        filepath = os.path.join(BUILDS_DIR, f"{file_token}.lua")
         
         async with aiofiles.open(filepath, mode="w", encoding="cp1251") as f:
             await f.write(content)
             
-        print(f"[Build] VIP file ready for User {payload.user_id}. Token: {download_token}")
+        print(f"[Build] VIP file ready for User {payload.user_id}. Token: {file_token}")
         
-        # return f"https://api.mtgmods.com/api/v1/files/downloads/vip/{download_token}"
-        return f"http://localhost:8005/api/v1/files/downloads/vip/{download_token}"
+        # return f"https://api.mtgmods.com/api/v1/files/downloads/vip/{file_token}"
+        return f"http://localhost:8005/api/v1/files/downloads/vip/{file_token}"
 
     @staticmethod
     def remove_file(path: str):
