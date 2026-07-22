@@ -14,3 +14,13 @@ async def process_message(message: aio_pika.IncomingMessage):
             service = DistributionService()
             download_url = await service.build_vip_file(payload)
             print(f"[RabbitMQ] Task completed. URL: {download_url}")
+
+            if message.reply_to:
+                await message.channel.default_exchange.publish(
+                    aio_pika.Message(
+                        body=download_url.encode("utf-8"),
+                        correlation_id=message.correlation_id,
+                    ),
+                    routing_key=message.reply_to,
+                )
+                print(f"[RabbitMQ] Sent download link back to {message.reply_to}")
