@@ -141,19 +141,9 @@ class LicenseService:
             tx.purchased_at = datetime.now(timezone.utc)
             await self.db.commit()
 
-    async def validate_for_download(self, key: str, user_id: int) -> License:
-        db_sub = await self.license_repo.get_by_key(key)
+    async def get_active_license_for_download(self, user_id: int) -> LicenseModel:
+        db_sub = await self.license_repo.get_active_by_user(user_id)
         if not db_sub:
-            raise DomainException(message="License not found", status_code=404, error_code="NOT_FOUND")
-        if db_sub.user_id != user_id:
-            raise DomainException(message="Access denied", status_code=403, error_code="ACCESS_DENIED")
+            raise DomainException(message="You don't have an active license.", status_code=403, error_code="NO_ACTIVE_LICENSE")
             
-        domain_sub = License(
-            id=db_sub.id, key=db_sub.key, duration_days=db_sub.duration_days,
-            status=db_sub.status, activated_at=db_sub.activated_at, expires_at=db_sub.expires_at
-        )
-        
-        if not domain_sub.is_valid():
-            raise DomainException(message="License is expired or banned", status_code=403, error_code="NOT_ACTIVE")
-            
-        return domain_sub
+        return db_sub

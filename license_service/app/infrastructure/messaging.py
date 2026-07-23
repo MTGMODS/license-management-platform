@@ -1,7 +1,7 @@
 import json, aio_pika, uuid, asyncio
 from app.shared.config import settings
 
-async def publish_file_generation_event(user_id: int, media_id: int, expire_date: str = None):
+async def publish_file_generation_event(user_id: int, expire_date: str = None):
     connection = await aio_pika.connect_robust(settings.RABBITMQ_URL)
     async with connection:
         channel = await connection.channel()
@@ -12,7 +12,6 @@ async def publish_file_generation_event(user_id: int, media_id: int, expire_date
             "event_type": "FileGenerationRequested",
             "payload": {
                 "user_id": user_id,
-                "media_id": media_id,
                 "expire_date": expire_date
             }
         }

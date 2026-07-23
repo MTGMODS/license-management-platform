@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.shared.database import get_db
-from app.domain.schemas import ActivateKeyDTO, DownloadRequestDTO
+from app.domain.schemas import ActivateKeyDTO
 from app.application.service import LicenseService
 from app.shared.exceptions import DomainException
 from app.infrastructure.messaging import publish_file_generation_event
@@ -17,12 +17,12 @@ async def activate_key(payload: ActivateKeyDTO, user_id: int = Depends(get_curre
     return {"status": "success", "message": "License activated successfully"}
 
 @router.post("/download", description="Request a download for a license key")
-async def request_download(payload: DownloadRequestDTO, user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
+async def request_download(user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
     service = LicenseService(db)
-    domain_sub = await service.validate_for_download(payload.key, user_id)
-    expire_date = domain_sub.expires_at.isoformat() if domain_sub.expires_at else None
+    db_sub = await service.get_active_license_for_download(user_id)
+    expire_date = db_sub.expires_at.isoformat() if db_sub.expires_at else None
     try:
-        download_url = await publish_file_generation_event(user_id=payload.user_id, media_id=payload.user_id, expire_date=expire_date)
+        download_url = await publish_file_generation_event(user_id=user_id, expire_date=expire_date)
         return {"status": "success", "message": "File generated successfully.", "download_url": download_url}
     except Exception as e:
         raise DomainException(message=str(e), status_code=500, error_code="FILE_GENERATION_FAILED")
