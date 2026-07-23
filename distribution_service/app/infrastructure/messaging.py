@@ -17,14 +17,17 @@ async def process_message(message: aio_pika.IncomingMessage):
             print(f"[RabbitMQ] Task completed. URL: {download_url}")
 
             if message.reply_to:
-                connection = await aio_pika.connect_robust(settings.RABBITMQ_URL)
-                async with connection:
-                    channel = await connection.channel()
-                    await channel.default_exchange.publish(
-                        aio_pika.Message(
-                            body=download_url.encode("utf-8"),
-                            correlation_id=message.correlation_id,
-                        ),
-                        routing_key=message.reply_to,
-                    )
-                print(f"[RabbitMQ] Sent download link back to {message.reply_to}")
+                try:
+                    connection = await aio_pika.connect_robust(settings.RABBITMQ_URL)
+                    async with connection:
+                        channel = await connection.channel()
+                        await channel.default_exchange.publish(
+                            aio_pika.Message(
+                                body=download_url.encode("utf-8"),
+                                correlation_id=message.correlation_id,
+                            ),
+                            routing_key=message.reply_to,
+                        )
+                    print(f"[RabbitMQ] Sent download link back to {message.reply_to}")
+                except Exception as e:
+                    print(f"[RabbitMQ] ❌ Failed to send response: {e}")

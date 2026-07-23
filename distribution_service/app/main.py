@@ -12,19 +12,24 @@ from app.infrastructure.messaging import process_message
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    connection = None
     try:
         connection = await aio_pika.connect_robust(settings.RABBITMQ_URL)
         channel = await connection.channel()
         queue = await channel.declare_queue("file_generation_queue", durable=True)
         await queue.consume(process_message)
-        print("[Distribution] 🐇 Connecnted to RabbitMQ. Waiting task...")
-        
+        print("[Distribution] ✅ Connected to RabbitMQ. Waiting task...")
         yield
-        
-        await connection.close()
+    except aio_pika.exceptions.AMQPConnectionError as e:
+        print(f"[Distribution] ❌ Failed to connect to RabbitMQ: {e}")
+        yield
     except Exception as e:
-        print(f"[Distribution] ❌ Error RabbitMQ: {e}")
+        print(f"[Distribution] ❌ Unexpected error: {e}")
         yield
+    finally:
+        if connection and not connection.is_closed:
+            await connection.close()
+            print("[Distribution] ✅ RabbitMQ connection closed")
 
 app = FastAPI(
     title="Distribution Service", 
