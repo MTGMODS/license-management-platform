@@ -53,6 +53,14 @@ class LicenseRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    async def get_by_id(self, license_id: int) -> LicenseModel | None:
+        result = await self.db.execute(
+            select(LicenseModel)
+            .options(selectinload(LicenseModel.devices))
+            .filter(LicenseModel.id == license_id)
+        )
+        return result.scalars().first()
+
     async def get_by_key(self, key: str) -> LicenseModel:
         result = await self.db.execute(
             select(LicenseModel)
@@ -69,13 +77,15 @@ class LicenseRepository:
         )
         return result.scalars().first()
 
-    async def remove_device(self, device_id: int):
-        result = await self.db.execute(select(DeviceModel).filter(DeviceModel.id == device_id))
-        dev = result.scalars().first()
-        if dev:
-            self.db.delete(dev)
-            await self.db.commit()
-
+    async def get_all_licenses(self, limit: int = 100, offset: int = 0) -> list[LicenseModel]:
+        result = await self.db.execute(
+            select(LicenseModel)
+            .options(selectinload(LicenseModel.devices))
+            .order_by(LicenseModel.created_at.desc())
+            .limit(limit).offset(offset)
+        )
+        return result.scalars().all()
+    
     async def create_license(self, key: str, duration_days: int, status: LicenseStatus) -> LicenseModel:
         db_sub = LicenseModel(key=key, duration_days=duration_days, status=status)
         self.db.add(db_sub)
@@ -96,6 +106,16 @@ class LicenseRepository:
             activation = DeviceModel(license_id=license_id, device=device, ip_address=ip_address, user_agent=user_agent)
             self.db.add(activation)
         await self.db.commit()
+
+    async def remove_device(self, device_id: int) -> bool:
+        result = await self.db.execute(select(DeviceModel).filter(DeviceModel.id == device_id))
+        dev = result.scalars().first()
+        if dev:
+            self.db.delete(dev)
+            await self.db.commit()
+            return True
+        return False
+
 
 class TransactionRepository:
     def __init__(self, db: AsyncSession):

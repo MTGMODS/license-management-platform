@@ -147,3 +147,27 @@ class LicenseService:
             raise DomainException(message="You don't have an active license.", status_code=403, error_code="NO_ACTIVE_LICENSE")
             
         return db_sub
+
+    async def get_all_licenses_admin(self, limit: int, offset: int):
+        return await self.license_repo.get_all_licenses(limit, offset)
+
+    async def update_license_status_admin(self, license_id: int, new_status: LicenseStatus):
+        lic = await self.license_repo.get_by_id(license_id)
+        if not lic:
+            raise DomainException(message="License not found.", status_code=404, error_code="NOT_FOUND")
+        
+        lic.status = new_status
+        await self.db.commit()
+        return lic
+
+    async def remove_device_admin(self, device_id: int):
+        deleted = await self.license_repo.remove_device(device_id)
+        
+        if not deleted:
+            raise DomainException(
+                message=f"Device with ID {device_id} not found.", 
+                status_code=404, 
+                error_code="NOT_FOUND"
+            )
+            
+        return {"status": "success"}
