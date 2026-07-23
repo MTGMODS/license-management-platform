@@ -1,14 +1,10 @@
-import uuid
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.exceptions import RequestValidationError
-
 from app.shared.database import engine, Base
 from app.shared.config import settings
 from app.shared.exceptions import DomainException, global_exception_handler, validation_exception_handler
-
 from app.api.client_routes import router as client_router
 from app.api.user_routes import router as user_router
 from app.api.admin_routes import router as admin_router
@@ -21,7 +17,7 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
 
 app = FastAPI(
-    title="MTG License Service",
+    title="License Service",
     description="Core SaaS System for License & HWID Management",
     version=settings.APP_VERSION,
     lifespan=lifespan
