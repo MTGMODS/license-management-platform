@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from app.domain.models import LicenseStatus, License
 from app.domain.schemas import GeneratePurchaseDTO
-from app.infrastructure.repository import LicenseRepository, TransactionRepository, TransactionModel, LicenseModel
+from app.infrastructure.repository import LicenseRepository, TransactionRepository, TransactionModel, LicenseModel, DeviceModel
 from app.shared.exceptions import DomainException
 
 class LicenseService:
@@ -38,14 +38,18 @@ class LicenseService:
 
         await self.license_repo.log_device(db_sub.id, device, ip_address, user_agent)
         return {"user_id": db_sub.user_id, "expires_at": db_sub.expires_at.isoformat() if db_sub.expires_at else None}
-    
 
-    async def get_user_devices(self, user_id: int) -> dict:
+    async def get_license_info(self, user_id: int) -> dict:
         db_sub = await self.license_repo.get_active_by_user(user_id)
+        
         if not db_sub:
-            raise DomainException(message="No active license found.", status_code=404, error_code="NOT_FOUND")
-            
-        devices = []
+            raise DomainException(
+                message="You don't have an active license.", 
+                status_code=404, 
+                error_code="NO_ACTIVE_LICENSE"
+            )
+
+        devices_list = []
         for d in db_sub.devices:
             hwid_masked = f"{d.device[:3]}******{d.device[-3:]}" if len(d.device) > 6 else "***"
             ip_masked = "Unknown"
@@ -53,18 +57,32 @@ class LicenseService:
                 parts = d.ip_address.split('.')
                 ip_masked = f"{parts[0]}.{parts[1]}.*.*" if len(parts) == 4 else "***"
 
-            devices.append({
+            devices_list.append({
                 "id": d.id,
                 "hwid": hwid_masked,
                 "ip": ip_masked,
                 "last_used_at": d.last_used_at.isoformat() if d.last_used_at else None
             })
-            
+
+        tx = db_sub.transaction
+        
         return {
-            "license_key": db_sub.key,
-            "max_devices": db_sub.max_devices,
-            "resets_used": db_sub.resets_used,
-            "devices": devices
+            "license": {
+                "key": db_sub.key,
+                "status": db_sub.status.value,
+                "duration_days": db_sub.duration_days,
+                "max_devices": db_sub.max_devices,
+                "reset_limit": db_sub.reset_limit,
+                "activated_at": db_sub.activated_at.isoformat() if db_sub.activated_at else None,
+                "expires_at": db_sub.expires_at.isoformat() if db_sub.expires_at else None,
+            },
+            "devices": devices_list,
+            "billing": {
+                "amount": tx.amount,
+                "method": tx.payment_method,
+                "status": tx.status,
+                "purchased_at": tx.purchased_at.isoformat()
+            } if tx else None
         }
 
     async def reset_device(self, user_id: int, device_id: int):
@@ -72,16 +90,30 @@ class LicenseService:
         if not db_sub:
             raise DomainException(message="No active license found.", status_code=404, error_code="NOT_FOUND")
             
-        if db_sub.resets_used >= 1: 
-            raise DomainException(message="You have already used your 1 allowed device reset.", status_code=403, error_code="RESET_LIMIT_REACHED")
-            
-        target_device = next((d for d in db_sub.devices if d.id == device_id), None)
-        if not target_device:
+        if db_sub.reset_limit <= 0: 
+            raise DomainException(message="You have no device resets left.", status_code=403, error_code="RESET_LIMIT_REACHED")
+
+        if not any(d.id == device_id for d in db_sub.devices):
             raise DomainException(message="Device not found on your license.", status_code=404, error_code="NOT_FOUND")
             
-        await self.license_repo.remove_device(device_id)
-        db_sub.resets_used += 1
-        await self.db.commit()
+        deleted = await self.license_repo.remove_device(device_id)
+
+        if deleted:
+            db_sub.reset_limit -= 1
+            await self.db.commit()
+            return {"status": "success", "message": "Device has been successfully unlinked."}
+        else:
+            raise DomainException(message="Device delete is fail.", status_code=404, error_code="DELETE_FAILED")
+
+    async def remove_device_admin(self, device_id: int):
+        deleted = await self.license_repo.remove_device(device_id)
+        if not deleted:
+            raise DomainException(
+                message=f"Device with ID {device_id} not found.", 
+                status_code=404, 
+                error_code="NOT_FOUND"
+            )
+        return {"status": "success"}
     
     def _make_key(self, n=16) -> str:
         raw = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(n))
@@ -159,15 +191,3 @@ class LicenseService:
         lic.status = new_status
         await self.db.commit()
         return lic
-
-    async def remove_device_admin(self, device_id: int):
-        deleted = await self.license_repo.remove_device(device_id)
-        
-        if not deleted:
-            raise DomainException(
-                message=f"Device with ID {device_id} not found.", 
-                status_code=404, 
-                error_code="NOT_FOUND"
-            )
-            
-        return {"status": "success"}
