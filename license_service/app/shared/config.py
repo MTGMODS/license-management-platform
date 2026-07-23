@@ -4,6 +4,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     DATABASE_POSTGRES_URL: str
     RABBITMQ_URL: str
+    JWT_SECRET: str
     API_VERSION: str
     APP_VERSION: str
     DEBUG_MODE: bool

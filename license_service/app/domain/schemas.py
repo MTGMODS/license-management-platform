@@ -7,11 +7,9 @@ class CheckRequestDTO(BaseModel):
 
 class ActivateKeyDTO(BaseModel):
     key: str = Field(..., min_length=19, max_length=19, description="VIP Key")
-    user_id: int
 
 class DownloadRequestDTO(BaseModel):
     key: str = Field(..., min_length=19, max_length=19, description="VIP Key")
-    user_id: int
 
 class GeneratePurchaseDTO(BaseModel):
     duration_days: Optional[int] = Field(None, gt=0, description="Days (None = forever)")
