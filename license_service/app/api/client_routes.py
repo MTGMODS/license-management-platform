@@ -4,7 +4,7 @@ from app.shared.database import get_db
 from app.domain.schemas import CheckRequestDTO
 from app.application.service import LicenseService
 
-router = APIRouter(prefix="/api/v1/client", tags=["Client (In-Game)"])
+router = APIRouter(prefix="/api/v1/license", tags=["Client"])
 
 @router.post("/check", description="Check license & hwid for access")
 async def check_license(payload: CheckRequestDTO, request: Request, db: AsyncSession = Depends(get_db)):

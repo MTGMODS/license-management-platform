@@ -12,6 +12,7 @@ class LicenseModel(Base):
     user_id = Column(Integer, index=True, nullable=True)
     key = Column(String, unique=True, index=True, nullable=False)
     duration_days = Column(Integer, nullable=True)
+    resets_used = Column(Integer, default=0, nullable=False)
     max_devices = Column(Integer, default=3, nullable=False)
     status = Column(SQLEnum(LicenseStatus), default=LicenseStatus.NOT_ACTIVATED)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -59,6 +60,21 @@ class LicenseRepository:
             .filter(LicenseModel.key == key)
         )
         return result.scalars().first()
+
+    async def get_active_by_user(self, user_id: int) -> LicenseModel | None:
+        result = await self.db.execute(
+            select(LicenseModel)
+            .options(selectinload(LicenseModel.devices))
+            .filter(LicenseModel.user_id == user_id, LicenseModel.status == LicenseStatus.ACTIVE)
+        )
+        return result.scalars().first()
+
+    async def remove_device(self, device_id: int):
+        result = await self.db.execute(select(DeviceModel).filter(DeviceModel.id == device_id))
+        dev = result.scalars().first()
+        if dev:
+            self.db.delete(dev)
+            await self.db.commit()
 
     async def create_license(self, key: str, duration_days: int, status: LicenseStatus) -> LicenseModel:
         db_sub = LicenseModel(key=key, duration_days=duration_days, status=status)

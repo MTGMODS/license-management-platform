@@ -4,7 +4,7 @@ from app.shared.database import get_db
 from app.domain.schemas import GeneratePurchaseDTO
 from app.application.service import LicenseService
 
-router = APIRouter(prefix="/api/v1/admin", tags=["Admin Panel"])
+router = APIRouter(prefix="/api/v1/license", tags=["Admin Panel"])
 
 @router.post("/generate", description="Generate a new license key and log a purchase transaction")
 async def generate_new_key(payload: GeneratePurchaseDTO, db: AsyncSession = Depends(get_db)):

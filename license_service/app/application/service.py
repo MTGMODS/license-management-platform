@@ -30,15 +30,58 @@ class LicenseService:
 
         existing_devices = [d.device for d in db_sub.devices]
         if device not in existing_devices:
-            if len(existing_devices) >= db_sub.max_devices:
+            if len(existing_devices) >= db_sub.max_devices: 
                 raise DomainException(
-                    message=f"Device limit reached (Max {db_sub.max_devices} for you)",
-                    status_code=403, error_code="DEVICE_LIMIT_REACHED"
+                    message=f"Device limit reached (Max {db_sub.max_devices}). Reset HWID in profile.", 
+                    status_code=403, error_code="HWID_LIMIT_REACHED"
                 )
 
         await self.license_repo.log_device(db_sub.id, device, ip_address, user_agent)
-        
         return {"user_id": db_sub.user_id, "expires_at": db_sub.expires_at.isoformat() if db_sub.expires_at else None}
+    
+
+    async def get_user_devices(self, user_id: int) -> dict:
+        db_sub = await self.license_repo.get_active_by_user(user_id)
+        if not db_sub:
+            raise DomainException(message="No active license found.", status_code=404, error_code="NOT_FOUND")
+            
+        devices = []
+        for d in db_sub.devices:
+            hwid_masked = f"{d.device[:3]}******{d.device[-3:]}" if len(d.device) > 6 else "***"
+            ip_masked = "Unknown"
+            if d.ip_address:
+                parts = d.ip_address.split('.')
+                ip_masked = f"{parts[0]}.{parts[1]}.*.*" if len(parts) == 4 else "***"
+
+            devices.append({
+                "id": d.id,
+                "hwid": hwid_masked,
+                "ip": ip_masked,
+                "last_used_at": d.last_used_at.isoformat() if d.last_used_at else None
+            })
+            
+        return {
+            "license_key": db_sub.key,
+            "max_devices": db_sub.max_devices,
+            "resets_used": db_sub.resets_used,
+            "devices": devices
+        }
+
+    async def reset_device(self, user_id: int, device_id: int):
+        db_sub = await self.license_repo.get_active_by_user(user_id)
+        if not db_sub:
+            raise DomainException(message="No active license found.", status_code=404, error_code="NOT_FOUND")
+            
+        if db_sub.resets_used >= 1: 
+            raise DomainException(message="You have already used your 1 allowed device reset.", status_code=403, error_code="RESET_LIMIT_REACHED")
+            
+        target_device = next((d for d in db_sub.devices if d.id == device_id), None)
+        if not target_device:
+            raise DomainException(message="Device not found on your license.", status_code=404, error_code="NOT_FOUND")
+            
+        await self.license_repo.remove_device(device_id)
+        db_sub.resets_used += 1
+        await self.db.commit()
     
     def _make_key(self, n=16) -> str:
         raw = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(n))
