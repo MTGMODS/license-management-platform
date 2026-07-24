@@ -6,7 +6,7 @@ from app.domain.models import LicenseStatus
 from app.application.service import LicenseService
 from app.application.jwt_utils import get_admin_user_id
 
-router = APIRouter(prefix="/api/v1/admin", tags=["Admin Panel"])
+router = APIRouter(prefix="/api/v1/license", tags=["Admin Panel"])
 
 @router.post("/generate", description="Generate a new unactivated license key")
 async def generate_new_key(
@@ -29,7 +29,7 @@ async def get_all_licenses(
     licenses = await service.get_all_licenses_admin(limit, offset)
     return {"status": "success", "data": licenses}
 
-@router.patch("/licenses/{license_id}/status", description="Ban, Unban or Expire a license")
+@router.patch("/{license_id}/status", description="Ban, Unban or Expire a license")
 async def change_license_status(
     license_id: int, 
     status: LicenseStatus, 

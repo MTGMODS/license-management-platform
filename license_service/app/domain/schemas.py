@@ -7,6 +7,7 @@ class CheckRequestDTO(BaseModel):
 
 class ActivateKeyDTO(BaseModel):
     key: str = Field(..., min_length=19, max_length=19, description="VIP Key")
+    force: bool = Field(False, description="Force activate and deactivate old license")
 
 class GeneratePurchaseDTO(BaseModel):
     duration_days: Optional[int] = Field(None, gt=0, description="Days (None = forever)")

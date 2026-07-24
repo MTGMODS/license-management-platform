@@ -57,6 +57,7 @@ class LicenseRepository:
         result = await self.db.execute(
             select(LicenseModel)
             .options(selectinload(LicenseModel.devices))
+            .options(selectinload(LicenseModel.transaction))
             .filter(LicenseModel.id == license_id)
         )
         return result.scalars().first()
@@ -65,6 +66,7 @@ class LicenseRepository:
         result = await self.db.execute(
             select(LicenseModel)
             .options(selectinload(LicenseModel.devices))
+            .options(selectinload(LicenseModel.transaction))
             .filter(LicenseModel.key == key)
         )
         return result.scalars().first()
@@ -75,7 +77,6 @@ class LicenseRepository:
             .options(selectinload(LicenseModel.devices))
             .options(selectinload(LicenseModel.transaction))
             .filter(LicenseModel.user_id == user_id, LicenseModel.status == LicenseStatus.ACTIVE)
-            
         )
         return result.scalars().first()
 

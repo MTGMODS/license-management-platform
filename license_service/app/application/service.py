@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.domain.models import LicenseStatus, License
-from app.domain.schemas import GeneratePurchaseDTO
+from app.domain.schemas import GeneratePurchaseDTO, ActivateKeyDTO
 from app.infrastructure.repository import LicenseRepository, TransactionRepository, TransactionModel, LicenseModel, DeviceModel
 from app.shared.exceptions import DomainException
 
@@ -144,8 +144,20 @@ class LicenseService:
         
         return {"key": new_key, "transaction_id": tx.id}
 
-    async def activate_key_for_user(self, key: str, user_id: int) -> int:
-        db_sub = await self.license_repo.get_by_key(key)
+    async def activate_key_for_user(self, payload: ActivateKeyDTO, user_id: int) -> int:
+        active_sub = await self.license_repo.get_active_by_user(user_id)
+
+        if active_sub:
+            if not payload.force:
+                raise DomainException(
+                    message="You already have an active license. Activating this key will deactivate the old one.", 
+                    status_code=409, error_code="ACTIVE_LICENSE_EXISTS"
+                )
+            else:
+                active_sub.status = LicenseStatus.EXPIRED
+                active_sub.expires_at = datetime.now(timezone.utc)
+
+        db_sub = await self.license_repo.get_by_key(payload.key)
         if not db_sub or db_sub.status != LicenseStatus.NOT_ACTIVATED:
             raise DomainException(message="Invalid key or already activated", status_code=400, error_code="INVALID_KEY")
         
@@ -162,9 +174,7 @@ class LicenseService:
         return db_sub.id
 
     async def complete_pending_purchase(self, license_id: int, user_id: int):
-        result = await self.db.execute(
-            select(TransactionModel).filter(TransactionModel.license_id == license_id, TransactionModel.status == "PENDING")
-        )
+        result = await self.db.execute(select(TransactionModel).filter(TransactionModel.license_id == license_id, TransactionModel.status == "PENDING"))
         tx = result.scalars().first()
 
         if tx:
