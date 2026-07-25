@@ -32,7 +32,7 @@ async def get_my_dashboard_info(user_id: int = Depends(get_current_user_id), db:
     service = LicenseService(db)
     return await service.get_license_info(user_id)
 
-@router.delete("/devices/{device_id}", description="Reset a specific device (Limit: 1)")
+@router.delete("/device/{device_id}", description="Reset a specific device (Limit: 1)")
 async def reset_my_device(device_id: int, user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
     service = LicenseService(db)
     await service.reset_device(user_id, device_id)
