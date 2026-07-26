@@ -132,7 +132,6 @@ class LicenseService:
         await self.db.flush() 
 
         tx = TransactionModel(
-            user_id=payload.user_id, 
             license_id=db_sub.id, 
             amount=payload.amount, 
             payment_method=payload.method, 
