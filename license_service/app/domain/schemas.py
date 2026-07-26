@@ -10,12 +10,11 @@ class ActivateKeyDTO(BaseModel):
     force: bool = Field(False, description="Force activate and deactivate old license")
 
 class GeneratePurchaseDTO(BaseModel):
-    duration_days: Optional[int] = Field(None, gt=0, description="Days (None = forever)")
+    duration_days: Optional[int] = Field(None, gt=0, description="Duration of the license in days")
     amount: float = Field(..., ge=0.0, description="Amount purchased")
     method: str = Field(..., description="Payment method")
-    user_id: Optional[int] = Field(None, description="User (if exists)")
-    status: str = Field("COMPLETED", description="PENDING або COMPLETED")
-    max_devices: int = Field(3, description="Limit of devices")
+    status: str = Field(default="COMPLETED", description="PENDING або COMPLETED")
+    max_devices: int = Field(default=3, description="Maximum allowed devices")
 
     @field_validator('method')
     def validate_method(cls, v):
@@ -23,3 +22,7 @@ class GeneratePurchaseDTO(BaseModel):
         if v not in allowed:
             raise ValueError(f'Invalid payment method. Allowed: {allowed}')
         return v
+
+class TelegramBotGenerateDTO(BaseModel):
+    duration_days: int = Field(..., description="Duration of the license in days")
+    amount: float = Field(..., description="Amount purchased")
