@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.repository import UserRepository
 from app.domain.models import User, UserStatus
+from app.domain.schemas import UpdateUser
 from app.shared.exceptions import DomainException
 
 class UserService:
@@ -84,3 +85,30 @@ class UserService:
             return []
         db_users = await self.repo.search_users(nickname, telegram_id, discord_id)
         return [User.model_validate(user) for user in db_users]
+
+    async def admin_update_user(self, target_user_id: int, payload: UpdateUser) -> dict:
+        user = await self.repo.get_by_id(target_user_id) 
+        if not user:
+            raise DomainException(message="User not found", status_code=404, error_code="NOT_FOUND")
+
+        update_data = payload.model_dump(exclude_unset=True)
+        
+        if "status" in update_data:
+            user.status = update_data["status"]
+        if "role" in update_data:
+            user.role = update_data["role"]
+        if "telegram_id" in update_data:
+            user.telegram_id = update_data["telegram_id"]
+        if "discord_id" in update_data:
+            user.discord_id = update_data["discord_id"]
+
+        await self.db.commit()
+        await self.db.refresh(user)
+
+        return {
+            "id": user.id,
+            "status": user.status.value,
+            "role": user.role.value,
+            "telegram_id": user.telegram_id,
+            "discord_id": user.discord_id
+        }

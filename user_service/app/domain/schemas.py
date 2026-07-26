@@ -6,7 +6,7 @@ class TelegramAuthPayload(BaseModel):
     id_token: Optional[str] = Field(None, description="OIDC JWT token from Telegram Login")
     init_data: Optional[str] = Field(None, description="Raw initData string from Telegram Mini App")
 
-class AdminUpdateUser(BaseModel):
+class UpdateUser(BaseModel):
     status: Optional[UserStatus] = None
     role: Optional[UserRole] = None
     telegram_id: Optional[str] = None
