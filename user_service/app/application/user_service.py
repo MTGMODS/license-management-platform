@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.repository import UserRepository
-from app.domain.models import User, UserStatus
+from app.domain.models import User, UserStatus, UserRole
 from app.domain.schemas import UpdateUser
 from app.shared.exceptions import DomainException
 
@@ -102,13 +102,5 @@ class UserService:
         if "discord_id" in update_data:
             user.discord_id = update_data["discord_id"]
 
-        await self.db.commit()
-        await self.db.refresh(user)
-
-        return {
-            "id": user.id,
-            "status": user.status.value,
-            "role": user.role.value,
-            "telegram_id": user.telegram_id,
-            "discord_id": user.discord_id
-        }
+        await self.repo.update(user)
+        return User.model_validate(user)
