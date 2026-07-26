@@ -1,10 +1,16 @@
 from typing import Optional
 from pydantic import BaseModel, Field, model_validator
-from app.domain.models import User
+from app.domain.models import User, UserStatus, UserRole
 
 class TelegramAuthPayload(BaseModel):
     id_token: Optional[str] = Field(None, description="OIDC JWT token from Telegram Login")
     init_data: Optional[str] = Field(None, description="Raw initData string from Telegram Mini App")
+
+class AdminUpdateUser(BaseModel):
+    status: Optional[UserStatus] = None
+    role: Optional[UserRole] = None
+    telegram_id: Optional[str] = None
+    discord_id: Optional[str] = None
 
 class LinkSocialPayload(BaseModel):
     telegram_id: Optional[str] = Field(None, description="Telegram ID")
@@ -24,3 +30,4 @@ class TokenResponse(BaseModel):
 
 class RefreshRequest(BaseModel):
     refresh_token: str
+

@@ -8,13 +8,18 @@ class UserStatus(str, Enum):
     BANNED = "BANNED"
     DELETED = "DELETED"
 
+class UserRole(str, Enum):
+    USER = "USER"
+    SMART = "SMART"
+    ADMIN = "ADMIN"
+
 class User(BaseModel):
     id: Optional[int] = None
     telegram_id: Optional[str] = None
     discord_id: Optional[str] = None
     nickname: str
     avatar_url: Optional[str] = None
-    role: str = "USER"
+    role: UserRole = UserRole.USER
     status: UserStatus = UserStatus.ACTIVE
     created_at: Optional[datetime] = None
 
