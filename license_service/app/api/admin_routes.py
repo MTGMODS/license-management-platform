@@ -11,9 +11,20 @@ router = APIRouter(prefix="/api/v1/license", tags=["Admin Panel"])
 
 @router.post("/generate", description="Generate a new unactivated license key")
 async def generate_new_key(payload: GeneratePurchaseDTO, admin_id: int = Depends(get_admin_user_id), db: AsyncSession = Depends(get_db)):
+    payload.count = 1
     service = LicenseService(db)
     result = await service.generate_and_bill(payload)
     return {"status": "success", "data": result}
+
+@router.post("/generate/bulk", description="Mass generate unactivated license keys")
+async def generate_bulk_keys(payload: GeneratePurchaseDTO, admin_id: int = Depends(get_admin_user_id), db: AsyncSession = Depends(get_db)):
+    service = LicenseService(db)
+    keys = await service.generate_and_bill(payload)
+    return {
+        "status": "success", 
+        "count": len(keys),
+        "data": {"keys": keys}
+    }
 
 @router.get("/find", description="Find licenses by user_id or key")
 async def admin_find_licenses(

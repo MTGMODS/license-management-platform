@@ -87,6 +87,11 @@ class LicenseRepository:
         self.db.add(db_sub)
         await self.db.flush()
         return db_sub
+
+    async def create_licenses_bulk(self, licenses: list[LicenseModel]) -> list[LicenseModel]:
+        self.db.add_all(licenses)
+        await self.db.flush()
+        return licenses
         
     async def log_device(self, license_id: int, device: str, ip_address: str, user_agent: str):
         result = await self.db.execute(
@@ -121,6 +126,11 @@ class TransactionRepository:
         self.db.add(purchase)
         await self.db.flush()
         return purchase
+
+    async def create_transactions_bulk(self, transactions: list[TransactionModel]) -> list[TransactionModel]:
+        self.db.add_all(transactions)
+        await self.db.flush()
+        return transactions
 
     async def get_pending_by_license(self, license_id: int) -> TransactionModel | None:
         result = await self.db.execute(
