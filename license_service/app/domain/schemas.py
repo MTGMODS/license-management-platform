@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field, field_validator
-from app.domain.models import LicenseStatus
+from pydantic import BaseModel, Field
+from app.domain.models import LicenseStatus, PaymentMethod
 from typing import Optional
 
 class CheckRequestDTO(BaseModel):
@@ -13,16 +13,9 @@ class ActivateKeyDTO(BaseModel):
 class GeneratePurchaseDTO(BaseModel):
     duration_days: Optional[int] = Field(None, gt=0, description="Duration of the license in days")
     amount: float = Field(..., ge=0.0, description="Amount purchased")
-    method: str = Field(..., description="Payment method")
-    status: str = Field(default="COMPLETED", description="PENDING або COMPLETED")
+    method: PaymentMethod = Field(..., description="Payment method")
+    status: str = Field(default="COMPLETED", description="PENDING or COMPLETED")
     max_devices: int = Field(default=3, description="Maximum allowed devices")
-
-    @field_validator('method')
-    def validate_method(cls, v):
-        allowed = ["Stars", "FunPay", "Crypto", "Card", "PayPal", "Manual"]
-        if v not in allowed:
-            raise ValueError(f'Invalid payment method. Allowed: {allowed}')
-        return v
 
 class TelegramBotGenerateDTO(BaseModel):
     duration_days: int = Field(..., description="Duration of the license in days")
