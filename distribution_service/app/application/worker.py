@@ -18,7 +18,7 @@ async def cleanup_old_files_task():
 
                     if now - filepath.stat().st_mtime > MAX_AGE_SECONDS:
                         filepath.unlink()
-                        print(f"[Cleanup] Deleted old file {filepath.name}")
+                        print(f"[Cleanup Worker] Deleted old file {filepath.name}")
 
         except Exception as e:
             print(f"[Cleanup Worker] {e}")
