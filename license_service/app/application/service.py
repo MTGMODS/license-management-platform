@@ -78,7 +78,7 @@ class LicenseService:
                 "expires_at": db_sub.expires_at.isoformat() if db_sub.expires_at else None,
             },
             "devices": devices_list,
-            "billing": {
+            "transaction": {
                 "amount": tx.amount,
                 "method": tx.payment_method,
                 "status": tx.status,

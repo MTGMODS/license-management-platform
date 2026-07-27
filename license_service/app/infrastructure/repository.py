@@ -37,7 +37,7 @@ class DeviceModel(Base):
     license = relationship("LicenseModel", back_populates="devices")
 
 class TransactionModel(Base):
-    __tablename__ = "billing_purchases"
+    __tablename__ = "transaction_purchases"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, index=True, nullable=True)

@@ -27,7 +27,7 @@ async def request_download(user_id: int = Depends(get_current_user_id), db: Asyn
     except Exception as e:
         raise DomainException(message=str(e), status_code=500, error_code="FILE_GENERATION_FAILED")
 
-@router.get("/info", description="Get dashboard info: license, billing, and masked devices")
+@router.get("/info", description="Get dashboard info: license, purchase, and masked devices")
 async def get_my_dashboard_info(user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
     service = LicenseService(db)
     return await service.get_license_info(user_id)
