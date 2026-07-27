@@ -2,11 +2,10 @@ import secrets
 import string
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
 from app.domain.models import LicenseStatus, License
 from app.domain.schemas import GeneratePurchaseDTO, ActivateKeyDTO, UpdateLicenseDTO
-from app.infrastructure.repository import LicenseRepository, TransactionRepository, TransactionModel, LicenseModel
+from app.infrastructure.repository import LicenseRepository, TransactionRepository, LicenseModel
 from app.shared.exceptions import DomainException
 
 class LicenseService:
@@ -115,37 +114,29 @@ class LicenseService:
             )
         return {"status": "success"}
     
-    def _make_key(self, n=16) -> str:
-        raw = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(n))
-        return '-'.join(raw[i:i+4] for i in range(0, n, 4))
-
     async def generate_and_bill(self, payload: GeneratePurchaseDTO) -> dict:
-        new_key = self._make_key()
+        raw_key = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(16))
+        new_key = '-'.join(raw_key[i:i+4] for i in range(0, 16, 4))
         
-        db_sub = LicenseModel(
+        db_sub = await self.license_repo.create_license(
             key=new_key, 
             duration_days=payload.duration_days, 
             status=LicenseStatus.NOT_ACTIVATED,
             max_devices=payload.max_devices
         )
-        self.db.add(db_sub)
-        await self.db.flush() 
-
-        tx = TransactionModel(
+        
+        tx = await self.tx_repo.create(
             license_id=db_sub.id, 
             amount=payload.amount, 
-            payment_method=payload.method, 
+            method=payload.method.value, 
             status=payload.status
         )
-        self.db.add(tx)
         
         await self.db.commit()
-        
         return {"key": new_key, "transaction_id": tx.id}
 
     async def activate_key_for_user(self, payload: ActivateKeyDTO, user_id: int) -> int:
         active_sub = await self.license_repo.get_active_by_user(user_id)
-
         if active_sub:
             if not payload.force:
                 raise DomainException(
@@ -173,9 +164,7 @@ class LicenseService:
         return db_sub.id
 
     async def complete_pending_purchase(self, license_id: int, user_id: int):
-        result = await self.db.execute(select(TransactionModel).filter(TransactionModel.license_id == license_id, TransactionModel.status == "PENDING"))
-        tx = result.scalars().first()
-
+        tx = await self.tx_repo.get_pending_by_license(license_id)
         if tx:
             tx.status = "COMPLETED"
             tx.user_id = user_id
@@ -186,7 +175,6 @@ class LicenseService:
         db_sub = await self.license_repo.get_active_by_user(user_id)
         if not db_sub:
             raise DomainException(message="You don't have an active license.", status_code=403, error_code="NO_ACTIVE_LICENSE")
-            
         return db_sub
 
     async def admin_get_license(self, license_id: int) -> dict:
@@ -207,14 +195,13 @@ class LicenseService:
             raise DomainException(message="License not found", status_code=404, error_code="NOT_FOUND")
 
         update_data = payload.model_dump(exclude_unset=True)
-        
         if "status" in update_data:
             license_obj.status = update_data["status"]
         if "reset_limit" in update_data:
             license_obj.reset_limit = update_data["reset_limit"]
         if "max_devices" in update_data:
             license_obj.max_devices = update_data["max_devices"]
+            
         await self.db.commit()
         await self.db.refresh(license_obj)
-
         return license_obj
