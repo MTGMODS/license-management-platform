@@ -67,6 +67,8 @@ class LicenseService:
         
         return {
             "license": {
+                "id": db_sub.id,
+                "user_id": db_sub.user_id,
                 "key": db_sub.key,
                 "status": db_sub.status.value,
                 "duration_days": db_sub.duration_days,
@@ -186,8 +188,31 @@ class LicenseService:
     async def admin_find_licenses(self, user_id: int = None, key: str = None) -> list:
         if not user_id and not key:
             return []
+        
         licenses = await self.license_repo.search_licenses(user_id=user_id, key=key)
-        return licenses
+        
+        return [
+            {
+                "id": lic.id,
+                "user_id": lic.user_id,
+                "key": lic.key,
+                "status": lic.status.value,
+                "duration_days": lic.duration_days,
+                "max_devices": lic.max_devices,
+                "reset_limit": lic.reset_limit,
+                "created_at": lic.created_at.isoformat() if lic.created_at else None,
+                "activated_at": lic.activated_at.isoformat() if lic.activated_at else None,
+                "expires_at": lic.expires_at.isoformat() if lic.expires_at else None,
+                "transaction": {
+                    "id": lic.transaction.id,
+                    "amount": lic.transaction.amount,
+                    "method": lic.transaction.payment_method,
+                    "status": lic.transaction.status,
+                    "purchased_at": lic.transaction.purchased_at.isoformat() if lic.transaction.purchased_at else None
+                } if lic.transaction else None
+            }
+            for lic in licenses
+        ]
 
     async def admin_update_license(self, license_id: int, payload: UpdateLicenseDTO) -> dict:
         license_obj = await self.license_repo.get_by_id(license_id)

@@ -19,6 +19,7 @@ class PaymentMethod(str, enum.Enum):
 class License(BaseModel):
     id: Optional[int] = None
     key: str
+    user_id: Optional[int] = None
     duration_days: Optional[int] = None
     status: LicenseStatus = LicenseStatus.NOT_ACTIVATED
     activated_at: Optional[datetime] = None

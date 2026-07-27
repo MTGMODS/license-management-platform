@@ -73,7 +73,7 @@ class LicenseRepository:
         return result.scalars().first()
 
     async def search_licenses(self, user_id: Optional[int] = None, key: Optional[str] = None) -> list[LicenseModel]:
-        query = select(LicenseModel).options(selectinload(LicenseModel.devices))
+        query = select(LicenseModel).options(selectinload(LicenseModel.devices), selectinload(LicenseModel.transaction))
         if user_id is not None:
             query = query.where(LicenseModel.user_id == user_id)
         if key is not None:
