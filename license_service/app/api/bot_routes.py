@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.shared.database import get_db
 from app.shared.config import settings
+from app.domain.models import PaymentMethod
 from app.domain.schemas import GeneratePurchaseDTO, TelegramBotGenerateDTO
 from app.application.service import LicenseService
 
@@ -17,7 +18,7 @@ async def verify_bot_access(x_bot_token: str = Header(None)):
 async def tg_bot_generate_key(payload: TelegramBotGenerateDTO, is_bot: bool = Depends(verify_bot_access), db: AsyncSession = Depends(get_db)):
     service = LicenseService(db)
 
-    full_payload = GeneratePurchaseDTO(duration_days=payload.duration_days, amount=payload.amount, method="Telegram Stars")
-    result = await service.generate_and_bill(full_payload)
+    new_payload = GeneratePurchaseDTO(duration_days=payload.duration_days, amount=payload.amount, method=PaymentMethod.STARS)
+    result = await service.generate_and_bill(new_payload)
     
     return {"status": "success", "data": result}
