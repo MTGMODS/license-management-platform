@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum as SQLEnum, select
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum as SQLEnum, select, update
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship, selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -92,6 +92,19 @@ class LicenseRepository:
         self.db.add_all(licenses)
         await self.db.flush()
         return licenses
+
+    async def deactivate_expired_licenses(self) -> list[int]:
+        query = (
+            update(LicenseModel)
+            .where(LicenseModel.status == LicenseStatus.ACTIVE)
+            .where(LicenseModel.expires_at < func.now())
+            .values(status=LicenseStatus.EXPIRED)
+            .returning(LicenseModel.user_id)
+        )
+        result = await self.db.execute(query)
+        await self.db.commit()
+        
+        return list(result.scalars().all())
         
     async def log_device(self, license_id: int, device: str, ip_address: str, user_agent: str):
         result = await self.db.execute(
