@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.domain.models import LicenseStatus, License
-from app.domain.schemas import GeneratePurchaseDTO, ActivateKeyDTO
-from app.infrastructure.repository import LicenseRepository, TransactionRepository, TransactionModel, LicenseModel, DeviceModel
+from app.domain.schemas import GeneratePurchaseDTO, ActivateKeyDTO, UpdateLicenseDTO
+from app.infrastructure.repository import LicenseRepository, TransactionRepository, TransactionModel, LicenseModel
 from app.shared.exceptions import DomainException
 
 class LicenseService:
@@ -189,14 +189,32 @@ class LicenseService:
             
         return db_sub
 
-    async def get_all_licenses_admin(self, limit: int, offset: int):
-        return await self.license_repo.get_all_licenses(limit, offset)
+    async def admin_get_license(self, license_id: int) -> dict:
+        license_obj = await self.license_repo.get_by_id(license_id)
+        if not license_obj:
+            raise DomainException(message="License not found", status_code=404, error_code="NOT_FOUND")
+        return license_obj
 
-    async def update_license_status_admin(self, license_id: int, new_status: LicenseStatus):
-        lic = await self.license_repo.get_by_id(license_id)
-        if not lic:
-            raise DomainException(message="License not found.", status_code=404, error_code="NOT_FOUND")
+    async def admin_find_licenses(self, user_id: int = None, key: str = None) -> list:
+        if not user_id and not key:
+            return []
+        licenses = await self.license_repo.search_licenses(user_id=user_id, key=key)
+        return licenses
+
+    async def admin_update_license(self, license_id: int, payload: UpdateLicenseDTO) -> dict:
+        license_obj = await self.license_repo.get_by_id(license_id)
+        if not license_obj:
+            raise DomainException(message="License not found", status_code=404, error_code="NOT_FOUND")
+
+        update_data = payload.model_dump(exclude_unset=True)
         
-        lic.status = new_status
+        if "status" in update_data:
+            license_obj.status = update_data["status"]
+        if "reset_limit" in update_data:
+            license_obj.reset_limit = update_data["reset_limit"]
+        if "max_devices" in update_data:
+            license_obj.max_devices = update_data["max_devices"]
         await self.db.commit()
-        return lic
+        await self.db.refresh(license_obj)
+
+        return license_obj
