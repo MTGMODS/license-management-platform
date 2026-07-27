@@ -13,9 +13,8 @@ class PaymentMethod(str, enum.Enum):
     STARS = "Stars"
     FUNPAY = "FunPay"
     CRYPTO = "Crypto"
-    CARD = "Card"
     PAYPAL = "PayPal"
-    MANUAL = "Manual"
+    CARD = "Card"
 
 class License(BaseModel):
     id: Optional[int] = None
