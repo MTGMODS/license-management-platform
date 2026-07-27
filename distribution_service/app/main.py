@@ -1,4 +1,4 @@
-import aio_pika
+import aio_pika, asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
@@ -6,13 +6,14 @@ from contextlib import asynccontextmanager
 
 from app.shared.config import settings
 from app.shared.exceptions import DomainException, global_exception_handler, validation_exception_handler
-
-from app.api.routes import router as download_router
+from app.application.worker import cleanup_old_files_task
 from app.infrastructure.messaging import process_message
+from app.api.routes import router as download_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     connection = None
+    task = asyncio.create_task(cleanup_old_files_task())
     try:
         connection = await aio_pika.connect_robust(settings.RABBITMQ_URL)
         channel = await connection.channel()
@@ -27,6 +28,7 @@ async def lifespan(app: FastAPI):
         print(f"[Distribution] ❌ Unexpected error: {e}")
         yield
     finally:
+        task.cancel()
         if connection and not connection.is_closed:
             await connection.close()
             print("[Distribution] ✅ RabbitMQ connection closed")
