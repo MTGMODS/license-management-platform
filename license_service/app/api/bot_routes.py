@@ -16,10 +16,8 @@ async def verify_bot_access(x_bot_token: str = Header(None)):
 @router.post("/generate/telegram_bot", description="Auto-generate key after TG bot payment")
 async def tg_bot_generate_key(payload: TelegramBotGenerateDTO, is_bot: bool = Depends(verify_bot_access), db: AsyncSession = Depends(get_db)):
     service = LicenseService(db)
-    result = await service.generate_and_bill(payload)
 
     full_payload = GeneratePurchaseDTO(duration_days=payload.duration_days, amount=payload.amount, method="Telegram Stars")
-    
     result = await service.generate_and_bill(full_payload)
     
     return {"status": "success", "data": result}
