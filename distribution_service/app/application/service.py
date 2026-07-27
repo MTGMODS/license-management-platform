@@ -1,4 +1,5 @@
 import os, re, aiofiles
+from app.shared.config import settings
 from app.domain.schemas import GenerationPayloadDTO
 
 BUILDS_DIR = "app/builds"
@@ -34,9 +35,9 @@ class DistributionService:
             await f.write(content)
             
         print(f"[Build] VIP file ready for User {payload.user_id}. Token: {file_token}")
-        
-        # return f"https://api.mtgmods.com/api/v1/files/downloads/vip/{file_token}"
-        return f"http://localhost:8005/api/v1/files/downloads/vip/{file_token}"
+
+        base = settings.DOWNLOAD_BASE_URL.rstrip("/")
+        return f"{base}/{file_token}"
 
     @staticmethod
     def remove_file(path: str):
