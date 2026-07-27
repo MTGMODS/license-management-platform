@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.models import LicenseStatus, License
 from app.domain.schemas import GeneratePurchaseDTO, ActivateKeyDTO, UpdateLicenseDTO
-from app.infrastructure.repository import LicenseRepository, TransactionRepository, LicenseModel
+from app.infrastructure.repository import LicenseRepository, TransactionRepository, LicenseModel, TransactionModel
 from app.shared.exceptions import DomainException
 
 class LicenseService:
@@ -115,27 +115,42 @@ class LicenseService:
                 error_code="NOT_FOUND"
             )
         return {"status": "success"}
+
+    def _make_key(self, n=16) -> str:
+        raw = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(n))
+        return '-'.join(raw[i:i+4] for i in range(0, n, 4))
     
-    async def generate_and_bill(self, payload: GeneratePurchaseDTO) -> dict:
-        raw_key = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(16))
-        new_key = '-'.join(raw_key[i:i+4] for i in range(0, 16, 4))
+    async def generate_and_bill(self, payload: GeneratePurchaseDTO):
+        keys = [self._make_key() for _ in range(payload.count)]
         
-        db_sub = await self.license_repo.create_license(
-            key=new_key, 
-            duration_days=payload.duration_days, 
-            status=LicenseStatus.NOT_ACTIVATED,
-            max_devices=payload.max_devices
-        )
+        licenses_to_insert = [
+            LicenseModel(
+                key=k,
+                duration_days=payload.duration_days,
+                status=LicenseStatus.NOT_ACTIVATED,
+                max_devices=payload.max_devices
+            ) for k in keys
+        ]
         
-        tx = await self.tx_repo.create(
-            license_id=db_sub.id, 
-            amount=payload.amount, 
-            method=payload.method.value, 
-            status=payload.status
-        )
+        inserted_licenses = await self.license_repo.create_licenses_bulk(licenses_to_insert)
+        
+        txs_to_insert = [
+            TransactionModel(
+                license_id=lic.id,
+                amount=payload.amount,
+                payment_method=payload.method.value,
+                status=payload.status
+            ) for lic in inserted_licenses
+        ]
+        
+        inserted_txs = await self.tx_repo.create_transactions_bulk(txs_to_insert)
         
         await self.db.commit()
-        return {"key": new_key, "transaction_id": tx.id}
+        
+        if payload.count == 1:
+            return {"key": keys[0], "transaction_id": inserted_txs[0].id}
+            
+        return keys
 
     async def activate_key_for_user(self, payload: ActivateKeyDTO, user_id: int) -> int:
         active_sub = await self.license_repo.get_active_by_user(user_id)
