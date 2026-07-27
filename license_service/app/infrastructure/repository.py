@@ -48,7 +48,7 @@ class TransactionModel(Base):
     purchased_at = Column(DateTime(timezone=True), server_default=func.now())
 
     license = relationship("LicenseModel", back_populates="transaction")
-    
+
 
 class LicenseRepository:
     def __init__(self, db: AsyncSession):
@@ -56,49 +56,36 @@ class LicenseRepository:
 
     async def get_by_id(self, license_id: int) -> LicenseModel | None:
         result = await self.db.execute(
-            select(LicenseModel)
-            .options(selectinload(LicenseModel.devices))
-            .options(selectinload(LicenseModel.transaction))
-            .filter(LicenseModel.id == license_id)
+            select(LicenseModel).options(selectinload(LicenseModel.devices), selectinload(LicenseModel.transaction)).filter(LicenseModel.id == license_id)
         )
         return result.scalars().first()
 
     async def get_by_key(self, key: str) -> LicenseModel:
         result = await self.db.execute(
-            select(LicenseModel)
-            .options(selectinload(LicenseModel.devices))
-            .options(selectinload(LicenseModel.transaction))
-            .filter(LicenseModel.key == key)
+            select(LicenseModel).options(selectinload(LicenseModel.devices), selectinload(LicenseModel.transaction)).filter(LicenseModel.key == key)
         )
         return result.scalars().first()
 
     async def get_active_by_user(self, user_id: int) -> LicenseModel | None:
         result = await self.db.execute(
-            select(LicenseModel)
-            .options(selectinload(LicenseModel.devices))
-            .options(selectinload(LicenseModel.transaction))
-            .filter(LicenseModel.user_id == user_id, LicenseModel.status == LicenseStatus.ACTIVE)
+            select(LicenseModel).options(selectinload(LicenseModel.devices), selectinload(LicenseModel.transaction)).filter(LicenseModel.user_id == user_id, LicenseModel.status == LicenseStatus.ACTIVE)
         )
         return result.scalars().first()
 
     async def search_licenses(self, user_id: Optional[int] = None, key: Optional[str] = None) -> list[LicenseModel]:
         query = select(LicenseModel).options(selectinload(LicenseModel.devices))
-
         if user_id is not None:
             query = query.where(LicenseModel.user_id == user_id)
         if key is not None:
             query = query.where(LicenseModel.key == key)
-            
         query = query.order_by(LicenseModel.created_at.desc())
-        
         result = await self.db.execute(query)
         return list(result.scalars().all())
-    
-    async def create_license(self, key: str, duration_days: int, status: LicenseStatus) -> LicenseModel:
-        db_sub = LicenseModel(key=key, duration_days=duration_days, status=status)
+
+    async def create_license(self, key: str, duration_days: int, status: LicenseStatus, max_devices: int) -> LicenseModel:
+        db_sub = LicenseModel(key=key, duration_days=duration_days, status=status, max_devices=max_devices)
         self.db.add(db_sub)
-        await self.db.commit()
-        await self.db.refresh(db_sub)
+        await self.db.flush()
         return db_sub
         
     async def log_device(self, license_id: int, device: str, ip_address: str, user_agent: str):
@@ -106,7 +93,6 @@ class LicenseRepository:
             select(DeviceModel).filter(DeviceModel.license_id == license_id, DeviceModel.device == device)
         )
         activation = result.scalars().first()
-
         if activation:
             activation.ip_address = ip_address
             activation.user_agent = user_agent
@@ -124,8 +110,6 @@ class LicenseRepository:
             return True
         return False
 
-
-
 class TransactionRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -135,6 +119,11 @@ class TransactionRepository:
             user_id=user_id, license_id=license_id, amount=amount, payment_method=method, status=status
         )
         self.db.add(purchase)
-        await self.db.commit()
-        await self.db.refresh(purchase)
+        await self.db.flush()
         return purchase
+
+    async def get_pending_by_license(self, license_id: int) -> TransactionModel | None:
+        result = await self.db.execute(
+            select(TransactionModel).filter(TransactionModel.license_id == license_id, TransactionModel.status == "PENDING")
+        )
+        return result.scalars().first()
