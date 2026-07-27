@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field, field_validator
+from app.domain.models import LicenseStatus
 from typing import Optional
 
 class CheckRequestDTO(BaseModel):
@@ -26,3 +27,8 @@ class GeneratePurchaseDTO(BaseModel):
 class TelegramBotGenerateDTO(BaseModel):
     duration_days: int = Field(..., description="Duration of the license in days")
     amount: float = Field(..., description="Amount purchased")
+
+class UpdateLicenseDTO(BaseModel):
+    status: Optional[LicenseStatus] = None
+    reset_limit: Optional[int] = None
+    max_devices: Optional[int] = None
