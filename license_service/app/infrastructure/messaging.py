@@ -29,7 +29,7 @@ async def publish_file_generation_event(user_id: int, expire_date: str = None) -
 
             async with callback_queue.iterator() as queue_iter:
                 try:
-                    async with asyncio.timeout(5.0):
+                    async with asyncio.timeout(10.0):
                         async for msg in queue_iter:
                             async with msg.process():
                                 if msg.correlation_id == correlation_id:
