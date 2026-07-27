@@ -11,6 +11,7 @@ class ActivateKeyDTO(BaseModel):
     force: bool = Field(False, description="Force activate and deactivate old license")
 
 class GeneratePurchaseDTO(BaseModel):
+    count: int = Field(default=1, gt=0, le=1000, description="Number of keys to generate")
     duration_days: Optional[int] = Field(None, gt=0, description="Duration of the license in days")
     amount: float = Field(..., ge=0.0, description="Amount purchased")
     method: PaymentMethod = Field(..., description="Payment method")
