@@ -9,6 +9,14 @@ class LicenseStatus(str, enum.Enum):
     EXPIRED = "EXPIRED"
     BANNED = "BANNED"
 
+class PaymentMethod(str, enum.Enum):
+    STARS = "Stars"
+    FUNPAY = "FunPay"
+    CRYPTO = "Crypto"
+    CARD = "Card"
+    PAYPAL = "PayPal"
+    MANUAL = "Manual"
+
 class License(BaseModel):
     id: Optional[int] = None
     key: str
