@@ -16,9 +16,9 @@ from app.api.bot_routes import router as bot_routes
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    task = asyncio.create_task(check_expired_licenses_task())
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    task = asyncio.create_task(check_expired_licenses_task())
     yield
     task.cancel()
     await engine.dispose()
