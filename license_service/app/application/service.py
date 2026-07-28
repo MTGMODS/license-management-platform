@@ -2,7 +2,9 @@ import secrets
 import string
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import BackgroundTasks
 
+from app.shared.database import AsyncSessionLocal
 from app.domain.models import LicenseStatus, License
 from app.domain.schemas import GeneratePurchaseDTO, ActivateKeyDTO, UpdateLicenseDTO
 from app.infrastructure.repository import LicenseRepository, TransactionRepository, LicenseModel, TransactionModel
@@ -245,3 +247,51 @@ class LicenseService:
         await self.db.commit()
         await self.db.refresh(license_obj)
         return license_obj
+
+class LicenseStatsService:
+    _cached_stats = None
+    _cache_expires_at = None
+    _is_generating = False
+
+    def __init__(self, db):
+        self.repo = LicenseRepository(db)
+
+    async def get_explorer_stats(self, metrics: list[str], group_by: str, period: str, filters: dict, sort: str, limit: int, offset: int):
+        return await self.repo.build_explorer_query(metrics, group_by, period, filters, sort, limit, offset)
+
+    async def get_website_stats(self, background_tasks: BackgroundTasks = None):
+        now = datetime.now(timezone.utc)
+
+        if LicenseStatsService._cached_stats and LicenseStatsService._cache_expires_at and now < LicenseStatsService._cache_expires_at:
+            return LicenseStatsService._cached_stats
+
+        if LicenseStatsService._cached_stats is not None:
+            if not LicenseStatsService._is_generating and background_tasks is not None:
+                LicenseStatsService._is_generating = True
+                background_tasks.add_task(LicenseStatsService._generate_background_stats)
+            return LicenseStatsService._cached_stats
+
+        LicenseStatsService._is_generating = True
+        try:
+            stats = await self.repo.get_heavy_public_stats()
+            LicenseStatsService._cached_stats = stats
+            LicenseStatsService._cache_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
+        finally:
+            LicenseStatsService._is_generating = False
+
+        return LicenseStatsService._cached_stats
+
+    @staticmethod
+    async def _generate_background_stats():
+        try:
+            async with AsyncSessionLocal() as db_session:
+                repo = LicenseRepository(db_session)
+                stats = await repo.get_heavy_public_stats()
+                
+                LicenseStatsService._cached_stats = stats
+                LicenseStatsService._cache_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
+                print("VIP background stats generation completed.")
+        except Exception as e:
+            print(f"Error in VIP background stats generation: {e}")
+        finally:
+            LicenseStatsService._is_generating = False

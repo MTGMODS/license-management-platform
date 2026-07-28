@@ -10,7 +10,9 @@ from app.application.worker import check_expired_licenses_task
 from app.api.client_routes import router as client_router
 from app.api.user_routes import router as user_router
 from app.api.admin_routes import router as admin_router
+from app.api.stats_routes import router as stats_router
 from app.api.bot_routes import router as bot_routes
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -41,6 +43,7 @@ app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 app.include_router(client_router)
 app.include_router(user_router)
+app.include_router(stats_router)
 app.include_router(admin_router)
 app.include_router(bot_routes)
 
