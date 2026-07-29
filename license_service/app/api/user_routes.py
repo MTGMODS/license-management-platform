@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/v1/license", tags=["User Dashboard"])
 async def activate_key(payload: ActivateKeyDTO, user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
     service = LicenseService(db)
     license_id = await service.activate_key_for_user(payload, user_id)
-    await service.complete_pending_purchase(license_id=license_id, user_id=user_id)
+    await service.complete_purchase(license_id=license_id, user_id=user_id)
     return {"status": "success", "message": "License activated successfully"}
 
 @router.post("/download", description="Request a download for a license key")

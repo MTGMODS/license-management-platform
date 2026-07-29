@@ -155,6 +155,10 @@ class LicenseService:
         return keys
 
     async def activate_key_for_user(self, payload: ActivateKeyDTO, user_id: int) -> int:
+        db_sub = await self.license_repo.get_by_key(payload.key)
+        if not db_sub or db_sub.status != LicenseStatus.NOT_ACTIVATED:
+            raise DomainException(message="Invalid key or already activated", status_code=400, error_code="INVALID_KEY")
+
         active_sub = await self.license_repo.get_active_by_user(user_id)
         if active_sub:
             if not payload.force:
@@ -165,10 +169,6 @@ class LicenseService:
             else:
                 active_sub.status = LicenseStatus.EXPIRED
                 active_sub.expires_at = datetime.now(timezone.utc)
-
-        db_sub = await self.license_repo.get_by_key(payload.key)
-        if not db_sub or db_sub.status != LicenseStatus.NOT_ACTIVATED:
-            raise DomainException(message="Invalid key or already activated", status_code=400, error_code="INVALID_KEY")
         
         expires_at = None
         if db_sub.duration_days is not None:
@@ -182,8 +182,8 @@ class LicenseService:
         await self.db.commit()
         return db_sub.id
 
-    async def complete_pending_purchase(self, license_id: int, user_id: int):
-        tx = await self.tx_repo.get_pending_by_license(license_id)
+    async def complete_purchase(self, license_id: int, user_id: int):
+        tx = await self.tx_repo.get_by_license(license_id)
         if tx:
             tx.status = "COMPLETED"
             tx.user_id = user_id
