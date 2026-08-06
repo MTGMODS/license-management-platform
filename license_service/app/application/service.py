@@ -190,7 +190,7 @@ class LicenseService:
             tx.purchased_at = datetime.now(timezone.utc)
             await self.db.commit()
 
-    async def get_active_license_for_download(self, user_id: int) -> LicenseModel:
+    async def get_active_license(self, user_id: int) -> LicenseModel:
         db_sub = await self.license_repo.get_active_by_user(user_id)
         if not db_sub:
             raise DomainException(message="You don't have an active license.", status_code=403, error_code="NO_ACTIVE_LICENSE")

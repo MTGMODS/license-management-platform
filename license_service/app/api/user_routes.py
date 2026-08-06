@@ -19,7 +19,7 @@ async def activate_key(payload: ActivateKeyDTO, user_id: int = Depends(get_curre
 @router.post("/download", description="Request a download for a license key")
 async def request_download(user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
     service = LicenseService(db)
-    db_sub = await service.get_active_license_for_download(user_id)
+    db_sub = await service.get_active_license(user_id)
     expire_date = db_sub.expires_at.isoformat() if db_sub.expires_at else None
     try:
         download_url = await publish_file_generation_event(user_id=user_id, expire_date=expire_date)
