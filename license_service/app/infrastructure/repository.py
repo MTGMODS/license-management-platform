@@ -94,18 +94,18 @@ class LicenseRepository:
         await self.db.flush()
         return licenses
 
-    async def deactivate_expired_licenses(self) -> list[int]:
+    async def deactivate_expired_licenses(self) -> list[dict]:
         query = (
             update(LicenseModel)
             .where(LicenseModel.status == LicenseStatus.ACTIVE)
             .where(LicenseModel.expires_at < func.now())
             .values(status=LicenseStatus.EXPIRED)
-            .returning(LicenseModel.user_id)
+            .returning(LicenseModel.id, LicenseModel.user_id, LicenseModel.expires_at)
         )
         result = await self.db.execute(query)
-        await self.db.commit()
         
-        return list(result.scalars().all())
+        rows = result.all()
+        return [{"license_id": r.id, "user_id": r.user_id, "expires_at": r.expires_at.isoformat() if r.expires_at else None} for r in rows]
         
     async def log_device(self, license_id: int, device: str, ip_address: str, user_agent: str):
         result = await self.db.execute(
