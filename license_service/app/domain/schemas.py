@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from app.domain.models import LicenseStatus, PaymentMethod
-from typing import Optional
+from typing import Optional, Literal
 
 class CheckRequestDTO(BaseModel):
     key: str = Field(..., min_length=19, max_length=19, description="VIP Key")
@@ -15,7 +15,7 @@ class GeneratePurchaseDTO(BaseModel):
     duration_days: Optional[int] = Field(None, gt=0, description="Duration of the license in days")
     amount: float = Field(..., ge=0.0, description="Amount purchased")
     method: PaymentMethod = Field(..., description="Payment method")
-    status: str = Field(default="COMPLETED", description="PENDING or COMPLETED")
+    status: Literal["PENDING", "COMPLETED"] = Field(default="COMPLETED", description="PENDING or COMPLETED")
     max_devices: int = Field(default=3, description="Maximum allowed devices")
 
 class TelegramBotGenerateDTO(BaseModel):
@@ -29,6 +29,6 @@ class UpdateLicenseDTO(BaseModel):
 
 class LicenseQuerySchema(BaseModel):
     metrics: list[str] = Field(default=["revenue", "purchases", "active_licenses"])
-    group_by_options: list[str] = Field(default=["date", "payment_method", "duration_days", "user_id"])
+    group_by_options: list[str] = Field(default=["method", "duration", "status", "date", "hour", "weekday", "user_id"])
     periods: list[str] = Field(default=["all", "30d", "24h", "1h"])
-    filters: list[str] = Field(default=["payment_method", "status", "duration_days"])
+    filters: list[str] = Field(default=["method", "status", "duration", "user_id"])
