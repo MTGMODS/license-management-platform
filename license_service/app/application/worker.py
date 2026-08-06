@@ -8,12 +8,15 @@ async def check_expired_licenses_task():
         try:
             async with AsyncSessionLocal() as db:
                 repo = LicenseRepository(db)
-                expired_user_ids = await repo.deactivate_expired_licenses()
+                expired_licenses = await repo.deactivate_expired_licenses()
                 
-                for user_id in expired_user_ids:
-                    if user_id:
-                        await publish_vip_expired_event(user_id)
-                        
+                if expired_licenses:
+                    await db.commit()
+                    
+                    for lic in expired_licenses:
+                        if lic.get("user_id"):
+                            await publish_vip_expired_event(lic)
+                            
         except Exception as e:
             print(f"[Worker Error] Failed to process expired licenses: {e}")
         
