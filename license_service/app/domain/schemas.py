@@ -16,7 +16,7 @@ class GeneratePurchaseDTO(BaseModel):
     amount: float = Field(..., ge=0.0, description="Amount purchased")
     method: PaymentMethod = Field(..., description="Payment method")
     status: Literal["PENDING", "COMPLETED"] = Field(default="COMPLETED", description="PENDING or COMPLETED")
-    max_devices: int = Field(default=3, description="Maximum allowed devices")
+    max_devices: int = Field(default=2, description="Maximum allowed devices")
 
 class TelegramBotGenerateDTO(BaseModel):
     duration_days: int = Field(..., description="Duration of the license in days")
