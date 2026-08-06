@@ -44,12 +44,12 @@ async def publish_file_generation_event(user_id: int, expire_date: str = None) -
         print(f"[RabbitMQ] ❌ Error: {e}")
         raise e
 
-async def publish_vip_expired_event(user_id: int):
+async def publish_vip_expired_event(event_data: dict):
     connection = await aio_pika.connect_robust(settings.RABBITMQ_URL)
     async with connection:
         channel = await connection.channel()
         queue = await channel.declare_queue("vip_deactivation_queue", durable=True)
+
+        message_body = json.dumps({"event": "license.expired", **event_data})
         
-        message_body = json.dumps({"user_id": user_id, "action": "deactivate_vip"})
-        
-        await channel.default_exchange.publish(aio_pika.Message(body=message_body.encode()), routing_key=queue.name,)
+        await channel.default_exchange.publish(aio_pika.Message(body=message_body.encode()), routing_key=queue.name)
