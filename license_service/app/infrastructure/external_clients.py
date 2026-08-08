@@ -18,7 +18,12 @@ class UserServiceClient:
                 response = await client.get(f"{self.base_url}/api/v1/users/resolve", params=params, headers=self.headers)
                 if response.status_code == 200:
                     return response.json().get("user_id")
-                return None
+                
+                if response.status_code == 404:
+                    return None
+                    
+                print(f"[UserServiceClient] Unexpected status code: {response.status_code}")
+                raise HTTPException(status_code=503, detail="User service unavailable")
             except Exception as e:
                 print(f"[UserServiceClient] Failed to resolve user: {e}")
                 raise HTTPException(status_code=503, detail="User service unavailable")
