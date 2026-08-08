@@ -60,3 +60,4 @@ async def publish_bot_command(routing_key: str, payload: dict):
             
     except Exception as e:
         print(f"[RabbitMQ] ❌ Publish Error ({routing_key}): {e}")
+        raise
