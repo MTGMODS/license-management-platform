@@ -9,6 +9,7 @@ from app.domain.models import LicenseStatus, License
 from app.domain.schemas import GeneratePurchaseDTO, ActivateKeyDTO, UpdateLicenseDTO
 from app.infrastructure.repository import LicenseRepository, TransactionRepository, LicenseModel, TransactionModel
 from app.shared.exceptions import DomainException
+from app.infrastructure.external_clients import UserServiceClient
 
 class LicenseService:
     def __init__(self, db: AsyncSession):
@@ -107,6 +108,28 @@ class LicenseService:
             return {"status": "success", "message": "Device has been successfully unlinked."}
         else:
             raise DomainException(message="Device delete is fail.", status_code=404, error_code="DELETE_FAILED")
+
+    async def get_bot_info_by_social(self, telegram_id: int = None, discord_id: int = None) -> dict:
+        user_client = UserServiceClient()
+        user_id = await user_client.resolve_social_to_user_id(telegram_id, discord_id)
+        if not user_id:
+            return {"is_vip": False}
+            
+        license_obj = await self.license_repo.get_active_by_user(user_id)
+        if not license_obj:
+            return {"is_vip": False}
+            
+        return {
+            "is_vip": True,
+            "license": {
+                "id": license_obj.id,
+                "activated_at": license_obj.activated_at.strftime("%d.%m.%Y %H:%M:%S UTC"),
+                "expires_at": license_obj.expires_at.strftime("%d.%m.%Y %H:%M:%S UTC"),
+                "duration_days": license_obj.duration_days,
+                "purchase_method": license_obj.transaction.payment_method,
+                "purchase_price": license_obj.transaction.amount
+            }
+        }
 
     async def remove_device_admin(self, device_id: int):
         deleted = await self.license_repo.remove_device(device_id)

@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     RABBITMQ_URL: str
     JWT_SECRET: str
     BOT_SECRET_TOKEN: str
+    USER_SERVICE_URL: str
+    INTERNAL_SECRET_TOKEN: str
     API_VERSION: str
     APP_VERSION: str
     DEBUG_MODE: bool
