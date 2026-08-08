@@ -25,7 +25,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="License Service",
-    description="Core SaaS System for License Management",
+    description="Core Micro SaaS System for License Management",
     version=settings.APP_VERSION,
     lifespan=lifespan
 )
