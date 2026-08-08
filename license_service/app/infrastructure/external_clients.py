@@ -1,7 +1,7 @@
 import httpx
+from fastapi import HTTPException
 from typing import Optional
 from app.shared.config import settings
-from app.shared.exceptions import DomainException
 
 class UserServiceClient:
     def __init__(self):
@@ -21,7 +21,7 @@ class UserServiceClient:
                 return None
             except Exception as e:
                 print(f"[UserServiceClient] Failed to resolve user: {e}")
-                return None
+                raise HTTPException(status_code=503, detail="User service unavailable")
 
     async def get_social_ids_by_user_id(self, user_id: int) -> dict:
         async with httpx.AsyncClient() as client:
