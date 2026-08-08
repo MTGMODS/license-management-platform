@@ -71,7 +71,25 @@ class UserService:
         db_user.discord_id = None
         await self.repo.update(db_user)
         return {"detail": "Account successfully deleted."}
+
+    # BOT METHODS
+    async def resolve_social_id(self, telegram_id: int = None, discord_id: int = None) -> int | None:
+        if telegram_id:
+            user = await self.repo.get_by_telegram_id(telegram_id)
+        elif discord_id:
+            user = await self.repo.get_by_discord_id(discord_id)
+        else:
+            return None
+            
+        return user.id if user else None
+
+    async def get_social_ids(self, user_id: int) -> dict | None:
+        user = await self.repo.get_by_id(user_id)
+        if not user:
+            return None
+        return {"telegram_id": user.telegram_id, "discord_id": user.discord_id}
     
+    # ADMIN METHODS
     async def get_user_for_admin(self, target_user_id: int) -> User:
         db_user = await self.repo.get_by_id(target_user_id)
         

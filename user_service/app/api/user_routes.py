@@ -7,7 +7,7 @@ from app.domain.models import User
 from app.domain.schemas import LinkSocialPayload
 from app.application.jwt_utils import get_current_user_id
 
-router = APIRouter(prefix="/api/v1/users", tags=["Users Service"])
+router = APIRouter(prefix="/api/v1/users", tags=["User Dashboard"])
 
 @router.get("/me", response_model=User)
 async def get_my_profile(current_user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):

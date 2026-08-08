@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     # --- Telegram Mini App ---
     TELEGRAM_BOT_TOKEN: str
 
+    # --- Service-to-Service ---
+    INTERNAL_SECRET_TOKEN: str
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 settings = Settings()
