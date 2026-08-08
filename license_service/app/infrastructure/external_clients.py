@@ -34,6 +34,13 @@ class UserServiceClient:
                 response = await client.get(f"{self.base_url}/api/v1/users/{user_id}/socials", headers=self.headers)
                 if response.status_code == 200:
                     return response.json()
-                return {}
-            except Exception:
-                return {}
+                
+                if response.status_code == 404:
+                    return {}
+
+                print(f"[UserServiceClient] Unexpected status {response.status_code} for user {user_id}")
+                raise HTTPException(status_code=503, detail="User service unavailable")
+                
+            except httpx.RequestError as e:
+                print(f"[UserServiceClient] Connection failed: {e}")
+                raise HTTPException(status_code=503, detail="User service unavailable")
