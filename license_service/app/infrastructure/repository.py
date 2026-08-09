@@ -1,6 +1,6 @@
 from typing import Optional
 from datetime import datetime, timedelta, timezone
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum as SQLEnum, select, update, distinct, case, desc, and_
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum as SQLEnum, select, update, distinct, case, desc, and_, or_
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship, selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -164,7 +164,10 @@ class LicenseRepository:
             func.count(distinct(case((and_(TransactionModel.amount == 0, LicenseModel.status == "ACTIVE"), LicenseModel.id)))).label("active_free")
         ).select_from(LicenseModel).outerjoin(
             TransactionModel, LicenseModel.id == TransactionModel.license_id
-        ).where(LicenseModel.duration_days.isnot(None))
+        ).where(
+            LicenseModel.duration_days.isnot(None),
+            TransactionModel.status == "COMPLETED"
+        )
         
         n_res = (await self.db.execute(new_totals_stmt)).first()
 
@@ -200,7 +203,10 @@ class LicenseRepository:
             func.sum(TransactionModel.amount).label("sum_forever")
         ).select_from(LicenseModel).outerjoin(
             TransactionModel, LicenseModel.id == TransactionModel.license_id
-        ).where(LicenseModel.duration_days.is_(None))
+        ).where(
+            LicenseModel.duration_days.is_(None),
+            TransactionModel.status == "COMPLETED"
+        )
 
         o_res = (await self.db.execute(old_totals_stmt)).first()
 
