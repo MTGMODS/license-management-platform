@@ -4,3 +4,4 @@ venv/
 *.env
 *.db
 /distribution_service/app/builds/
+/distribution_service/app/tools/
