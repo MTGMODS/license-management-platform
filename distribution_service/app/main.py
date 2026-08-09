@@ -1,7 +1,6 @@
-import asyncio
-from contextlib import asynccontextmanager
+import asyncio, aio_pika
 
-import aio_pika
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,9 +11,7 @@ from app.infrastructure.messaging import process_message
 from app.shared.config import settings
 from app.shared.exceptions import DomainException, global_exception_handler, validation_exception_handler
 
-
 RABBITMQ_RECONNECT_DELAY_SECONDS = 5
-
 
 async def consume_file_generation_events(app: FastAPI):
     while True:
@@ -36,7 +33,6 @@ async def consume_file_generation_events(app: FastAPI):
         finally:
             if connection and not connection.is_closed:
                 await connection.close()
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
