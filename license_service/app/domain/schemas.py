@@ -16,16 +16,16 @@ class GeneratePurchaseDTO(BaseModel):
     amount: float = Field(..., ge=0.0, description="Amount purchased")
     method: PaymentMethod = Field(..., description="Payment method")
     status: Literal["PENDING", "COMPLETED"] = Field(default="COMPLETED", description="PENDING or COMPLETED")
-    max_devices: int = Field(default=2, description="Maximum allowed devices")
+    max_devices: int = Field(default=2, ge=1, description="Maximum allowed devices")
 
 class TelegramBotGenerateDTO(BaseModel):
-    duration_days: int = Field(..., description="Duration of the license in days")
-    amount: float = Field(..., description="Amount purchased")
+    duration_days: int = Field(..., gt=0, description="Duration of the license in days")
+    amount: float = Field(..., ge=0.0, description="Amount purchased")
 
 class UpdateLicenseDTO(BaseModel):
     status: Optional[LicenseStatus] = None
-    reset_limit: Optional[int] = None
-    max_devices: Optional[int] = None
+    reset_limit: Optional[int] = Field(None, ge=0)
+    max_devices: Optional[int] = Field(None, ge=1)
 
 class LicenseQuerySchema(BaseModel):
     metrics: list[str] = Field(default=["revenue", "purchases", "active_licenses"])
