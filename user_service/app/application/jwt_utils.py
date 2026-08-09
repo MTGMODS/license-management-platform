@@ -1,4 +1,4 @@
-import jwt, hmac, hashlib
+import jwt, hmac, hashlib, time
 from jwt import PyJWKClient
 from urllib.parse import parse_qsl
 from datetime import datetime, timedelta, timezone
@@ -76,6 +76,15 @@ def verify_telegram_webapp_hash(init_data: str, bot_token: str) -> bool:
         parsed_data = dict(parse_qsl(init_data, keep_blank_values=True))
         tg_hash = parsed_data.pop("hash", None)
         if not tg_hash:
+            return False
+
+        auth_date = parsed_data.get("auth_date")
+        if not auth_date:
+            return False
+
+        auth_timestamp = int(auth_date)
+        now = int(time.time())
+        if auth_timestamp > now + 60 or now - auth_timestamp > settings.TELEGRAM_WEBAPP_MAX_AGE_SECONDS:
             return False
             
         check_string = "\n".join(f"{k}={v}" for k, v in sorted(parsed_data.items()))
