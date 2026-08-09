@@ -1,4 +1,3 @@
-import os
 from pathlib import Path as FilePath
 from fastapi import APIRouter, BackgroundTasks, Path
 from fastapi.responses import FileResponse
