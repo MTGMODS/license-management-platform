@@ -116,9 +116,27 @@ class UserService:
         if "role" in update_data:
             user.role = update_data["role"]
         if "telegram_id" in update_data:
-            user.telegram_id = update_data["telegram_id"]
+            telegram_id = update_data["telegram_id"]
+            if telegram_id is not None:
+                existing = await self.repo.get_by_telegram_id(telegram_id)
+                if existing and existing.id != user.id:
+                    raise DomainException(
+                        "This Telegram account is already linked to another profile.",
+                        status_code=409,
+                        error_code="ALREADY_LINKED"
+                    )
+            user.telegram_id = telegram_id
         if "discord_id" in update_data:
-            user.discord_id = update_data["discord_id"]
+            discord_id = update_data["discord_id"]
+            if discord_id is not None:
+                existing = await self.repo.get_by_discord_id(discord_id)
+                if existing and existing.id != user.id:
+                    raise DomainException(
+                        "This Discord account is already linked to another profile.",
+                        status_code=409,
+                        error_code="ALREADY_LINKED"
+                    )
+            user.discord_id = discord_id
 
         await self.repo.update(user)
         return User.model_validate(user)
