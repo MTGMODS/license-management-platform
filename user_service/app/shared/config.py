@@ -24,6 +24,7 @@ class Settings(BaseSettings):
 
     # --- Telegram Mini App ---
     TELEGRAM_BOT_TOKEN: str
+    TELEGRAM_WEBAPP_MAX_AGE_SECONDS: int = 3600
 
     # --- Service-to-Service ---
     INTERNAL_SECRET_TOKEN: str
