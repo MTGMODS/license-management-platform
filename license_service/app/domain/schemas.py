@@ -19,7 +19,7 @@ class GeneratePurchaseDTO(BaseModel):
     max_devices: int = Field(default=2, ge=1, description="Maximum allowed devices")
 
 class TelegramBotGenerateDTO(BaseModel):
-    duration_days: int = Field(..., gt=0, description="Duration of the license in days")
+    duration_days: Optional[int] = Field(None, gt=0, description="Duration of the license in days")
     amount: float = Field(..., ge=0.0, description="Amount purchased")
 
 class UpdateLicenseDTO(BaseModel):
