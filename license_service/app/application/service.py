@@ -119,15 +119,16 @@ class LicenseService:
         if not license_obj:
             return {"is_vip": False}
             
+        transaction = license_obj.transaction
         return {
             "is_vip": True,
             "license": {
                 "id": license_obj.id,
-                "activated_at": license_obj.activated_at.strftime("%d.%m.%Y %H:%M:%S UTC"),
-                "expires_at": license_obj.expires_at.strftime("%d.%m.%Y %H:%M:%S UTC"),
+                "activated_at": license_obj.activated_at.strftime("%d.%m.%Y %H:%M:%S UTC") if license_obj.activated_at else None,
+                "expires_at": license_obj.expires_at.strftime("%d.%m.%Y %H:%M:%S UTC") if license_obj.expires_at else None,
                 "duration_days": license_obj.duration_days,
-                "purchase_method": license_obj.transaction.payment_method,
-                "purchase_price": license_obj.transaction.amount
+                "purchase_method": transaction.payment_method if transaction else None,
+                "purchase_price": transaction.amount if transaction else None
             }
         }
 
