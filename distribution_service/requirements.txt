@@ -1,5 +1,5 @@
-fastapi[standard]==0.116.1
-sqlalchemy==2.0.41
-pydantic-settings==2.10.1
+fastapi[standard]==0.141.1
+sqlalchemy==2.0.51
+pydantic-settings==2.15.0
 aiofiles==23.2.1
-aio-pika==9.4.0
+aio-pika==10.0.1
