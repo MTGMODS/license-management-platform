@@ -1,9 +1,10 @@
+import re
 from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, Field, field_validator, AliasChoices
 
 class LaunchPayload(BaseModel):
-    version: str = Field(..., max_length=20, description="Product version")
+    version: str = Field(..., max_length=25, description="Product version")
     mode: str = Field(..., description="Product work mode")
     server: int = Field(..., validation_alias=AliasChoices("server", "server_id"), description="Server ID")
     device: str = Field(..., pattern="^(PC|MOBILE)$", description="Device type: 'PC' / 'MOBILE'")
@@ -28,6 +29,14 @@ class LaunchPayload(BaseModel):
             "gov", "judge", "lc", "fd", "ins", "mafia", "ghetto"
         }
         return v if v in valid_modes else "unknown"
+
+    @field_validator("version")
+    @classmethod
+    def validate_strict_version(cls, v: str) -> str:
+        if not re.match(r"^\d+(?:\.\d+)+\s+(Free|VIP|Launcher Edition)$", v):
+            raise ValueError("Invalid version format.")
+        
+        return v
 
     @property
     def is_vip(self) -> bool:
