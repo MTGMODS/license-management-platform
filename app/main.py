@@ -1,4 +1,3 @@
-import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, LabeledPrice
 from telegram.ext import (
     ApplicationBuilder, CommandHandler, CallbackQueryHandler,
@@ -8,10 +7,6 @@ from telegram.ext import (
 from app.config import TELEGRAM_BOT_TOKEN, TELEGRAM_VIP_CHAT_ID, WEB_APP_URL
 from app.api import api_client
 from app.rabbitmq import start_rabbitmq_consumer
-
-
-logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 PRICES = {
     "buy_7":   {"stars": 75,   "duration": 7,   "price": 1,  "title": "VIP на 7 дней"},
@@ -116,11 +111,11 @@ async def handle_join_request(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def post_init(app: Application):
     await api_client.start()
     app.create_task(start_rabbitmq_consumer(app.bot))
-    logger.info("[*] Telegram Bot initialized (API + RabbitMQ)")
+    print("[*] Telegram Bot initialized (API + RabbitMQ)")
 
 async def post_shutdown(app: Application):
     await api_client.close()
-    logger.info("[*] Telegram Bot API Client closed")
+    print("[*] Telegram Bot API Client closed")
 
 def start_bot():
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).post_init(post_init).post_shutdown(post_shutdown).build()
@@ -132,5 +127,5 @@ def start_bot():
     app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_handler))
     app.add_handler(ChatJoinRequestHandler(handle_join_request))
 
-    logger.info("[*] Starting Telegram Bot Microservice...")
+    print("[*] Starting Telegram Bot Microservice...")
     app.run_polling()
