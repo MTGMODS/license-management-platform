@@ -1,6 +1,6 @@
 import aiohttp
 from typing import Optional
-from app.config import BACKEND_API_URL, BOT_SECRET_TOKEN 
+from app.config import API_ENDPOINT_URL, BOT_SECRET_TOKEN 
 
 class APIClient:
     def __init__(self):
@@ -18,7 +18,7 @@ class APIClient:
         if not self.session:
             return {"error": True}
 
-        url = f"{BACKEND_API_URL}/api/v1/license/check/info?discord_id={discord_id}"
+        url = f"{API_ENDPOINT_URL}?discord_id={discord_id}"
         
         headers = {"x-bot-token": BOT_SECRET_TOKEN}
         

@@ -9,7 +9,7 @@ VIP_ROLE_ID = int(os.getenv("VIP_ROLE_ID"))
 VIP_CHANNEL_ID = int(os.getenv("VIP_CHANNEL_ID"))
 CHAT_CHANNEL_ID = int(os.getenv("CHAT_CHANNEL_ID"))
 
-BACKEND_API_URL = os.getenv("BACKEND_API_URL")
+API_ENDPOINT_URL = os.getenv("API_ENDPOINT_URL")
 RABBITMQ_URL = os.getenv("RABBITMQ_URL")
 
 BOT_SECRET_TOKEN = os.getenv("BOT_SECRET_TOKEN")
