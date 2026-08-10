@@ -27,6 +27,8 @@ They only:
     *   `discord.remove_vip_role` — Safely removes the VIP role from a user.
 *   **Secure API:** Communicates with the backend using a secure `x-bot-token` header.
 
+-
+
 ## ⚙️ Installation & Setup
 
 1. **Clone the repository:**
@@ -35,29 +37,42 @@ They only:
    cd mtg_discord_bot
    ```
 
-2. **Create Python venv :**
+2. **Configure environment variables:**
+    Create a '.env' file in the root directory based on the '.env.example' template
+
+
+3. **🐳 Running the Service (Docker - Recommended)**
+
+    Build and start the container in the background:
+    ```
+    docker-compose up -d --build
+    ```
+
+    Check the bot logs:
+    ```
+    docker logs -f mtg_discord_bot
+    ```
+
+    To stop the bot:
+    ```
+    docker-compose down
+    ```
+
+---
+
+## 🏃‍♂️ Local Development (Without Docker)
+
+1) **Create Python venv :**
     ```bash
     python -m venv venv
     ```
 
-3. **Install dependencies:**
+2) **Install dependencies:**
     ```bash
     pip install -r requirements.txt
     ```
 
-4. **Configure environment variables:**
-    Create a '.env' file in the root directory based on the '.env.example' template
-
-
-## 🏃‍♂️ Running the Service
-
-Start the bot directly using Python:
+3) **Start the Discord bot:** 
     ```bash
     python main.py
-    ```
-
-You should see:
-    ```
-    [*] Starting Discord Bot Microservice...
-    [*] Discord RabbitMQ Consumer is running...
     ```
