@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from app.config import DISCORD_BOT_TOKEN, DISCORD_GUILD_ID, VIP_ROLE_ID, VIP_CHANNEL_ID, CHAT_CHANNEL_ID
+from app.config import DISCORD_GUILD_ID, VIP_ROLE_ID, VIP_CHANNEL_ID, CHAT_CHANNEL_ID
 from app.api import api_client
 from app.rabbitmq import start_rabbitmq_consumer
 
