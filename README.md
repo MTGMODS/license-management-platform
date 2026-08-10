@@ -1,6 +1,6 @@
 # MTGMODS License Management Platform 🚀
 
-A robust, microservices-based SaaS platform designed for managing licenses, securely distributing game modifications (Lua scripts), and tracking usage analytics.
+A robust, microservices-based micro SaaS platform designed for managing licenses, securely distributing digital product, and tracking usage analytics.
 
 This repository contains the backend core of the MTG VIP ecosystem (Arizona & Rodina Helper), built with high scalability, strict service isolation, and event-driven communication in mind.
 
@@ -53,33 +53,12 @@ license-management-platform/
 └── README.md
 ```
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- [Docker](https://www.docker.com/) and Docker Compose installed.
-- Python 3.12+ (for local development).
-
-### Environment Setup
-
-Each microservice requires its own `.env` file. Copy the provided `.env.example` templates and fill in the appropriate database URIs, secret keys, and broker URLs:
-
-```
-cp license_service/.env.example license_service/.env
-cp user_service/.env.example user_service/.env
-cp distribution_service/.env.example distribution_service/.env
-cp usage_service/.env.example usage_service/.env
-```
-
-*Note: Ensure* *`x-internal-token`* *and JWT secrets match across services for seamless Service-to-Service (S2S) communication.*
-
 ## 🔐 Security & Communication
 
 - **Client to API:** Secured via `Authorization: Bearer <JWT>`.
 - **Service to Service (Sync):** Internal HTTP requests are verified using a shared `x-internal-token` header.
 - **Service to Service (Async):** Background tasks (like kicking expired users) are published to a RabbitMQ Topic Exchange (`mtgmods.bot.commands`).
 
-## 📜 License
+## 🚀 Getting Started
 
-This prject MIT license ownered Bohdan Marher (MGG MODS)
-
+In progress editing...
