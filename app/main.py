@@ -125,7 +125,3 @@ async def cmd_vip(interaction: discord.Interaction):
     )
     
     await interaction.followup.send(embed=create_embed(text))
-
-if __name__ == "__main__":
-    print("[*] Starting Discord Bot Microservice...")
-    bot.run(DISCORD_BOT_TOKEN)
