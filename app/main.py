@@ -116,6 +116,33 @@ async def helper_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     markup = InlineKeyboardMarkup([[InlineKeyboardButton("👉 Открыть VIP кабинет", web_app=WebAppInfo(url=WEB_APP_URL))]])
     await update.message.reply_text(text, reply_markup=markup, parse_mode="HTML")
 
+async def vip_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    telegram_id = update.effective_user.id
+    
+    vip_data = await api_client.check_vip_status(telegram_id)
+    
+    if vip_data.get("error"):
+        await update.message.reply_text("⚠️ <b>Не удалось проверить VIP. Попробуйте позже.</b>", parse_mode="HTML")
+        return
+
+    if not vip_data.get("is_vip"):
+        await update.message.reply_text("❌ <b>У вас нет активного VIP.</b>", parse_mode="HTML")
+        return
+
+    license_info = vip_data.get("license", {})
+    activated_at = license_info.get("activated_at")
+    expires_at = license_info.get("expires_at",  "FOREVER")
+    method = license_info.get("purchase_method")
+    price = license_info.get("purchase_price")
+
+    text = (
+        f"📅 <b>Активация VIP:</b> {activated_at}\n"
+        f"🔒 <b>Доступ к VIP:</b> до {expires_at}\n"
+        f"ℹ️ <b>Оплата:</b> ${price} через {method}"
+    )
+    
+    await update.message.reply_text(text, parse_mode="HTML")
+
 async def post_init(app: Application):
     await api_client.start()
     app.create_task(start_rabbitmq_consumer(app.bot))
@@ -129,8 +156,9 @@ def start_bot():
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).post_init(post_init).post_shutdown(post_shutdown).build()
 
     app.add_handler(CommandHandler("start", start_cmd))
-    app.add_handler(CommandHandler("helper", helper_cmd))
     app.add_handler(CommandHandler("pay", pay_cmd))
+    app.add_handler(CommandHandler("vip", vip_cmd))
+    app.add_handler(CommandHandler("helper", helper_cmd))
     app.add_handler(CallbackQueryHandler(pay_callback, pattern="^buy_"))
     app.add_handler(PreCheckoutQueryHandler(precheckout_handler))
     app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_handler))
