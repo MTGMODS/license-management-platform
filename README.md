@@ -27,7 +27,7 @@ They only:
     *   `discord.remove_vip_role` — Safely removes the VIP role from a user.
 *   **Secure API:** Communicates with the backend using a secure `x-bot-token` header.
 
--
+---
 
 ## ⚙️ Installation & Setup
 
