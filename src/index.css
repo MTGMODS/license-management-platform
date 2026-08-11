@@ -46,6 +46,13 @@
 
   --animate-fade-up: fade-up 0.5s var(--ease-out-soft) both;
   --animate-pulse-glow: pulse-glow 3.5s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.6s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes fade-up {
