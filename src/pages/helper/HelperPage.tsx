@@ -4,6 +4,7 @@ import { Link } from 'react-router'
 
 import { useRelease } from '@/features/release/useRelease'
 import { Badge, buttonStyles, Card, Skeleton } from '@/shared/ui'
+import { AnalyticsSection } from '@/widgets/analytics/AnalyticsSection'
 import { MediaGallery } from '@/widgets/gallery/MediaGallery'
 import { QuickStats } from '@/widgets/stats/QuickStats'
 
@@ -117,6 +118,7 @@ export function HelperPage() {
       <QuickStats />
       <ReleaseSection />
       <MediaGallery />
+      <AnalyticsSection />
       <VipTeaser />
     </div>
   )
