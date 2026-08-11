@@ -1,6 +1,8 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { parseApiDate } from './datetime'
+
 /**
  * Intl formatters are costly to construct, and the analytics section renders
  * thousands of numbers across its charts, so they are built once per locale
@@ -19,6 +21,10 @@ export function useFormatters() {
     const decimal = new Intl.NumberFormat(locale, {
       minimumFractionDigits: 1,
       maximumFractionDigits: 1,
+    })
+    const money = new Intl.NumberFormat(locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     })
     const dayMonth = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' })
     const fullDate = new Intl.DateTimeFormat(locale, {
@@ -43,10 +49,13 @@ export function useFormatters() {
       /** Already on a 0-100 scale in the payload, so it is not divided again. */
       percent: (value: number) => `${decimal.format(value)}%`,
       decimal: (value: number) => decimal.format(value),
+      /** Two fraction digits, for small per-day amounts. */
+      money: (value: number) => money.format(value),
       /** Parses the payload's `YYYY-MM-DD` as a calendar date, not local time. */
       dayMonth: (isoDate: string) => dayMonth.format(new Date(`${isoDate}T00:00:00Z`)),
       fullDate: (isoDate: string) => fullDate.format(new Date(`${isoDate}T00:00:00Z`)),
-      dateTime: (iso: string) => dateTime.format(new Date(iso)),
+      dateTime: (iso: string) => dateTime.format(parseApiDate(iso)),
+      dateOnly: (iso: string) => fullDate.format(parseApiDate(iso)),
       hour: (hour: number) => `${String(hour).padStart(2, '0')}:00`,
       /** Index 0 is Sunday, matching the payload's PostgreSQL `dow` values. */
       weekday: (index: number) => weekdayLong.format(weekdayDate(index)),

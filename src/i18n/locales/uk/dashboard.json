@@ -1,0 +1,50 @@
+{
+  "title": "Особистий кабінет",
+  "subtitle": "Керування VIP і завантаження преміум-версії.",
+  "activate": {
+    "title": "Активація ключа",
+    "subtitle": "Введіть ключ формату XXXX-XXXX-XXXX-XXXX.",
+    "placeholder": "XXXX-XXXX-XXXX-XXXX",
+    "action": "Активувати",
+    "success": "VIP активовано",
+    "forceTitle": "У вас уже є активний VIP",
+    "forceBody": "Новий ключ замінить поточний. Час, що лишився, не переноситься.",
+    "forceConfirm": "Замінити",
+    "forceCancel": "Скасувати"
+  },
+  "vip": {
+    "title": "Активний VIP",
+    "inactive": "Активного VIP поки немає",
+    "inactiveHint": "Активуйте ключ вище або купіть підписку на сторінці VIP.",
+    "status": "Статус",
+    "duration": "Термін",
+    "days": "{{count}} дн.",
+    "activated": "Активовано",
+    "expires": "Діє до",
+    "remaining": "Залишилось",
+    "remainingDays": "{{count}} дн.",
+    "remainingHours": "{{count}} год.",
+    "expired": "Закінчився",
+    "payment": "Оплата",
+    "amount": "Сума",
+    "method": "Спосіб",
+    "purchased": "Куплено",
+    "devices": "Пристрої",
+    "devicesCount": "{{used}} з {{max}}",
+    "noDevices": "Поки не прив'язано жодного пристрою",
+    "goVip": "Тарифи VIP"
+  },
+  "download": {
+    "title": "Преміум-файл",
+    "subtitle": "Персональна VIP-збірка. Посилання одноразове.",
+    "action": "Завантажити VIP",
+    "success": "Файл готовий",
+    "started": "Завантаження почалося"
+  },
+  "status": {
+    "ACTIVE": "Активний",
+    "EXPIRED": "Закінчився",
+    "BANNED": "Заблокований",
+    "NOT_ACTIVATED": "Не активований"
+  }
+}

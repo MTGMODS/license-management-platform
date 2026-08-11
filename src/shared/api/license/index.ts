@@ -1,6 +1,11 @@
 import { request } from '../http'
 
-import type { ActivateKeyResult, DownloadRequestResult, LicenseInfo } from './types'
+import type {
+  ActivateKeyResult,
+  DownloadRequestResult,
+  LicenseInfo,
+  LicenseSalesStats,
+} from './types'
 
 /** Length enforced by the backend DTO: `XXXX-XXXX-XXXX-XXXX`. */
 export const LICENSE_KEY_LENGTH = 19
@@ -9,6 +14,23 @@ export const LICENSE_KEY_PATTERN = /^[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$/
 
 export function getLicenseInfo(signal?: AbortSignal): Promise<LicenseInfo> {
   return request<LicenseInfo>({ service: 'license', path: '/info', auth: true, signal })
+}
+
+/**
+ * Public sales figures behind the VIP page.
+ *
+ * This is the one endpoint that wraps its payload in `{ status, data }`;
+ * `/info` on the very same service returns the object directly, so the
+ * envelope is unwrapped here rather than in the shared HTTP layer.
+ */
+export async function getLicenseSalesStats(signal?: AbortSignal): Promise<LicenseSalesStats> {
+  const response = await request<{ status: string; data: LicenseSalesStats }>({
+    service: 'license',
+    path: '/stats/public',
+    signal,
+  })
+
+  return response.data
 }
 
 /**
@@ -53,7 +75,10 @@ export type {
   DownloadRequestResult,
   LicenseDetails,
   LicenseDevice,
+  LicenseDurationStat,
   LicenseInfo,
+  LicensePaymentStat,
+  LicenseSalesStats,
   LicenseStatus,
   LicenseTransaction,
   PaymentMethod,

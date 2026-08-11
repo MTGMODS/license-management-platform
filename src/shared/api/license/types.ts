@@ -41,6 +41,43 @@ export interface LicenseInfo {
   transaction: LicenseTransaction | null
 }
 
+export interface LicenseDurationStat {
+  days: number
+  count: number
+  /** Money actually taken, which is not price times count: real sales include
+   *  discounts and Stars conversion rounding. */
+  sum: number
+  /** How many of these are still active now. */
+  active: number
+}
+
+export interface LicensePaymentStat {
+  method: string
+  count: number
+  sum: number
+}
+
+export interface LicenseSalesStats {
+  /** Offset-aware, unlike the timestamps on `LicenseInfo`. */
+  updated_at: string
+  /** Time-limited subscriptions, the only kind sold now. */
+  new_subs: {
+    total_vips: number
+    active_total: number
+    /** USD. Both breakdowns below sum to exactly this figure. */
+    total_money: number
+    free_issued: number
+    free_active: number
+    top_durations: LicenseDurationStat[]
+    top_payments: LicensePaymentStat[]
+  }
+  /** Legacy lifetime keys, no longer offered. */
+  old_forever: {
+    total_sold: number
+    total_money: number
+  }
+}
+
 export interface ActivateKeyResult {
   status: string
   message: string
