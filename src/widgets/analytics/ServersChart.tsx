@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import type { PeriodKey, ServerStats } from '@/shared/api/usage'
+import { getServer, UNKNOWN_SERVER_ID } from '@/shared/config/servers'
 import { useFormatters } from '@/shared/lib/format'
 import { Card, SegmentedControl } from '@/shared/ui'
 
@@ -21,7 +22,20 @@ export function ServersChart({ servers, period }: ServersChartProps) {
   const format = useFormatters()
   const [limit, setLimit] = useState<TopLimit>(10)
 
-  const ranked = [...servers]
+  const named = servers.map((item) => {
+    const info = getServer(item.server)
+
+    return {
+      ...item,
+      label:
+        item.server === UNKNOWN_SERVER_ID
+          ? t('analytics.servers.unknown')
+          : (info?.name ?? t('analytics.servers.name', { id: item.server })),
+      project: info ? t(`analytics.servers.project.${info.project}`) : null,
+    }
+  })
+
+  const ranked = named
     .sort((a, b) => b.users[period] - a.users[period])
     .filter((item) => item.users[period] > 0)
 
@@ -63,22 +77,18 @@ export function ServersChart({ servers, period }: ServersChartProps) {
             >
               <CartesianGrid stroke={CHART.grid} horizontal={false} />
               <XAxis type="number" {...AXIS_PROPS} tickFormatter={format.compact} />
-              <YAxis
-                type="category"
-                dataKey="server"
-                {...AXIS_PROPS}
-                width={92}
-                tickFormatter={(id: number) => t('analytics.servers.name', { id })}
-              />
+              {/* Names run to "Санкт Петербург", so the axis is wider than a
+                  numeric id would need. */}
+              <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={132} />
               <Tooltip
                 cursor={{ fill: CHART.cursor }}
                 content={({ active, payload }) => {
-                  const point = payload?.[0]?.payload as ServerStats | undefined
+                  const point = payload?.[0]?.payload as (typeof visible)[number] | undefined
                   if (!active || !point) return null
 
                   return (
                     <ChartTooltip
-                      title={t('analytics.servers.name', { id: point.server })}
+                      title={point.project ? `${point.label} · ${point.project}` : point.label}
                       rows={[
                         {
                           label: t('analytics.metric.users'),

@@ -25,6 +25,8 @@ const KNOWN_FACTIONS = [
   'fbi',
   'fd',
   'judge',
+  'lc',
+  'ins',
 ] as const
 
 type KnownFaction = (typeof KNOWN_FACTIONS)[number]
@@ -67,7 +69,7 @@ export function FactionsChart({ factions }: { factions: Record<string, FactionSt
             >
               <CartesianGrid stroke={CHART.grid} horizontal={false} />
               <XAxis type="number" {...AXIS_PROPS} tickFormatter={format.compact} />
-              <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={104} />
+              <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={144} />
               <Tooltip
                 cursor={{ fill: CHART.cursor }}
                 content={({ active, payload }) => {

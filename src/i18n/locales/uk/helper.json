@@ -52,8 +52,16 @@
       "title": "Сервери",
       "subtitle": "Де запускають хелпер.",
       "name": "Сервер {{id}}",
+      "unknown": "Сервер не визначено",
       "top": "Топ {{count}}",
-      "all": "Усі"
+      "all": "Усі",
+      "project": {
+        "arizona": "Arizona RP",
+        "arizonaMobile": "Arizona Mobile",
+        "arizonaVc": "Arizona Vice City",
+        "rodina": "Rodina RP",
+        "rodinaMobile": "Rodina Mobile"
+      }
     },
     "daily": {
       "title": "Динаміка за днями",
@@ -78,7 +86,9 @@
       "prison": "В'язниця",
       "fbi": "ФБР",
       "fd": "Пожежники",
-      "judge": "Суд"
+      "judge": "Судді",
+      "lc": "Центр ліцензування",
+      "ins": "Страхова"
     },
     "versions": {
       "title": "Версії",
