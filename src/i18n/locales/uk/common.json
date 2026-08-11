@@ -1,0 +1,40 @@
+{
+  "brand": "MTG MODS",
+  "actions": {
+    "download": "Завантажити",
+    "learnMore": "Детальніше",
+    "retry": "Повторити",
+    "copy": "Скопіювати",
+    "copied": "Скопійовано",
+    "close": "Закрити",
+    "cancel": "Скасувати",
+    "confirm": "Підтвердити",
+    "back": "Назад"
+  },
+  "state": {
+    "loading": "Завантаження",
+    "empty": "Поки немає даних",
+    "emptyHint": "Дані з'являться, щойно накопичиться статистика",
+    "error": "Не вдалося завантажити дані",
+    "errorHint": "Перевірте з'єднання і спробуйте ще раз"
+  },
+  "language": {
+    "label": "Мова",
+    "ru": "Русский",
+    "uk": "Українська"
+  },
+  "units": {
+    "days_one": "{{count}} день",
+    "days_few": "{{count}} дні",
+    "days_many": "{{count}} днів",
+    "days_other": "{{count}} дня",
+    "hours_one": "{{count}} година",
+    "hours_few": "{{count}} години",
+    "hours_many": "{{count}} годин",
+    "hours_other": "{{count}} години",
+    "minutes_one": "{{count}} хвилина",
+    "minutes_few": "{{count}} хвилини",
+    "minutes_many": "{{count}} хвилин",
+    "minutes_other": "{{count}} хвилини"
+  }
+}

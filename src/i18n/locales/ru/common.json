@@ -1,0 +1,40 @@
+{
+  "brand": "MTG MODS",
+  "actions": {
+    "download": "Скачать",
+    "learnMore": "Подробнее",
+    "retry": "Повторить",
+    "copy": "Скопировать",
+    "copied": "Скопировано",
+    "close": "Закрыть",
+    "cancel": "Отмена",
+    "confirm": "Подтвердить",
+    "back": "Назад"
+  },
+  "state": {
+    "loading": "Загрузка",
+    "empty": "Пока нет данных",
+    "emptyHint": "Данные появятся, как только накопится статистика",
+    "error": "Не удалось загрузить данные",
+    "errorHint": "Проверьте соединение и попробуйте ещё раз"
+  },
+  "language": {
+    "label": "Язык",
+    "ru": "Русский",
+    "uk": "Українська"
+  },
+  "units": {
+    "days_one": "{{count}} день",
+    "days_few": "{{count}} дня",
+    "days_many": "{{count}} дней",
+    "days_other": "{{count}} дня",
+    "hours_one": "{{count}} час",
+    "hours_few": "{{count}} часа",
+    "hours_many": "{{count}} часов",
+    "hours_other": "{{count}} часа",
+    "minutes_one": "{{count}} минута",
+    "minutes_few": "{{count}} минуты",
+    "minutes_many": "{{count}} минут",
+    "minutes_other": "{{count}} минуты"
+  }
+}
