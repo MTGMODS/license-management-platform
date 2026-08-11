@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router'
 
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
+import { DownloadPage } from '@/pages/helper/DownloadPage'
 import { HelperPage } from '@/pages/helper/HelperPage'
 import { HomePage } from '@/pages/home/HomePage'
 import { LoginPage } from '@/pages/login/LoginPage'
@@ -16,6 +17,7 @@ export function AppRoutes() {
       <Route element={<AppLayout />}>
         <Route index element={<HomePage />} />
         <Route path="helper" element={<HelperPage />} />
+        <Route path="helper/download" element={<DownloadPage />} />
         <Route path="vip" element={<VipPage />} />
         <Route path="login" element={<LoginPage />} />
 
