@@ -113,6 +113,8 @@ export function apiErrorTranslationKey(error: unknown): string {
         return 'errors:notFound'
       case 422:
         return 'errors:validation'
+      case 429:
+        return 'errors:rateLimited'
       default:
         return 'errors:unexpected'
     }

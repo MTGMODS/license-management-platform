@@ -5,6 +5,7 @@ import { Link } from 'react-router'
 import { useRelease } from '@/features/release/useRelease'
 import { Badge, buttonStyles, Card, Skeleton } from '@/shared/ui'
 import { MediaGallery } from '@/widgets/gallery/MediaGallery'
+import { QuickStats } from '@/widgets/stats/QuickStats'
 
 function Hero() {
   const { t } = useTranslation('helper')
@@ -113,6 +114,7 @@ export function HelperPage() {
   return (
     <div className="shell space-y-20 py-16">
       <Hero />
+      <QuickStats />
       <ReleaseSection />
       <MediaGallery />
       <VipTeaser />

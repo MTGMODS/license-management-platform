@@ -1,14 +1,19 @@
 export type ServiceName = 'user' | 'license' | 'usage' | 'distribution'
 
 /**
- * Path prefixes are fixed by the backend routers and double as the routing key
- * for the dev proxy, so they stay identical in both environments.
+ * Public gateway prefixes, as served by api.mtgmods.com. The services mount
+ * their routers under `/api/v1/...` internally and the gateway strips the
+ * `/api` segment, so `/api/v1/usage/stats/public` is a 404 in production while
+ * `/v1/usage/stats/public` is the live route.
+ *
+ * These double as the routing key for the dev proxy, which re-adds the `/api`
+ * segment when pointed straight at a service (see vite.config.ts).
  */
 const SERVICE_PREFIX: Record<ServiceName, string> = {
-  user: '/api/v1/users',
-  license: '/api/v1/license',
-  usage: '/api/v1/usage',
-  distribution: '/api/v1/files',
+  user: '/v1/users',
+  license: '/v1/license',
+  usage: '/v1/usage',
+  distribution: '/v1/files',
 }
 
 function normalizeBase(value: string | undefined): string {
