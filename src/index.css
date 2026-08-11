@@ -1,0 +1,180 @@
+@import 'tailwindcss';
+
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+
+/* ---------------------------------------------------------------------------
+   Design tokens
+   --------------------------------------------------------------------------- */
+
+@theme {
+  /* Surfaces: near-black with a cool cast so neon accents read as light,
+     not as saturated colour on grey. */
+  --color-ink-950: #07070b;
+  --color-ink-900: #0a0a10;
+  --color-ink-850: #0f0f16;
+  --color-ink-800: #14141d;
+  --color-ink-750: #1a1a25;
+  --color-ink-700: #22222f;
+  --color-ink-600: #2e2e3e;
+  --color-ink-500: #3d3d50;
+
+  --color-fg: #f4f5f8;
+  --color-fg-muted: #9d9db4;
+  --color-fg-subtle: #6a6a83;
+
+  --color-accent-300: #b8a8ff;
+  --color-accent-400: #9d86ff;
+  --color-accent-500: #7c5cff;
+  --color-accent-600: #6b46f0;
+  --color-accent-700: #5733d6;
+
+  --color-aqua-300: #7ceaf8;
+  --color-aqua-400: #38e0f5;
+  --color-aqua-500: #22d3ee;
+
+  --color-positive: #34d399;
+  --color-negative: #fb7185;
+  --color-caution: #fbbf24;
+
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', monospace;
+
+  --radius-card: 1rem;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-fade-up: fade-up 0.5s var(--ease-out-soft) both;
+  --animate-pulse-glow: pulse-glow 3.5s ease-in-out infinite;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.75;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Base
+   --------------------------------------------------------------------------- */
+
+@layer base {
+  * {
+    border-color: --alpha(var(--color-fg) / 8%);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    background-color: var(--color-ink-950);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* Safe areas keep the layout intact inside the Telegram Mini App. */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  ::selection {
+    background-color: --alpha(var(--color-accent-500) / 35%);
+    color: var(--color-fg);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent-400);
+    outline-offset: 2px;
+  }
+
+  /* Tabular figures stop counters and chart labels from jittering as they
+     animate between values. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Utilities
+   --------------------------------------------------------------------------- */
+
+/* Translucent panel used for cards and the sticky header. */
+@utility glass {
+  background-color: --alpha(var(--color-ink-850) / 70%);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+}
+
+/* Hairline top highlight that makes a dark card read as a raised surface. */
+@utility bevel {
+  box-shadow:
+    inset 0 1px 0 0 --alpha(var(--color-fg) / 6%),
+    0 1px 2px 0 --alpha(#000 / 40%);
+}
+
+@utility glow-accent {
+  box-shadow: 0 0 0 1px --alpha(var(--color-accent-500) / 30%), 0 8px 32px -8px --alpha(var(--color-accent-500) / 45%);
+}
+
+@utility text-gradient {
+  background-image: linear-gradient(
+    100deg,
+    var(--color-fg) 0%,
+    var(--color-accent-300) 55%,
+    var(--color-aqua-300) 100%
+  );
+  background-clip: text;
+  color: transparent;
+}
+
+/* Horizontal rule that fades out at both ends. */
+@utility rule-fade {
+  height: 1px;
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    --alpha(var(--color-fg) / 12%) 20%,
+    --alpha(var(--color-fg) / 12%) 80%,
+    transparent
+  );
+}
+
+/* Page-width container tuned so wide analytics charts still breathe. */
+@utility shell {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 80rem;
+  padding-inline: 1rem;
+
+  @media (width >= 40rem) {
+    padding-inline: 1.5rem;
+  }
+
+  @media (width >= 64rem) {
+    padding-inline: 2rem;
+  }
+}
