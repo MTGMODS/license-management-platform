@@ -7,6 +7,7 @@ import { Card, SegmentedControl, Skeleton } from '@/shared/ui'
 
 import { ActivityCharts } from './ActivityCharts'
 import { DailyTrends } from './DailyTrends'
+import { FactionsChart, VersionsChart } from './DistributionCharts'
 import { ServersChart } from './ServersChart'
 import { WorldMap } from './WorldMap'
 
@@ -52,6 +53,10 @@ export function AnalyticsSection() {
             hourly={data.analytics.activity.hourly}
             weekday={data.analytics.activity.weekday}
           />
+          <div className="grid gap-4 lg:grid-cols-2">
+            <FactionsChart factions={data.distribution.factions} />
+            <VersionsChart versions={data.distribution.versions} />
+          </div>
         </div>
       )}
     </section>
