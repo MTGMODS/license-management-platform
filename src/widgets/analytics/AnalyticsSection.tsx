@@ -8,6 +8,7 @@ import { Card, SegmentedControl, Skeleton } from '@/shared/ui'
 import { ActivityCharts } from './ActivityCharts'
 import { DailyTrends } from './DailyTrends'
 import { ServersChart } from './ServersChart'
+import { WorldMap } from './WorldMap'
 
 export function AnalyticsSection() {
   const { t } = useTranslation('helper')
@@ -44,6 +45,7 @@ export function AnalyticsSection() {
         </Card>
       ) : (
         <div className="mt-6 space-y-4">
+          <WorldMap countries={data.distribution.countries} period={period} />
           <ServersChart servers={data.distribution.servers} period={period} />
           <DailyTrends daily={data.analytics.timeline.daily} />
           <ActivityCharts

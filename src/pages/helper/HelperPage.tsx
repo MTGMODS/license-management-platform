@@ -1,12 +1,23 @@
 import { ArrowRight, Crown, Download, Sparkles } from 'lucide-react'
+import { lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
 import { useRelease } from '@/features/release/useRelease'
-import { Badge, buttonStyles, Card, Skeleton } from '@/shared/ui'
-import { AnalyticsSection } from '@/widgets/analytics/AnalyticsSection'
+import { Badge, buttonStyles, Card, DeferredMount, Skeleton } from '@/shared/ui'
 import { MediaGallery } from '@/widgets/gallery/MediaGallery'
 import { QuickStats } from '@/widgets/stats/QuickStats'
+
+/**
+ * The charting library and the world atlas together outweigh the rest of the
+ * app, and this section sits below the fold, so it is fetched only once the
+ * page itself is interactive.
+ */
+const AnalyticsSection = lazy(() =>
+  import('@/widgets/analytics/AnalyticsSection').then((module) => ({
+    default: module.AnalyticsSection,
+  })),
+)
 
 function Hero() {
   const { t } = useTranslation('helper')
@@ -118,7 +129,11 @@ export function HelperPage() {
       <QuickStats />
       <ReleaseSection />
       <MediaGallery />
-      <AnalyticsSection />
+      <DeferredMount fallback={<Skeleton className="h-96" />}>
+        <Suspense fallback={<Skeleton className="h-96" />}>
+          <AnalyticsSection />
+        </Suspense>
+      </DeferredMount>
       <VipTeaser />
     </div>
   )
