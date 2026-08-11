@@ -53,6 +53,13 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: 5173,
+      // Bind every interface so the tunnel and other devices on the LAN can
+      // reach the dev server; the default localhost-only bind refuses them.
+      host: true,
+      // Vite rejects unknown Host headers to guard against DNS rebinding.
+      // Tunnel subdomains rotate, so whole domains are allowed rather than the
+      // single current URL. Dev server only: `vite build` ignores this block.
+      allowedHosts: ['.ngrok-free.dev', '.ngrok-free.app', '.ngrok.io'],
       proxy,
     },
   }
