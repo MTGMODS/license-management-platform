@@ -1,6 +1,5 @@
 /**
- * Target wire format for every datetime field returned by backend services.
- * {@link parseApiDateTime} also accepts legacy shapes until all services emit `Z`.
+ * Wire format for every datetime field returned by backend services.
  *
  * @example "2026-08-12T15:06:00Z"
  */
@@ -13,53 +12,24 @@ export type ApiDateTime = string
  */
 export type ApiDate = string
 
-/** Target: `YYYY-MM-DDTHH:mm:ssZ`, optional fractional seconds. */
-const API_DATETIME_Z = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/
+/** `YYYY-MM-DDTHH:mm:ssZ`, optional fractional seconds. */
+const API_DATETIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/
 
 const API_DATE = /^\d{4}-\d{2}-\d{2}$/
-
-const HAS_OFFSET = /(?:Z|[+-]\d{2}:?\d{2})$/i
-
-const NAIVE_DATETIME = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?$/
 
 function warnDev(message: string): void {
   if (import.meta.env.DEV) console.warn(`[datetime] ${message}`)
 }
 
 /**
- * Normalises legacy API timestamps to UTC `...Z`. Stored values are UTC; naive
- * strings from older services must not be parsed as browser-local time.
- */
-export function normalizeApiDateTime(value: string): string {
-  const trimmed = value.trim()
-
-  if (API_DATETIME_Z.test(trimmed)) return trimmed
-
-  if (HAS_OFFSET.test(trimmed)) {
-    return trimmed.replace(/\+00:00$/, 'Z')
-  }
-
-  if (NAIVE_DATETIME.test(trimmed)) {
-    const iso = trimmed.replace(' ', 'T')
-    return iso.endsWith('Z') ? iso : `${iso}Z`
-  }
-
-  return trimmed
-}
-
-/**
- * Parses an API timestamp as UTC, then callers format it in the visitor's time
- * zone. Legacy naive and `+00:00` shapes are normalised until the backend
- * standardises on trailing `Z`.
+ * Parses an API timestamp. Services emit UTC with a trailing `Z`.
+ * Display formatters convert to the visitor's local time zone.
  */
 export function parseApiDateTime(value: string): Date {
-  const normalized = normalizeApiDateTime(value)
-
-  if (import.meta.env.DEV && !API_DATETIME_Z.test(normalized) && normalized === value.trim()) {
-    warnDev(`Unrecognised datetime (expected UTC ending with Z): ${value}`)
+  if (!API_DATETIME.test(value)) {
+    warnDev(`Expected UTC ISO with trailing Z (e.g. 2026-08-12T15:06:00Z), got: ${value}`)
   }
-
-  return new Date(normalized)
+  return new Date(value)
 }
 
 /** Parses a calendar date from usage daily buckets (`YYYY-MM-DD`). */
