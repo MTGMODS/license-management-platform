@@ -1,7 +1,7 @@
 import { LogOut } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 
 import { useAuthStore } from '@/features/auth'
 import { Avatar, Skeleton, buttonStyles } from '@/shared/ui'
@@ -9,11 +9,13 @@ import { Avatar, Skeleton, buttonStyles } from '@/shared/ui'
 export function AccountControl() {
   const { t } = useTranslation('header')
   const navigate = useNavigate()
+  const location = useLocation()
   const status = useAuthStore((state) => state.status)
   const user = useAuthStore((state) => state.user)
   const signOut = useAuthStore((state) => state.signOut)
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
+  const onDashboard = location.pathname.startsWith('/dashboard')
 
   useEffect(() => {
     if (!open) return
@@ -46,47 +48,44 @@ export function AccountControl() {
   const onSignOut = () => {
     signOut()
     setOpen(false)
-    void navigate('/', { replace: true })
+    void navigate('/helper', { replace: true })
   }
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className="relative inline-flex max-w-full">
       <button
         type="button"
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={() => setOpen((value) => !value)}
-        className="group flex items-center gap-2.5 rounded-xl py-1 pr-1 pl-1 transition-colors duration-200 hover:bg-ink-800 sm:pr-3"
+        className="group flex max-w-[12rem] items-center gap-2.5 rounded-xl py-1 pr-2.5 pl-1 transition-colors duration-200 hover:bg-ink-800 sm:max-w-[14rem]"
       >
         <Avatar src={user.avatar_url} name={user.nickname} />
-        <span className="hidden min-w-0 flex-col leading-tight sm:flex">
-          <span className="truncate text-sm font-medium text-fg">{user.nickname}</span>
-          <span className="tabular text-xs text-fg-subtle">
-            {user.id === null ? t('account.cabinet') : t('account.id', { id: user.id })}
-          </span>
-        </span>
+        <span className="min-w-0 truncate text-sm font-medium text-fg">{user.nickname}</span>
       </button>
 
       {open ? (
         <div
           role="menu"
-          className="absolute right-0 z-50 mt-2 w-48 overflow-hidden rounded-xl border border-ink-700 bg-ink-900 py-1 shadow-[0_16px_48px_-16px_rgba(0,0,0,0.75)]"
+          className="absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-xl border border-ink-700 bg-ink-900 py-1 shadow-[0_16px_48px_-16px_rgba(0,0,0,0.75)]"
         >
-          <Link
-            role="menuitem"
-            to="/dashboard"
-            onClick={() => setOpen(false)}
-            className="block px-3 py-2.5 text-sm text-fg transition-colors hover:bg-ink-800"
-          >
-            {t('account.cabinet')}
-          </Link>
+          {!onDashboard ? (
+            <Link
+              role="menuitem"
+              to="/dashboard"
+              onClick={() => setOpen(false)}
+              className="block px-3 py-2.5 text-sm text-fg transition-colors hover:bg-ink-800"
+            >
+              {t('account.cabinet')}
+            </Link>
+          ) : null}
           <button
             role="menuitem"
             type="button"
             onClick={onSignOut}
             className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-fg-muted transition-colors hover:bg-ink-800 hover:text-fg"
           >
-            <LogOut aria-hidden className="size-4" />
+            <LogOut aria-hidden className="size-4 shrink-0" />
             {t('account.logout')}
           </button>
         </div>
