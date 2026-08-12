@@ -1,7 +1,8 @@
 import enum
-from datetime import datetime, timezone
 from typing import Optional
+from datetime import datetime, timezone
 from pydantic import BaseModel
+from app.shared.datetime_utils import UtcDateTime
 
 class LicenseStatus(str, enum.Enum):
     NOT_ACTIVATED = "NOT_ACTIVATED"
@@ -22,8 +23,8 @@ class License(BaseModel):
     user_id: Optional[int] = None
     duration_days: Optional[int] = None
     status: LicenseStatus = LicenseStatus.NOT_ACTIVATED
-    activated_at: Optional[datetime] = None
-    expires_at: Optional[datetime] = None
+    activated_at: Optional[UtcDateTime] = None
+    expires_at: Optional[UtcDateTime] = None
 
     def is_valid(self) -> bool:
         if self.status != LicenseStatus.ACTIVE:
@@ -44,4 +45,4 @@ class Transaction(BaseModel):
     amount: float
     method: str
     status: str
-    purchased_at: Optional[datetime] = None
+    purchased_at: Optional[UtcDateTime] = None

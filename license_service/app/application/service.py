@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import BackgroundTasks
 
 from app.shared.database import AsyncSessionLocal
+from app.shared.datetime_utils import format_utc
 from app.domain.models import LicenseStatus, License
 from app.domain.schemas import GeneratePurchaseDTO, ActivateKeyDTO, UpdateLicenseDTO
 from app.infrastructure.repository import LicenseRepository, TransactionRepository, LicenseModel, TransactionModel
@@ -39,7 +40,7 @@ class LicenseService:
                 )
 
         await self.license_repo.log_device(db_sub.id, device, ip_address, user_agent)
-        return {"user_id": db_sub.user_id, "expires_at": db_sub.expires_at.isoformat() if db_sub.expires_at else None}
+        return {"user_id": db_sub.user_id, "expires_at": format_utc(db_sub.expires_at)}
 
     async def get_license_info(self, user_id: int) -> dict:
         db_sub = await self.license_repo.get_active_by_user(user_id)
@@ -63,7 +64,7 @@ class LicenseService:
                 "id": d.id,
                 "hwid": hwid_masked,
                 "ip": ip_masked,
-                "last_used_at": d.last_used_at.isoformat() if d.last_used_at else None
+                "last_used_at": format_utc(d.last_used_at)
             })
 
         tx = db_sub.transaction
@@ -77,15 +78,15 @@ class LicenseService:
                 "duration_days": db_sub.duration_days,
                 "max_devices": db_sub.max_devices,
                 "reset_limit": db_sub.reset_limit,
-                "activated_at": db_sub.activated_at.isoformat() if db_sub.activated_at else None,
-                "expires_at": db_sub.expires_at.isoformat() if db_sub.expires_at else None,
+                "activated_at": format_utc(db_sub.activated_at),
+                "expires_at": format_utc(db_sub.expires_at),
             },
             "devices": devices_list,
             "transaction": {
                 "amount": tx.amount,
                 "method": tx.payment_method,
                 "status": tx.status,
-                "purchased_at": tx.purchased_at.isoformat()
+                "purchased_at": format_utc(tx.purchased_at)
             } if tx else None
         }
 
@@ -124,8 +125,8 @@ class LicenseService:
             "is_vip": True,
             "license": {
                 "id": license_obj.id,
-                "activated_at": license_obj.activated_at.strftime("%d.%m.%Y %H:%M:%S UTC") if license_obj.activated_at else None,
-                "expires_at": license_obj.expires_at.strftime("%d.%m.%Y %H:%M:%S UTC") if license_obj.expires_at else None,
+                "activated_at": format_utc(license_obj.activated_at),
+                "expires_at": format_utc(license_obj.expires_at),
                 "duration_days": license_obj.duration_days,
                 "purchase_method": transaction.payment_method if transaction else None,
                 "purchase_price": transaction.amount if transaction else None
@@ -241,15 +242,15 @@ class LicenseService:
                 "duration_days": lic.duration_days,
                 "max_devices": lic.max_devices,
                 "reset_limit": lic.reset_limit,
-                "created_at": lic.created_at.isoformat() if lic.created_at else None,
-                "activated_at": lic.activated_at.isoformat() if lic.activated_at else None,
-                "expires_at": lic.expires_at.isoformat() if lic.expires_at else None,
+                "created_at": format_utc(lic.created_at),
+                "activated_at": format_utc(lic.activated_at),
+                "expires_at": format_utc(lic.expires_at),
                 "transaction": {
                     "id": lic.transaction.id,
                     "amount": lic.transaction.amount,
                     "method": lic.transaction.payment_method,
                     "status": lic.transaction.status,
-                    "purchased_at": lic.transaction.purchased_at.isoformat() if lic.transaction.purchased_at else None
+                    "purchased_at": format_utc(lic.transaction.purchased_at)
                 } if lic.transaction else None
             }
             for lic in licenses

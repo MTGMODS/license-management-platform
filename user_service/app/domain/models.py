@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional
-from datetime import datetime
 from pydantic import BaseModel, ConfigDict, field_validator
+from app.shared.datetime_utils import UtcDateTime
 
 class UserStatus(str, Enum):
     ACTIVE = "ACTIVE"
@@ -21,7 +21,7 @@ class User(BaseModel):
     avatar_url: Optional[str] = None
     role: UserRole = UserRole.USER
     status: UserStatus = UserStatus.ACTIVE
-    created_at: Optional[datetime] = None
+    created_at: Optional[UtcDateTime] = None
 
     model_config = ConfigDict(from_attributes=True)
 

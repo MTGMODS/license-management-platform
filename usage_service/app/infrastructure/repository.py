@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func as sql_func
 from datetime import datetime, timedelta, timezone
 from app.shared.database import Base
+from app.shared.datetime_utils import format_utc
 
 class LaunchModel(Base):
     __tablename__ = "launches"
@@ -339,7 +340,7 @@ class LaunchRepository:
         activity_weekday = await self._get_activity_weekday()
 
         return {
-            "updated_at": now.isoformat(),
+            "updated_at": format_utc(now),
             "overview": {
                 "metrics": global_data["metrics"],
                 "users": global_data["users"],

@@ -5,6 +5,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship, selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.shared.database import Base
+from app.shared.datetime_utils import format_utc
 from app.domain.models import LicenseStatus
 
 class LicenseModel(Base):
@@ -105,7 +106,7 @@ class LicenseRepository:
         result = await self.db.execute(query)
         
         rows = result.all()
-        return [{"license_id": r.id, "user_id": r.user_id, "expires_at": r.expires_at.isoformat() if r.expires_at else None} for r in rows]
+        return [{"license_id": r.id, "user_id": r.user_id, "expires_at": format_utc(r.expires_at)} for r in rows]
         
     async def log_device(self, license_id: int, device: str, ip_address: str, user_agent: str):
         result = await self.db.execute(
@@ -211,7 +212,7 @@ class LicenseRepository:
         o_res = (await self.db.execute(old_totals_stmt)).first()
 
         return {
-            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": format_utc(datetime.now(timezone.utc)),
             "new_subs": {
                 "total_vips": n_res.total_vips or 0,
                 "active_total": n_res.active_total or 0,

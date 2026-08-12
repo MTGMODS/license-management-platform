@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from app.shared.database import engine, Base
 from app.shared.config import settings
+from app.shared import datetime_utils as _datetime_utils
 from app.shared.exceptions import DomainException, global_exception_handler, validation_exception_handler
 from app.application.worker import check_expired_licenses_task
 from app.api.client_routes import router as client_router
@@ -12,6 +13,7 @@ from app.api.user_routes import router as user_router
 from app.api.admin_routes import router as admin_router
 from app.api.stats_routes import router as stats_router
 from app.api.bot_routes import router as bot_routes
+
 
 
 @asynccontextmanager

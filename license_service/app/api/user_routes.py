@@ -6,6 +6,7 @@ from app.application.service import LicenseService
 from app.shared.exceptions import DomainException
 from app.infrastructure.messaging import publish_file_generation_event
 from app.application.jwt_utils import get_current_user_id 
+from app.shared.datetime_utils import format_utc
 
 router = APIRouter(prefix="/api/v1/license", tags=["User Dashboard"])
 
@@ -20,7 +21,7 @@ async def activate_key(payload: ActivateKeyDTO, user_id: int = Depends(get_curre
 async def request_download(user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
     service = LicenseService(db)
     db_sub = await service.get_active_license(user_id)
-    expire_date = db_sub.expires_at.isoformat() if db_sub.expires_at else None
+    expire_date = format_utc(db_sub.expires_at)
     try:
         download_url = await publish_file_generation_event(user_id=user_id, expire_date=expire_date)
         return {"status": "success", "message": "File generated successfully.", "download_url": download_url}

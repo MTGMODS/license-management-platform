@@ -1,7 +1,7 @@
 import re
 from typing import Optional
-from datetime import datetime
 from pydantic import BaseModel, Field, field_validator, AliasChoices
+from app.shared.datetime_utils import UtcDateTime
 
 class LaunchPayload(BaseModel):
     version: str = Field(..., max_length=25, description="Product version")
@@ -49,4 +49,4 @@ class Launch(BaseModel):
     device: str
     server: int
     country: str
-    launched_at: Optional[datetime] = None
+    launched_at: Optional[UtcDateTime] = None

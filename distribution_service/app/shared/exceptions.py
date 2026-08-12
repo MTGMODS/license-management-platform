@@ -2,6 +2,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from datetime import datetime, timezone
+from app.shared.datetime_utils import format_utc
 
 class DomainException(Exception):
     def __init__(self, message: str, status_code: int = 400, error_code: str = "BAD_REQUEST"):
@@ -15,7 +16,7 @@ async def global_exception_handler(request: Request, exc: DomainException):
         content={
             "error_code": exc.error_code,
             "message": exc.message,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": format_utc(datetime.now(timezone.utc)),
             "path": request.url.path
         }
     )
@@ -28,7 +29,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={
             "error_code": "VALIDATION_ERROR",
             "message": f"Invalid input data: {error_msg}",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": format_utc(datetime.now(timezone.utc)),
             "path": request.url.path
         }
     )

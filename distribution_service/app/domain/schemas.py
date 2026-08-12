@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime
+from app.shared.datetime_utils import UtcDateTime
 
 class GenerationPayloadDTO(BaseModel):
     user_id: int
-    expire_date: Optional[datetime] = None
+    expire_date: Optional[UtcDateTime] = None
