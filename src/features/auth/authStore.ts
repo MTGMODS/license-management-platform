@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 
 import { clearTokens, getTokens, setTokens, type AuthTokens } from '@/shared/api'
+import { clearUserQueries } from '@/shared/api/queryClient'
 import { getCurrentUser, type TokenResponse, type User } from '@/shared/api/user'
 
 export type AuthStatus = 'initialising' | 'authenticated' | 'anonymous'
@@ -39,6 +40,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
         // session is unusable, so drop it rather than leaving a half-signed-in
         // header on screen.
         clearTokens()
+        clearUserQueries()
         set({ status: 'anonymous', user: null })
       }
     })().finally(() => {
@@ -49,6 +51,8 @@ export const useAuthStore = create<AuthState>()((set) => ({
   },
 
   completeSignIn: (response) => {
+    // Drop the previous account's private caches before switching identity.
+    clearUserQueries()
     const tokens: AuthTokens = {
       accessToken: response.access_token,
       refreshToken: response.refresh_token,
@@ -59,6 +63,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
 
   signOut: () => {
     clearTokens()
+    clearUserQueries()
     set({ status: 'anonymous', user: null })
   },
 
@@ -69,5 +74,6 @@ export const useAuthStore = create<AuthState>()((set) => ({
 
 /** Drops local state when the HTTP layer reports the session as unrecoverable. */
 export function handleSessionExpired(): void {
+  clearUserQueries()
   useAuthStore.setState({ status: 'anonymous', user: null })
 }
