@@ -4,10 +4,18 @@ import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
 import { apiErrorTranslationKey } from '@/shared/api'
-import type { OAuthProvider } from '@/shared/api/user'
+import { authenticateWithTelegramInitData, type OAuthProvider } from '@/shared/api/user'
 
 import { useAuthStore } from './authStore'
-import { AuthPopupError, openAuthPopup } from './popupAuth'
+import {
+  AuthPopupError,
+  isEmbeddedBrowserWithoutPopups,
+  openAuthPopup,
+  shouldUseFullPageOAuth,
+  startFullPageOAuth,
+  tryOpenAuthWindow,
+} from './popupAuth'
+import { getTelegramInitData, isInsideTelegramShell } from './telegram'
 
 function failureTranslationKey(error: unknown): string {
   if (error instanceof AuthPopupError) {
@@ -25,9 +33,11 @@ function failureTranslationKey(error: unknown): string {
 }
 
 interface UseOAuthSignInResult {
-  /** Provider whose popup is currently open, if any. */
   pendingProvider: OAuthProvider | null
+  blockedProvider: OAuthProvider | null
   signIn: (provider: OAuthProvider) => Promise<void>
+  retryAfterAllowingPopups: () => Promise<void>
+  dismissPopupBlock: () => void
 }
 
 export function useOAuthSignIn(): UseOAuthSignInResult {
@@ -35,19 +45,29 @@ export function useOAuthSignIn(): UseOAuthSignInResult {
   const navigate = useNavigate()
   const completeSignIn = useAuthStore((state) => state.completeSignIn)
   const [pendingProvider, setPendingProvider] = useState<OAuthProvider | null>(null)
+  const [blockedProvider, setBlockedProvider] = useState<OAuthProvider | null>(null)
 
-  const signIn = useCallback(
-    async (provider: OAuthProvider) => {
+  const runWithPopup = useCallback(
+    async (provider: OAuthProvider, popup: Window) => {
+      setBlockedProvider(null)
       setPendingProvider(provider)
 
       try {
-        const response = await openAuthPopup(provider)
+        const response = await openAuthPopup(provider, popup)
         completeSignIn(response)
         void navigate('/dashboard', { replace: true })
       } catch (error) {
+        if (error instanceof AuthPopupError && error.reason === 'blocked') {
+          try {
+            popup.close()
+          } catch {
+            // ignore
+          }
+          setBlockedProvider(provider)
+          return
+        }
+
         const key = failureTranslationKey(error)
-        // Dismissing the popup is a deliberate user action, not a fault worth
-        // an error-styled toast.
         const isCancellation = error instanceof AuthPopupError && error.reason === 'closed'
 
         if (isCancellation) {
@@ -62,5 +82,84 @@ export function useOAuthSignIn(): UseOAuthSignInResult {
     [completeSignIn, navigate, t],
   )
 
-  return { pendingProvider, signIn }
+  const signIn = useCallback(
+    async (provider: OAuthProvider) => {
+      if (provider === 'telegram') {
+        const initData = getTelegramInitData()
+
+        if (initData) {
+          setPendingProvider('telegram')
+          try {
+            const response = await authenticateWithTelegramInitData(initData)
+            completeSignIn(response)
+            void navigate('/dashboard', { replace: true })
+          } catch (error) {
+            toast.error(
+              t(apiErrorTranslationKey(error), { defaultValue: t('errors:auth.failed') }),
+            )
+          } finally {
+            setPendingProvider(null)
+          }
+          return
+        }
+
+        // Inside Telegram without initData = opened as a plain link, not Mini App.
+        // Do not fall through to OAuth — that is the wrong flow here.
+        if (isInsideTelegramShell()) {
+          toast.error(t('errors:auth.telegramMiniAppRequired'))
+          return
+        }
+      }
+
+      if (isEmbeddedBrowserWithoutPopups()) {
+        setBlockedProvider(provider)
+        return
+      }
+
+      if (shouldUseFullPageOAuth()) {
+        setPendingProvider(provider)
+        startFullPageOAuth(provider)
+        return
+      }
+
+      const popup = tryOpenAuthWindow()
+      if (!popup) {
+        setBlockedProvider(provider)
+        return
+      }
+      await runWithPopup(provider, popup)
+    },
+    [completeSignIn, navigate, runWithPopup, t],
+  )
+
+  const retryAfterAllowingPopups = useCallback(async () => {
+    if (!blockedProvider) return
+    const provider = blockedProvider
+
+    if (shouldUseFullPageOAuth()) {
+      setBlockedProvider(null)
+      setPendingProvider(provider)
+      startFullPageOAuth(provider)
+      return
+    }
+
+    const popup = tryOpenAuthWindow()
+    if (!popup) {
+      setBlockedProvider(provider)
+      return
+    }
+    await runWithPopup(provider, popup)
+  }, [blockedProvider, runWithPopup])
+
+  const dismissPopupBlock = useCallback(() => {
+    setBlockedProvider(null)
+  }, [])
+
+  return {
+    pendingProvider,
+    blockedProvider,
+    signIn,
+    retryAfterAllowingPopups,
+    dismissPopupBlock,
+  }
 }

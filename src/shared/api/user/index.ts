@@ -6,12 +6,38 @@ import type { TokenResponse, User } from './types'
 export type OAuthProvider = 'discord' | 'telegram'
 
 /**
- * Entry point of the provider OAuth flow. The browser navigates here (in a
- * popup on desktop); the backend redirects onward to Discord/Telegram and
- * generates its own CSRF `state`, so no parameters are supplied by the client.
+ * OAuth must hit the user service host directly in local dev.
+ * Going through the Vite proxy would set `oauth_state` on `localhost`, while
+ * Discord/Telegram redirect back to `127.0.0.1:8001` — cookies would not
+ * match and the callback would return an auth error HTML (HTTP 200).
+ */
+function oauthServiceRoot(): string | null {
+  const absolute = import.meta.env.VITE_USER_API_URL
+  if (typeof absolute === 'string' && absolute) {
+    return absolute.replace(/\/+$/, '')
+  }
+
+  const direct = import.meta.env.VITE_DEV_USER_TARGET
+  if (typeof direct === 'string' && direct) {
+    // Direct service mounts under /api/v1/... (gateway strips /api).
+    return `${direct.replace(/\/+$/, '')}/api`
+  }
+
+  return null
+}
+
+/**
+ * Entry point of the provider OAuth flow. Always absolute so a blank popup
+ * can navigate here (relative URLs would resolve against about:blank).
  */
 export function oauthLoginUrl(provider: OAuthProvider): string {
-  return serviceUrl('user', `/auth/${provider}/login`)
+  const suffix = `/v1/users/auth/${provider}/login`
+  const root = oauthServiceRoot()
+  if (root) return `${root}${suffix}`
+
+  const path = serviceUrl('user', `/auth/${provider}/login`)
+  if (/^https?:\/\//i.test(path)) return path
+  return new URL(path, window.location.origin).href
 }
 
 export function getCurrentUser(signal?: AbortSignal): Promise<User> {
@@ -29,6 +55,15 @@ export function authenticateWithTelegramInitData(initData: string): Promise<Toke
     path: '/auth/telegram/webapp',
     method: 'POST',
     body: { init_data: initData },
+  })
+}
+
+/** Consumes a one-time ticket from the OAuth callback HTML fallback. */
+export function consumeOAuthHandoff(ticket: string, signal?: AbortSignal): Promise<unknown> {
+  return request<unknown>({
+    service: 'user',
+    path: `/auth/handoff/${encodeURIComponent(ticket)}`,
+    signal,
   })
 }
 

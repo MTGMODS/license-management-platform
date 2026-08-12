@@ -1,18 +1,18 @@
 import { ArrowLeft, Info, Loader2 } from 'lucide-react'
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate } from 'react-router'
 
 import { useAuthStore, useOAuthSignIn } from '@/features/auth'
 import type { OAuthProvider } from '@/shared/api/user'
 import { cn } from '@/shared/lib/cn'
-import { Card } from '@/shared/ui'
+import { Button, Card } from '@/shared/ui'
 import { DiscordIcon, TelegramIcon } from '@/shared/ui/BrandIcons'
 
 const PROVIDERS: {
   id: OAuthProvider
   labelKey: 'provider.discord' | 'provider.telegram'
   icon: typeof DiscordIcon
-  /** Vendor brand colours, used only on these two buttons. */
   className: string
 }[] = [
   {
@@ -32,7 +32,22 @@ const PROVIDERS: {
 export function LoginPage() {
   const { t } = useTranslation(['login', 'common'])
   const status = useAuthStore((state) => state.status)
-  const { pendingProvider, signIn } = useOAuthSignIn()
+  const {
+    pendingProvider,
+    blockedProvider,
+    signIn,
+    retryAfterAllowingPopups,
+    dismissPopupBlock,
+  } = useOAuthSignIn()
+
+  useEffect(() => {
+    if (!blockedProvider) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') dismissPopupBlock()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [blockedProvider, dismissPopupBlock])
 
   if (status === 'authenticated') {
     return <Navigate to="/dashboard" replace />
@@ -40,8 +55,6 @@ export function LoginPage() {
 
   return (
     <div className="shell flex flex-col items-center py-16 sm:py-24">
-      {/* The brief opens with a deliberate off-ramp: most visitors do not need
-          an account at all, and saying so up front prevents pointless sign-ups. */}
       <div className="mb-10 max-w-xl text-center">
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
           {t('login:warning.title')}
@@ -67,7 +80,7 @@ export function LoginPage() {
               <button
                 key={provider.id}
                 type="button"
-                disabled={pendingProvider !== null}
+                disabled={pendingProvider !== null || blockedProvider !== null}
                 aria-busy={busy || undefined}
                 onClick={() => void signIn(provider.id)}
                 className={cn(
@@ -97,6 +110,43 @@ export function LoginPage() {
         <ArrowLeft aria-hidden className="size-4" />
         {t('login:back')}
       </Link>
+
+      {blockedProvider ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/75 p-4 backdrop-blur-sm"
+          role="presentation"
+          onClick={dismissPopupBlock}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="popup-blocked-title"
+            className="w-full max-w-md rounded-2xl border border-ink-700 bg-ink-900 p-6 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.8)] sm:p-8"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="popup-blocked-title" className="text-xl font-semibold tracking-tight">
+              {t('login:popupBlocked.title')}
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-fg-muted">
+              {t('login:popupBlocked.body')}
+            </p>
+            <div className="mt-7 flex flex-col gap-3">
+              <Button
+                type="button"
+                variant="primary"
+                size="lg"
+                fullWidth
+                onClick={() => void retryAfterAllowingPopups()}
+              >
+                {t('login:popupBlocked.allow')}
+              </Button>
+              <Button type="button" variant="ghost" size="md" fullWidth onClick={dismissPopupBlock}>
+                {t('login:popupBlocked.cancel')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

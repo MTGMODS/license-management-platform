@@ -37,12 +37,28 @@ export function serviceUrl(service: ServiceName, path: string): string {
 /** Origin of a service, used to validate OAuth popup `postMessage` senders. */
 export function serviceOrigin(service: ServiceName): string {
   const base = SERVICE_BASE[service]
-  if (!base) return window.location.origin
-  try {
-    return new URL(base, window.location.origin).origin
-  } catch {
-    return window.location.origin
+  if (base) {
+    try {
+      return new URL(base, window.location.origin).origin
+    } catch {
+      return window.location.origin
+    }
   }
+
+  // Dev with empty VITE_*_API_URL: fetches are same-origin via the Vite proxy,
+  // but the OAuth callback HTML is still served from the direct user service.
+  if (service === 'user') {
+    const direct = import.meta.env.VITE_DEV_USER_TARGET
+    if (typeof direct === 'string' && direct) {
+      try {
+        return new URL(direct).origin
+      } catch {
+        // fall through
+      }
+    }
+  }
+
+  return window.location.origin
 }
 
 export const REQUEST_TIMEOUT_MS = 20_000

@@ -1,31 +1,29 @@
 import { serviceOrigin } from '@/shared/api'
 import { oauthLoginUrl, type OAuthProvider, type TokenResponse } from '@/shared/api/user'
 
+import {
+  AUTH_BROADCAST_CHANNEL,
+  AUTH_ERROR_TYPE,
+  AUTH_SUCCESS_TYPE,
+  isAuthBroadcastMessage,
+} from './authChannel'
+
 /**
  * Contract with the backend OAuth callback.
  *
- * The callback must render a page that posts one of these messages to its
- * opener and then closes. A JSON body cannot work here: the popup lives on the
- * API origin, so the parent window is forbidden from reading its contents.
+ * Real popup (opener intact):
+ *   window.opener.postMessage({ type, payload|error }, FRONTEND_ORIGIN)
+ *   then window.close()
  *
- *   window.opener.postMessage(
- *     { type: 'mtg_auth_success', payload: <TokenResponse> },
- *     '<site origin>',
- *   )
+ * If the provider's COOP nulls opener, the API may redirect the popup to
+ * `/auth/callback?ticket=...` which relays via BroadcastChannel.
  *
- *   window.opener.postMessage(
- *     { type: 'mtg_auth_error', error_code: 'USER_BANNED', message: '...' },
- *     '<site origin>',
- *   )
- *
- * The target origin must be explicit rather than '*', otherwise any page that
- * can reach the popup could read the tokens.
+ * Popups are opened as `about:blank` first, then navigated to the login URL,
+ * so a blocked popup never hijacks the login tab.
  */
-const SUCCESS_TYPE = 'mtg_auth_success'
-const ERROR_TYPE = 'mtg_auth_error'
-
 const POPUP_FEATURES = 'popup=yes,width=520,height=720,menubar=no,toolbar=no,location=no'
 const CLOSE_POLL_INTERVAL_MS = 400
+const CLOSE_GRACE_MS = 2500
 
 export type AuthPopupFailure = 'blocked' | 'closed' | 'failed'
 
@@ -45,7 +43,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
-function readTokenResponse(payload: unknown): TokenResponse | null {
+export function readTokenResponse(payload: unknown): TokenResponse | null {
   if (!isRecord(payload)) return null
   const { access_token, refresh_token, user } = payload
   if (typeof access_token !== 'string' || typeof refresh_token !== 'string') return null
@@ -54,27 +52,97 @@ function readTokenResponse(payload: unknown): TokenResponse | null {
 }
 
 /**
- * Opens the provider flow in a popup and resolves once the callback posts the
- * tokens back. Rejects if the browser blocked the popup, the user closed it,
- * or the backend reported a failure.
+ * Cursor / VS Code Simple Browser — popups become blank tabs; show dialog instead.
  */
-export function openAuthPopup(provider: OAuthProvider): Promise<TokenResponse> {
-  const expectedOrigin = serviceOrigin('user')
+export function isEmbeddedBrowserWithoutPopups(): boolean {
+  return /Electron/i.test(navigator.userAgent)
+}
 
-  const opened = window.open(oauthLoginUrl(provider), 'mtg-oauth', POPUP_FEATURES)
+/**
+ * Phones, tablets, and Chrome DevTools device emulation: use same-tab OAuth
+ * instead of a popup (emulation makes window.open look like a blocked tab).
+ */
+export function shouldUseFullPageOAuth(): boolean {
+  if (isEmbeddedBrowserWithoutPopups()) return false
+  if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) return true
+  if (window.matchMedia('(max-width: 900px)').matches) return true
+  return false
+}
 
-  if (!opened) {
-    return Promise.reject(new AuthPopupError('blocked'))
+export function startFullPageOAuth(provider: OAuthProvider): void {
+  window.location.assign(oauthLoginUrl(provider))
+}
+
+/**
+ * Must run inside a user gesture. Returns null when popups are blocked or the
+ * environment only opens a normal tab — callers show the dialog (desktop) or
+ * should have used full-page OAuth (mobile) already.
+ */
+export function tryOpenAuthWindow(): Window | null {
+  if (isEmbeddedBrowserWithoutPopups()) return null
+
+  const opened = window.open('about:blank', 'mtg-oauth', POPUP_FEATURES)
+  if (!opened || opened.closed) return null
+
+  // Some browsers return a Window but still opened a tab the same size as us.
+  if (isLikelyTabNotPopup(opened)) {
+    try {
+      opened.close()
+    } catch {
+      // ignore
+    }
+    return null
   }
 
-  const popup: Window = opened
+  return opened
+}
+
+/** True when the opened window is a full browser tab, not a sized popup. */
+function isLikelyTabNotPopup(win: Window): boolean {
+  try {
+    if (win.outerWidth === 0 && win.outerHeight === 0) return true
+
+    const sameAsOpener =
+      Math.abs(win.outerWidth - window.outerWidth) < 48 &&
+      Math.abs(win.outerHeight - window.outerHeight) < 48
+    if (sameAsOpener) return true
+
+    const screenW = window.screen.availWidth || window.screen.width
+    const screenH = window.screen.availHeight || window.screen.height
+    if (win.outerWidth >= screenW * 0.85 && win.outerHeight >= screenH * 0.75) {
+      return true
+    }
+  } catch {
+    return true
+  }
+  return false
+}
+
+/**
+ * Drives an already-opened blank popup through the OAuth login URL and waits
+ * for the callback. Pass the window from `tryOpenAuthWindow()` so the open
+ * stays tied to the click that unlocked the popup.
+ */
+export function openAuthPopup(provider: OAuthProvider, popup: Window): Promise<TokenResponse> {
+  const expectedOrigin = serviceOrigin('user')
+  const loginUrl = oauthLoginUrl(provider)
+
+  try {
+    popup.location.assign(loginUrl)
+  } catch {
+    popup.location.href = loginUrl
+  }
 
   return new Promise<TokenResponse>((resolve, reject) => {
     let settled = false
+    let closeGraceTimer: number | undefined
+    const channel = new BroadcastChannel(AUTH_BROADCAST_CHANNEL)
 
     const cleanup = () => {
       window.removeEventListener('message', onMessage)
+      channel.close()
       window.clearInterval(closeTimer)
+      if (closeGraceTimer !== undefined) window.clearTimeout(closeGraceTimer)
     }
 
     const settle = (action: () => void) => {
@@ -84,44 +152,67 @@ export function openAuthPopup(provider: OAuthProvider): Promise<TokenResponse> {
       action()
     }
 
+    const acceptSuccess = (payload: unknown) => {
+      const tokens = readTokenResponse(payload)
+      settle(() => {
+        try {
+          popup.close()
+        } catch {
+          // ignore
+        }
+        if (tokens) resolve(tokens)
+        else reject(new AuthPopupError('failed'))
+      })
+    }
+
+    const acceptError = (code: string | null) => {
+      settle(() => {
+        try {
+          popup.close()
+        } catch {
+          // ignore
+        }
+        reject(new AuthPopupError('failed', code))
+      })
+    }
+
     function onMessage(event: MessageEvent) {
-      // Anything from another origin is untrusted: tokens must only ever be
-      // accepted from the API that issued them.
       if (event.origin !== expectedOrigin) return
       if (!isRecord(event.data)) return
 
       const { type } = event.data
 
-      if (type === SUCCESS_TYPE) {
-        const tokens = readTokenResponse(event.data.payload)
-        settle(() => {
-          popup.close()
-          if (tokens) {
-            resolve(tokens)
-          } else {
-            reject(new AuthPopupError('failed'))
-          }
-        })
+      if (type === AUTH_SUCCESS_TYPE) {
+        acceptSuccess(event.data.payload)
         return
       }
 
-      if (type === ERROR_TYPE) {
+      if (type === AUTH_ERROR_TYPE) {
         const code = typeof event.data.error_code === 'string' ? event.data.error_code : null
-        settle(() => {
-          popup.close()
-          reject(new AuthPopupError('failed', code))
-        })
+        acceptError(code)
       }
     }
 
-    // `closed` is one of the few cross-origin properties still readable, so
-    // polling is the only way to notice a user dismissing the window.
+    channel.onmessage = (event: MessageEvent) => {
+      if (!isAuthBroadcastMessage(event.data)) return
+
+      if (event.data.type === AUTH_SUCCESS_TYPE) {
+        acceptSuccess(event.data.payload)
+        return
+      }
+
+      const code = typeof event.data.error_code === 'string' ? event.data.error_code : null
+      acceptError(code)
+    }
+
     const closeTimer = window.setInterval(() => {
-      if (popup.closed) {
+      if (!popup.closed) return
+      window.clearInterval(closeTimer)
+      closeGraceTimer = window.setTimeout(() => {
         settle(() => {
           reject(new AuthPopupError('closed'))
         })
-      }
+      }, CLOSE_GRACE_MS)
     }, CLOSE_POLL_INTERVAL_MS)
 
     window.addEventListener('message', onMessage)
