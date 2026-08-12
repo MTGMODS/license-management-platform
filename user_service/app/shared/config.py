@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
+    # --- Frontend ---
+    FRONTEND_URL: str
+
     # --- Discord OAuth2 ---
     DISCORD_CLIENT_ID: str
     DISCORD_CLIENT_SECRET: str
@@ -28,6 +31,8 @@ class Settings(BaseSettings):
 
     # --- Service-to-Service ---
     INTERNAL_SECRET_TOKEN: str
+
+    
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
