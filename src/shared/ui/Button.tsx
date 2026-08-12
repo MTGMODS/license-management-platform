@@ -34,11 +34,13 @@ export function Button({
       className={buttonStyles({ variant, size, fullWidth, className })}
     >
       {loading ? (
-        <Loader2 aria-hidden className="size-4 animate-spin" />
+        <Loader2 aria-hidden className="size-4 shrink-0 animate-spin" />
       ) : null}
-      {/* Keeping the label mounted while loading avoids the button resizing
-          and the pointer landing on a different control. */}
-      <span className={cn(loading && 'opacity-70')}>{children}</span>
+      {/* inline-flex keeps icon+label on one row; a plain span blockifies and
+          stacks Lucide SVGs above the text. */}
+      <span className={cn('inline-flex items-center gap-2', loading && 'opacity-70')}>
+        {children}
+      </span>
     </button>
   )
 }

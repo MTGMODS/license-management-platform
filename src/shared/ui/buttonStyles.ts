@@ -5,10 +5,10 @@ export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'outline'
 export type ButtonSize = 'sm' | 'md' | 'lg'
 
 const BASE =
-  'relative inline-flex select-none items-center justify-center gap-2 rounded-xl font-medium ' +
+  'relative inline-flex flex-nowrap select-none items-center justify-center gap-2 rounded-xl font-medium ' +
   'whitespace-nowrap transition-[background-color,border-color,box-shadow,transform,opacity] ' +
   'duration-200 ease-out-soft active:translate-y-px ' +
-  'disabled:pointer-events-none disabled:opacity-45'
+  'disabled:pointer-events-none disabled:opacity-45 [&_svg]:shrink-0'
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
