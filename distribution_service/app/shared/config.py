@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    DOWNLOAD_BASE_URL: str = "http://localhost:8005/api/v1/files/downloads/vip"
+    DOWNLOAD_BASE_URL: str
     RABBITMQ_URL: str
     API_VERSION: str
     APP_VERSION: str
