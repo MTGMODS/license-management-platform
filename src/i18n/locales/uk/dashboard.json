@@ -32,6 +32,12 @@
     "devices": "Пристрої",
     "devicesCount": "{{used}} з {{max}}",
     "noDevices": "Поки не прив'язано жодного пристрою",
+    "resetsLimit": "Скидань: до {{count}}",
+    "resetDevice": "Скинути",
+    "resetConfirm": "Відв'язати цей пристрій?",
+    "resetConfirmAction": "Так, скинути",
+    "resetCancel": "Скасувати",
+    "resetSuccess": "Пристрій відв'язано",
     "goVip": "Тарифи VIP"
   },
   "download": {

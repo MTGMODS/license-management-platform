@@ -5,6 +5,7 @@ import {
   activateKey,
   getLicenseInfo,
   requestPremiumDownload,
+  resetDevice,
   type ActivateKeyResult,
   type DownloadRequestResult,
   type LicenseInfo,
@@ -46,5 +47,16 @@ export function useActivateKey() {
 export function usePremiumDownload() {
   return useMutation<DownloadRequestResult>({
     mutationFn: () => requestPremiumDownload(),
+  })
+}
+
+export function useResetDevice() {
+  const queryClient = useQueryClient()
+
+  return useMutation<{ status: string; message: string }, unknown, number>({
+    mutationFn: (deviceId) => resetDevice(deviceId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: LICENSE_INFO_KEY })
+    },
   })
 }

@@ -1,4 +1,4 @@
-import { Crown, Download, KeyRound, Loader2 } from 'lucide-react'
+import { Crown, Download, KeyRound, Loader2, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -9,6 +9,7 @@ import {
   useActivateKey,
   useLicenseInfo,
   usePremiumDownload,
+  useResetDevice,
 } from '@/features/license/useLicense'
 import { ApiError, apiErrorTranslationKey } from '@/shared/api'
 import {
@@ -124,7 +125,10 @@ function ActivateForm() {
 
 function VipPanel({ info }: { info: LicenseInfo }) {
   const { t } = useTranslation('dashboard')
+  const { t: te } = useTranslation(['errors'])
   const format = useFormatters()
+  const resetDevice = useResetDevice()
+  const [confirmDeviceId, setConfirmDeviceId] = useState<number | null>(null)
   const { license, devices, transaction } = info
   const active = license.status === 'ACTIVE'
 
@@ -139,6 +143,16 @@ function VipPanel({ info }: { info: LicenseInfo }) {
         hours < 48
           ? t('vip.remainingHours', { count: hours })
           : t('vip.remainingDays', { count: Math.ceil(ms / (24 * 60 * 60 * 1000)) })
+    }
+  }
+
+  const onReset = async (deviceId: number) => {
+    try {
+      await resetDevice.mutateAsync(deviceId)
+      toast.success(t('vip.resetSuccess'))
+      setConfirmDeviceId(null)
+    } catch (error) {
+      toast.error(te(apiErrorTranslationKey(error), { defaultValue: te('errors:unexpected') }))
     }
   }
 
@@ -200,27 +214,73 @@ function VipPanel({ info }: { info: LicenseInfo }) {
       ) : null}
 
       <div className="mt-6 border-t border-white/5 pt-5">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm font-medium text-fg-muted">{t('vip.devices')}</p>
-          <p className="tabular text-sm text-fg-subtle">
-            {t('vip.devicesCount', { used: devices.length, max: license.max_devices })}
-          </p>
+          <div className="flex flex-wrap items-center gap-3 text-sm text-fg-subtle">
+            <span className="tabular">
+              {t('vip.devicesCount', { used: devices.length, max: license.max_devices })}
+            </span>
+            <span className="tabular">{t('vip.resetsLimit', { count: license.reset_limit })}</span>
+          </div>
         </div>
         {devices.length === 0 ? (
           <p className="mt-3 text-sm text-fg-subtle">{t('vip.noDevices')}</p>
         ) : (
           <ul className="mt-3 space-y-2">
-            {devices.map((device) => (
-              <li
-                key={device.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-ink-800 px-3 py-2 text-sm"
-              >
-                <span className="tabular font-mono text-fg-muted">{device.hwid}</span>
-                <span className="text-fg-subtle">
-                  {device.last_used_at ? format.dateTime(device.last_used_at) : device.ip}
-                </span>
-              </li>
-            ))}
+            {devices.map((device) => {
+              const confirming = confirmDeviceId === device.id
+              const busy = resetDevice.isPending && resetDevice.variables === device.id
+
+              return (
+                <li
+                  key={device.id}
+                  className="flex items-center justify-between gap-3 rounded-lg bg-ink-800 px-3 py-2 text-sm"
+                >
+                  <div className="min-w-0">
+                    <p className="tabular font-mono text-fg-muted">{device.hwid}</p>
+                    <p className="mt-0.5 text-xs text-fg-subtle">
+                      {device.last_used_at ? format.dateTime(device.last_used_at) : device.ip}
+                    </p>
+                  </div>
+
+                  {confirming ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-fg-muted">{t('vip.resetConfirm')}</span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="primary"
+                        loading={busy}
+                        onClick={() => void onReset(device.id)}
+                      >
+                        {t('vip.resetConfirmAction')}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        disabled={busy}
+                        onClick={() => setConfirmDeviceId(null)}
+                      >
+                        {t('vip.resetCancel')}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="shrink-0"
+                      disabled={resetDevice.isPending}
+                      onClick={() => setConfirmDeviceId(device.id)}
+                    >
+                      <Trash2 aria-hidden className="size-3.5" />
+                      {t('vip.resetDevice')}
+                    </Button>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         )}
       </div>

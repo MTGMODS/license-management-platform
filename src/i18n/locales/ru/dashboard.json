@@ -32,6 +32,12 @@
     "devices": "Устройства",
     "devicesCount": "{{used}} из {{max}}",
     "noDevices": "Пока не привязано ни одно устройство",
+    "resetsLimit": "Сбросов: до {{count}}",
+    "resetDevice": "Сбросить",
+    "resetConfirm": "Отвязать это устройство?",
+    "resetConfirmAction": "Да, сбросить",
+    "resetCancel": "Отмена",
+    "resetSuccess": "Устройство отвязано",
     "goVip": "Тарифы VIP"
   },
   "download": {
