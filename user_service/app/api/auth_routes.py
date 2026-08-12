@@ -71,35 +71,35 @@ def _oauth_popup_html(*, payload: dict | None = None, error_code: str | None = N
     var message = {message_js};
     var statusEl = document.getElementById("status");
 
-    function send() {{
-      if (!window.opener) {{
-        statusEl.textContent = "You can close this window.";
-        return;
-      }}
-      try {{
-        if (payload) {{
-          window.opener.postMessage(
-            {{ type: "mtg_auth_success", payload: payload }},
-            target
-          );
-        }} else {{
-          window.opener.postMessage(
-            {{
-              type: "mtg_auth_error",
-              error_code: errorCode,
-              message: message
-            }},
-            target
-          );
-        }}
-      }} catch (err) {{
-        statusEl.textContent = "Could not return to the site. Close this window.";
-        return;
-      }}
-      window.close();
+    var data = payload
+      ? {{ type: "mtg_auth_success", payload: payload }}
+      : {{ type: "mtg_auth_error", error_code: errorCode, message: message }};
+
+    function fallbackRedirect() {{
+      statusEl.textContent = "Redirecting…";
+      window.location.replace(
+        target + "/auth/callback#" + encodeURIComponent(JSON.stringify(data))
+      );
     }}
 
-    send();
+    if (window.opener) {{
+      try {{
+        window.opener.postMessage(data, target);
+      }} catch (err) {{
+        // fall through — still try close / redirect
+      }}
+      try {{
+        window.close();
+      }} catch (err) {{}}
+      // Real popup disappears here. If we are still open (tab / blocked popup
+      // / full-page with a stale opener), finish via the SPA.
+      setTimeout(function () {{
+        fallbackRedirect();
+      }}, 100);
+      return;
+    }}
+
+    fallbackRedirect();
   }})();
   </script>
 </body>
@@ -233,6 +233,7 @@ async def telegram_webapp_auth(payload: TelegramAuthPayload, db: AsyncSession = 
         user=user,
     )
 
+
 @router.get("/discord/login", summary="Initiate Discord OAuth2 Flow")
 async def discord_oauth_login():
     state = secrets.token_urlsafe(16)
@@ -327,10 +328,11 @@ async def discord_oauth_callback(request: Request, code: str, state: str = None,
     except (HTTPException, DomainException) as exc:
         return _oauth_exception_to_html(exc)
 
+
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_access_token(request: RefreshRequest, db: AsyncSession = Depends(get_db)):
     user_id = verify_refresh_token(request.refresh_token)
-    
+
     service = AuthService(db)
     db_user = await service.get_valid_user_for_refresh(user_id)
 
