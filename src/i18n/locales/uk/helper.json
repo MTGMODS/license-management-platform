@@ -117,7 +117,9 @@
     "title": "Як це виглядає",
     "subtitle": "Відео та скріншоти з гри.",
     "videoSoon": "Відео скоро з'явиться",
-    "screenshotsSoon": "Скріншоти скоро з'являться"
+    "screenshotsSoon": "Скріншоти скоро з'являться",
+    "screenshotSoon": "Скрін {{index}}",
+    "screenshotAlt": "Скріншот хелпера {{index}}"
   },
   "vipTeaser": {
     "title": "VIP-версія",
