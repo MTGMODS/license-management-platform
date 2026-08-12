@@ -5,7 +5,7 @@ import type { FactionStats, VersionStats } from '@/shared/api/usage'
 import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
-import { AXIS_PROPS, CHART } from './chartTheme'
+import { AXIS_PROPS, barActiveProps, CHART } from './chartTheme'
 import { ChartTooltip } from './ChartTooltip'
 
 /**
@@ -63,6 +63,7 @@ export function FactionsChart({ factions }: { factions: Record<string, FactionSt
         <div className="mt-6" style={{ height: Math.max(220, rows.length * 30 + 40) }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
+              accessibilityLayer={false}
               data={rows}
               layout="vertical"
               margin={{ top: 4, right: 12, bottom: 0, left: 8 }}
@@ -71,7 +72,7 @@ export function FactionsChart({ factions }: { factions: Record<string, FactionSt
               <XAxis type="number" {...AXIS_PROPS} tickFormatter={format.compact} />
               <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={144} />
               <Tooltip
-                cursor={{ fill: CHART.cursor }}
+                cursor={false}
                 content={({ active, payload }) => {
                   const point = payload?.[0]?.payload as FactionRow | undefined
                   if (!active || !point) return null
@@ -107,6 +108,7 @@ export function FactionsChart({ factions }: { factions: Record<string, FactionSt
                 fill={CHART.users}
                 radius={[0, 4, 4, 0]}
                 isAnimationActive={false}
+                activeBar={barActiveProps(CHART.users)}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -153,6 +155,7 @@ export function VersionsChart({ versions }: { versions: VersionStats[] }) {
         <div className="mt-6" style={{ height: Math.max(220, rows.length * 30 + 40) }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
+              accessibilityLayer={false}
               data={rows}
               layout="vertical"
               margin={{ top: 4, right: 12, bottom: 0, left: 8 }}
@@ -161,7 +164,7 @@ export function VersionsChart({ versions }: { versions: VersionStats[] }) {
               <XAxis type="number" {...AXIS_PROPS} tickFormatter={format.compact} />
               <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={132} />
               <Tooltip
-                cursor={{ fill: CHART.cursor }}
+                cursor={false}
                 content={({ active, payload }) => {
                   const point = payload?.[0]?.payload as { label: string; users: number } | undefined
                   if (!active || !point) return null
@@ -185,6 +188,7 @@ export function VersionsChart({ versions }: { versions: VersionStats[] }) {
                 fill={CHART.launches}
                 radius={[0, 4, 4, 0]}
                 isAnimationActive={false}
+                activeBar={barActiveProps(CHART.launches)}
               />
             </BarChart>
           </ResponsiveContainer>

@@ -6,7 +6,9 @@ import type { CountryStats, PeriodKey } from '@/shared/api/usage'
 import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
+import { CRIMEA_OVERLAY_PATHS, UKRAINE_NUMERIC_ID } from './crimeaOverlay'
 import { COUNTRY_SHAPES, MAP_HEIGHT, MAP_WIDTH } from './worldGeometry'
+import { HOVER_OUTLINE } from './chartTheme'
 
 const BASE_FILL = '#1a1a25'
 const STROKE = 'rgba(244, 245, 248, 0.08)'
@@ -47,17 +49,13 @@ export function WorldMap({ countries: rows, period }: WorldMapProps) {
     [i18n.language],
   )
 
-  const { byNumericId, byCode, max, unknownUsers } = useMemo(() => {
+  const { byNumericId, byCode, max } = useMemo(() => {
     const numeric = new Map<string, CountryStats>()
     const code = new Map<string, CountryStats>()
     let peak = 0
-    let unknown = 0
 
     for (const row of rows) {
-      if (row.code === 'UNKNOWN') {
-        unknown = row.users[period]
-        continue
-      }
+      if (row.code === 'UNKNOWN') continue
 
       code.set(row.code, row)
       peak = Math.max(peak, row.users[period])
@@ -68,7 +66,7 @@ export function WorldMap({ countries: rows, period }: WorldMapProps) {
       if (id) numeric.set(id, row)
     }
 
-    return { byNumericId: numeric, byCode: code, max: peak, unknownUsers: unknown }
+    return { byNumericId: numeric, byCode: code, max: peak }
   }, [rows, period])
 
   const hovered = hover ? byCode.get(hover.code) : null
@@ -103,14 +101,15 @@ export function WorldMap({ countries: rows, period }: WorldMapProps) {
           {COUNTRY_SHAPES.map((shape) => {
             const row = byNumericId.get(shape.numericId)
             const value = row?.users[period] ?? 0
+            const isHovered = row != null && hover?.code === row.code
 
             return (
               <path
                 key={shape.numericId}
                 d={shape.path}
                 fill={fillFor(intensityOf(value, max))}
-                stroke={STROKE}
-                strokeWidth={0.5}
+                stroke={isHovered ? HOVER_OUTLINE.stroke : STROKE}
+                strokeWidth={isHovered ? HOVER_OUTLINE.strokeWidth : 0.5}
                 className={row ? 'cursor-pointer' : undefined}
                 onMouseMove={(event) => {
                   if (!row) return
@@ -125,6 +124,34 @@ export function WorldMap({ countries: rows, period }: WorldMapProps) {
               />
             )
           })}
+
+          {(() => {
+            const ukraine = byNumericId.get(UKRAINE_NUMERIC_ID)
+            if (!ukraine) return null
+
+            const value = ukraine.users[period]
+            const isHovered = hover?.code === ukraine.code
+
+            return CRIMEA_OVERLAY_PATHS.map((path, index) => (
+              <path
+                key={`crimea-${index}`}
+                d={path}
+                fill={fillFor(intensityOf(value, max))}
+                stroke={isHovered ? HOVER_OUTLINE.stroke : STROKE}
+                strokeWidth={isHovered ? HOVER_OUTLINE.strokeWidth : 0.5}
+                className="cursor-pointer"
+                onMouseMove={(event) => {
+                  const box = event.currentTarget.ownerSVGElement?.getBoundingClientRect()
+                  if (!box) return
+                  setHover({
+                    code: ukraine.code,
+                    x: event.clientX - box.left,
+                    y: event.clientY - box.top,
+                  })
+                }}
+              />
+            ))
+          })()}
         </svg>
 
         {hover && hovered ? (
@@ -164,11 +191,6 @@ export function WorldMap({ countries: rows, period }: WorldMapProps) {
         ) : null}
       </div>
 
-      {unknownUsers > 0 ? (
-        <p className="mt-3 text-sm text-fg-subtle">
-          {t('analytics.map.unknownCountry', { count: unknownUsers })}
-        </p>
-      ) : null}
     </Card>
   )
 }

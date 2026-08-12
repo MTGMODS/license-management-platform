@@ -5,7 +5,7 @@ import type { HourActivityPoint, WeekdayActivityPoint } from '@/shared/api/usage
 import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
-import { AXIS_PROPS, CHART } from './chartTheme'
+import { AXIS_PROPS, barActiveProps, CHART, Y_AXIS_NUMERIC } from './chartTheme'
 import { ChartTooltip } from './ChartTooltip'
 
 interface ActivityChartsProps {
@@ -37,7 +37,7 @@ export function ActivityCharts({ hourly, weekday }: ActivityChartsProps) {
 
         <div className="mt-6 h-56">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={hourly} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+            <BarChart accessibilityLayer={false} data={hourly} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
               <CartesianGrid stroke={CHART.grid} vertical={false} />
               <XAxis
                 dataKey="hour"
@@ -45,9 +45,9 @@ export function ActivityCharts({ hourly, weekday }: ActivityChartsProps) {
                 interval={3}
                 tickFormatter={(hour: number) => format.hour(hour)}
               />
-              <YAxis {...AXIS_PROPS} width={44} tickFormatter={format.compact} />
+              <YAxis {...Y_AXIS_NUMERIC} tickFormatter={format.compact} />
               <Tooltip
-                cursor={{ fill: CHART.cursor }}
+                cursor={false}
                 content={({ active, payload }) => {
                   const point = payload?.[0]?.payload as HourActivityPoint | undefined
                   if (!active || !point) return null
@@ -76,6 +76,7 @@ export function ActivityCharts({ hourly, weekday }: ActivityChartsProps) {
                 fill={CHART.users}
                 radius={[4, 4, 0, 0]}
                 isAnimationActive={false}
+                activeBar={barActiveProps(CHART.users)}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -95,16 +96,16 @@ export function ActivityCharts({ hourly, weekday }: ActivityChartsProps) {
 
         <div className="mt-6 h-56">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={weekday} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+            <BarChart accessibilityLayer={false} data={weekday} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
               <CartesianGrid stroke={CHART.grid} vertical={false} />
               <XAxis
                 dataKey="weekday"
                 {...AXIS_PROPS}
                 tickFormatter={(index: number) => format.weekdayShort(index)}
               />
-              <YAxis {...AXIS_PROPS} width={44} tickFormatter={format.compact} />
+              <YAxis {...Y_AXIS_NUMERIC} tickFormatter={format.compact} />
               <Tooltip
-                cursor={{ fill: CHART.cursor }}
+                cursor={false}
                 content={({ active, payload }) => {
                   const point = payload?.[0]?.payload as WeekdayActivityPoint | undefined
                   if (!active || !point) return null
@@ -133,6 +134,7 @@ export function ActivityCharts({ hourly, weekday }: ActivityChartsProps) {
                 fill={CHART.launches}
                 radius={[4, 4, 0, 0]}
                 isAnimationActive={false}
+                activeBar={barActiveProps(CHART.launches)}
               />
             </BarChart>
           </ResponsiveContainer>

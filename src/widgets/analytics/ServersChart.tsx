@@ -7,7 +7,7 @@ import { getServer, UNKNOWN_SERVER_ID } from '@/shared/config/servers'
 import { useFormatters } from '@/shared/lib/format'
 import { Card, SegmentedControl } from '@/shared/ui'
 
-import { AXIS_PROPS, CHART } from './chartTheme'
+import { AXIS_PROPS, barActiveProps, CHART } from './chartTheme'
 import { ChartTooltip } from './ChartTooltip'
 
 type TopLimit = 5 | 10 | 20 | 0
@@ -71,6 +71,7 @@ export function ServersChart({ servers, period }: ServersChartProps) {
         <div className="mt-6" style={{ height: Math.max(220, visible.length * 26 + 40) }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
+              accessibilityLayer={false}
               data={visible}
               layout="vertical"
               margin={{ top: 4, right: 12, bottom: 0, left: 8 }}
@@ -81,7 +82,7 @@ export function ServersChart({ servers, period }: ServersChartProps) {
                   numeric id would need. */}
               <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={132} />
               <Tooltip
-                cursor={{ fill: CHART.cursor }}
+                cursor={false}
                 content={({ active, payload }) => {
                   const point = payload?.[0]?.payload as (typeof visible)[number] | undefined
                   if (!active || !point) return null
@@ -110,6 +111,7 @@ export function ServersChart({ servers, period }: ServersChartProps) {
                 fill={CHART.users}
                 radius={[0, 4, 4, 0]}
                 isAnimationActive={false}
+                activeBar={barActiveProps(CHART.users)}
               />
             </BarChart>
           </ResponsiveContainer>

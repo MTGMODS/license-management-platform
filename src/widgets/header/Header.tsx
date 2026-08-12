@@ -6,7 +6,6 @@ import { Link, NavLink, useLocation } from 'react-router'
 import { cn } from '@/shared/lib/cn'
 
 import { AccountControl } from './AccountControl'
-import { LanguageSwitcher } from './LanguageSwitcher'
 
 const NAV_ITEMS = [
   { to: '/helper', labelKey: 'nav.helper' },
@@ -61,7 +60,6 @@ export function Header() {
         </nav>
 
         <div className="flex items-center justify-end gap-2">
-          <LanguageSwitcher className="hidden sm:flex" />
           <AccountControl />
           <button
             type="button"
@@ -93,7 +91,6 @@ export function Header() {
                 {t(item.labelKey)}
               </NavLink>
             ))}
-            <LanguageSwitcher className="mt-2 self-start sm:hidden" />
           </nav>
         </div>
       ) : null}

@@ -113,7 +113,7 @@
     color: var(--color-fg);
   }
 
-  :focus-visible {
+  :focus-visible:not(:where(.recharts-wrapper, .recharts-wrapper *)) {
     outline: 2px solid var(--color-accent-400);
     outline-offset: 2px;
   }
@@ -123,6 +123,17 @@
   .tabular {
     font-variant-numeric: tabular-nums;
   }
+}
+
+/* Recharts v3: no focus ring on chart surface; tooltip cursor uses light stroke. */
+.recharts-wrapper,
+.recharts-wrapper * {
+  outline: none !important;
+}
+
+.recharts-tooltip-cursor {
+  stroke: none !important;
+  stroke-width: 0 !important;
 }
 
 /* ---------------------------------------------------------------------------

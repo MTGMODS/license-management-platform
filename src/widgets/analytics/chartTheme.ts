@@ -17,3 +17,23 @@ export const AXIS_PROPS = {
   tickLine: false,
   axisLine: false,
 } as const
+
+/** Numeric Y axes: auto width from tick labels (e.g. "2,5 тис."). */
+export const Y_AXIS_NUMERIC = {
+  ...AXIS_PROPS,
+  width: 'auto' as const,
+}
+
+/** Shared hover outline for chart bars and map countries. */
+export const HOVER_OUTLINE = {
+  stroke: 'rgba(244, 245, 248, 0.55)',
+  strokeWidth: 1.5,
+} as const
+
+/** Hover outline on the bar itself — not the full-row tooltip band. */
+export function barActiveProps(fill: string) {
+  return {
+    fill,
+    ...HOVER_OUTLINE,
+  } as const
+}

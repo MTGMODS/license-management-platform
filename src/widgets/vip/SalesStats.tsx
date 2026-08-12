@@ -17,7 +17,7 @@ import { useSalesStats } from '@/features/license/useSalesStats'
 import type { LicenseDurationStat, LicensePaymentStat } from '@/shared/api/license'
 import { useFormatters } from '@/shared/lib/format'
 import { Card, Skeleton } from '@/shared/ui'
-import { AXIS_PROPS, CHART } from '@/widgets/analytics/chartTheme'
+import { AXIS_PROPS, barActiveProps, CHART, Y_AXIS_NUMERIC } from '@/widgets/analytics/chartTheme'
 import { ChartTooltip } from '@/widgets/analytics/ChartTooltip'
 
 /** Distinct hues for the payment split; the chart is a true part-of-whole. */
@@ -41,12 +41,12 @@ function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
       ) : (
         <div className="mt-6 h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={rows} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+            <BarChart accessibilityLayer={false} data={rows} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
               <CartesianGrid stroke={CHART.grid} vertical={false} />
               <XAxis dataKey="label" {...AXIS_PROPS} />
-              <YAxis {...AXIS_PROPS} width={40} allowDecimals={false} />
+              <YAxis {...Y_AXIS_NUMERIC} allowDecimals={false} />
               <Tooltip
-                cursor={{ fill: CHART.cursor }}
+                cursor={false}
                 content={({ active, payload }) => {
                   const point = payload?.[0]?.payload as (typeof rows)[number] | undefined
                   if (!active || !point) return null
@@ -78,6 +78,7 @@ function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
                 fill={CHART.users}
                 radius={[4, 4, 0, 0]}
                 isAnimationActive={false}
+                activeBar={barActiveProps(CHART.users)}
               />
             </BarChart>
           </ResponsiveContainer>

@@ -14,7 +14,7 @@ import type { DailyPoint } from '@/shared/api/usage'
 import { useFormatters } from '@/shared/lib/format'
 import { Card, SegmentedControl } from '@/shared/ui'
 
-import { AXIS_PROPS, CHART } from './chartTheme'
+import { AXIS_PROPS, CHART, Y_AXIS_NUMERIC } from './chartTheme'
 import { ChartTooltip } from './ChartTooltip'
 
 type Metric = 'users' | 'launches'
@@ -51,7 +51,7 @@ export function DailyTrends({ daily }: { daily: DailyPoint[] }) {
       ) : (
         <div className="mt-6 h-72">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={daily} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+            <AreaChart accessibilityLayer={false} data={daily} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
               <defs>
                 <linearGradient id={`daily-${metric}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={color} stopOpacity={0.35} />
@@ -66,7 +66,7 @@ export function DailyTrends({ daily }: { daily: DailyPoint[] }) {
                 tickFormatter={format.dayMonth}
                 minTickGap={28}
               />
-              <YAxis {...AXIS_PROPS} width={48} tickFormatter={format.compact} />
+              <YAxis {...Y_AXIS_NUMERIC} tickFormatter={format.compact} />
               <Tooltip
                 cursor={{ stroke: CHART.axis, strokeDasharray: '4 4' }}
                 content={({ active, payload }) => {
