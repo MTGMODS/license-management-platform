@@ -6,6 +6,7 @@ import ruHeader from './locales/ru/header.json'
 import ruHelper from './locales/ru/helper.json'
 import ruHome from './locales/ru/home.json'
 import ruLogin from './locales/ru/login.json'
+import ruTerms from './locales/ru/terms.json'
 import ruVip from './locales/ru/vip.json'
 import ukCommon from './locales/uk/common.json'
 import ukDashboard from './locales/uk/dashboard.json'
@@ -15,6 +16,7 @@ import ukHeader from './locales/uk/header.json'
 import ukHelper from './locales/uk/helper.json'
 import ukHome from './locales/uk/home.json'
 import ukLogin from './locales/uk/login.json'
+import ukTerms from './locales/uk/terms.json'
 import ukVip from './locales/uk/vip.json'
 
 export const defaultNS = 'common'
@@ -29,6 +31,7 @@ export const resources = {
     helper: ruHelper,
     home: ruHome,
     login: ruLogin,
+    terms: ruTerms,
     vip: ruVip,
   },
   uk: {
@@ -40,6 +43,7 @@ export const resources = {
     helper: ukHelper,
     home: ukHome,
     login: ukLogin,
+    terms: ukTerms,
     vip: ukVip,
   },
 } as const

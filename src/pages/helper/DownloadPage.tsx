@@ -1,6 +1,7 @@
 import { Download, FileCode2, Monitor, PlayCircle, Smartphone, Sparkles, Wand2 } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useTranslation, Trans } from 'react-i18next'
+import { Link } from 'react-router'
 import { toast } from 'sonner'
 
 import { isInstallerAvailable } from '@/features/download/installer'
@@ -273,6 +274,18 @@ export function DownloadPage() {
         <VersionBadge />
       </div>
       <p className="mt-3 text-fg-muted">{t('subtitle')}</p>
+
+      <p className="mt-4 max-w-2xl text-sm leading-relaxed text-fg-subtle">
+        <Trans
+          i18nKey="legalNotice"
+          ns="download"
+          components={{
+            terms: (
+              <Link to="/terms" className="text-accent-300 underline decoration-accent-500/40 underline-offset-2 transition-colors hover:text-accent-200" />
+            ),
+          }}
+        />
+      </p>
 
       <div className="mt-8">
         <DeviceToggle device={device} onChange={setDevice} />

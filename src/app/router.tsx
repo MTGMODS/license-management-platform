@@ -6,6 +6,7 @@ import { HelperPage } from '@/pages/helper/HelperPage'
 import { HomePage } from '@/pages/home/HomePage'
 import { LoginPage } from '@/pages/login/LoginPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
+import { TermsPage } from '@/pages/terms/TermsPage'
 import { VipPage } from '@/pages/vip/VipPage'
 
 import { AppLayout } from './AppLayout'
@@ -20,6 +21,7 @@ export function AppRoutes() {
         <Route path="helper/download" element={<DownloadPage />} />
         <Route path="vip" element={<VipPage />} />
         <Route path="login" element={<LoginPage />} />
+        <Route path="terms" element={<TermsPage />} />
 
         <Route element={<RequireAuth />}>
           <Route path="dashboard" element={<DashboardPage />} />

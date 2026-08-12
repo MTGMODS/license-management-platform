@@ -1,5 +1,8 @@
 {
   "brand": "MTG MODS",
+  "footer": {
+    "terms": "Условия и конфиденциальность"
+  },
   "actions": {
     "download": "Скачать",
     "learnMore": "Подробнее",

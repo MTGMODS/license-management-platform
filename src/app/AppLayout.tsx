@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Outlet } from 'react-router'
+import { Link, Outlet } from 'react-router'
 
 import { GITHUB_ORG_URL } from '@/shared/config/profile'
 import { Header } from '@/widgets/header/Header'
@@ -34,14 +34,19 @@ function Footer() {
     <footer className="mt-24 border-t border-white/5 py-8">
       <div className="shell flex flex-col items-center justify-between gap-3 text-sm text-fg-subtle sm:flex-row">
         <span>© {new Date().getFullYear()} {t('brand')}</span>
-        <a
-          href={GITHUB_ORG_URL}
-          target="_blank"
-          rel="noreferrer noopener"
-          className="transition-colors hover:text-fg-muted"
-        >
-          GitHub
-        </a>
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <Link to="/terms" className="transition-colors hover:text-fg-muted">
+            {t('footer.terms')}
+          </Link>
+          <a
+            href={GITHUB_ORG_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="transition-colors hover:text-fg-muted"
+          >
+            GitHub
+          </a>
+        </div>
       </div>
     </footer>
   )

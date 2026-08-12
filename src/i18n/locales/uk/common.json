@@ -1,5 +1,8 @@
 {
   "brand": "MTG MODS",
+  "footer": {
+    "terms": "Умови та конфіденційність"
+  },
   "actions": {
     "download": "Завантажити",
     "learnMore": "Детальніше",
