@@ -281,9 +281,6 @@ class LicenseStatsService:
     def __init__(self, db):
         self.repo = LicenseRepository(db)
 
-    async def get_explorer_stats(self, metrics: list[str], group_by: str, period: str, filters: dict, sort: str, limit: int, offset: int):
-        return await self.repo.build_explorer_query(metrics, group_by, period, filters, sort, limit, offset)
-
     async def get_website_stats(self, background_tasks: BackgroundTasks = None):
         now = datetime.now(timezone.utc)
 

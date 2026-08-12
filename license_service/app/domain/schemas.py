@@ -26,9 +26,3 @@ class UpdateLicenseDTO(BaseModel):
     status: Optional[LicenseStatus] = None
     reset_limit: Optional[int] = Field(None, ge=0)
     max_devices: Optional[int] = Field(None, ge=1)
-
-class LicenseQuerySchema(BaseModel):
-    metrics: list[str] = Field(default=["revenue", "purchases", "active_licenses"])
-    group_by_options: list[str] = Field(default=["method", "duration", "status", "date", "hour", "weekday", "user_id"])
-    periods: list[str] = Field(default=["all", "30d", "24h", "1h"])
-    filters: list[str] = Field(default=["method", "status", "duration", "user_id"])
