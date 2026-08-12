@@ -1,22 +1,9 @@
-/**
- * Period selector values.
- *
- * The two backends disagree on the "all time" literal: `/stats/public` nests
- * its precomputed windows under `all_time`, while the query builder's `period`
- * parameter expects `all`. `PERIOD_QUERY_VALUE` bridges the two.
- */
+import type { ApiDate, ApiDateTime } from '@/shared/lib/datetime'
+
+/** Precomputed window keys on `/stats/public`. */
 export type PeriodKey = 'all_time' | '30d' | '24h' | '1h'
 
-export type QueryPeriod = 'all' | '30d' | '24h' | '1h'
-
 export const PERIOD_KEYS: readonly PeriodKey[] = ['all_time', '30d', '24h', '1h']
-
-export const PERIOD_QUERY_VALUE: Record<PeriodKey, QueryPeriod> = {
-  all_time: 'all',
-  '30d': '30d',
-  '24h': '24h',
-  '1h': '1h',
-}
 
 /** A metric broken down by all four precomputed windows. */
 export type PeriodCounts = Record<PeriodKey, number>
@@ -67,7 +54,7 @@ export interface CountryStats {
   user_share: number
   launches_per_user: number
   users: PeriodCounts
-  /** All-time only, unlike `users`. Period-scoped values need the query builder. */
+  /** All-time only, unlike `users`. */
   launches: number
 }
 
@@ -80,14 +67,14 @@ export interface VersionStats {
 }
 
 export interface DailyPoint {
-  /** `YYYY-MM-DD`. Days without activity are omitted entirely. */
-  date: string
+  /** UTC calendar day (`YYYY-MM-DD`). Days without activity are omitted. */
+  date: ApiDate
   users: number
   launches: number
 }
 
 export interface HourlyTimelinePoint {
-  date: string
+  date: ApiDate
   hour: number
   users: number
   launches: number
@@ -108,7 +95,7 @@ export interface WeekdayActivityPoint {
 }
 
 export interface UsagePublicStats {
-  updated_at: string
+  updated_at: ApiDateTime
   overview: UsageOverview
   distribution: {
     /** Keyed by mode name rather than an array. */
@@ -130,66 +117,3 @@ export interface UsagePublicStats {
     }
   }
 }
-
-export type UsageMetric =
-  | 'users'
-  | 'launches'
-  | 'vip_users'
-  | 'free_users'
-  | 'vip_percent'
-  | 'launches_per_user'
-
-export type UsageGroupBy =
-  | 'server'
-  | 'country'
-  | 'mode'
-  | 'device'
-  | 'version'
-  | 'date'
-  | 'hour'
-  | 'weekday'
-
-export type UsageFilterField = 'server' | 'mode' | 'country' | 'device' | 'version' | 'vip'
-
-/** Response of `/stats/query/schema`, used to drive the Query Builder UI. */
-export interface UsageQuerySchema {
-  metrics: UsageMetric[]
-  groups: UsageGroupBy[]
-  periods: QueryPeriod[]
-  filters: UsageFilterField[]
-}
-
-export interface UsageQueryParams {
-  metric?: UsageMetric[]
-  group_by?: UsageGroupBy | null
-  period?: QueryPeriod
-  server?: number | null
-  mode?: string | null
-  country?: string | null
-  device?: string | null
-  version?: string | null
-  vip?: boolean | null
-  /** Prefix with `-` for descending, e.g. `-users`. */
-  sort?: string | null
-  /** Backend caps this at 1000; there is no "all" value. */
-  limit?: number
-  offset?: number
-}
-
-/** Rows are shaped by the requested metrics and grouping, so keys are dynamic. */
-export type UsageQueryRow = Record<string, string | number | null>
-
-export interface UsageQueryResult {
-  query: {
-    metrics: string[]
-    group_by: string | null
-    period: string
-    filters: Record<string, unknown>
-    sort: string | null
-    limit: number
-    offset: number
-  }
-  data: UsageQueryRow[]
-}
-
-export const USAGE_QUERY_LIMIT_MAX = 1000

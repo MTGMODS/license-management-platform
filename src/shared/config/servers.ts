@@ -95,3 +95,7 @@ export const UNKNOWN_SERVER_ID = 0
 export function getServer(id: number): ServerInfo | null {
   return SERVERS.get(id) ?? null
 }
+
+export function formatServerLabel(id: number, name: string): string {
+  return `[${id}] ${name}`
+}

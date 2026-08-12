@@ -1,3 +1,5 @@
+import type { ApiDateTime } from '@/shared/lib/datetime'
+
 export type LicenseStatus = 'NOT_ACTIVATED' | 'ACTIVE' | 'EXPIRED' | 'BANNED'
 
 /** Values of the backend `PaymentMethod` enum. */
@@ -9,7 +11,7 @@ export interface LicenseDevice {
   hwid: string
   /** Masked server-side, e.g. `192.168.*.*`, or `Unknown`. */
   ip: string
-  last_used_at: string | null
+  last_used_at: ApiDateTime | null
 }
 
 export interface LicenseDetails {
@@ -21,9 +23,8 @@ export interface LicenseDetails {
   duration_days: number | null
   max_devices: number
   reset_limit: number
-  activated_at: string | null
-  /** ISO 8601. The backend does not precompute remaining time. */
-  expires_at: string | null
+  activated_at: ApiDateTime | null
+  expires_at: ApiDateTime | null
 }
 
 export interface LicenseTransaction {
@@ -31,7 +32,7 @@ export interface LicenseTransaction {
   /** Free-form string column; matches `PaymentMethod` in practice. */
   method: string
   status: string
-  purchased_at: string
+  purchased_at: ApiDateTime
 }
 
 export interface LicenseInfo {
@@ -58,8 +59,7 @@ export interface LicensePaymentStat {
 }
 
 export interface LicenseSalesStats {
-  /** Offset-aware, unlike the timestamps on `LicenseInfo`. */
-  updated_at: string
+  updated_at: ApiDateTime
   /** Time-limited subscriptions, the only kind sold now. */
   new_subs: {
     total_vips: number

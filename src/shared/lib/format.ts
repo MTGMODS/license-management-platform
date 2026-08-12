@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { parseApiDate } from './datetime'
+import { parseApiCalendarDate, parseApiDateTime } from './datetime'
 
 /**
  * Intl formatters are costly to construct, and the analytics section renders
@@ -51,11 +51,12 @@ export function useFormatters() {
       decimal: (value: number) => decimal.format(value),
       /** Two fraction digits, for small per-day amounts. */
       money: (value: number) => money.format(value),
-      /** Parses the payload's `YYYY-MM-DD` as a calendar date, not local time. */
-      dayMonth: (isoDate: string) => dayMonth.format(new Date(`${isoDate}T00:00:00Z`)),
-      fullDate: (isoDate: string) => fullDate.format(new Date(`${isoDate}T00:00:00Z`)),
-      dateTime: (iso: string) => dateTime.format(parseApiDate(iso)),
-      dateOnly: (iso: string) => fullDate.format(parseApiDate(iso)),
+      /** Usage daily buckets: `YYYY-MM-DD` interpreted as a UTC calendar day. */
+      dayMonth: (isoDate: string) => dayMonth.format(parseApiCalendarDate(isoDate)),
+      fullDate: (isoDate: string) => fullDate.format(parseApiCalendarDate(isoDate)),
+      /** API datetimes: `YYYY-MM-DDTHH:mm:ssZ`, shown in the visitor's locale. */
+      dateTime: (iso: string) => dateTime.format(parseApiDateTime(iso)),
+      dateOnly: (iso: string) => fullDate.format(parseApiDateTime(iso)),
       hour: (hour: number) => `${String(hour).padStart(2, '0')}:00`,
       /** Index 0 is Sunday, matching the payload's PostgreSQL `dow` values. */
       weekday: (index: number) => weekdayLong.format(weekdayDate(index)),

@@ -5,7 +5,8 @@ import type { GeometryCollection, Topology } from 'topojson-specification'
 import topology from 'world-atlas/countries-110m.json'
 
 export const MAP_WIDTH = 960
-export const MAP_HEIGHT = 460
+/** Shorter than the full Natural Earth frame: Antarctica is omitted below. */
+export const MAP_HEIGHT = 420
 
 /**
  * The 110m atlas omits microstates and small island territories, so seven
@@ -15,12 +16,22 @@ export const MAP_HEIGHT = 460
  * the download size. See scripts/verify-usage-labels.mjs.
  */
 
+/** ISO 3166-1 numeric for Antarctica — dropped so the fit can zoom inhabited land. */
+const ANTARCTICA_NUMERIC_ID = '010'
+
 /** Names the one object the atlas exposes so `feature` resolves to a collection. */
 type WorldTopology = Topology<{ countries: GeometryCollection }>
 
 const atlas = topology as unknown as WorldTopology
 
-const world = feature(atlas, atlas.objects.countries) as FeatureCollection<Geometry>
+const atlasWorld = feature(atlas, atlas.objects.countries) as FeatureCollection<Geometry>
+
+const world: FeatureCollection<Geometry> = {
+  type: 'FeatureCollection',
+  features: (atlasWorld.features as Feature<Geometry>[]).filter(
+    (item) => String(item.id ?? '') !== ANTARCTICA_NUMERIC_ID,
+  ),
+}
 
 // Natural Earth keeps continent shapes recognisable without the extreme polar
 // distortion Mercator applies, which matters when most traffic sits at high
@@ -38,7 +49,7 @@ export interface CountryShape {
  * Projection and path strings are computed once at module scope: they never
  * change, and rebuilding them on hover would re-project every country.
  */
-export const COUNTRY_SHAPES: CountryShape[] = (world.features as Feature<Geometry>[])
+export const COUNTRY_SHAPES: CountryShape[] = world.features
   .map((item) => ({
     numericId: String(item.id ?? ''),
     path: pathBuilder(item) ?? '',

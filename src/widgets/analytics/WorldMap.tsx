@@ -7,6 +7,7 @@ import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
 import { CRIMEA_OVERLAY_PATHS, UKRAINE_NUMERIC_ID } from './crimeaOverlay'
+import { PeriodControl } from './PeriodControl'
 import { COUNTRY_SHAPES, MAP_HEIGHT, MAP_WIDTH } from './worldGeometry'
 import { HOVER_OUTLINE } from './chartTheme'
 
@@ -15,7 +16,6 @@ const STROKE = 'rgba(244, 245, 248, 0.08)'
 
 interface WorldMapProps {
   countries: CountryStats[]
-  period: PeriodKey
 }
 
 interface HoverState {
@@ -39,9 +39,10 @@ function fillFor(intensity: number): string {
   return `color-mix(in oklab, #7c5cff ${12 + intensity * 88}%, ${BASE_FILL})`
 }
 
-export function WorldMap({ countries: rows, period }: WorldMapProps) {
+export function WorldMap({ countries: rows }: WorldMapProps) {
   const { t, i18n } = useTranslation('helper')
   const format = useFormatters()
+  const [period, setPeriod] = useState<PeriodKey>('all_time')
   const [hover, setHover] = useState<HoverState | null>(null)
 
   const displayNames = useMemo(
@@ -79,15 +80,17 @@ export function WorldMap({ countries: rows, period }: WorldMapProps) {
           <p className="mt-1 text-sm text-fg-muted">{t('analytics.map.subtitle')}</p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-fg-subtle">
-          <span>{t('analytics.map.less')}</span>
-          <span
-            aria-hidden
-            className="h-2 w-24 rounded-full"
-            style={{ background: `linear-gradient(to right, ${fillFor(0.08)}, ${fillFor(1)})` }}
-          />
-          <span>{t('analytics.map.more')}</span>
-        </div>
+        <PeriodControl value={period} onChange={setPeriod} />
+      </div>
+
+      <div className="mt-4 flex items-center gap-2 text-xs text-fg-subtle">
+        <span>{t('analytics.map.less')}</span>
+        <span
+          aria-hidden
+          className="h-2 w-24 rounded-full"
+          style={{ background: `linear-gradient(to right, ${fillFor(0.08)}, ${fillFor(1)})` }}
+        />
+        <span>{t('analytics.map.more')}</span>
       </div>
 
       <div className="relative mt-6">

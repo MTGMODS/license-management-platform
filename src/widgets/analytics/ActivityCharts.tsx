@@ -1,8 +1,10 @@
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import type { HourActivityPoint, WeekdayActivityPoint } from '@/shared/api/usage'
 import { useFormatters } from '@/shared/lib/format'
+import { shiftHourlyToLocal } from '@/shared/lib/timezone'
 import { Card } from '@/shared/ui'
 
 import { AXIS_PROPS, barActiveProps, CHART, Y_AXIS_NUMERIC } from './chartTheme'
@@ -22,9 +24,15 @@ export function ActivityCharts({ hourly, weekday }: ActivityChartsProps) {
   const { t } = useTranslation('helper')
   const format = useFormatters()
 
-  const peakHour = hourly.reduce<HourActivityPoint | null>(
-    (best, point) => (!best || point.launches > best.launches ? point : best),
-    null,
+  const localHourly = useMemo(() => shiftHourlyToLocal(hourly), [hourly])
+
+  const peakHour = useMemo(
+    () =>
+      localHourly.reduce<HourActivityPoint | null>(
+        (best, point) => (!best || point.launches > best.launches ? point : best),
+        null,
+      ),
+    [localHourly],
   )
 
   return (
@@ -32,12 +40,12 @@ export function ActivityCharts({ hourly, weekday }: ActivityChartsProps) {
       <Card className="p-6">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="text-lg font-semibold tracking-tight">{t('analytics.activity.hours')}</h3>
-          <span className="text-xs text-fg-subtle">{t('analytics.utcNote')}</span>
+          <span className="text-xs text-fg-subtle">{t('analytics.activity.localTime')}</span>
         </div>
 
         <div className="mt-6 h-56">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart accessibilityLayer={false} data={hourly} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
+            <BarChart accessibilityLayer={false} data={localHourly} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
               <CartesianGrid stroke={CHART.grid} vertical={false} />
               <XAxis
                 dataKey="hour"

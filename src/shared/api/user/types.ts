@@ -1,3 +1,5 @@
+import type { ApiDateTime } from '@/shared/lib/datetime'
+
 export type UserRole = 'USER' | 'SMART' | 'ADMIN'
 
 export type UserStatus = 'ACTIVE' | 'BANNED' | 'DELETED'
@@ -13,7 +15,7 @@ export interface User {
   avatar_url: string | null
   role: UserRole
   status: UserStatus
-  created_at: string | null
+  created_at: ApiDateTime | null
 }
 
 export interface TokenResponse {

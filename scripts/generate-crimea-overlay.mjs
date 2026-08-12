@@ -1,17 +1,22 @@
 /**
  * Projects Crimea + Sevastopol (Highcharts ua-all admin-1) onto the same canvas
- * as world-atlas/countries-110m and prints paths for crimeaOverlay.ts.
+ * as world-atlas/countries-110m (Antarctica excluded) and prints paths for
+ * crimeaOverlay.ts.
  *
  * Usage: node scripts/generate-crimea-overlay.mjs
  */
-import { geoNaturalEarth1, geoPath } from 'd3-geo'
+import { createRequire } from 'node:module'
 import { writeFileSync } from 'node:fs'
+import { geoNaturalEarth1, geoPath } from 'd3-geo'
 import { feature } from 'topojson-client'
-import topology from 'world-atlas/countries-110m.json'
+
+const require = createRequire(import.meta.url)
+const topology = require('world-atlas/countries-110m.json')
 
 const UA_TOPO_URL = 'https://code.highcharts.com/mapdata/countries/ua/ua-all.topo.json'
 const MAP_WIDTH = 960
-const MAP_HEIGHT = 460
+const MAP_HEIGHT = 420
+const ANTARCTICA_NUMERIC_ID = '010'
 
 const response = await fetch(UA_TOPO_URL)
 if (!response.ok) {
@@ -19,7 +24,11 @@ if (!response.ok) {
 }
 
 const uaTopo = await response.json()
-const world = feature(topology, topology.objects.countries)
+const atlasWorld = feature(topology, topology.objects.countries)
+const world = {
+  type: 'FeatureCollection',
+  features: atlasWorld.features.filter((item) => String(item.id ?? '') !== ANTARCTICA_NUMERIC_ID),
+}
 const projection = geoNaturalEarth1().fitSize([MAP_WIDTH, MAP_HEIGHT], world)
 const pathBuilder = geoPath(projection)
 const fc = feature(uaTopo, uaTopo.objects.default)

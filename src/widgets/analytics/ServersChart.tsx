@@ -3,23 +3,24 @@ import { useTranslation } from 'react-i18next'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import type { PeriodKey, ServerStats } from '@/shared/api/usage'
-import { getServer, UNKNOWN_SERVER_ID } from '@/shared/config/servers'
+import { formatServerLabel, getServer, UNKNOWN_SERVER_ID } from '@/shared/config/servers'
 import { useFormatters } from '@/shared/lib/format'
 import { Card, SegmentedControl } from '@/shared/ui'
 
 import { AXIS_PROPS, barActiveProps, CHART } from './chartTheme'
 import { ChartTooltip } from './ChartTooltip'
+import { PeriodControl } from './PeriodControl'
 
 type TopLimit = 5 | 10 | 20 | 0
 
 interface ServersChartProps {
   servers: ServerStats[]
-  period: PeriodKey
 }
 
-export function ServersChart({ servers, period }: ServersChartProps) {
+export function ServersChart({ servers }: ServersChartProps) {
   const { t } = useTranslation('helper')
   const format = useFormatters()
+  const [period, setPeriod] = useState<PeriodKey>('all_time')
   const [limit, setLimit] = useState<TopLimit>(10)
 
   const named = servers.map((item) => {
@@ -30,7 +31,10 @@ export function ServersChart({ servers, period }: ServersChartProps) {
       label:
         item.server === UNKNOWN_SERVER_ID
           ? t('analytics.servers.unknown')
-          : (info?.name ?? t('analytics.servers.name', { id: item.server })),
+          : formatServerLabel(
+              item.server,
+              info?.name ?? t('analytics.servers.name', { id: item.server }),
+            ),
       project: info ? t(`analytics.servers.project.${info.project}`) : null,
     }
   })
@@ -49,18 +53,21 @@ export function ServersChart({ servers, period }: ServersChartProps) {
           <p className="mt-1 text-sm text-fg-muted">{t('analytics.servers.subtitle')}</p>
         </div>
 
-        <SegmentedControl
-          size="sm"
-          label={t('analytics.servers.title')}
-          value={limit}
-          onChange={setLimit}
-          options={[
-            { id: 5, label: t('analytics.servers.top', { count: 5 }) },
-            { id: 10, label: t('analytics.servers.top', { count: 10 }) },
-            { id: 20, label: t('analytics.servers.top', { count: 20 }) },
-            { id: 0, label: t('analytics.servers.all') },
-          ]}
-        />
+        <div className="flex flex-col items-end gap-2">
+          <PeriodControl value={period} onChange={setPeriod} />
+          <SegmentedControl
+            size="sm"
+            label={t('analytics.servers.title')}
+            value={limit}
+            onChange={setLimit}
+            options={[
+              { id: 5, label: t('analytics.servers.top', { count: 5 }) },
+              { id: 10, label: t('analytics.servers.top', { count: 10 }) },
+              { id: 20, label: t('analytics.servers.top', { count: 20 }) },
+              { id: 0, label: t('analytics.servers.all') },
+            ]}
+          />
+        </div>
       </div>
 
       {visible.length === 0 ? (
@@ -80,7 +87,7 @@ export function ServersChart({ servers, period }: ServersChartProps) {
               <XAxis type="number" {...AXIS_PROPS} tickFormatter={format.compact} />
               {/* Names run to "Санкт Петербург", so the axis is wider than a
                   numeric id would need. */}
-              <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={132} />
+              <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={148} />
               <Tooltip
                 cursor={false}
                 content={({ active, payload }) => {
