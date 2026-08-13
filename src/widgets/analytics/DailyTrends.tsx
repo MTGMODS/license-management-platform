@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Area,
@@ -19,10 +19,21 @@ import { ChartTooltip } from './ChartTooltip'
 
 type Metric = 'users' | 'launches'
 
+/** UTC calendar day matching the backend daily buckets (`YYYY-MM-DD`). */
+function utcToday(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
 export function DailyTrends({ daily }: { daily: DailyPoint[] }) {
   const { t } = useTranslation('helper')
   const format = useFormatters()
   const [metric, setMetric] = useState<Metric>('users')
+
+  // Today's bucket is still filling, so the last point collapses the series.
+  const points = useMemo(() => {
+    const today = utcToday()
+    return daily.filter((point) => point.date !== today)
+  }, [daily])
 
   const color = metric === 'users' ? CHART.users : CHART.launches
 
@@ -46,12 +57,12 @@ export function DailyTrends({ daily }: { daily: DailyPoint[] }) {
         />
       </div>
 
-      {daily.length === 0 ? (
+      {points.length === 0 ? (
         <p className="mt-8 text-sm text-fg-subtle">{t('analytics.empty')}</p>
       ) : (
         <div className="mt-6 h-72">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart accessibilityLayer={false} data={daily} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
+            <AreaChart accessibilityLayer={false} data={points} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
               <defs>
                 <linearGradient id={`daily-${metric}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={color} stopOpacity={0.35} />
