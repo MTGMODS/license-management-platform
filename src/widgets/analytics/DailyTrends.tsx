@@ -15,7 +15,7 @@ import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
 import { AXIS_PROPS, CHART, type ChartMetric, chartColor, Y_AXIS_NUMERIC } from './chartTheme'
-import { ChartTooltip, launchesPerUser, statsTooltipRows } from './ChartTooltip'
+import { ChartTooltip, statsTooltipRows } from './ChartTooltip'
 
 /** UTC calendar day matching the backend daily buckets (`YYYY-MM-DD`). */
 function utcToday(): string {
@@ -71,11 +71,7 @@ export function DailyTrends({ daily, metric }: { daily: DailyPoint[]; metric: Ch
                   return (
                     <ChartTooltip
                       title={format.fullDate(point.date)}
-                      rows={statsTooltipRows(t, format, {
-                        users: point.users,
-                        launches: point.launches,
-                        launches_per_user: launchesPerUser(point.users, point.launches),
-                      })}
+                      rows={statsTooltipRows(t, format, point)}
                     />
                   )
                 }}

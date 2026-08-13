@@ -19,14 +19,6 @@ export interface StatsTooltipValues {
   vip_percent?: number
 }
 
-export function launchesPerUser(users: number, launches: number): number {
-  return users > 0 ? launches / users : 0
-}
-
-export function userShareOf(users: number, total: number): number {
-  return total > 0 ? (users / total) * 100 : 0
-}
-
 /** Users / launches, then U/S, VIP, L/U — same order and colours on every chart. */
 export function statsTooltipRows(
   t: TFunction<'helper'>,

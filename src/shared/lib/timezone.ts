@@ -16,13 +16,15 @@ export function shiftHourlyToLocal(hourly: HourActivityPoint[]): HourActivityPoi
     hour,
     users: 0,
     launches: 0,
+    launches_per_user: 0,
   }))
 
   for (const point of hourly) {
     const localHour = ((point.hour + offset) % 24 + 24) % 24
     const bucket = buckets[localHour]!
-    bucket.users += point.users
-    bucket.launches += point.launches
+    bucket.users = point.users
+    bucket.launches = point.launches
+    bucket.launches_per_user = point.launches_per_user
   }
 
   return buckets

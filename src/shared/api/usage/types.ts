@@ -19,6 +19,9 @@ export interface UsageOverviewMetrics {
 export interface DeviceFamilyStats {
   users: PeriodCounts
   launches: PeriodCounts
+  /** Share of overview users for the window, 0–100. */
+  user_share: PeriodCounts
+  launches_per_user: PeriodCounts
 }
 
 export interface UsageOverview {
@@ -93,6 +96,7 @@ export interface DailyPoint {
   date: ApiDate
   users: number
   launches: number
+  launches_per_user: number
 }
 
 export interface HourlyTimelinePoint {
@@ -100,6 +104,7 @@ export interface HourlyTimelinePoint {
   hour: number
   users: number
   launches: number
+  launches_per_user: number
 }
 
 export interface HourActivityPoint {
@@ -107,6 +112,7 @@ export interface HourActivityPoint {
   hour: number
   users: number
   launches: number
+  launches_per_user: number
 }
 
 export interface WeekdayActivityPoint {
@@ -114,6 +120,7 @@ export interface WeekdayActivityPoint {
   weekday: number
   users: number
   launches: number
+  launches_per_user: number
 }
 
 export interface UsagePublicStats {

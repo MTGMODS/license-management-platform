@@ -8,7 +8,7 @@ import { shiftHourlyToLocal } from '@/shared/lib/timezone'
 import { Card } from '@/shared/ui'
 
 import { AXIS_PROPS, barActiveProps, CHART, type ChartMetric, chartColor, Y_AXIS_NUMERIC } from './chartTheme'
-import { ChartTooltip, launchesPerUser, statsTooltipRows } from './ChartTooltip'
+import { ChartTooltip, statsTooltipRows } from './ChartTooltip'
 
 interface ActivityChartsProps {
   hourly: HourActivityPoint[]
@@ -66,11 +66,7 @@ export function ActivityCharts({ hourly, weekday, metric }: ActivityChartsProps)
                   return (
                     <ChartTooltip
                       title={format.hour(point.hour)}
-                      rows={statsTooltipRows(t, format, {
-                        users: point.users,
-                        launches: point.launches,
-                        launches_per_user: launchesPerUser(point.users, point.launches),
-                      })}
+                      rows={statsTooltipRows(t, format, point)}
                     />
                   )
                 }}
@@ -115,11 +111,7 @@ export function ActivityCharts({ hourly, weekday, metric }: ActivityChartsProps)
                   return (
                     <ChartTooltip
                       title={format.weekday(point.weekday)}
-                      rows={statsTooltipRows(t, format, {
-                        users: point.users,
-                        launches: point.launches,
-                        launches_per_user: launchesPerUser(point.users, point.launches),
-                      })}
+                      rows={statsTooltipRows(t, format, point)}
                     />
                   )
                 }}

@@ -6,7 +6,7 @@ import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
 import { AXIS_PROPS, barActiveProps, CHART, type ChartMetric, chartColor } from './chartTheme'
-import { ChartTooltip, launchesPerUser, statsTooltipRows } from './ChartTooltip'
+import { ChartTooltip, statsTooltipRows } from './ChartTooltip'
 
 /**
  * Faction codes the payload can return. Anything outside this list falls back
@@ -169,7 +169,8 @@ export function VersionsChart({
               users,
               launches,
               user_share: tail.reduce((sum, item) => sum + item.user_share[period], 0),
-              launches_per_user: launchesPerUser(users, launches),
+              // Collapsed tail has no backend row; L/U follows the same formula.
+              launches_per_user: users > 0 ? launches / users : 0,
             }
           })(),
         ]

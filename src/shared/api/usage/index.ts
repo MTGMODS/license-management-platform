@@ -2,14 +2,18 @@ import { request } from '../http'
 
 import type {
   CountryStats,
+  DailyPoint,
   DeviceFamilyStats,
   FactionStats,
+  HourActivityPoint,
+  HourlyTimelinePoint,
   PeriodCounts,
   PeriodKey,
   ProductStats,
   ServerStats,
   UsagePublicStats,
   VersionStats,
+  WeekdayActivityPoint,
 } from './types'
 import { PERIOD_KEYS } from './types'
 
@@ -31,6 +35,10 @@ function asPeriodCounts(value: unknown): PeriodCounts {
 
   const n = typeof value === 'number' && Number.isFinite(value) ? value : 0
   return { all_time: n, '30d': n, '24h': n, '1h': n }
+}
+
+function asNumber(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0
 }
 
 function normalizeFaction(raw: Record<string, unknown>, fallbackMode = 'unknown'): FactionStats {
@@ -115,12 +123,52 @@ function normalizeDeviceFamily(raw: unknown): DeviceFamilyStats {
     return {
       users: asPeriodCounts(source.users),
       launches: asPeriodCounts(source.launches),
+      user_share: asPeriodCounts(source.user_share),
+      launches_per_user: asPeriodCounts(source.launches_per_user),
     }
   }
 
   // Legacy shape was a bare PeriodCounts map for users only.
   const users = asPeriodCounts(raw)
-  return { users, launches: { all_time: 0, '30d': 0, '24h': 0, '1h': 0 } }
+  const empty = { all_time: 0, '30d': 0, '24h': 0, '1h': 0 }
+  return { users, launches: empty, user_share: empty, launches_per_user: empty }
+}
+
+function normalizeDailyPoint(raw: Record<string, unknown>): DailyPoint {
+  return {
+    date: typeof raw.date === 'string' ? raw.date : '',
+    users: asNumber(raw.users),
+    launches: asNumber(raw.launches),
+    launches_per_user: asNumber(raw.launches_per_user),
+  }
+}
+
+function normalizeHourlyTimelinePoint(raw: Record<string, unknown>): HourlyTimelinePoint {
+  return {
+    date: typeof raw.date === 'string' ? raw.date : '',
+    hour: asNumber(raw.hour),
+    users: asNumber(raw.users),
+    launches: asNumber(raw.launches),
+    launches_per_user: asNumber(raw.launches_per_user),
+  }
+}
+
+function normalizeHourActivity(raw: Record<string, unknown>): HourActivityPoint {
+  return {
+    hour: asNumber(raw.hour),
+    users: asNumber(raw.users),
+    launches: asNumber(raw.launches),
+    launches_per_user: asNumber(raw.launches_per_user),
+  }
+}
+
+function normalizeWeekdayActivity(raw: Record<string, unknown>): WeekdayActivityPoint {
+  return {
+    weekday: asNumber(raw.weekday),
+    users: asNumber(raw.users),
+    launches: asNumber(raw.launches),
+    launches_per_user: asNumber(raw.launches_per_user),
+  }
 }
 
 function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
@@ -129,6 +177,16 @@ function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
   const countriesRaw = (payload.distribution.countries ?? []) as unknown as Record<string, unknown>[]
   const productsRaw = (payload.distribution.products ?? []) as unknown as Record<string, unknown>[]
   const devicesRaw = payload.overview.devices as unknown as Record<string, unknown>
+  const dailyRaw = (payload.analytics.timeline.daily ?? []) as unknown as Record<string, unknown>[]
+  const hourlyTimelineRaw = (payload.analytics.timeline.hourly ?? []) as unknown as Record<
+    string,
+    unknown
+  >[]
+  const hourlyActivityRaw = (payload.analytics.activity.hourly ?? []) as unknown as Record<
+    string,
+    unknown
+  >[]
+  const weekdayRaw = (payload.analytics.activity.weekday ?? []) as unknown as Record<string, unknown>[]
 
   return {
     ...payload,
@@ -146,6 +204,16 @@ function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
       versions: versionsRaw.map(normalizeVersion),
       countries: countriesRaw.map(normalizeCountry),
       products: productsRaw.map(normalizeProduct),
+    },
+    analytics: {
+      timeline: {
+        daily: dailyRaw.map(normalizeDailyPoint),
+        hourly: hourlyTimelineRaw.map(normalizeHourlyTimelinePoint),
+      },
+      activity: {
+        hourly: hourlyActivityRaw.map(normalizeHourActivity),
+        weekday: weekdayRaw.map(normalizeWeekdayActivity),
+      },
     },
   }
 }
