@@ -66,10 +66,20 @@ class LaunchRepository:
             func.count(distinct(case((and_(LaunchModel.device == 'PC', LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label("pc_24h"),
             func.count(distinct(case((and_(LaunchModel.device == 'PC', LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label("pc_1h"),
 
+            func.count(case((LaunchModel.device == 'PC', LaunchModel.id))).label("pc_l_all"),
+            func.count(case((and_(LaunchModel.device == 'PC', LaunchModel.launched_at >= d30), LaunchModel.id))).label("pc_l_30d"),
+            func.count(case((and_(LaunchModel.device == 'PC', LaunchModel.launched_at >= d1), LaunchModel.id))).label("pc_l_24h"),
+            func.count(case((and_(LaunchModel.device == 'PC', LaunchModel.launched_at >= d1h), LaunchModel.id))).label("pc_l_1h"),
+
             func.count(distinct(case((LaunchModel.device == 'MOBILE', LaunchModel.hwid)))).label("mob_all"),
             func.count(distinct(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label("mob_30d"),
             func.count(distinct(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label("mob_24h"),
             func.count(distinct(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label("mob_1h"),
+
+            func.count(case((LaunchModel.device == 'MOBILE', LaunchModel.id))).label("mob_l_all"),
+            func.count(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.launched_at >= d30), LaunchModel.id))).label("mob_l_30d"),
+            func.count(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.launched_at >= d1), LaunchModel.id))).label("mob_l_24h"),
+            func.count(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.launched_at >= d1h), LaunchModel.id))).label("mob_l_1h"),
         )
         res = (await self.db.execute(stmt)).first()
         
@@ -100,8 +110,14 @@ class LaunchRepository:
                 "1h": res.l_1h
             },
             "devices": {
-                "pc": {"all_time": res.pc_all, "30d": res.pc_30d, "24h": res.pc_24h, "1h": res.pc_1h},
-                "mobile": {"all_time": res.mob_all, "30d": res.mob_30d, "24h": res.mob_24h, "1h": res.mob_1h}
+                "pc": {
+                    "users": {"all_time": res.pc_all, "30d": res.pc_30d, "24h": res.pc_24h, "1h": res.pc_1h},
+                    "launches": {"all_time": res.pc_l_all, "30d": res.pc_l_30d, "24h": res.pc_l_24h, "1h": res.pc_l_1h}
+                },
+                "mobile": {
+                    "users": {"all_time": res.mob_all, "30d": res.mob_30d, "24h": res.mob_24h, "1h": res.mob_1h},
+                    "launches": {"all_time": res.mob_l_all, "30d": res.mob_l_30d, "24h": res.mob_l_24h, "1h": res.mob_l_1h}
+                }
             }
         }
         return global_data, g_u_all
@@ -225,6 +241,51 @@ class LaunchRepository:
             for row in res.all()
         ]
 
+    async def _get_products(self, d30, d1, d1h, g_u_all):
+        families = [
+            ("arizona_pc", LaunchModel.server.between(1, 32)),
+            ("arizona_mobile", LaunchModel.server.between(101, 103)),
+            ("rodina_pc", LaunchModel.server.between(301, 307)),
+            ("rodina_mobile", LaunchModel.server.between(401, 402)),
+        ]
+
+        select_cols = []
+        for name, cond in families:
+            select_cols.extend([
+                func.count(distinct(case((cond, LaunchModel.hwid)))).label(f"{name}_u_all"),
+                func.count(distinct(case((and_(cond, LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label(f"{name}_u_30d"),
+                func.count(distinct(case((and_(cond, LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label(f"{name}_u_24h"),
+                func.count(distinct(case((and_(cond, LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label(f"{name}_u_1h"),
+                func.count(case((cond, LaunchModel.id))).label(f"{name}_l_all"),
+                func.count(case((and_(cond, LaunchModel.launched_at >= d30), LaunchModel.id))).label(f"{name}_l_30d"),
+                func.count(case((and_(cond, LaunchModel.launched_at >= d1), LaunchModel.id))).label(f"{name}_l_24h"),
+                func.count(case((and_(cond, LaunchModel.launched_at >= d1h), LaunchModel.id))).label(f"{name}_l_1h"),
+            ])
+
+        res = (await self.db.execute(select(*select_cols))).first()
+        products = []
+        for name, _ in families:
+            u_all = getattr(res, f"{name}_u_all") or 0
+            l_all = getattr(res, f"{name}_l_all") or 0
+            products.append({
+                "product": name,
+                "user_share": round((u_all / g_u_all) * 100, 1) if g_u_all > 0 else 0,
+                "launches_per_user": round(l_all / u_all, 2) if u_all > 0 else 0,
+                "users": {
+                    "all_time": u_all,
+                    "30d": getattr(res, f"{name}_u_30d") or 0,
+                    "24h": getattr(res, f"{name}_u_24h") or 0,
+                    "1h": getattr(res, f"{name}_u_1h") or 0,
+                },
+                "launches": {
+                    "all_time": l_all,
+                    "30d": getattr(res, f"{name}_l_30d") or 0,
+                    "24h": getattr(res, f"{name}_l_24h") or 0,
+                    "1h": getattr(res, f"{name}_l_1h") or 0,
+                },
+            })
+        return products
+
     async def _get_timeline_daily(self):
         stmt = (
             select(
@@ -320,6 +381,7 @@ class LaunchRepository:
         servers = await self._get_servers(d30, d1, d1h, g_u_all)
         countries = await self._get_countries(d30, d1, d1h, g_u_all)
         versions = await self._get_versions(d30, d1, d1h, g_u_all)
+        products = await self._get_products(d30, d1, d1h, g_u_all)
         
         timeline_daily = await self._get_timeline_daily()
         timeline_hourly = await self._get_timeline_hourly(d1)
@@ -339,7 +401,8 @@ class LaunchRepository:
                 "factions": factions,
                 "servers": servers,
                 "countries": countries,
-                "versions": versions
+                "versions": versions,
+                "products": products
             },
             "analytics": {
                 "timeline": {
