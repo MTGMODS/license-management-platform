@@ -6,7 +6,7 @@ import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
 import { AXIS_PROPS, barActiveProps, CHART, type ChartMetric, chartColor } from './chartTheme'
-import { ChartTooltip } from './ChartTooltip'
+import { ChartTooltip, launchesPerUser, statsTooltipRows } from './ChartTooltip'
 
 /**
  * Faction codes the payload can return. Anything outside this list falls back
@@ -102,30 +102,13 @@ export function FactionsChart({
                   return (
                     <ChartTooltip
                       title={point.label}
-                      rows={[
-                        {
-                          label: t('analytics.factions.users'),
-                          value: format.number(point.users),
-                          color: CHART.users,
-                        },
-                        {
-                          label: t('analytics.metric.launches'),
-                          value: format.number(point.launches),
-                          color: CHART.launches,
-                        },
-                        {
-                          label: t('analytics.factions.share'),
-                          value: format.percent(point.user_share),
-                        },
-                        {
-                          label: t('analytics.factions.vipShare'),
-                          value: format.percent(point.vip_percent),
-                        },
-                        {
-                          label: t('analytics.factions.perUser'),
-                          value: format.decimal(point.launches_per_user),
-                        },
-                      ]}
+                      rows={statsTooltipRows(t, format, {
+                        users: point.users,
+                        launches: point.launches,
+                        user_share: point.user_share,
+                        launches_per_user: point.launches_per_user,
+                        vip_percent: point.vip_percent,
+                      })}
                     />
                   )
                 }}
@@ -173,14 +156,22 @@ export function VersionsChart({
       label: item.version,
       users: item.users[period],
       launches: item.launches[period],
+      user_share: item.user_share[period],
+      launches_per_user: item.launches_per_user[period],
     })),
     ...(tail.length > 0
       ? [
-          {
-            label: t('analytics.versions.other'),
-            users: tail.reduce((sum, item) => sum + item.users[period], 0),
-            launches: tail.reduce((sum, item) => sum + item.launches[period], 0),
-          },
+          (() => {
+            const users = tail.reduce((sum, item) => sum + item.users[period], 0)
+            const launches = tail.reduce((sum, item) => sum + item.launches[period], 0)
+            return {
+              label: t('analytics.versions.other'),
+              users,
+              launches,
+              user_share: tail.reduce((sum, item) => sum + item.user_share[period], 0),
+              launches_per_user: launchesPerUser(users, launches),
+            }
+          })(),
         ]
       : []),
   ]
@@ -215,18 +206,7 @@ export function VersionsChart({
                   return (
                     <ChartTooltip
                       title={point.label}
-                      rows={[
-                        {
-                          label: t('analytics.metric.users'),
-                          value: format.number(point.users),
-                          color: CHART.users,
-                        },
-                        {
-                          label: t('analytics.metric.launches'),
-                          value: format.number(point.launches),
-                          color: CHART.launches,
-                        },
-                      ]}
+                      rows={statsTooltipRows(t, format, point)}
                     />
                   )
                 }}

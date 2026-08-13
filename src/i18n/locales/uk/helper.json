@@ -39,7 +39,10 @@
     "metric": {
       "label": "Показник",
       "users": "Користувачі",
-      "launches": "Запуски"
+      "launches": "Запуски",
+      "share": "Частка",
+      "perUser": "Запусків на користувача",
+      "vipShare": "З них із VIP"
     },
     "servers": {
       "title": "Ігрові сервери",

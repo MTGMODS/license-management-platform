@@ -1,9 +1,76 @@
+import type { TFunction } from 'i18next'
 import type { ReactNode } from 'react'
+
+import type { Formatters } from '@/shared/lib/format'
+
+import { CHART } from './chartTheme'
 
 export interface TooltipRow {
   label: string
   value: string
   color?: string
+}
+
+export interface StatsTooltipValues {
+  users: number
+  launches: number
+  user_share?: number
+  launches_per_user?: number
+  vip_percent?: number
+}
+
+export function launchesPerUser(users: number, launches: number): number {
+  return users > 0 ? launches / users : 0
+}
+
+export function userShareOf(users: number, total: number): number {
+  return total > 0 ? (users / total) * 100 : 0
+}
+
+/** Users / launches, then U/S, VIP, L/U — same order and colours on every chart. */
+export function statsTooltipRows(
+  t: TFunction<'helper'>,
+  format: Formatters,
+  stats: StatsTooltipValues,
+): TooltipRow[] {
+  const rows: TooltipRow[] = [
+    {
+      label: t('analytics.metric.users'),
+      value: format.number(stats.users),
+      color: CHART.users,
+    },
+    {
+      label: t('analytics.metric.launches'),
+      value: format.number(stats.launches),
+      color: CHART.launches,
+    },
+  ]
+
+  if (stats.user_share != null) {
+    rows.push({
+      label: t('analytics.metric.share'),
+      value: format.percent(stats.user_share),
+      color: CHART.share,
+    })
+  }
+
+  if (stats.vip_percent != null) {
+    rows.push({
+      label: t('analytics.metric.vipShare'),
+      value: format.percent(stats.vip_percent),
+      color: CHART.vip,
+    })
+  }
+
+  if (stats.launches_per_user != null) {
+    rows.push({
+      label: t('analytics.metric.perUser'),
+      value: format.decimal(stats.launches_per_user),
+      color: CHART.perUser,
+    })
+  }
+
+  return rows
 }
 
 /**

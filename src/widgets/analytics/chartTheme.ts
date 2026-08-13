@@ -6,6 +6,11 @@ export const CHART = {
   users: '#0fb0fa',
   usersSoft: '#83d5fc',
   launches: '#34d399',
+  /** User share of the selected window. */
+  share: '#f59e0b',
+  /** Launches per user. */
+  perUser: '#a855f7',
+  vip: '#f43f5e',
   grid: 'rgba(245, 246, 249, 0.06)',
   axis: '#707b8b',
   cursor: 'rgba(245, 246, 249, 0.05)',

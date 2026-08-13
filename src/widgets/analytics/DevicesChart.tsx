@@ -6,7 +6,7 @@ import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
 import { AXIS_PROPS, barActiveProps, CHART, type ChartMetric, chartColor } from './chartTheme'
-import { ChartTooltip } from './ChartTooltip'
+import { ChartTooltip, launchesPerUser, statsTooltipRows, userShareOf } from './ChartTooltip'
 
 interface DevicesChartProps {
   devices: {
@@ -22,20 +22,29 @@ export function DevicesChart({ devices, period, metric }: DevicesChartProps) {
   const format = useFormatters()
   const color = chartColor(metric)
 
+  const pcUsers = devices.pc.users[period]
+  const mobileUsers = devices.mobile.users[period]
+  const totalUsers = pcUsers + mobileUsers
+
   const rows = [
     {
       id: 'pc',
       label: t('analytics.devices.pc'),
-      users: devices.pc.users[period],
+      users: pcUsers,
       launches: devices.pc.launches[period],
     },
     {
       id: 'mobile',
       label: t('analytics.devices.mobile'),
-      users: devices.mobile.users[period],
+      users: mobileUsers,
       launches: devices.mobile.launches[period],
     },
   ]
+    .map((row) => ({
+      ...row,
+      user_share: userShareOf(row.users, totalUsers),
+      launches_per_user: launchesPerUser(row.users, row.launches),
+    }))
     .filter((row) => row[metric] > 0)
     .sort((a, b) => b[metric] - a[metric])
 
@@ -65,21 +74,7 @@ export function DevicesChart({ devices, period, metric }: DevicesChartProps) {
                   if (!active || !point) return null
 
                   return (
-                    <ChartTooltip
-                      title={point.label}
-                      rows={[
-                        {
-                          label: t('analytics.metric.users'),
-                          value: format.number(point.users),
-                          color: CHART.users,
-                        },
-                        {
-                          label: t('analytics.metric.launches'),
-                          value: format.number(point.launches),
-                          color: CHART.launches,
-                        },
-                      ]}
-                    />
+                    <ChartTooltip title={point.label} rows={statsTooltipRows(t, format, point)} />
                   )
                 }}
               />

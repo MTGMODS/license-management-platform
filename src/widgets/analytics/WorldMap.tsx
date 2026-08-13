@@ -7,6 +7,7 @@ import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
 import { type ChartMetric, chartColor, HOVER_OUTLINE } from './chartTheme'
+import { ChartTooltip, statsTooltipRows } from './ChartTooltip'
 import { CRIMEA_OVERLAY_PATHS, UKRAINE_NUMERIC_ID } from './crimeaOverlay'
 import { COUNTRY_SHAPES, MAP_HEIGHT, MAP_WIDTH } from './worldGeometry'
 
@@ -159,31 +160,15 @@ export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
             className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-[calc(100%+12px)]"
             style={{ left: hover.x, top: hover.y }}
           >
-            <div className="glass bevel rounded-xl px-3.5 py-2.5 text-sm shadow-xl">
-              <p className="font-medium text-fg">
-                {displayNames.of(hovered.code) ?? hovered.code}
-              </p>
-              <div className="mt-1.5 space-y-1 whitespace-nowrap">
-                <div className="flex items-center gap-4 text-fg-muted">
-                  <span>{t('analytics.metric.users')}</span>
-                  <span className="tabular ml-auto font-medium text-fg">
-                    {format.number(hovered.users[period])}
-                  </span>
-                </div>
-                <div className="flex items-center gap-4 text-fg-muted">
-                  <span>{t('analytics.metric.launches')}</span>
-                  <span className="tabular ml-auto font-medium text-fg">
-                    {format.number(hovered.launches[period])}
-                  </span>
-                </div>
-                <div className="flex items-center gap-4 text-fg-muted">
-                  <span>{t('analytics.map.share')}</span>
-                  <span className="tabular ml-auto font-medium text-fg">
-                    {format.percent(hovered.user_share[period])}
-                  </span>
-                </div>
-              </div>
-            </div>
+            <ChartTooltip
+              title={displayNames.of(hovered.code) ?? hovered.code}
+              rows={statsTooltipRows(t, format, {
+                users: hovered.users[period],
+                launches: hovered.launches[period],
+                user_share: hovered.user_share[period],
+                launches_per_user: hovered.launches_per_user[period],
+              })}
+            />
           </div>
         ) : null}
       </div>

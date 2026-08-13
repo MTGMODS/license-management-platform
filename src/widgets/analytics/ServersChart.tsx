@@ -8,7 +8,7 @@ import { useFormatters } from '@/shared/lib/format'
 import { Card, SegmentedControl } from '@/shared/ui'
 
 import { AXIS_PROPS, barActiveProps, CHART, type ChartMetric, chartColor } from './chartTheme'
-import { ChartTooltip } from './ChartTooltip'
+import { ChartTooltip, statsTooltipRows } from './ChartTooltip'
 
 type TopLimit = 5 | 10 | 20 | 0
 
@@ -77,18 +77,12 @@ function ProductsChart({
                 return (
                   <ChartTooltip
                     title={point.label}
-                    rows={[
-                      {
-                        label: t('analytics.metric.users'),
-                        value: format.number(point.users[period]),
-                        color: CHART.users,
-                      },
-                      {
-                        label: t('analytics.metric.launches'),
-                        value: format.number(point.launches[period]),
-                        color: CHART.launches,
-                      },
-                    ]}
+                    rows={statsTooltipRows(t, format, {
+                      users: point.users[period],
+                      launches: point.launches[period],
+                      user_share: point.user_share[period],
+                      launches_per_user: point.launches_per_user[period],
+                    })}
                   />
                 )
               }}
@@ -184,18 +178,12 @@ export function ServersChart({ servers, products, period, metric }: ServersChart
                   return (
                     <ChartTooltip
                       title={point.project ? `${point.label} · ${point.project}` : point.label}
-                      rows={[
-                        {
-                          label: t('analytics.metric.users'),
-                          value: format.number(point.users[period]),
-                          color: CHART.users,
-                        },
-                        {
-                          label: t('analytics.metric.launches'),
-                          value: format.number(point.launches[period]),
-                          color: CHART.launches,
-                        },
-                      ]}
+                      rows={statsTooltipRows(t, format, {
+                        users: point.users[period],
+                        launches: point.launches[period],
+                        user_share: point.user_share[period],
+                        launches_per_user: point.launches_per_user[period],
+                      })}
                     />
                   )
                 }}
