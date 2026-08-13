@@ -25,13 +25,15 @@ export function QuickStats() {
 
     return (
       <section>
-        <h2 className="text-xl font-semibold tracking-tight">{t('stats.title')}</h2>
-        <p className="mt-1 text-sm text-fg-muted">{t('stats.subtitle')}</p>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <h2 className="text-[clamp(1.05rem,2.2vh,1.25rem)] font-semibold tracking-tight">
+          {t('stats.title')}
+        </h2>
+        <p className="mt-1 text-[clamp(0.75rem,1.4vh,0.875rem)] text-fg-muted">{t('stats.subtitle')}</p>
+        <div className="mt-[clamp(0.5rem,1.2vh,1rem)] grid gap-[clamp(0.5rem,1.2vh,1rem)] sm:grid-cols-2 lg:grid-cols-5">
           {Array.from({ length: 5 }, (_, index) => (
             <Skeleton
               key={index}
-              className="h-24"
+              className="h-[clamp(4.5rem,12vh,6rem)]"
               label={index === 0 ? t('stats.loading') : undefined}
             />
           ))}
@@ -77,23 +79,27 @@ export function QuickStats() {
 
   return (
     <section>
-      <h2 className="text-xl font-semibold tracking-tight">{t('stats.title')}</h2>
-      <p className="mt-1 text-sm text-fg-muted">{t('stats.subtitle')}</p>
+      <h2 className="text-[clamp(1.05rem,2.2vh,1.25rem)] font-semibold tracking-tight">
+        {t('stats.title')}
+      </h2>
+      <p className="mt-1 text-[clamp(0.75rem,1.4vh,0.875rem)] text-fg-muted">{t('stats.subtitle')}</p>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mt-[clamp(0.5rem,1.2vh,1rem)] grid gap-[clamp(0.5rem,1.2vh,1rem)] sm:grid-cols-2 lg:grid-cols-5">
         {items.map((item) => {
           const Icon = item.icon
           return (
-            <Card key={item.id} className="p-4">
-              <Icon aria-hidden className="size-5 text-accent-300" />
-              <p className="tabular mt-3 text-2xl font-semibold tracking-tight">{item.value}</p>
-              <p className="mt-1 text-sm text-fg-subtle">{item.label}</p>
+            <Card key={item.id} className="p-[clamp(0.65rem,1.4vh,1rem)]">
+              <Icon aria-hidden className="size-[clamp(1rem,2.2vh,1.25rem)] text-accent-300" />
+              <p className="tabular mt-[clamp(0.35rem,1vh,0.75rem)] text-[clamp(1.15rem,2.6vh,1.5rem)] font-semibold tracking-tight">
+                {item.value}
+              </p>
+              <p className="mt-1 text-[clamp(0.75rem,1.4vh,0.875rem)] text-fg-subtle">{item.label}</p>
             </Card>
           )
         })}
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-fg-subtle">
+      <div className="mt-[clamp(0.5rem,1.2vh,1rem)] flex flex-wrap items-center justify-between gap-2 text-[clamp(0.75rem,1.4vh,0.875rem)] text-fg-subtle">
         <span>{t('stats.updated', { time: format.dateTime(data.updated_at) })}</span>
         <span className="inline-flex items-center gap-1.5">
           <ArrowDown aria-hidden className="size-4" />

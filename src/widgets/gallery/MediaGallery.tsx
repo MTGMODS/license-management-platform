@@ -110,59 +110,70 @@ export function MediaGallery({ compact = false }: { compact?: boolean }) {
   const active = items[activeIndex] ?? items[0]
   if (!active) return null
 
-  return (
-    <section aria-label={compact ? t('gallery.title') : undefined}>
-      {compact ? null : (
-        <>
-          <h2 className="text-2xl font-semibold tracking-tight">{t('gallery.title')}</h2>
-          <p className="mt-2 text-fg-muted">{t('gallery.subtitle')}</p>
-        </>
+  const thumbs = (
+    <div
+      className={cn(
+        'flex gap-2 overflow-x-auto pb-1',
+        compact ? 'mt-[clamp(0.4rem,1vh,0.75rem)] shrink-0 justify-center' : 'mt-4 gap-3 pb-2',
       )}
+    >
+      {items.map((item, index) => (
+        <button
+          key={
+            item.kind === 'image'
+              ? item.src
+              : item.kind === 'image-placeholder'
+                ? `ph-${item.index}`
+                : 'video'
+          }
+          type="button"
+          aria-current={index === activeIndex}
+          onClick={() => setActiveIndex(index)}
+          className={cn(
+            'shrink-0 overflow-hidden rounded-lg border transition-colors duration-200',
+            compact
+              ? 'h-[clamp(2.25rem,5vh,3.25rem)] w-[clamp(4rem,8.5vh,5.75rem)]'
+              : 'h-16 w-28',
+            index === activeIndex
+              ? 'border-accent-500/60'
+              : 'border-white/5 opacity-60 hover:opacity-100',
+          )}
+        >
+          {item.kind === 'image' ? (
+            <img src={item.src} alt={item.alt} className="size-full object-cover" />
+          ) : item.kind === 'image-placeholder' ? (
+            <span className="grid size-full place-items-center bg-ink-800 text-fg-subtle">
+              <ImageIcon aria-hidden className="size-5" />
+            </span>
+          ) : (
+            <VideoThumb videoId={item.videoId} />
+          )}
+        </button>
+      ))}
+    </div>
+  )
 
-      <div
-        className={cn(
-          'overflow-hidden rounded-card border border-white/5 bg-ink-850',
-          compact
-            ? 'mx-auto mt-0 aspect-video w-full max-w-lg'
-            : 'mt-6 aspect-video',
-        )}
-      >
+  if (compact) {
+    return (
+      <section aria-label={t('gallery.title')} className="flex min-h-0 flex-1 flex-col">
+        <div className="relative min-h-0 min-w-0 w-full flex-1 [container-type:size]">
+          <div className="contain-video absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-card border border-white/5 bg-ink-850">
+            <Viewer item={active} />
+          </div>
+        </div>
+        {thumbs}
+      </section>
+    )
+  }
+
+  return (
+    <section>
+      <h2 className="text-2xl font-semibold tracking-tight">{t('gallery.title')}</h2>
+      <p className="mt-2 text-fg-muted">{t('gallery.subtitle')}</p>
+      <div className="mt-6 aspect-video overflow-hidden rounded-card border border-white/5 bg-ink-850">
         <Viewer item={active} />
       </div>
-
-      <div className={cn('flex gap-3 overflow-x-auto pb-2', compact ? 'mt-3' : 'mt-4')}>
-        {items.map((item, index) => (
-          <button
-            key={
-              item.kind === 'image'
-                ? item.src
-                : item.kind === 'image-placeholder'
-                  ? `ph-${item.index}`
-                  : 'video'
-            }
-            type="button"
-            aria-current={index === activeIndex}
-            onClick={() => setActiveIndex(index)}
-            className={cn(
-              'shrink-0 overflow-hidden rounded-lg border transition-colors duration-200',
-              compact ? 'h-12 w-20' : 'h-16 w-28',
-              index === activeIndex
-                ? 'border-accent-500/60'
-                : 'border-white/5 opacity-60 hover:opacity-100',
-            )}
-          >
-            {item.kind === 'image' ? (
-              <img src={item.src} alt={item.alt} className="size-full object-cover" />
-            ) : item.kind === 'image-placeholder' ? (
-              <span className="grid size-full place-items-center bg-ink-800 text-fg-subtle">
-                <ImageIcon aria-hidden className="size-5" />
-              </span>
-            ) : (
-              <VideoThumb videoId={item.videoId} />
-            )}
-          </button>
-        ))}
-      </div>
+      {thumbs}
     </section>
   )
 }

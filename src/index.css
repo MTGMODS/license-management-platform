@@ -196,3 +196,10 @@
     padding-inline: 2rem;
   }
 }
+
+/* 16:9 box that fills a size container without overflowing either axis. */
+@utility contain-video {
+  aspect-ratio: 16 / 9;
+  width: min(100cqw, calc(100cqh * 16 / 9));
+  height: min(100cqh, calc(100cqw * 9 / 16));
+}

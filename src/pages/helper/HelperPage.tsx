@@ -31,19 +31,19 @@ function Hero() {
     : t('hero.download')
 
   return (
-    <section className="text-center">
-      <h1 className="text-gradient text-4xl font-semibold tracking-tight sm:text-5xl">
+    <section className="flex min-h-0 flex-1 flex-col text-center">
+      <h1 className="text-gradient shrink-0 text-[clamp(1.75rem,4.2vh,3.25rem)] font-semibold tracking-tight">
         {t('hero.title')}
       </h1>
-      <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-fg-muted sm:text-lg">
+      <p className="mx-auto mt-[clamp(0.35rem,1vh,0.75rem)] max-w-2xl shrink-0 text-[clamp(0.875rem,1.6vh,1.125rem)] leading-relaxed text-fg-muted">
         {t('hero.subtitle')}
       </p>
 
-      <div className="mx-auto mt-5 max-w-lg">
+      <div className="mx-auto mt-[clamp(0.5rem,1.4vh,1rem)] flex min-h-0 w-full flex-1 flex-col">
         <MediaGallery compact />
       </div>
 
-      <div className="mt-5 flex flex-wrap justify-center gap-3">
+      <div className="mt-[clamp(0.5rem,1.4vh,1rem)] flex shrink-0 flex-wrap justify-center gap-3">
         <Link to="/helper/download" className={buttonStyles({ size: 'lg' })}>
           <Download aria-hidden className="size-4" />
           {downloadLabel}
@@ -72,20 +72,28 @@ export function HelperPage() {
   }, [isError, t])
 
   return (
-    <div
-      className={cn(
-        'shell flex flex-1 flex-col py-6',
-        isError ? 'justify-center' : 'space-y-8',
-      )}
-    >
-      <Hero />
-      {isError ? null : <QuickStats />}
+    <div className="shell flex flex-1 flex-col">
+      <div
+        className={cn(
+          'flex flex-col py-[clamp(0.75rem,1.8vh,1.5rem)]',
+          isError ? 'min-h-0 flex-1' : 'min-h-[calc(100dvh-4rem)]',
+        )}
+      >
+        <Hero />
+        {isError ? null : (
+          <div className="mt-[clamp(0.75rem,2vh,1.5rem)] shrink-0">
+            <QuickStats />
+          </div>
+        )}
+      </div>
       {isError ? null : (
-        <DeferredMount fallback={<Skeleton className="h-96" />}>
-          <Suspense fallback={<Skeleton className="h-96" />}>
-            <AnalyticsSection />
-          </Suspense>
-        </DeferredMount>
+        <div className="pb-10">
+          <DeferredMount fallback={<Skeleton className="h-96" />}>
+            <Suspense fallback={<Skeleton className="h-96" />}>
+              <AnalyticsSection />
+            </Suspense>
+          </DeferredMount>
+        </div>
       )}
     </div>
   )
