@@ -42,6 +42,10 @@ class LaunchRepository:
             result["vip_percent"] = vip_percent
         return result
 
+    @staticmethod
+    def _launches_per_user(users, launches) -> float:
+        return round(launches / users, 2) if users else 0
+
     async def save(self, version: str, hwid: str, device: str, server: int, country: str, mode: str):
         new_launch = LaunchModel(
             version=version, 
@@ -138,11 +142,21 @@ class LaunchRepository:
             "devices": {
                 "pc": {
                     "users": {"all_time": res.pc_all, "30d": res.pc_30d, "24h": res.pc_24h, "1h": res.pc_1h},
-                    "launches": {"all_time": res.pc_l_all, "30d": res.pc_l_30d, "24h": res.pc_l_24h, "1h": res.pc_l_1h}
+                    "launches": {"all_time": res.pc_l_all, "30d": res.pc_l_30d, "24h": res.pc_l_24h, "1h": res.pc_l_1h},
+                    **LaunchRepository._period_metrics(
+                        {"all_time": res.pc_all, "30d": res.pc_30d, "24h": res.pc_24h, "1h": res.pc_1h},
+                        {"all_time": res.pc_l_all, "30d": res.pc_l_30d, "24h": res.pc_l_24h, "1h": res.pc_l_1h},
+                        g_users,
+                    ),
                 },
                 "mobile": {
                     "users": {"all_time": res.mob_all, "30d": res.mob_30d, "24h": res.mob_24h, "1h": res.mob_1h},
-                    "launches": {"all_time": res.mob_l_all, "30d": res.mob_l_30d, "24h": res.mob_l_24h, "1h": res.mob_l_1h}
+                    "launches": {"all_time": res.mob_l_all, "30d": res.mob_l_30d, "24h": res.mob_l_24h, "1h": res.mob_l_1h},
+                    **LaunchRepository._period_metrics(
+                        {"all_time": res.mob_all, "30d": res.mob_30d, "24h": res.mob_24h, "1h": res.mob_1h},
+                        {"all_time": res.mob_l_all, "30d": res.mob_l_30d, "24h": res.mob_l_24h, "1h": res.mob_l_1h},
+                        g_users,
+                    ),
                 }
             }
         }
@@ -341,7 +355,8 @@ class LaunchRepository:
             {
                 "date": str(row.dt) if row.dt else "Unknown",
                 "users": row.u_all,
-                "launches": row.l_all
+                "launches": row.l_all,
+                "launches_per_user": self._launches_per_user(row.u_all, row.l_all),
             }
             for row in res.all()
         ]
@@ -364,7 +379,8 @@ class LaunchRepository:
                 "date": str(row.dt) if row.dt else "Unknown",
                 "hour": int(row.hr) if row.hr is not None else 0,
                 "users": row.u_all,
-                "launches": row.l_all
+                "launches": row.l_all,
+                "launches_per_user": self._launches_per_user(row.u_all, row.l_all),
             }
             for row in res.all()
         ]
@@ -384,7 +400,8 @@ class LaunchRepository:
             {
                 "hour": int(row.hr) if row.hr is not None else 0,
                 "users": row.u_all,
-                "launches": row.l_all
+                "launches": row.l_all,
+                "launches_per_user": self._launches_per_user(row.u_all, row.l_all),
             }
             for row in res.all()
         ]
@@ -404,7 +421,8 @@ class LaunchRepository:
             {
                 "weekday": int(row.dow) if row.dow is not None else 0,
                 "users": row.u_all,
-                "launches": row.l_all
+                "launches": row.l_all,
+                "launches_per_user": self._launches_per_user(row.u_all, row.l_all),
             }
             for row in res.all()
         ]
