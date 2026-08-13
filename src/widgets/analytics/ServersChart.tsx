@@ -29,7 +29,7 @@ interface ServersChartProps {
   period: PeriodKey
 }
 
-function ProductsTable({ products, period }: { products: ProductStats[]; period: PeriodKey }) {
+function ProductsChart({ products, period }: { products: ProductStats[]; period: PeriodKey }) {
   const { t } = useTranslation('helper')
   const format = useFormatters()
 
@@ -40,35 +40,60 @@ function ProductsTable({ products, period }: { products: ProductStats[]; period:
         ? t(`analytics.servers.products.name.${item.product}`)
         : item.product,
     }))
+    .filter((item) => item.users[period] > 0)
     .sort((a, b) => b.users[period] - a.users[period])
 
   if (rows.length === 0) return null
 
   return (
-    <div className="mt-6 overflow-x-auto border-t border-white/5 pt-5">
+    <div className="mt-6 border-t border-white/5 pt-5">
       <p className="text-sm font-medium text-fg-muted">{t('analytics.servers.products.title')}</p>
-      <table className="mt-3 w-full min-w-[28rem] text-left text-sm">
-        <thead>
-          <tr className="text-fg-subtle">
-            <th className="pb-2 pr-4 font-medium">{t('analytics.servers.products.product')}</th>
-            <th className="pb-2 pr-4 font-medium">{t('analytics.servers.products.users')}</th>
-            <th className="pb-2 pr-4 font-medium">{t('analytics.servers.products.launches')}</th>
-            <th className="pb-2 font-medium">{t('analytics.servers.products.share')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.product} className="border-t border-white/5">
-              <td className="py-2.5 pr-4 font-medium text-fg">{row.label}</td>
-              <td className="tabular py-2.5 pr-4 text-fg-muted">{format.number(row.users[period])}</td>
-              <td className="tabular py-2.5 pr-4 text-fg-muted">
-                {format.number(row.launches[period])}
-              </td>
-              <td className="tabular py-2.5 text-fg-muted">{format.percent(row.user_share)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="mt-4" style={{ height: Math.max(160, rows.length * 36 + 40) }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            accessibilityLayer={false}
+            data={rows}
+            layout="vertical"
+            margin={{ top: 4, right: 12, bottom: 0, left: 8 }}
+          >
+            <CartesianGrid stroke={CHART.grid} horizontal={false} />
+            <XAxis type="number" {...AXIS_PROPS} tickFormatter={format.compact} />
+            <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={148} />
+            <Tooltip
+              cursor={false}
+              content={({ active, payload }) => {
+                const point = payload?.[0]?.payload as (typeof rows)[number] | undefined
+                if (!active || !point) return null
+
+                return (
+                  <ChartTooltip
+                    title={point.label}
+                    rows={[
+                      {
+                        label: t('analytics.metric.users'),
+                        value: format.number(point.users[period]),
+                        color: CHART.users,
+                      },
+                      {
+                        label: t('analytics.metric.launches'),
+                        value: format.number(point.launches[period]),
+                        color: CHART.launches,
+                      },
+                    ]}
+                  />
+                )
+              }}
+            />
+            <Bar
+              dataKey={`users.${period}`}
+              fill={CHART.launches}
+              radius={[0, 4, 4, 0]}
+              isAnimationActive={false}
+              activeBar={barActiveProps(CHART.launches)}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   )
 }
@@ -177,7 +202,7 @@ export function ServersChart({ servers, products, period }: ServersChartProps) {
         </div>
       )}
 
-      <ProductsTable products={products} period={period} />
+      <ProductsChart products={products} period={period} />
     </Card>
   )
 }

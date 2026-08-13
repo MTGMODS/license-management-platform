@@ -56,14 +56,10 @@
       },
       "products": {
         "title": "Проєкти",
-        "product": "Проєкт",
-        "users": "Користувачі",
-        "launches": "Запуски",
-        "share": "Частка",
         "name": {
-          "arizona_pc": "Arizona RP · PC",
+          "arizona_pc": "Arizona Online",
           "arizona_mobile": "Arizona Mobile",
-          "rodina_pc": "Rodina RP · PC",
+          "rodina_pc": "Rodina Online",
           "rodina_mobile": "Rodina Mobile"
         }
       }
