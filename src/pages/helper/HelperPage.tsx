@@ -68,7 +68,7 @@ export function HelperPage() {
     }
     if (toasted.current) return
     toasted.current = true
-    toast.error(t('stats.error'))
+    toast.warning(t('stats.error'), { description: t('stats.errorHint') })
   }, [isError, t])
 
   return (
