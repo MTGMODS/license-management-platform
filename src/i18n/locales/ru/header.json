@@ -5,7 +5,7 @@
     "more": "Ещё"
   },
   "account": {
-    "cabinet": "Кабинет",
+    "cabinet": "Личный кабинет",
     "id": "ID {{id}}",
     "vip": "VIP",
     "logout": "Выйти"
