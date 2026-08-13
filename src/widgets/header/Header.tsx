@@ -1,8 +1,9 @@
 import { Menu, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, NavLink, useLocation } from 'react-router'
+import { NavLink, useLocation } from 'react-router'
 
+import logo from '@/assets/logo.png'
 import { cn } from '@/shared/lib/cn'
 
 import { AccountControl } from './AccountControl'
@@ -12,15 +13,15 @@ const NAV_ITEMS = [
   { to: '/vip', labelKey: 'nav.vip' },
 ] as const
 
+const ACTIVE_UNDERLINE =
+  'after:absolute after:inset-x-3 after:-bottom-px after:h-px after:rounded-full ' +
+  'after:bg-accent-400 after:shadow-[0_0_10px_1px_var(--color-accent-500)]'
+
 function navLinkClasses({ isActive }: { isActive: boolean }): string {
   return cn(
     'relative rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200',
     isActive ? 'text-fg' : 'text-fg-muted hover:text-fg',
-    // A short accent underline marks the active section without the shouty
-    // neon the brief warns against.
-    isActive &&
-      'after:absolute after:inset-x-3 after:-bottom-px after:h-px after:rounded-full ' +
-        'after:bg-accent-400 after:shadow-[0_0_10px_1px_var(--color-accent-500)]',
+    isActive && ACTIVE_UNDERLINE,
   )
 }
 
@@ -37,12 +38,19 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/5 glass">
       <div className="shell grid h-16 grid-cols-[auto_1fr_auto] items-center gap-3">
-        <Link
+        <NavLink
           to="/"
-          className="text-base font-semibold tracking-tight text-fg transition-opacity hover:opacity-80"
+          end
+          className={({ isActive }) =>
+            cn(
+              'relative inline-flex items-center gap-2 rounded-lg py-1 pr-2 text-base font-semibold tracking-tight text-fg transition-colors duration-200 hover:text-fg',
+              isActive && ACTIVE_UNDERLINE,
+            )
+          }
         >
-          MTG<span className="text-accent-400"> MODS</span>
-        </Link>
+          <img src={logo} alt="" width={36} height={36} className="size-9 rounded-md" />
+          MTG MODS
+        </NavLink>
 
         <nav className="hidden justify-center gap-1 md:flex" aria-label={t('nav.helper')}>
           {NAV_ITEMS.map((item) => (
