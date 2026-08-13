@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
-import type { PeriodKey, ServerStats } from '@/shared/api/usage'
+import type { PeriodKey, ProductKey, ProductStats, ServerStats } from '@/shared/api/usage'
 import { formatServerLabel, getServer, UNKNOWN_SERVER_ID } from '@/shared/config/servers'
 import { useFormatters } from '@/shared/lib/format'
 import { Card, SegmentedControl } from '@/shared/ui'
@@ -12,12 +12,68 @@ import { ChartTooltip } from './ChartTooltip'
 
 type TopLimit = 5 | 10 | 20 | 0
 
+const KNOWN_PRODUCTS = [
+  'arizona_pc',
+  'arizona_mobile',
+  'rodina_pc',
+  'rodina_mobile',
+] as const satisfies readonly ProductKey[]
+
+function isKnownProduct(value: string): value is ProductKey {
+  return (KNOWN_PRODUCTS as readonly string[]).includes(value)
+}
+
 interface ServersChartProps {
   servers: ServerStats[]
+  products: ProductStats[]
   period: PeriodKey
 }
 
-export function ServersChart({ servers, period }: ServersChartProps) {
+function ProductsTable({ products, period }: { products: ProductStats[]; period: PeriodKey }) {
+  const { t } = useTranslation('helper')
+  const format = useFormatters()
+
+  const rows = [...products]
+    .map((item) => ({
+      ...item,
+      label: isKnownProduct(item.product)
+        ? t(`analytics.servers.products.name.${item.product}`)
+        : item.product,
+    }))
+    .sort((a, b) => b.users[period] - a.users[period])
+
+  if (rows.length === 0) return null
+
+  return (
+    <div className="mt-6 overflow-x-auto border-t border-white/5 pt-5">
+      <p className="text-sm font-medium text-fg-muted">{t('analytics.servers.products.title')}</p>
+      <table className="mt-3 w-full min-w-[28rem] text-left text-sm">
+        <thead>
+          <tr className="text-fg-subtle">
+            <th className="pb-2 pr-4 font-medium">{t('analytics.servers.products.product')}</th>
+            <th className="pb-2 pr-4 font-medium">{t('analytics.servers.products.users')}</th>
+            <th className="pb-2 pr-4 font-medium">{t('analytics.servers.products.launches')}</th>
+            <th className="pb-2 font-medium">{t('analytics.servers.products.share')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.product} className="border-t border-white/5">
+              <td className="py-2.5 pr-4 font-medium text-fg">{row.label}</td>
+              <td className="tabular py-2.5 pr-4 text-fg-muted">{format.number(row.users[period])}</td>
+              <td className="tabular py-2.5 pr-4 text-fg-muted">
+                {format.number(row.launches[period])}
+              </td>
+              <td className="tabular py-2.5 text-fg-muted">{format.percent(row.user_share)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+export function ServersChart({ servers, products, period }: ServersChartProps) {
   const { t } = useTranslation('helper')
   const format = useFormatters()
   const [limit, setLimit] = useState<TopLimit>(10)
@@ -120,6 +176,8 @@ export function ServersChart({ servers, period }: ServersChartProps) {
           </ResponsiveContainer>
         </div>
       )}
+
+      <ProductsTable products={products} period={period} />
     </Card>
   )
 }

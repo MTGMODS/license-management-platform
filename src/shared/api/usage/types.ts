@@ -67,6 +67,16 @@ export interface VersionStats {
   launches_per_user: number
 }
 
+export type ProductKey = 'arizona_pc' | 'arizona_mobile' | 'rodina_pc' | 'rodina_mobile'
+
+export interface ProductStats {
+  product: ProductKey | string
+  user_share: number
+  launches_per_user: number
+  users: PeriodCounts
+  launches: PeriodCounts
+}
+
 export interface DailyPoint {
   /** UTC calendar day (`YYYY-MM-DD`). Days without activity are omitted. */
   date: ApiDate
@@ -103,6 +113,7 @@ export interface UsagePublicStats {
     servers: ServerStats[]
     countries: CountryStats[]
     versions: VersionStats[]
+    products: ProductStats[]
   }
   analytics: {
     timeline: {

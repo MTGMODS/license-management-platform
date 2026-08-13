@@ -10,7 +10,7 @@
     "title": "Хелпер в цифрах",
     "subtitle": "Обезличенная статистика запусков. Обновляется автоматически.",
     "users": "Пользователей",
-    "vip": "С активным VIP",
+    "vip": "С VIP-версией",
     "launches": "Запусков",
     "countries": "Стран",
     "servers": "Игровых серверов",
@@ -53,6 +53,19 @@
         "arizonaVc": "Arizona Vice City",
         "rodina": "Rodina RP",
         "rodinaMobile": "Rodina Mobile"
+      },
+      "products": {
+        "title": "Проекты",
+        "product": "Проект",
+        "users": "Пользователи",
+        "launches": "Запуски",
+        "share": "Доля",
+        "name": {
+          "arizona_pc": "Arizona RP · PC",
+          "arizona_mobile": "Arizona Mobile",
+          "rodina_pc": "Rodina RP · PC",
+          "rodina_mobile": "Rodina Mobile"
+        }
       }
     },
     "daily": {

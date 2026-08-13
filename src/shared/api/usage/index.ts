@@ -5,6 +5,7 @@ import type {
   FactionStats,
   PeriodCounts,
   PeriodKey,
+  ProductStats,
   UsagePublicStats,
   VersionStats,
 } from './types'
@@ -86,9 +87,20 @@ function normalizeCountry(raw: Record<string, unknown>): CountryStats {
   }
 }
 
+function normalizeProduct(raw: Record<string, unknown>): ProductStats {
+  return {
+    product: typeof raw.product === 'string' ? raw.product : 'unknown',
+    users: asPeriodCounts(raw.users),
+    launches: asPeriodCounts(raw.launches),
+    user_share: typeof raw.user_share === 'number' ? raw.user_share : 0,
+    launches_per_user: typeof raw.launches_per_user === 'number' ? raw.launches_per_user : 0,
+  }
+}
+
 function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
   const versionsRaw = payload.distribution.versions as unknown as Record<string, unknown>[]
   const countriesRaw = payload.distribution.countries as unknown as Record<string, unknown>[]
+  const productsRaw = (payload.distribution.products ?? []) as unknown as Record<string, unknown>[]
 
   return {
     ...payload,
@@ -97,6 +109,7 @@ function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
       factions: normalizeFactions(payload.distribution.factions),
       versions: versionsRaw.map(normalizeVersion),
       countries: countriesRaw.map(normalizeCountry),
+      products: productsRaw.map(normalizeProduct),
     },
   }
 }

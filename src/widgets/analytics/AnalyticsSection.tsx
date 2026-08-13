@@ -48,7 +48,11 @@ export function AnalyticsSection() {
 
       <div className="mt-6 space-y-4">
         <FactionsChart factions={data.distribution.factions} period={period} />
-        <ServersChart servers={data.distribution.servers} period={period} />
+        <ServersChart
+          servers={data.distribution.servers}
+          products={data.distribution.products}
+          period={period}
+        />
         <WorldMap countries={data.distribution.countries} period={period} />
         <VersionsChart versions={data.distribution.versions} period={period} />
       </div>
