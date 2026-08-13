@@ -75,21 +75,24 @@ export function HelperPage() {
     <div className="shell flex min-h-0 flex-1 flex-col">
       <div
         className={cn(
-          'flex min-h-0 flex-col py-[clamp(0.75rem,1.8vh,1.5rem)]',
+          'flex min-h-0 flex-col overflow-hidden py-[clamp(0.75rem,1.8vh,1.5rem)]',
           isError ? 'h-full flex-1' : 'h-[calc(100dvh-4rem)]',
         )}
       >
         <Hero />
         {isError ? null : (
-          <div className="mt-[clamp(0.75rem,2vh,1.5rem)] shrink-0">
+          <div className="mt-[clamp(0.75rem,2vh,1.5rem)] hidden shrink-0 lg:block">
             <QuickStats />
           </div>
         )}
       </div>
       {isError ? null : (
         <div className="pb-10">
-          <DeferredMount fallback={<Skeleton className="h-96" />}>
-            <Suspense fallback={<Skeleton className="h-96" />}>
+          <div className="lg:hidden pt-2">
+            <QuickStats />
+          </div>
+          <DeferredMount fallback={<Skeleton className="mt-8 h-96" />}>
+            <Suspense fallback={<Skeleton className="mt-8 h-96" />}>
               <AnalyticsSection />
             </Suspense>
           </DeferredMount>

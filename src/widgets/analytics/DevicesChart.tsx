@@ -44,7 +44,7 @@ export function DevicesChart({ devices, period, metric }: DevicesChartProps) {
     .sort((a, b) => b[metric] - a[metric])
 
   return (
-    <Card className="p-6">
+    <Card className="p-4 text-left sm:p-6">
       <h3 className="text-lg font-semibold tracking-tight">{t('analytics.devices.title')}</h3>
       <p className="mt-1 text-sm text-fg-muted">{t('analytics.devices.subtitle')}</p>
 

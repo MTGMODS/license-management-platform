@@ -31,7 +31,7 @@ export function SegmentedControl<T extends string | number>({
       role="group"
       aria-label={label}
       className={cn(
-        'inline-flex shrink-0 rounded-xl bg-ink-800 p-1 ring-1 ring-white/5',
+        'inline-flex max-w-full shrink-0 overflow-x-auto rounded-xl bg-ink-800 p-1 ring-1 ring-white/5',
         className,
       )}
     >

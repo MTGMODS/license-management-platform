@@ -75,7 +75,7 @@ export function FactionsChart({
     .sort((a, b) => b[metric] - a[metric])
 
   return (
-    <Card className="p-6">
+    <Card className="p-4 text-left sm:p-6">
       <h3 className="text-lg font-semibold tracking-tight">{t('analytics.factions.title')}</h3>
       <p className="mt-1 text-sm text-fg-muted">{t('analytics.factions.subtitle')}</p>
 
@@ -180,7 +180,7 @@ export function VersionsChart({
     .sort((a, b) => b[metric] - a[metric])
 
   return (
-    <Card className="p-6">
+    <Card className="p-4 text-left sm:p-6">
       <h3 className="text-lg font-semibold tracking-tight">{t('analytics.versions.title')}</h3>
       <p className="mt-1 text-sm text-fg-muted">{t('analytics.versions.subtitle')}</p>
 

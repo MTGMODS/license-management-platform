@@ -35,7 +35,7 @@ export function DailyTrends({ daily, metric }: { daily: DailyPoint[]; metric: Ch
   const color = chartColor(metric)
 
   return (
-    <Card className="p-6">
+    <Card className="p-4 text-left sm:p-6">
       <div>
         <h3 className="text-lg font-semibold tracking-tight">{t('analytics.daily.title')}</h3>
         <p className="mt-1 text-sm text-fg-muted">{t('analytics.daily.subtitle')}</p>

@@ -29,7 +29,7 @@ export function QuickStats() {
           {t('stats.title')}
         </h2>
         <p className="mt-1 text-[clamp(0.75rem,1.4vh,0.875rem)] text-fg-muted">{t('stats.subtitle')}</p>
-        <div className="mt-[clamp(0.5rem,1.2vh,1rem)] grid gap-[clamp(0.5rem,1.2vh,1rem)] sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-[clamp(0.5rem,1.2vh,1rem)] grid grid-cols-2 gap-[clamp(0.5rem,1.2vh,1rem)] lg:grid-cols-5">
           {Array.from({ length: 5 }, (_, index) => (
             <Skeleton
               key={index}
@@ -84,7 +84,7 @@ export function QuickStats() {
       </h2>
       <p className="mt-1 text-[clamp(0.75rem,1.4vh,0.875rem)] text-fg-muted">{t('stats.subtitle')}</p>
 
-      <div className="mt-[clamp(0.5rem,1.2vh,1rem)] grid gap-[clamp(0.5rem,1.2vh,1rem)] sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-[clamp(0.5rem,1.2vh,1rem)] grid grid-cols-2 gap-[clamp(0.5rem,1.2vh,1rem)] lg:grid-cols-5">
         {items.map((item) => {
           const Icon = item.icon
           return (

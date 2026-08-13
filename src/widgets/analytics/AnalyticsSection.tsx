@@ -42,8 +42,8 @@ export function AnalyticsSection() {
 
   return (
     <section>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
+      <div className="flex flex-col items-stretch gap-4 text-left sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+        <div className="min-w-0">
           <h2 className="text-2xl font-semibold tracking-tight">{t('analytics.title')}</h2>
           <p className="mt-2 text-fg-muted">{t('analytics.subtitle')}</p>
         </div>

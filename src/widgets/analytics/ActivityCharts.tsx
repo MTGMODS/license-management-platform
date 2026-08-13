@@ -40,7 +40,7 @@ export function ActivityCharts({ hourly, weekday, metric }: ActivityChartsProps)
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <Card className="p-6">
+      <Card className="p-4 text-left sm:p-6">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="text-lg font-semibold tracking-tight">{t('analytics.activity.hours')}</h3>
           <span className="text-xs text-fg-subtle">{t('analytics.activity.localTime')}</span>
@@ -83,7 +83,7 @@ export function ActivityCharts({ hourly, weekday, metric }: ActivityChartsProps)
         </div>
       </Card>
 
-      <Card className="p-6">
+      <Card className="p-4 text-left sm:p-6">
         <h3 className="text-lg font-semibold tracking-tight">
           {t('analytics.activity.weekdays')}
         </h3>

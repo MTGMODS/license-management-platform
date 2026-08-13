@@ -130,9 +130,9 @@ export function ServersChart({ servers, products, period, metric }: ServersChart
   const visible = limit === 0 ? ranked : ranked.slice(0, limit)
 
   return (
-    <Card className="p-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
+    <Card className="p-4 text-left sm:p-6">
+      <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 text-left">
           <h3 className="text-lg font-semibold tracking-tight">{t('analytics.servers.title')}</h3>
           <p className="mt-1 text-sm text-fg-muted">{t('analytics.servers.subtitle')}</p>
         </div>
@@ -166,8 +166,6 @@ export function ServersChart({ servers, products, period, metric }: ServersChart
             >
               <CartesianGrid stroke={CHART.grid} horizontal={false} />
               <XAxis type="number" {...AXIS_PROPS} tickFormatter={format.compact} />
-              {/* Names run to "Санкт Петербург", so the axis is wider than a
-                  numeric id would need. */}
               <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={148} />
               <Tooltip
                 cursor={false}
