@@ -85,10 +85,10 @@ function ProductsChart({ products, period }: { products: ProductStats[]; period:
             />
             <Bar
               dataKey={`users.${period}`}
-              fill={CHART.launches}
+              fill={CHART.users}
               radius={[0, 4, 4, 0]}
               isAnimationActive={false}
-              activeBar={barActiveProps(CHART.launches)}
+              activeBar={barActiveProps(CHART.users)}
             />
           </BarChart>
         </ResponsiveContainer>

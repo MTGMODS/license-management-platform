@@ -207,7 +207,7 @@ export function VersionsChart({
                         {
                           label: t('analytics.versions.users'),
                           value: format.number(point.users),
-                          color: CHART.launches,
+                          color: CHART.users,
                         },
                       ]}
                     />
@@ -216,10 +216,10 @@ export function VersionsChart({
               />
               <Bar
                 dataKey="users"
-                fill={CHART.launches}
+                fill={CHART.users}
                 radius={[0, 4, 4, 0]}
                 isAnimationActive={false}
-                activeBar={barActiveProps(CHART.launches)}
+                activeBar={barActiveProps(CHART.users)}
               />
             </BarChart>
           </ResponsiveContainer>
