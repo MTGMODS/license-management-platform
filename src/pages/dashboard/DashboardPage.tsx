@@ -348,11 +348,10 @@ function LicenseSection() {
 
   if (isError && (isServiceUnavailable(error) || (!isNoActiveLicense(error) && !(error instanceof ApiError && error.status === 404)))) {
     return (
-      <Card className="p-6">
+      <Card className="p-5">
         <ErrorState
-          className="py-8"
-          title={t('vip.unavailable')}
-          description={t('vip.unavailableHint')}
+          compact
+          description={t('vip.unavailable')}
           retrying={isFetching}
           onRetry={() => void refetch()}
         />

@@ -188,11 +188,10 @@ export function SalesStats() {
     return (
       <section>
         <h2 className="text-2xl font-semibold tracking-tight">{t('stats.title')}</h2>
-        <Card className="mt-6 p-6">
+        <Card className="mt-6 p-5">
           <ErrorState
-            className="py-8"
-            title={t('stats.error')}
-            description={t('stats.errorHint')}
+            compact
+            description={t('stats.error')}
             retrying={isFetching}
             onRetry={() => void refetch()}
           />

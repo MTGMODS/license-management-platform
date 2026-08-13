@@ -49,10 +49,31 @@ interface ErrorStateProps {
   onRetry?: () => void
   retrying?: boolean
   className?: string
+  compact?: boolean
 }
 
-export function ErrorState({ title, description, onRetry, retrying, className }: ErrorStateProps) {
+export function ErrorState({
+  title,
+  description,
+  onRetry,
+  retrying,
+  className,
+  compact = false,
+}: ErrorStateProps) {
   const { t } = useTranslation('common')
+
+  if (compact) {
+    return (
+      <div className={cn('flex flex-wrap items-center justify-between gap-3', className)}>
+        <p className="text-sm text-fg-muted">{description ?? title ?? t('state.errorHint')}</p>
+        {onRetry ? (
+          <Button variant="ghost" size="sm" loading={retrying} onClick={onRetry}>
+            {t('actions.retry')}
+          </Button>
+        ) : null}
+      </div>
+    )
+  }
 
   return (
     <StateMessage

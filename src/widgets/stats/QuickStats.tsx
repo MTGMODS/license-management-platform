@@ -73,11 +73,10 @@ export function QuickStats() {
           ))}
         </div>
       ) : isError || !data ? (
-        <Card className="mt-6 p-6">
+        <Card className="mt-6 p-5">
           <ErrorState
-            className="py-8"
-            title={t('stats.error')}
-            description={t('stats.errorHint')}
+            compact
+            description={t('stats.error')}
             retrying={isFetching}
             onRetry={() => void refetch()}
           />

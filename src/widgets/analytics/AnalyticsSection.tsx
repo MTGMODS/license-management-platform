@@ -26,11 +26,10 @@ export function AnalyticsSection() {
           <Skeleton className="h-72" />
         </div>
       ) : isError || !data ? (
-        <Card className="mt-6 p-6">
+        <Card className="mt-6 p-5">
           <ErrorState
-            className="py-8"
-            title={t('analytics.error')}
-            description={t('analytics.errorHint')}
+            compact
+            description={t('analytics.error')}
             retrying={isFetching}
             onRetry={() => void refetch()}
           />
