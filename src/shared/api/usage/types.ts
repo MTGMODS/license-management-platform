@@ -16,6 +16,11 @@ export interface UsageOverviewMetrics {
   global_launches_per_user: number
 }
 
+export interface DeviceFamilyStats {
+  users: PeriodCounts
+  launches: PeriodCounts
+}
+
 export interface UsageOverview {
   metrics: UsageOverviewMetrics
   users: {
@@ -25,8 +30,8 @@ export interface UsageOverview {
   }
   launches: PeriodCounts
   devices: {
-    pc: PeriodCounts
-    mobile: PeriodCounts
+    pc: DeviceFamilyStats
+    mobile: DeviceFamilyStats
   }
 }
 

@@ -7,6 +7,7 @@ import { Skeleton } from '@/shared/ui'
 
 import { ActivityCharts } from './ActivityCharts'
 import { DailyTrends } from './DailyTrends'
+import { DevicesChart } from './DevicesChart'
 import { FactionsChart, VersionsChart } from './DistributionCharts'
 import { PeriodControl } from './PeriodControl'
 import { ServersChart } from './ServersChart'
@@ -54,6 +55,7 @@ export function AnalyticsSection() {
           period={period}
         />
         <WorldMap countries={data.distribution.countries} period={period} />
+        <DevicesChart devices={data.overview.devices} period={period} />
         <VersionsChart versions={data.distribution.versions} period={period} />
       </div>
 

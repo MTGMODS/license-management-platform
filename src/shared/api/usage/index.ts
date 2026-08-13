@@ -2,6 +2,7 @@ import { request } from '../http'
 
 import type {
   CountryStats,
+  DeviceFamilyStats,
   FactionStats,
   PeriodCounts,
   PeriodKey,
@@ -97,13 +98,35 @@ function normalizeProduct(raw: Record<string, unknown>): ProductStats {
   }
 }
 
+function normalizeDeviceFamily(raw: unknown): DeviceFamilyStats {
+  if (raw && typeof raw === 'object' && ('users' in raw || 'launches' in raw)) {
+    const source = raw as Record<string, unknown>
+    return {
+      users: asPeriodCounts(source.users),
+      launches: asPeriodCounts(source.launches),
+    }
+  }
+
+  // Legacy shape was a bare PeriodCounts map for users only.
+  const users = asPeriodCounts(raw)
+  return { users, launches: { all_time: 0, '30d': 0, '24h': 0, '1h': 0 } }
+}
+
 function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
   const versionsRaw = payload.distribution.versions as unknown as Record<string, unknown>[]
   const countriesRaw = payload.distribution.countries as unknown as Record<string, unknown>[]
   const productsRaw = (payload.distribution.products ?? []) as unknown as Record<string, unknown>[]
+  const devicesRaw = payload.overview.devices as unknown as Record<string, unknown>
 
   return {
     ...payload,
+    overview: {
+      ...payload.overview,
+      devices: {
+        pc: normalizeDeviceFamily(devicesRaw?.pc),
+        mobile: normalizeDeviceFamily(devicesRaw?.mobile),
+      },
+    },
     distribution: {
       ...payload.distribution,
       factions: normalizeFactions(payload.distribution.factions),
