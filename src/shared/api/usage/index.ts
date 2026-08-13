@@ -30,17 +30,40 @@ function asPeriodCounts(value: unknown): PeriodCounts {
   return { all_time: n, '30d': n, '24h': n, '1h': n }
 }
 
-function normalizeFaction(raw: Record<string, unknown>): FactionStats {
-  const users = asPeriodCounts(raw.users ?? raw.total_users)
-  const launches = asPeriodCounts(raw.launches)
+function normalizeFaction(raw: Record<string, unknown>, fallbackMode = 'unknown'): FactionStats {
+  const mode =
+    typeof raw.mode === 'string' && raw.mode
+      ? raw.mode
+      : fallbackMode
+
   return {
-    users,
-    launches,
+    mode,
+    users: asPeriodCounts(raw.users ?? raw.total_users),
+    launches: asPeriodCounts(raw.launches),
+    vip_users: asPeriodCounts(raw.vip_users),
     user_share: typeof raw.user_share === 'number' ? raw.user_share : 0,
     launches_per_user: typeof raw.launches_per_user === 'number' ? raw.launches_per_user : 0,
-    vip_users: typeof raw.vip_users === 'number' ? raw.vip_users : 0,
     vip_percent: typeof raw.vip_percent === 'number' ? raw.vip_percent : 0,
   }
+}
+
+/** New API: array of `{ mode, ... }`. Legacy: `{ police: {...}, ... }`. */
+function normalizeFactions(raw: unknown): FactionStats[] {
+  if (Array.isArray(raw)) {
+    return raw.map((item) =>
+      normalizeFaction(
+        item && typeof item === 'object' ? (item as Record<string, unknown>) : {},
+      ),
+    )
+  }
+
+  if (raw && typeof raw === 'object') {
+    return Object.entries(raw as Record<string, Record<string, unknown>>).map(([mode, stats]) =>
+      normalizeFaction(stats ?? {}, mode),
+    )
+  }
+
+  return []
 }
 
 function normalizeVersion(raw: Record<string, unknown>): VersionStats {
@@ -64,7 +87,6 @@ function normalizeCountry(raw: Record<string, unknown>): CountryStats {
 }
 
 function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
-  const factionsRaw = payload.distribution.factions as unknown as Record<string, Record<string, unknown>>
   const versionsRaw = payload.distribution.versions as unknown as Record<string, unknown>[]
   const countriesRaw = payload.distribution.countries as unknown as Record<string, unknown>[]
 
@@ -72,9 +94,7 @@ function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
     ...payload,
     distribution: {
       ...payload.distribution,
-      factions: Object.fromEntries(
-        Object.entries(factionsRaw).map(([code, stats]) => [code, normalizeFaction(stats)]),
-      ),
+      factions: normalizeFactions(payload.distribution.factions),
       versions: versionsRaw.map(normalizeVersion),
       countries: countriesRaw.map(normalizeCountry),
     },

@@ -37,13 +37,12 @@ function isKnownFaction(code: string): code is KnownFaction {
 }
 
 interface FactionRow {
-  code: string
+  mode: string
   label: string
   users: number
   launches: number
   user_share: number
   launches_per_user: number
-  vip_users: number
   vip_percent: number
 }
 
@@ -51,23 +50,28 @@ export function FactionsChart({
   factions,
   period,
 }: {
-  factions: Record<string, FactionStats>
+  factions: FactionStats[]
   period: PeriodKey
 }) {
   const { t } = useTranslation('helper')
   const format = useFormatters()
 
-  const rows: FactionRow[] = Object.entries(factions)
-    .map(([code, stats]) => ({
-      code,
-      label: isKnownFaction(code) ? t(`analytics.factionName.${code}`) : code.toUpperCase(),
-      users: stats.users[period],
-      launches: stats.launches[period],
-      user_share: stats.user_share,
-      launches_per_user: stats.launches_per_user,
-      vip_users: stats.vip_users,
-      vip_percent: stats.vip_percent,
-    }))
+  const rows: FactionRow[] = factions
+    .map((stats) => {
+      const users = stats.users[period]
+      const vipUsers = stats.vip_users[period]
+      return {
+        mode: stats.mode,
+        label: isKnownFaction(stats.mode)
+          ? t(`analytics.factionName.${stats.mode}`)
+          : stats.mode.toUpperCase(),
+        users,
+        launches: stats.launches[period],
+        user_share: stats.user_share,
+        launches_per_user: stats.launches_per_user,
+        vip_percent: users > 0 ? (vipUsers / users) * 100 : stats.vip_percent,
+      }
+    })
     .filter((row) => row.users > 0)
     .sort((a, b) => b.users - a.users)
 

@@ -31,11 +31,13 @@ export interface UsageOverview {
 }
 
 export interface FactionStats {
+  /** Mode key from the helper, e.g. `police`, `none`. */
+  mode: string
   users: PeriodCounts
   launches: PeriodCounts
+  vip_users: PeriodCounts
   user_share: number
   launches_per_user: number
-  vip_users: number
   vip_percent: number
 }
 
@@ -97,8 +99,7 @@ export interface UsagePublicStats {
   updated_at: ApiDateTime
   overview: UsageOverview
   distribution: {
-    /** Keyed by mode name rather than an array. */
-    factions: Record<string, FactionStats>
+    factions: FactionStats[]
     servers: ServerStats[]
     countries: CountryStats[]
     versions: VersionStats[]
