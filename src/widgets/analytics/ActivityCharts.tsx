@@ -137,10 +137,10 @@ export function ActivityCharts({ hourly, weekday }: ActivityChartsProps) {
               />
               <Bar
                 dataKey="launches"
-                fill={CHART.launches}
+                fill={CHART.users}
                 radius={[4, 4, 0, 0]}
                 isAnimationActive={false}
-                activeBar={barActiveProps(CHART.launches)}
+                activeBar={barActiveProps(CHART.users)}
               />
             </BarChart>
           </ResponsiveContainer>
