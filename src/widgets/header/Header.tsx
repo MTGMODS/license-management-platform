@@ -43,12 +43,12 @@ export function Header() {
           end
           className={({ isActive }) =>
             cn(
-              'relative inline-flex items-center gap-2 rounded-lg px-2 py-1 text-base font-semibold tracking-tight text-fg transition-colors duration-200 hover:text-fg',
+              'relative inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold tracking-tight text-fg transition-colors duration-200 hover:text-fg',
               isActive && ACTIVE_UNDERLINE,
             )
           }
         >
-          <img src={logo} alt="" width={36} height={36} className="size-9 rounded-md" />
+          <img src={logo} alt="" width={24} height={24} className="size-6 rounded-sm" />
           MTG MODS
         </NavLink>
 
