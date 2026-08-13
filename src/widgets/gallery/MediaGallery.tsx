@@ -159,16 +159,16 @@ export function MediaGallery({ compact = false }: { compact?: boolean }) {
     return (
       <section
         aria-label={t('gallery.title')}
-        className="flex min-h-0 w-full min-w-0 flex-1 basis-0 flex-col items-center [container-type:size]"
+        className="flex min-h-0 w-full min-w-0 flex-1 basis-0 flex-col [container-type:size]"
       >
-        <div
-          className="my-auto flex w-full min-w-0 flex-col"
-          style={{
-            width:
-              'min(100cqw, calc((100cqh - 0.75rem - clamp(2.25rem, 5vh, 3.25rem)) * 16 / 9))',
-          }}
-        >
-          <div className="aspect-video w-full overflow-hidden rounded-card border border-white/5 bg-ink-850">
+        <div className="my-auto flex w-full min-w-0 flex-col">
+          <div
+            className="mx-auto aspect-video overflow-hidden rounded-card border border-white/5 bg-ink-850"
+            style={{
+              width:
+                'min(100cqw, calc((100cqh - 0.75rem - clamp(2.25rem, 5vh, 3.25rem)) * 16 / 9))',
+            }}
+          >
             <Viewer item={active} />
           </div>
           {thumbs}
