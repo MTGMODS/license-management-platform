@@ -4,6 +4,8 @@ import { Link, Outlet } from 'react-router'
 import { GITHUB_ORG_URL } from '@/shared/config/profile'
 import { Header } from '@/widgets/header/Header'
 
+import { useDocumentTitle } from './useDocumentTitle'
+
 /**
  * Fixed ambient wash behind the page. Two off-screen radial pools keep large
  * dark surfaces from reading as flat grey, and a faint grid adds the technical
@@ -54,6 +56,7 @@ function Footer() {
 
 export function AppLayout() {
   const { t } = useTranslation('header')
+  useDocumentTitle()
 
   return (
     <div className="flex min-h-dvh flex-col">

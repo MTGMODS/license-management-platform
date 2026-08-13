@@ -1,5 +1,12 @@
 {
   "brand": "MTG MODS",
+  "tab": {
+    "home": "MTG MODS",
+    "helper": "Arizona&Rodina Helper",
+    "vip": "Підписка MTG VIP для хелпера",
+    "login": "Вхід у кабінет",
+    "dashboard": "Кабінет"
+  },
   "footer": {
     "terms": "Умови та конфіденційність"
   },
