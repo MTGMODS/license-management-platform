@@ -15,16 +15,25 @@ interface ActivityChartsProps {
   weekday: WeekdayActivityPoint[]
 }
 
+/** PostgreSQL `dow` is Sunday=0; charts should read Mon→Sun. */
+function weekdayOrder(day: number): number {
+  return day === 0 ? 7 : day
+}
+
 /**
- * Both series are all-time aggregates with no per-period breakdown in the
- * payload, so they deliberately ignore the section's period selector and say
- * so rather than silently showing the same bars for every period.
+ * All-time aggregates with no per-period breakdown in the payload. They live
+ * under the "global all-time" section rather than following the period selector.
  */
 export function ActivityCharts({ hourly, weekday }: ActivityChartsProps) {
   const { t } = useTranslation('helper')
   const format = useFormatters()
 
   const localHourly = useMemo(() => shiftHourlyToLocal(hourly), [hourly])
+
+  const weekdayMondayFirst = useMemo(
+    () => [...weekday].sort((a, b) => weekdayOrder(a.weekday) - weekdayOrder(b.weekday)),
+    [weekday],
+  )
 
   const peakHour = useMemo(
     () =>
@@ -104,7 +113,11 @@ export function ActivityCharts({ hourly, weekday }: ActivityChartsProps) {
 
         <div className="mt-6 h-56">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart accessibilityLayer={false} data={weekday} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
+            <BarChart
+              accessibilityLayer={false}
+              data={weekdayMondayFirst}
+              margin={{ top: 4, right: 8, bottom: 0, left: 4 }}
+            >
               <CartesianGrid stroke={CHART.grid} vertical={false} />
               <XAxis
                 dataKey="weekday"

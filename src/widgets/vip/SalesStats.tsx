@@ -21,7 +21,7 @@ import { AXIS_PROPS, barActiveProps, CHART, Y_AXIS_NUMERIC } from '@/widgets/ana
 import { ChartTooltip } from '@/widgets/analytics/ChartTooltip'
 
 /** Distinct hues for the payment split; the chart is a true part-of-whole. */
-const PAYMENT_COLORS = ['#7c5cff', '#34d399', '#fbbf24', '#fb7185', '#38bdf8']
+const PAYMENT_COLORS = ['#0fb0fa', '#34d399', '#fbbf24', '#fb7185', '#38bdf8']
 
 function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
   const { t } = useTranslation('vip')

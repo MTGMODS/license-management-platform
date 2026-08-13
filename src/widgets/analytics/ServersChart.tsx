@@ -9,18 +9,17 @@ import { Card, SegmentedControl } from '@/shared/ui'
 
 import { AXIS_PROPS, barActiveProps, CHART } from './chartTheme'
 import { ChartTooltip } from './ChartTooltip'
-import { PeriodControl } from './PeriodControl'
 
 type TopLimit = 5 | 10 | 20 | 0
 
 interface ServersChartProps {
   servers: ServerStats[]
+  period: PeriodKey
 }
 
-export function ServersChart({ servers }: ServersChartProps) {
+export function ServersChart({ servers, period }: ServersChartProps) {
   const { t } = useTranslation('helper')
   const format = useFormatters()
-  const [period, setPeriod] = useState<PeriodKey>('all_time')
   const [limit, setLimit] = useState<TopLimit>(10)
 
   const named = servers.map((item) => {
@@ -53,21 +52,18 @@ export function ServersChart({ servers }: ServersChartProps) {
           <p className="mt-1 text-sm text-fg-muted">{t('analytics.servers.subtitle')}</p>
         </div>
 
-        <div className="flex flex-col items-end gap-2">
-          <PeriodControl value={period} onChange={setPeriod} />
-          <SegmentedControl
-            size="sm"
-            label={t('analytics.servers.title')}
-            value={limit}
-            onChange={setLimit}
-            options={[
-              { id: 5, label: t('analytics.servers.top', { count: 5 }) },
-              { id: 10, label: t('analytics.servers.top', { count: 10 }) },
-              { id: 20, label: t('analytics.servers.top', { count: 20 }) },
-              { id: 0, label: t('analytics.servers.all') },
-            ]}
-          />
-        </div>
+        <SegmentedControl
+          size="sm"
+          label={t('analytics.servers.title')}
+          value={limit}
+          onChange={setLimit}
+          options={[
+            { id: 5, label: t('analytics.servers.top', { count: 5 }) },
+            { id: 10, label: t('analytics.servers.top', { count: 10 }) },
+            { id: 20, label: t('analytics.servers.top', { count: 20 }) },
+            { id: 0, label: t('analytics.servers.all') },
+          ]}
+        />
       </div>
 
       {visible.length === 0 ? (

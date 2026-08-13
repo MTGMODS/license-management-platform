@@ -3,12 +3,12 @@
  * palette is mirrored here from the design tokens in index.css.
  */
 export const CHART = {
-  users: '#7c5cff',
-  usersSoft: '#b8a8ff',
+  users: '#0fb0fa',
+  usersSoft: '#83d5fc',
   launches: '#34d399',
-  grid: 'rgba(244, 245, 248, 0.06)',
-  axis: '#6a6a83',
-  cursor: 'rgba(244, 245, 248, 0.05)',
+  grid: 'rgba(245, 246, 249, 0.06)',
+  axis: '#707b8b',
+  cursor: 'rgba(245, 246, 249, 0.05)',
 } as const
 
 export const AXIS_PROPS = {
@@ -26,7 +26,7 @@ export const Y_AXIS_NUMERIC = {
 
 /** Shared hover outline for chart bars and map countries. */
 export const HOVER_OUTLINE = {
-  stroke: 'rgba(244, 245, 248, 0.55)',
+  stroke: 'rgba(245, 246, 249, 0.55)',
   strokeWidth: 1.5,
 } as const
 

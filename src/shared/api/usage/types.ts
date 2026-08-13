@@ -31,9 +31,9 @@ export interface UsageOverview {
 }
 
 export interface FactionStats {
-  total_users: number
+  users: PeriodCounts
+  launches: PeriodCounts
   user_share: number
-  launches: number
   launches_per_user: number
   vip_users: number
   vip_percent: number
@@ -54,15 +54,14 @@ export interface CountryStats {
   user_share: number
   launches_per_user: number
   users: PeriodCounts
-  /** All-time only, unlike `users`. */
-  launches: number
+  launches: PeriodCounts
 }
 
 export interface VersionStats {
   version: string
-  users: number
+  users: PeriodCounts
   user_share: number
-  launches: number
+  launches: PeriodCounts
   launches_per_user: number
 }
 

@@ -7,15 +7,16 @@ import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
 import { CRIMEA_OVERLAY_PATHS, UKRAINE_NUMERIC_ID } from './crimeaOverlay'
-import { PeriodControl } from './PeriodControl'
 import { COUNTRY_SHAPES, MAP_HEIGHT, MAP_WIDTH } from './worldGeometry'
 import { HOVER_OUTLINE } from './chartTheme'
 
-const BASE_FILL = '#1a1a25'
-const STROKE = 'rgba(244, 245, 248, 0.08)'
+const BASE_FILL = '#2a313c'
+const STROKE = 'rgba(245, 246, 249, 0.08)'
+const ACCENT = '#0fb0fa'
 
 interface WorldMapProps {
   countries: CountryStats[]
+  period: PeriodKey
 }
 
 interface HoverState {
@@ -36,13 +37,12 @@ function intensityOf(value: number, max: number): number {
 
 function fillFor(intensity: number): string {
   if (intensity <= 0) return BASE_FILL
-  return `color-mix(in oklab, #7c5cff ${12 + intensity * 88}%, ${BASE_FILL})`
+  return `color-mix(in oklab, ${ACCENT} ${12 + intensity * 88}%, ${BASE_FILL})`
 }
 
-export function WorldMap({ countries: rows }: WorldMapProps) {
+export function WorldMap({ countries: rows, period }: WorldMapProps) {
   const { t, i18n } = useTranslation('helper')
   const format = useFormatters()
-  const [period, setPeriod] = useState<PeriodKey>('all_time')
   const [hover, setHover] = useState<HoverState | null>(null)
 
   const displayNames = useMemo(
@@ -74,13 +74,9 @@ export function WorldMap({ countries: rows }: WorldMapProps) {
 
   return (
     <Card className="p-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h3 className="text-lg font-semibold tracking-tight">{t('analytics.map.title')}</h3>
-          <p className="mt-1 text-sm text-fg-muted">{t('analytics.map.subtitle')}</p>
-        </div>
-
-        <PeriodControl value={period} onChange={setPeriod} />
+      <div>
+        <h3 className="text-lg font-semibold tracking-tight">{t('analytics.map.title')}</h3>
+        <p className="mt-1 text-sm text-fg-muted">{t('analytics.map.subtitle')}</p>
       </div>
 
       <div className="mt-4 flex items-center gap-2 text-xs text-fg-subtle">
@@ -174,12 +170,9 @@ export function WorldMap({ countries: rows }: WorldMapProps) {
                   </span>
                 </div>
                 <div className="flex items-center gap-4 text-fg-muted">
-                  {/* The payload exposes launches as a single all-time number
-                      for countries, unlike servers, so it cannot follow the
-                      period selector and is labelled accordingly. */}
-                  <span>{t('analytics.map.launchesAllTime')}</span>
+                  <span>{t('analytics.metric.launches')}</span>
                   <span className="tabular ml-auto font-medium text-fg">
-                    {format.number(hovered.launches)}
+                    {format.number(hovered.launches[period])}
                   </span>
                 </div>
                 <div className="flex items-center gap-4 text-fg-muted">

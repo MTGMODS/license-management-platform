@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
-import type { FactionStats, VersionStats } from '@/shared/api/usage'
+import type { FactionStats, PeriodKey, VersionStats } from '@/shared/api/usage'
 import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
@@ -14,6 +14,7 @@ import { ChartTooltip } from './ChartTooltip'
  * backend shows up honestly instead of silently mislabelled.
  */
 const KNOWN_FACTIONS = [
+  'none',
   'police',
   'gov',
   'army',
@@ -35,22 +36,40 @@ function isKnownFaction(code: string): code is KnownFaction {
   return (KNOWN_FACTIONS as readonly string[]).includes(code)
 }
 
-interface FactionRow extends FactionStats {
+interface FactionRow {
   code: string
   label: string
+  users: number
+  launches: number
+  user_share: number
+  launches_per_user: number
+  vip_users: number
+  vip_percent: number
 }
 
-export function FactionsChart({ factions }: { factions: Record<string, FactionStats> }) {
+export function FactionsChart({
+  factions,
+  period,
+}: {
+  factions: Record<string, FactionStats>
+  period: PeriodKey
+}) {
   const { t } = useTranslation('helper')
   const format = useFormatters()
 
   const rows: FactionRow[] = Object.entries(factions)
     .map(([code, stats]) => ({
-      ...stats,
       code,
       label: isKnownFaction(code) ? t(`analytics.factionName.${code}`) : code.toUpperCase(),
+      users: stats.users[period],
+      launches: stats.launches[period],
+      user_share: stats.user_share,
+      launches_per_user: stats.launches_per_user,
+      vip_users: stats.vip_users,
+      vip_percent: stats.vip_percent,
     }))
-    .sort((a, b) => b.total_users - a.total_users)
+    .filter((row) => row.users > 0)
+    .sort((a, b) => b.users - a.users)
 
   return (
     <Card className="p-6">
@@ -70,7 +89,7 @@ export function FactionsChart({ factions }: { factions: Record<string, FactionSt
             >
               <CartesianGrid stroke={CHART.grid} horizontal={false} />
               <XAxis type="number" {...AXIS_PROPS} tickFormatter={format.compact} />
-              <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={144} />
+              <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={168} />
               <Tooltip
                 cursor={false}
                 content={({ active, payload }) => {
@@ -83,7 +102,7 @@ export function FactionsChart({ factions }: { factions: Record<string, FactionSt
                       rows={[
                         {
                           label: t('analytics.factions.users'),
-                          value: format.number(point.total_users),
+                          value: format.number(point.users),
                           color: CHART.users,
                         },
                         {
@@ -104,7 +123,7 @@ export function FactionsChart({ factions }: { factions: Record<string, FactionSt
                 }}
               />
               <Bar
-                dataKey="total_users"
+                dataKey="users"
                 fill={CHART.users}
                 radius={[0, 4, 4, 0]}
                 isAnimationActive={false}
@@ -125,7 +144,13 @@ export function FactionsChart({ factions }: { factions: Record<string, FactionSt
  */
 const VERSION_TAIL_THRESHOLD = 0.5
 
-export function VersionsChart({ versions }: { versions: VersionStats[] }) {
+export function VersionsChart({
+  versions,
+  period,
+}: {
+  versions: VersionStats[]
+  period: PeriodKey
+}) {
   const { t } = useTranslation('helper')
   const format = useFormatters()
 
@@ -133,16 +158,18 @@ export function VersionsChart({ versions }: { versions: VersionStats[] }) {
   const tail = versions.filter((item) => item.user_share < VERSION_TAIL_THRESHOLD)
 
   const rows = [
-    ...main.map((item) => ({ label: item.version, users: item.users })),
+    ...main.map((item) => ({ label: item.version, users: item.users[period] })),
     ...(tail.length > 0
       ? [
           {
             label: t('analytics.versions.other'),
-            users: tail.reduce((sum, item) => sum + item.users, 0),
+            users: tail.reduce((sum, item) => sum + item.users[period], 0),
           },
         ]
       : []),
-  ].sort((a, b) => b.users - a.users)
+  ]
+    .filter((row) => row.users > 0)
+    .sort((a, b) => b.users - a.users)
 
   return (
     <Card className="p-6">
