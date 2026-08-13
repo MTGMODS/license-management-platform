@@ -33,7 +33,7 @@ export function QuickStats() {
           {Array.from({ length: 5 }, (_, index) => (
             <Skeleton
               key={index}
-              className="h-[clamp(4.5rem,12vh,6rem)]"
+              className="h-[clamp(3.75rem,10vh,5rem)]"
               label={index === 0 ? t('stats.loading') : undefined}
             />
           ))}
@@ -89,11 +89,15 @@ export function QuickStats() {
           const Icon = item.icon
           return (
             <Card key={item.id} className="p-[clamp(0.65rem,1.4vh,1rem)]">
-              <Icon aria-hidden className="size-[clamp(1rem,2.2vh,1.25rem)] text-accent-300" />
+              <div className="flex items-center gap-2">
+                <Icon aria-hidden className="size-[clamp(1rem,2.2vh,1.25rem)] shrink-0 text-accent-300" />
+                <p className="min-w-0 truncate text-[clamp(0.75rem,1.4vh,0.875rem)] text-fg-subtle">
+                  {item.label}
+                </p>
+              </div>
               <p className="tabular mt-[clamp(0.35rem,1vh,0.75rem)] text-[clamp(1.15rem,2.6vh,1.5rem)] font-semibold tracking-tight">
                 {item.value}
               </p>
-              <p className="mt-1 text-[clamp(0.75rem,1.4vh,0.875rem)] text-fg-subtle">{item.label}</p>
             </Card>
           )
         })}
