@@ -31,7 +31,7 @@ function Hero() {
     : t('hero.download')
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col text-center">
+    <section className="flex min-h-0 flex-1 basis-0 flex-col text-center">
       <h1 className="text-gradient shrink-0 text-[clamp(1.75rem,4.2vh,3.25rem)] font-semibold tracking-tight">
         {t('hero.title')}
       </h1>
@@ -39,7 +39,7 @@ function Hero() {
         {t('hero.subtitle')}
       </p>
 
-      <div className="mx-auto mt-[clamp(0.5rem,1.4vh,1rem)] flex min-h-0 w-full flex-1 flex-col">
+      <div className="mx-auto mt-[clamp(0.5rem,1.4vh,1rem)] flex min-h-0 w-full flex-1 basis-0 flex-col">
         <MediaGallery compact />
       </div>
 
@@ -72,11 +72,11 @@ export function HelperPage() {
   }, [isError, t])
 
   return (
-    <div className="shell flex flex-1 flex-col">
+    <div className="shell flex min-h-0 flex-1 flex-col">
       <div
         className={cn(
-          'flex flex-col py-[clamp(0.75rem,1.8vh,1.5rem)]',
-          isError ? 'min-h-0 flex-1' : 'min-h-[calc(100dvh-4rem)]',
+          'flex min-h-0 flex-col py-[clamp(0.75rem,1.8vh,1.5rem)]',
+          isError ? 'h-full flex-1' : 'h-[calc(100dvh-4rem)]',
         )}
       >
         <Hero />

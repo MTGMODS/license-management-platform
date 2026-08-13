@@ -155,10 +155,12 @@ export function MediaGallery({ compact = false }: { compact?: boolean }) {
 
   if (compact) {
     return (
-      <section aria-label={t('gallery.title')} className="flex min-h-0 flex-1 flex-col">
-        <div className="relative min-h-0 min-w-0 w-full flex-1 [container-type:size]">
-          <div className="contain-video absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-card border border-white/5 bg-ink-850">
-            <Viewer item={active} />
+      <section aria-label={t('gallery.title')} className="flex min-h-0 flex-1 basis-0 flex-col">
+        <div className="relative min-h-[28vh] w-full flex-1 basis-0">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="aspect-video h-full max-w-full overflow-hidden rounded-card border border-white/5 bg-ink-850">
+              <Viewer item={active} />
+            </div>
           </div>
         </div>
         {thumbs}
