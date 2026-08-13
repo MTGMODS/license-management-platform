@@ -8,20 +8,20 @@
    --------------------------------------------------------------------------- */
 
 @theme {
-  /* Surfaces: near-black with a cool cast so neon accents read as light,
-     not as saturated colour on grey. */
-  --color-ink-950: #07070b;
-  --color-ink-900: #0a0a10;
-  --color-ink-850: #0f0f16;
-  --color-ink-800: #14141d;
-  --color-ink-750: #1a1a25;
-  --color-ink-700: #22222f;
-  --color-ink-600: #2e2e3e;
-  --color-ink-500: #3d3d50;
+  /* Surfaces: cool dark, lifted ~10% toward white so screenshots do not
+     read as crushed black. */
+  --color-ink-950: #1a1a29;
+  --color-ink-900: #1d1d2e;
+  --color-ink-850: #222232;
+  --color-ink-800: #272738;
+  --color-ink-750: #2c2c3f;
+  --color-ink-700: #343448;
+  --color-ink-600: #3f3f55;
+  --color-ink-500: #4d4d65;
 
-  --color-fg: #f4f5f8;
-  --color-fg-muted: #9d9db4;
-  --color-fg-subtle: #6a6a83;
+  --color-fg: #f5f6f9;
+  --color-fg-muted: #a7a7bc;
+  --color-fg-subtle: #777791;
 
   --color-accent-300: #b8a8ff;
   --color-accent-400: #9d86ff;

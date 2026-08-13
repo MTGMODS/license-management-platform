@@ -12,10 +12,10 @@ import { Header } from '@/widgets/header/Header'
 function BackgroundAmbience() {
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      <div className="absolute -top-40 -left-32 size-[36rem] rounded-full bg-accent-600/12 blur-[120px] animate-pulse-glow" />
-      <div className="absolute -right-40 top-1/3 size-[32rem] rounded-full bg-aqua-500/8 blur-[130px] animate-pulse-glow [animation-delay:1.5s]" />
+      <div className="absolute -top-40 -left-32 size-[36rem] rounded-full bg-accent-600/16 blur-[120px] animate-pulse-glow" />
+      <div className="absolute -right-40 top-1/3 size-[32rem] rounded-full bg-aqua-500/12 blur-[130px] animate-pulse-glow [animation-delay:1.5s]" />
       <div
-        className="absolute inset-0 opacity-[0.035]"
+        className="absolute inset-0 opacity-[0.045]"
         style={{
           backgroundImage:
             'linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)',
