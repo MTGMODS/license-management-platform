@@ -54,6 +54,10 @@
     "minutes_one": "{{count}} хвилина",
     "minutes_few": "{{count}} хвилини",
     "minutes_many": "{{count}} хвилин",
-    "minutes_other": "{{count}} хвилини"
+    "minutes_other": "{{count}} хвилини",
+    "seconds_one": "{{count}} секунда",
+    "seconds_few": "{{count}} секунди",
+    "seconds_many": "{{count}} секунд",
+    "seconds_other": "{{count}} секунди"
   }
 }

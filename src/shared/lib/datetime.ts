@@ -44,3 +44,31 @@ export function parseApiCalendarDate(value: string): Date {
 export function millisecondsUntil(value: string, now: number = Date.now()): number {
   return parseApiDateTime(value).getTime() - now
 }
+
+const SECOND = 1000
+const MINUTE = 60 * SECOND
+const HOUR = 60 * MINUTE
+const DAY = 24 * HOUR
+
+export type RemainingUnit = 'days' | 'hours' | 'minutes' | 'seconds'
+
+/**
+ * Largest whole unit still left. Under 24 hours this never reports days,
+ * so a leftover of 20 hours is hours, not "0 days".
+ */
+export function remainingTimeParts(ms: number): { count: number; unit: RemainingUnit } | null {
+  if (ms <= 0) return null
+  if (ms >= DAY) return { count: Math.floor(ms / DAY), unit: 'days' }
+  if (ms >= HOUR) return { count: Math.floor(ms / HOUR), unit: 'hours' }
+  if (ms >= MINUTE) return { count: Math.floor(ms / MINUTE), unit: 'minutes' }
+  return { count: Math.max(1, Math.floor(ms / SECOND)), unit: 'seconds' }
+}
+
+/** How often the remaining-time label should refresh, if at all. */
+export function remainingTickMs(ms: number): number | null {
+  if (ms <= 0) return null
+  if (ms < MINUTE) return SECOND
+  if (ms < HOUR) return 15 * SECOND
+  if (ms < DAY) return 60 * SECOND
+  return null
+}

@@ -1,5 +1,5 @@
 import { Crown, Download, KeyRound, Loader2, Trash2 } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
@@ -14,7 +14,7 @@ import {
   type LicenseInfo,
   type LicenseStatus,
 } from '@/shared/api/license'
-import { millisecondsUntil } from '@/shared/lib/datetime'
+import { millisecondsUntil, remainingTickMs, remainingTimeParts } from '@/shared/lib/datetime'
 import { triggerFileDownload } from '@/shared/lib/download'
 import { useFormatters } from '@/shared/lib/format'
 import { Badge, Button, buttonStyles, Card, Skeleton } from '@/shared/ui'
@@ -120,26 +120,29 @@ function ActivateForm() {
 }
 
 function VipPanel({ info }: { info: LicenseInfo }) {
-  const { t } = useTranslation('dashboard')
+  const { t } = useTranslation(['dashboard', 'common'])
   const { t: te } = useTranslation(['errors'])
   const format = useFormatters()
   const resetDevice = useResetDevice()
   const [confirmDeviceId, setConfirmDeviceId] = useState<number | null>(null)
+  const [now, setNow] = useState(() => Date.now())
   const { license, devices, transaction } = info
   const active = license.status === 'ACTIVE'
+  const remainingMs = license.expires_at ? millisecondsUntil(license.expires_at, now) : 0
+  const tickMs = remainingTickMs(remainingMs)
+
+  useEffect(() => {
+    if (tickMs == null) return
+    const id = window.setInterval(() => setNow(Date.now()), tickMs)
+    return () => window.clearInterval(id)
+  }, [tickMs, license.expires_at])
 
   let remaining = '—'
   if (license.expires_at) {
-    const ms = millisecondsUntil(license.expires_at)
-    if (ms <= 0) {
-      remaining = t('vip.expired')
-    } else {
-      const hours = Math.ceil(ms / (60 * 60 * 1000))
-      remaining =
-        hours < 48
-          ? t('vip.remainingHours', { count: hours })
-          : t('vip.remainingDays', { count: Math.ceil(ms / (24 * 60 * 60 * 1000)) })
-    }
+    const parts = remainingTimeParts(remainingMs)
+    remaining = parts
+      ? t(`common:units.${parts.unit}`, { count: parts.count })
+      : t('vip.expired')
   }
 
   const onReset = async (deviceId: number) => {
@@ -168,7 +171,7 @@ function VipPanel({ info }: { info: LicenseInfo }) {
         <div>
           <dt className="text-sm text-fg-subtle">{t('vip.duration')}</dt>
           <dd className="mt-1 font-medium">
-            {license.duration_days != null ? t('vip.days', { count: license.duration_days }) : '—'}
+            {license.duration_days != null ? t('common:units.days', { count: license.duration_days }) : '—'}
           </dd>
         </div>
         <div>
