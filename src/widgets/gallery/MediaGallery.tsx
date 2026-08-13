@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 import {
   HELPER_SCREENSHOTS,
   HELPER_VIDEO_ID,
-  HELPER_VIDEO_POSTER,
   youtubeThumbnailUrl,
 } from '@/shared/config/product'
 import { cn } from '@/shared/lib/cn'
@@ -35,15 +34,11 @@ function Viewer({ item }: { item: GalleryItem }) {
     )
   }
 
-  // YouTube embed stays wired; without an id we show the helper poster instead
-  // of an empty "coming soon" panel.
   if (!item.videoId) {
     return (
-      <img
-        src={HELPER_VIDEO_POSTER}
-        alt={t('gallery.title')}
-        className="size-full object-cover"
-        loading="lazy"
+      <Placeholder
+        icon={<PlayCircle aria-hidden className="size-10" />}
+        label={t('gallery.videoSoon')}
       />
     )
   }
@@ -70,16 +65,25 @@ function Placeholder({ icon, label }: { icon: React.ReactNode; label: string }) 
 }
 
 function VideoThumb({ videoId }: { videoId: string | null }) {
-  const src = videoId ? youtubeThumbnailUrl(videoId) : HELPER_VIDEO_POSTER
+  if (!videoId) {
+    return (
+      <span className="grid size-full place-items-center bg-ink-800 text-fg-subtle">
+        <PlayCircle aria-hidden className="size-5" />
+      </span>
+    )
+  }
 
   return (
     <span className="relative block size-full">
-      <img src={src} alt="" className="size-full object-cover" loading="lazy" />
-      {videoId ? (
-        <span className="absolute inset-0 grid place-items-center bg-black/35">
-          <PlayCircle aria-hidden className="size-6 text-white drop-shadow" />
-        </span>
-      ) : null}
+      <img
+        src={youtubeThumbnailUrl(videoId)}
+        alt=""
+        className="size-full object-cover"
+        loading="lazy"
+      />
+      <span className="absolute inset-0 grid place-items-center bg-black/35">
+        <PlayCircle aria-hidden className="size-6 text-white drop-shadow" />
+      </span>
     </span>
   )
 }

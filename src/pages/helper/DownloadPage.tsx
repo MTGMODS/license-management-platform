@@ -1,4 +1,4 @@
-import { Download, FileCode2, Monitor, Smartphone, Sparkles, Wand2 } from 'lucide-react'
+import { Download, FileCode2, Monitor, PlayCircle, Smartphone, Sparkles, Wand2 } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation, Trans } from 'react-i18next'
 import { Link } from 'react-router'
@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 
 import { isInstallerAvailable } from '@/features/download/installer'
 import { useRelease } from '@/features/release/useRelease'
-import { FREE_LUA_FALLBACK_URL, HELPER_VIDEO_ID, HELPER_VIDEO_POSTER, PC_INSTALLER_URL } from '@/shared/config/product'
+import { FREE_LUA_FALLBACK_URL, HELPER_VIDEO_ID, PC_INSTALLER_URL } from '@/shared/config/product'
 import { detectDevice, type DeviceKind } from '@/shared/lib/device'
 import { triggerFileDownload } from '@/shared/lib/download'
 import { cn } from '@/shared/lib/cn'
@@ -247,13 +247,9 @@ function VideoGuide() {
             />
           </div>
         ) : (
-          <div className="aspect-video">
-            <img
-              src={HELPER_VIDEO_POSTER}
-              alt={t('guide.title')}
-              className="size-full object-cover"
-              loading="lazy"
-            />
+          <div className="flex aspect-video flex-col items-center justify-center gap-3 text-fg-subtle">
+            <PlayCircle aria-hidden className="size-10" />
+            <p className="text-sm">{t('guide.soon')}</p>
           </div>
         )}
       </div>

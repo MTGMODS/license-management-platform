@@ -91,10 +91,6 @@ const SCREENSHOTS_BASE = normalizeCdnBase(readEnv('VITE_HELPER_SCREENSHOTS_BASE'
 const USE_PLACEHOLD_SHOTS =
   readEnv('VITE_HELPER_SCREENSHOTS_BASE').toLowerCase() === 'placehold'
 
-/** Fallback CDN folder when no screenshot base is configured. */
-const HELPER_MEDIA_FALLBACK =
-  'https://mtgmods.github.io/arizona-helper/Resourse'
-
 export const HELPER_SCREENSHOTS: { src: string; index: number }[] = USE_PLACEHOLD_SHOTS
   ? Array.from({ length: 9 }, (_, offset) => {
       const index = offset + 1
@@ -103,22 +99,15 @@ export const HELPER_SCREENSHOTS: { src: string; index: number }[] = USE_PLACEHOL
         src: `https://placehold.co/960x540/12121a/8b8ba3/png?text=${index}`,
       }
     })
-  : Array.from({ length: 9 }, (_, offset) => {
-      const index = offset + 1
-      const base = SCREENSHOTS_BASE || HELPER_MEDIA_FALLBACK
-      return {
-        index,
-        src: `${base}/${index}.png`,
-      }
-    })
-
-/**
- * Shown in the video slot while `VITE_HELPER_VIDEO_URL` is unset. Prefer
- * `logo.png` next to the screenshots; fall back to the published helper art.
- */
-export const HELPER_VIDEO_POSTER = SCREENSHOTS_BASE
-  ? `${SCREENSHOTS_BASE}/logo.png`
-  : `${HELPER_MEDIA_FALLBACK}/logo.png`
+  : SCREENSHOTS_BASE
+    ? Array.from({ length: 9 }, (_, offset) => {
+        const index = offset + 1
+        return {
+          index,
+          src: `${SCREENSHOTS_BASE}/${index}.png`,
+        }
+      })
+    : []
 
 /** YouTube poster used in gallery thumbnails. */
 export function youtubeThumbnailUrl(videoId: string): string {
