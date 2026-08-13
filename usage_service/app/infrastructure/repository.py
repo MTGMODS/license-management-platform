@@ -19,8 +19,28 @@ class LaunchModel(Base):
 
 class LaunchRepository:
 
+    PERIODS = ("all_time", "30d", "24h", "1h")
+
     def __init__(self, db: AsyncSession):
         self.db = db
+
+    @staticmethod
+    def _period_metrics(users: dict, launches: dict, g_users: dict, vip_users: dict | None = None) -> dict:
+        user_share = {}
+        launches_per_user = {}
+        vip_percent = {}
+        for p in LaunchRepository.PERIODS:
+            u = users.get(p) or 0
+            l = launches.get(p) or 0
+            gu = g_users.get(p) or 0
+            user_share[p] = round((u / gu) * 100, 1) if gu > 0 else 0
+            launches_per_user[p] = round(l / u, 2) if u > 0 else 0
+            if vip_users is not None:
+                vip_percent[p] = round(((vip_users.get(p) or 0) / u) * 100, 1) if u > 0 else 0
+        result = {"user_share": user_share, "launches_per_user": launches_per_user}
+        if vip_users is not None:
+            result["vip_percent"] = vip_percent
+        return result
 
     async def save(self, version: str, hwid: str, device: str, server: int, country: str, mode: str):
         new_launch = LaunchModel(
@@ -85,6 +105,12 @@ class LaunchRepository:
         
         g_u_all = res.u_all if res and res.u_all > 0 else 0
         g_l_all = res.l_all if res and res.l_all > 0 else 0
+        g_users = {
+            "all_time": res.u_all or 0,
+            "30d": res.u_30d or 0,
+            "24h": res.u_24h or 0,
+            "1h": res.u_1h or 0,
+        }
 
         vip_conversion = round((res.vip_all / g_u_all) * 100, 1) if g_u_all > 0 else 0
         total_devices = res.pc_all + res.mob_all
@@ -99,7 +125,7 @@ class LaunchRepository:
                 "global_launches_per_user": round(g_l_all / g_u_all, 2) if g_u_all > 0 else 0
             },
             "users": {
-                "total": {"all_time": res.u_all, "30d": res.u_30d, "24h": res.u_24h, "1h": res.u_1h},
+                "total": g_users,
                 "vip": {"all_time": res.vip_all, "30d": res.vip_30d, "24h": res.vip_24h, "1h": res.vip_1h},
                 "free": {"all_time": res.free_all, "30d": res.free_30d, "24h": res.free_24h, "1h": res.free_1h}
             },
@@ -120,9 +146,9 @@ class LaunchRepository:
                 }
             }
         }
-        return global_data, g_u_all
+        return global_data, g_users
 
-    async def _get_servers(self, d30, d1, d1h, g_u_all):
+    async def _get_servers(self, d30, d1, d1h, g_users):
         stmt = (
             select(
                 LaunchModel.server,
@@ -140,18 +166,21 @@ class LaunchRepository:
             .order_by(LaunchModel.server.asc())
         )
         res = await self.db.execute(stmt)
-        return [
-            {
+        result = []
+        for row in res.all():
+            users = {"all_time": row.u_all, "30d": row.u_30d, "24h": row.u_24h, "1h": row.u_1h}
+            launches = {"all_time": row.l_all, "30d": row.l_30d, "24h": row.l_24h, "1h": row.l_1h}
+            metrics = self._period_metrics(users, launches, g_users)
+            result.append({
                 "server": row.server,
-                "user_share": round((row.u_all / g_u_all) * 100, 1) if g_u_all > 0 else 0,
-                "launches_per_user": round(row.l_all / row.u_all, 2) if row.u_all > 0 else 0,
-                "users": {"all_time": row.u_all, "30d": row.u_30d, "24h": row.u_24h, "1h": row.u_1h},
-                "launches": {"all_time": row.l_all, "30d": row.l_30d, "24h": row.l_24h, "1h": row.l_1h}
-            }
-            for row in res.all()
-        ]
+                "user_share": metrics["user_share"],
+                "launches_per_user": metrics["launches_per_user"],
+                "users": users,
+                "launches": launches,
+            })
+        return result
 
-    async def _get_countries(self, d30, d1, d1h, g_u_all):
+    async def _get_countries(self, d30, d1, d1h, g_users):
         stmt = (
             select(
                 func.coalesce(LaunchModel.country, 'UNKNOWN').label("c_code"),
@@ -168,18 +197,21 @@ class LaunchRepository:
             .order_by(desc("u_all"))
         )
         res = await self.db.execute(stmt)
-        return [
-            {
+        result = []
+        for row in res.all():
+            users = {"all_time": row.u_all, "30d": row.u_30d, "24h": row.u_24h, "1h": row.u_1h}
+            launches = {"all_time": row.l_all, "30d": row.l_30d, "24h": row.l_24h, "1h": row.l_1h}
+            metrics = self._period_metrics(users, launches, g_users)
+            result.append({
                 "code": row.c_code,
-                "user_share": round((row.u_all / g_u_all) * 100, 1) if g_u_all > 0 else 0,
-                "launches_per_user": round(row.l_all / row.u_all, 2) if row.u_all > 0 else 0,
-                "users": {"all_time": row.u_all, "30d": row.u_30d, "24h": row.u_24h, "1h": row.u_1h},
-                "launches": {"all_time": row.l_all, "30d": row.l_30d, "24h": row.l_24h, "1h": row.l_1h}
-            }
-            for row in res.all()
-        ]
+                "user_share": metrics["user_share"],
+                "launches_per_user": metrics["launches_per_user"],
+                "users": users,
+                "launches": launches,
+            })
+        return result
 
-    async def _get_factions(self, d30, d1, d1h, g_u_all):
+    async def _get_factions(self, d30, d1, d1h, g_users):
         stmt = (
             select(
                 func.coalesce(LaunchModel.mode, 'none').label("m_name"),
@@ -200,20 +232,24 @@ class LaunchRepository:
             .order_by(desc("u_all"))
         )
         res = await self.db.execute(stmt)
-        return [
-            {
+        result = []
+        for row in res.all():
+            users = {"all_time": row.u_all, "30d": row.u_30d, "24h": row.u_24h, "1h": row.u_1h}
+            launches = {"all_time": row.l_all, "30d": row.l_30d, "24h": row.l_24h, "1h": row.l_1h}
+            vip_users = {"all_time": row.vip_all, "30d": row.vip_30d, "24h": row.vip_24h, "1h": row.vip_1h}
+            metrics = self._period_metrics(users, launches, g_users, vip_users)
+            result.append({
                 "mode": row.m_name,
-                "user_share": round((row.u_all / g_u_all) * 100, 1) if g_u_all > 0 else 0,
-                "launches_per_user": round(row.l_all / row.u_all, 2) if row.u_all > 0 else 0,
-                "vip_percent": round((row.vip_all / row.u_all) * 100, 1) if row.u_all > 0 else 0,
-                "users": {"all_time": row.u_all, "30d": row.u_30d, "24h": row.u_24h, "1h": row.u_1h},
-                "vip_users": {"all_time": row.vip_all, "30d": row.vip_30d, "24h": row.vip_24h, "1h": row.vip_1h},
-                "launches": {"all_time": row.l_all, "30d": row.l_30d, "24h": row.l_24h, "1h": row.l_1h}
-            }
-            for row in res.all()
-        ]
+                "user_share": metrics["user_share"],
+                "launches_per_user": metrics["launches_per_user"],
+                "vip_percent": metrics["vip_percent"],
+                "users": users,
+                "vip_users": vip_users,
+                "launches": launches,
+            })
+        return result
 
-    async def _get_versions(self, d30, d1, d1h, g_u_all):
+    async def _get_versions(self, d30, d1, d1h, g_users):
         stmt = (
             select(
                 LaunchModel.version,
@@ -230,18 +266,21 @@ class LaunchRepository:
             .order_by(desc("u_all"))
         )
         res = await self.db.execute(stmt)
-        return [
-            {
+        result = []
+        for row in res.all():
+            users = {"all_time": row.u_all, "30d": row.u_30d, "24h": row.u_24h, "1h": row.u_1h}
+            launches = {"all_time": row.l_all, "30d": row.l_30d, "24h": row.l_24h, "1h": row.l_1h}
+            metrics = self._period_metrics(users, launches, g_users)
+            result.append({
                 "version": row.version,
-                "user_share": round((row.u_all / g_u_all) * 100, 1) if g_u_all > 0 else 0,
-                "launches_per_user": round(row.l_all / row.u_all, 2) if row.u_all > 0 else 0,
-                "users": {"all_time": row.u_all, "30d": row.u_30d, "24h": row.u_24h, "1h": row.u_1h},
-                "launches": {"all_time": row.l_all, "30d": row.l_30d, "24h": row.l_24h, "1h": row.l_1h}
-            }
-            for row in res.all()
-        ]
+                "user_share": metrics["user_share"],
+                "launches_per_user": metrics["launches_per_user"],
+                "users": users,
+                "launches": launches,
+            })
+        return result
 
-    async def _get_products(self, d30, d1, d1h, g_u_all):
+    async def _get_products(self, d30, d1, d1h, g_users):
         families = [
             ("arizona_pc", LaunchModel.server.between(1, 32)),
             ("arizona_mobile", LaunchModel.server.between(101, 103)),
@@ -265,24 +304,25 @@ class LaunchRepository:
         res = (await self.db.execute(select(*select_cols))).first()
         products = []
         for name, _ in families:
-            u_all = getattr(res, f"{name}_u_all") or 0
-            l_all = getattr(res, f"{name}_l_all") or 0
+            users = {
+                "all_time": getattr(res, f"{name}_u_all") or 0,
+                "30d": getattr(res, f"{name}_u_30d") or 0,
+                "24h": getattr(res, f"{name}_u_24h") or 0,
+                "1h": getattr(res, f"{name}_u_1h") or 0,
+            }
+            launches = {
+                "all_time": getattr(res, f"{name}_l_all") or 0,
+                "30d": getattr(res, f"{name}_l_30d") or 0,
+                "24h": getattr(res, f"{name}_l_24h") or 0,
+                "1h": getattr(res, f"{name}_l_1h") or 0,
+            }
+            metrics = self._period_metrics(users, launches, g_users)
             products.append({
                 "product": name,
-                "user_share": round((u_all / g_u_all) * 100, 1) if g_u_all > 0 else 0,
-                "launches_per_user": round(l_all / u_all, 2) if u_all > 0 else 0,
-                "users": {
-                    "all_time": u_all,
-                    "30d": getattr(res, f"{name}_u_30d") or 0,
-                    "24h": getattr(res, f"{name}_u_24h") or 0,
-                    "1h": getattr(res, f"{name}_u_1h") or 0,
-                },
-                "launches": {
-                    "all_time": l_all,
-                    "30d": getattr(res, f"{name}_l_30d") or 0,
-                    "24h": getattr(res, f"{name}_l_24h") or 0,
-                    "1h": getattr(res, f"{name}_l_1h") or 0,
-                },
+                "user_share": metrics["user_share"],
+                "launches_per_user": metrics["launches_per_user"],
+                "users": users,
+                "launches": launches,
             })
         return products
 
@@ -375,13 +415,13 @@ class LaunchRepository:
         d1 = now - timedelta(hours=24)
         d1h = now - timedelta(hours=1)
 
-        global_data, g_u_all = await self._get_global(d30, d1, d1h)
+        global_data, g_users = await self._get_global(d30, d1, d1h)
 
-        factions = await self._get_factions(d30, d1, d1h, g_u_all)
-        servers = await self._get_servers(d30, d1, d1h, g_u_all)
-        countries = await self._get_countries(d30, d1, d1h, g_u_all)
-        versions = await self._get_versions(d30, d1, d1h, g_u_all)
-        products = await self._get_products(d30, d1, d1h, g_u_all)
+        factions = await self._get_factions(d30, d1, d1h, g_users)
+        servers = await self._get_servers(d30, d1, d1h, g_users)
+        countries = await self._get_countries(d30, d1, d1h, g_users)
+        versions = await self._get_versions(d30, d1, d1h, g_users)
+        products = await self._get_products(d30, d1, d1h, g_users)
         
         timeline_daily = await self._get_timeline_daily()
         timeline_hourly = await self._get_timeline_hourly(d1)
