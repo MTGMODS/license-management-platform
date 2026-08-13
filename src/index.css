@@ -8,26 +8,26 @@
    --------------------------------------------------------------------------- */
 
 @theme {
-  /* Surfaces: cool dark, lifted ~10% toward white so screenshots do not
-     read as crushed black. */
-  --color-ink-950: #1a1a29;
-  --color-ink-900: #1d1d2e;
-  --color-ink-850: #222232;
-  --color-ink-800: #272738;
-  --color-ink-750: #2c2c3f;
-  --color-ink-700: #343448;
-  --color-ink-600: #3f3f55;
-  --color-ink-500: #4d4d65;
+  /* Surfaces: cool dark with a sky-blue cast. Lifted from crushed black,
+     then eased ~5% so the page is not overly bright. */
+  --color-ink-950: #191f27;
+  --color-ink-900: #1c222c;
+  --color-ink-850: #20272f;
+  --color-ink-800: #252c35;
+  --color-ink-750: #2a313c;
+  --color-ink-700: #313944;
+  --color-ink-600: #3c4551;
+  --color-ink-500: #495360;
 
   --color-fg: #f5f6f9;
-  --color-fg-muted: #a7a7bc;
-  --color-fg-subtle: #777791;
+  --color-fg-muted: #9da7b4;
+  --color-fg-subtle: #707b8b;
 
-  --color-accent-300: #b8a8ff;
-  --color-accent-400: #9d86ff;
-  --color-accent-500: #7c5cff;
-  --color-accent-600: #6b46f0;
-  --color-accent-700: #5733d6;
+  --color-accent-300: #83d5fc;
+  --color-accent-400: #41c0fb;
+  --color-accent-500: #0fb0fa;
+  --color-accent-600: #0b92da;
+  --color-accent-700: #0f77b3;
 
   --color-aqua-300: #7ceaf8;
   --color-aqua-400: #38e0f5;
