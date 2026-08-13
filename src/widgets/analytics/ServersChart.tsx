@@ -47,8 +47,7 @@ function ProductsChart({ products, period }: { products: ProductStats[]; period:
 
   return (
     <div className="mt-6 border-t border-white/5 pt-5">
-      <p className="text-sm font-medium text-fg-muted">{t('analytics.servers.products.title')}</p>
-      <div className="mt-4" style={{ height: Math.max(160, rows.length * 36 + 40) }}>
+      <div style={{ height: Math.max(160, rows.length * 36 + 40) }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             accessibilityLayer={false}
