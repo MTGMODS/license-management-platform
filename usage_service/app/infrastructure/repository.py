@@ -143,7 +143,10 @@ class LaunchRepository:
                 func.count(distinct(case((LaunchModel.launched_at >= d30, LaunchModel.hwid)))).label("u_30d"),
                 func.count(distinct(case((LaunchModel.launched_at >= d1, LaunchModel.hwid)))).label("u_24h"),
                 func.count(distinct(case((LaunchModel.launched_at >= d1h, LaunchModel.hwid)))).label("u_1h"),
-                func.count(LaunchModel.id).label("l_all")
+                func.count(LaunchModel.id).label("l_all"),
+                func.count(case((LaunchModel.launched_at >= d30, LaunchModel.id))).label("l_30d"),
+                func.count(case((LaunchModel.launched_at >= d1, LaunchModel.id))).label("l_24h"),
+                func.count(case((LaunchModel.launched_at >= d1h, LaunchModel.id))).label("l_1h")
             )
             .group_by("c_code")
             .order_by(desc("u_all"))
@@ -155,42 +158,57 @@ class LaunchRepository:
                 "user_share": round((row.u_all / g_u_all) * 100, 1) if g_u_all > 0 else 0,
                 "launches_per_user": round(row.l_all / row.u_all, 2) if row.u_all > 0 else 0,
                 "users": {"all_time": row.u_all, "30d": row.u_30d, "24h": row.u_24h, "1h": row.u_1h},
-                "launches": row.l_all
+                "launches": {"all_time": row.l_all, "30d": row.l_30d, "24h": row.l_24h, "1h": row.l_1h}
             }
             for row in res.all()
         ]
 
-    async def _get_factions(self, g_u_all):
+    async def _get_factions(self, d30, d1, d1h, g_u_all):
         stmt = (
             select(
                 func.coalesce(LaunchModel.mode, 'none').label("m_name"),
                 func.count(distinct(LaunchModel.hwid)).label("u_all"),
+                func.count(distinct(case((LaunchModel.launched_at >= d30, LaunchModel.hwid)))).label("u_30d"),
+                func.count(distinct(case((LaunchModel.launched_at >= d1, LaunchModel.hwid)))).label("u_24h"),
+                func.count(distinct(case((LaunchModel.launched_at >= d1h, LaunchModel.hwid)))).label("u_1h"),
                 func.count(distinct(case((LaunchModel.version.ilike('%VIP%'), LaunchModel.hwid)))).label("vip_all"),
-                func.count(LaunchModel.id).label("l_all")
+                func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label("vip_30d"),
+                func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label("vip_24h"),
+                func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label("vip_1h"),
+                func.count(LaunchModel.id).label("l_all"),
+                func.count(case((LaunchModel.launched_at >= d30, LaunchModel.id))).label("l_30d"),
+                func.count(case((LaunchModel.launched_at >= d1, LaunchModel.id))).label("l_24h"),
+                func.count(case((LaunchModel.launched_at >= d1h, LaunchModel.id))).label("l_1h")
             )
             .group_by("m_name")
             .order_by(desc("u_all"))
         )
         res = await self.db.execute(stmt)
-        factions_data = {}
-        for row in res.all():
-            total_u = row.u_all
-            factions_data[row.m_name] = {
-                "total_users": total_u,
-                "user_share": round((total_u / g_u_all) * 100, 1) if g_u_all > 0 else 0,
-                "launches": row.l_all,
-                "launches_per_user": round(row.l_all / total_u, 2) if total_u > 0 else 0,
-                "vip_users": row.vip_all,
-                "vip_percent": round((row.vip_all / total_u) * 100, 1) if total_u > 0 else 0
+        return [
+            {
+                "mode": row.m_name,
+                "user_share": round((row.u_all / g_u_all) * 100, 1) if g_u_all > 0 else 0,
+                "launches_per_user": round(row.l_all / row.u_all, 2) if row.u_all > 0 else 0,
+                "vip_percent": round((row.vip_all / row.u_all) * 100, 1) if row.u_all > 0 else 0,
+                "users": {"all_time": row.u_all, "30d": row.u_30d, "24h": row.u_24h, "1h": row.u_1h},
+                "vip_users": {"all_time": row.vip_all, "30d": row.vip_30d, "24h": row.vip_24h, "1h": row.vip_1h},
+                "launches": {"all_time": row.l_all, "30d": row.l_30d, "24h": row.l_24h, "1h": row.l_1h}
             }
-        return factions_data
+            for row in res.all()
+        ]
 
-    async def _get_versions(self, g_u_all):
+    async def _get_versions(self, d30, d1, d1h, g_u_all):
         stmt = (
             select(
                 LaunchModel.version,
                 func.count(distinct(LaunchModel.hwid)).label("u_all"),
-                func.count(LaunchModel.id).label("l_all")
+                func.count(distinct(case((LaunchModel.launched_at >= d30, LaunchModel.hwid)))).label("u_30d"),
+                func.count(distinct(case((LaunchModel.launched_at >= d1, LaunchModel.hwid)))).label("u_24h"),
+                func.count(distinct(case((LaunchModel.launched_at >= d1h, LaunchModel.hwid)))).label("u_1h"),
+                func.count(LaunchModel.id).label("l_all"),
+                func.count(case((LaunchModel.launched_at >= d30, LaunchModel.id))).label("l_30d"),
+                func.count(case((LaunchModel.launched_at >= d1, LaunchModel.id))).label("l_24h"),
+                func.count(case((LaunchModel.launched_at >= d1h, LaunchModel.id))).label("l_1h")
             )
             .group_by(LaunchModel.version)
             .order_by(desc("u_all"))
@@ -199,10 +217,10 @@ class LaunchRepository:
         return [
             {
                 "version": row.version,
-                "users": row.u_all,
                 "user_share": round((row.u_all / g_u_all) * 100, 1) if g_u_all > 0 else 0,
-                "launches": row.l_all,
-                "launches_per_user": round(row.l_all / row.u_all, 2) if row.u_all > 0 else 0
+                "launches_per_user": round(row.l_all / row.u_all, 2) if row.u_all > 0 else 0,
+                "users": {"all_time": row.u_all, "30d": row.u_30d, "24h": row.u_24h, "1h": row.u_1h},
+                "launches": {"all_time": row.l_all, "30d": row.l_30d, "24h": row.l_24h, "1h": row.l_1h}
             }
             for row in res.all()
         ]
@@ -298,10 +316,10 @@ class LaunchRepository:
 
         global_data, g_u_all = await self._get_global(d30, d1, d1h)
 
-        factions = await self._get_factions(g_u_all)
+        factions = await self._get_factions(d30, d1, d1h, g_u_all)
         servers = await self._get_servers(d30, d1, d1h, g_u_all)
         countries = await self._get_countries(d30, d1, d1h, g_u_all)
-        versions = await self._get_versions(g_u_all)
+        versions = await self._get_versions(d30, d1, d1h, g_u_all)
         
         timeline_daily = await self._get_timeline_daily()
         timeline_hourly = await self._get_timeline_hourly(d1)
