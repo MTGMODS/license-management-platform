@@ -113,10 +113,8 @@ export function MediaGallery({ compact = false }: { compact?: boolean }) {
   const thumbs = (
     <div
       className={cn(
-        // safe center: centered when the row fits, start-aligned when it
-        // overflows so the first thumbs stay reachable on phones.
-        'flex w-full min-w-0 gap-2 overflow-x-auto overscroll-x-contain pb-1 justify-safe-center',
-        compact ? 'mt-2 shrink-0' : 'mt-4 gap-3 pb-2',
+        'flex w-full min-w-0 gap-2 overflow-x-auto overscroll-x-contain pb-1',
+        compact ? 'mt-2 shrink-0 justify-start lg:justify-center' : 'mt-4 gap-3 pb-2',
       )}
     >
       {items.map((item, index) => (
