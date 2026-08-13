@@ -25,13 +25,13 @@ export function QuickStats() {
 
     return (
       <section>
-        <h2 className="text-2xl font-semibold tracking-tight">{t('stats.title')}</h2>
-        <p className="mt-2 text-fg-muted">{t('stats.subtitle')}</p>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <h2 className="text-xl font-semibold tracking-tight">{t('stats.title')}</h2>
+        <p className="mt-1 text-sm text-fg-muted">{t('stats.subtitle')}</p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {Array.from({ length: 5 }, (_, index) => (
             <Skeleton
               key={index}
-              className="h-28"
+              className="h-24"
               label={index === 0 ? t('stats.loading') : undefined}
             />
           ))}
@@ -77,16 +77,16 @@ export function QuickStats() {
 
   return (
     <section>
-      <h2 className="text-2xl font-semibold tracking-tight">{t('stats.title')}</h2>
-      <p className="mt-2 text-fg-muted">{t('stats.subtitle')}</p>
+      <h2 className="text-xl font-semibold tracking-tight">{t('stats.title')}</h2>
+      <p className="mt-1 text-sm text-fg-muted">{t('stats.subtitle')}</p>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {items.map((item) => {
           const Icon = item.icon
           return (
-            <Card key={item.id} className="p-5">
+            <Card key={item.id} className="p-4">
               <Icon aria-hidden className="size-5 text-accent-300" />
-              <p className="tabular mt-4 text-3xl font-semibold tracking-tight">{item.value}</p>
+              <p className="tabular mt-3 text-2xl font-semibold tracking-tight">{item.value}</p>
               <p className="mt-1 text-sm text-fg-subtle">{item.label}</p>
             </Card>
           )

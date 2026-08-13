@@ -1,4 +1,4 @@
-import { ArrowRight, Crown, Download, Sparkles } from 'lucide-react'
+import { Crown, Download } from 'lucide-react'
 import { lazy, Suspense, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 
 import { useRelease } from '@/features/release/useRelease'
 import { usePublicStats } from '@/features/usage/usePublicStats'
-import { Badge, buttonStyles, Card, DeferredMount, Skeleton } from '@/shared/ui'
+import { buttonStyles, Card, DeferredMount, Skeleton } from '@/shared/ui'
 import { MediaGallery } from '@/widgets/gallery/MediaGallery'
 import { QuickStats } from '@/widgets/stats/QuickStats'
 
@@ -23,25 +23,29 @@ const AnalyticsSection = lazy(() =>
 
 function Hero() {
   const { t } = useTranslation('helper')
+  const { data } = useRelease()
+  const version = data?.free.version
+  const downloadLabel = version
+    ? t('hero.downloadVersion', { version })
+    : t('hero.download')
 
   return (
     <section className="text-center">
-      <Badge tone="accent">
-        <Sparkles aria-hidden className="size-3.5" />
-        {t('hero.eyebrow')}
-      </Badge>
-
-      <h1 className="text-gradient mt-6 text-5xl font-semibold tracking-tight sm:text-6xl">
+      <h1 className="text-gradient text-4xl font-semibold tracking-tight sm:text-5xl">
         {t('hero.title')}
       </h1>
-      <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-fg-muted">
+      <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-fg-muted">
         {t('hero.subtitle')}
       </p>
 
-      <div className="mt-9 flex flex-wrap justify-center gap-3">
+      <div className="mx-auto mt-6 max-w-3xl text-left">
+        <MediaGallery compact />
+      </div>
+
+      <div className="mt-6 flex flex-wrap justify-center gap-3">
         <Link to="/helper/download" className={buttonStyles({ size: 'lg' })}>
           <Download aria-hidden className="size-4" />
-          {t('hero.download')}
+          {downloadLabel}
         </Link>
         <Link to="/vip" className={buttonStyles({ size: 'lg', variant: 'secondary' })}>
           {t('hero.vip')}
@@ -51,58 +55,23 @@ function Hero() {
   )
 }
 
-function ReleaseSection() {
+function Changelog() {
   const { t } = useTranslation('helper')
   const { data, isPending, isError } = useRelease()
 
+  if (isPending) {
+    return <Skeleton className="h-20" label={t('release.loading')} />
+  }
+
+  if (isError || !data?.free.notes) return null
+
   return (
-    <section>
-      <h2 className="text-2xl font-semibold tracking-tight">{t('release.title')}</h2>
-      <p className="mt-2 text-fg-muted">{t('release.subtitle')}</p>
-
-      <Card className="mt-6 p-6 sm:p-8">
-        {isPending ? (
-          <div className="space-y-3">
-            <Skeleton className="h-6 w-48" label={t('release.loading')} />
-            <Skeleton className="h-4 w-72" />
-          </div>
-        ) : isError || !data ? (
-          <p className="text-sm text-fg-muted">{t('release.unavailable')}</p>
-        ) : (
-          <div className="flex flex-wrap items-start justify-between gap-6">
-            <div>
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-sm text-fg-subtle">{t('release.version')}</span>
-                <span className="tabular text-2xl font-semibold">{data.free.version}</span>
-                {data.vip ? (
-                  <Badge tone="neutral">
-                    <Crown aria-hidden className="size-3.5" />
-                    <span className="tabular">
-                      {t('release.vipVersion')}: {data.vip.version}
-                    </span>
-                  </Badge>
-                ) : null}
-              </div>
-
-              {data.free.notes ? (
-                <div className="mt-5">
-                  <p className="text-sm font-medium text-fg-muted">{t('release.changelog')}</p>
-                  {/* Authored as plain text with newlines, so line breaks are preserved rather than parsed. */}
-                  <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-fg-subtle">
-                    {data.free.notes}
-                  </p>
-                </div>
-              ) : null}
-            </div>
-
-            <Link to="/helper/download" className={buttonStyles()}>
-              {t('release.action')}
-              <ArrowRight aria-hidden className="size-4" />
-            </Link>
-          </div>
-        )}
-      </Card>
-    </section>
+    <Card className="p-5">
+      <p className="text-sm font-medium text-fg-muted">{t('release.changelog')}</p>
+      <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-fg-subtle">
+        {data.free.notes}
+      </p>
+    </Card>
   )
 }
 
@@ -118,7 +87,6 @@ function VipTeaser() {
       <p className="mx-auto mt-3 max-w-xl text-fg-muted">{t('vipTeaser.subtitle')}</p>
       <Link to="/vip" className={buttonStyles({ className: 'mt-7' })}>
         {t('vipTeaser.action')}
-        <ArrowRight aria-hidden className="size-4" />
       </Link>
     </Card>
   )
@@ -140,11 +108,10 @@ export function HelperPage() {
   }, [isError, t])
 
   return (
-    <div className="shell space-y-20 py-16">
+    <div className="shell space-y-10 py-10">
       <Hero />
       {isError ? null : <QuickStats />}
-      <ReleaseSection />
-      <MediaGallery />
+      <Changelog />
       {isError ? null : (
         <DeferredMount fallback={<Skeleton className="h-96" />}>
           <Suspense fallback={<Skeleton className="h-96" />}>

@@ -88,7 +88,7 @@ function VideoThumb({ videoId }: { videoId: string | null }) {
   )
 }
 
-export function MediaGallery() {
+export function MediaGallery({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation('helper')
   const items = useMemo<GalleryItem[]>(() => {
     const screens: GalleryItem[] =
@@ -111,15 +111,26 @@ export function MediaGallery() {
   if (!active) return null
 
   return (
-    <section>
-      <h2 className="text-2xl font-semibold tracking-tight">{t('gallery.title')}</h2>
-      <p className="mt-2 text-fg-muted">{t('gallery.subtitle')}</p>
+    <section aria-label={compact ? t('gallery.title') : undefined}>
+      {compact ? null : (
+        <>
+          <h2 className="text-2xl font-semibold tracking-tight">{t('gallery.title')}</h2>
+          <p className="mt-2 text-fg-muted">{t('gallery.subtitle')}</p>
+        </>
+      )}
 
-      <div className="mt-6 aspect-video overflow-hidden rounded-card border border-white/5 bg-ink-850">
+      <div
+        className={cn(
+          'overflow-hidden rounded-card border border-white/5 bg-ink-850',
+          compact
+            ? 'mx-auto mt-0 aspect-video w-full max-w-xl'
+            : 'mt-6 aspect-video',
+        )}
+      >
         <Viewer item={active} />
       </div>
 
-      <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+      <div className={cn('flex gap-3 overflow-x-auto pb-2', compact ? 'mt-3' : 'mt-4')}>
         {items.map((item, index) => (
           <button
             key={
@@ -133,7 +144,8 @@ export function MediaGallery() {
             aria-current={index === activeIndex}
             onClick={() => setActiveIndex(index)}
             className={cn(
-              'h-16 w-28 shrink-0 overflow-hidden rounded-lg border transition-colors duration-200',
+              'shrink-0 overflow-hidden rounded-lg border transition-colors duration-200',
+              compact ? 'h-12 w-20' : 'h-16 w-28',
               index === activeIndex
                 ? 'border-accent-500/60'
                 : 'border-white/5 opacity-60 hover:opacity-100',

@@ -5,12 +5,8 @@ import { Link } from 'react-router'
 import { toast } from 'sonner'
 
 import { useAuthStore } from '@/features/auth/authStore'
-import {
-  useActivateKey,
-  useLicenseInfo,
-  usePremiumDownload,
-  useResetDevice,
-} from '@/features/license/useLicense'
+import { useActivateKey, useLicenseInfo, usePremiumDownload, useResetDevice } from '@/features/license/useLicense'
+import { useRelease } from '@/features/release/useRelease'
 import { ApiError, apiErrorTranslationKey, isNoActiveLicense, isServiceUnavailable } from '@/shared/api'
 import {
   LICENSE_KEY_LENGTH,
@@ -300,6 +296,11 @@ function PremiumDownload() {
   const { t } = useTranslation('dashboard')
   const { t: te } = useTranslation(['errors'])
   const download = usePremiumDownload()
+  const { data: release } = useRelease()
+  const vipVersion = release?.vip?.version
+  const actionLabel = vipVersion
+    ? t('download.actionVersion', { version: vipVersion })
+    : t('download.action')
 
   const onClick = async () => {
     try {
@@ -327,7 +328,7 @@ function PremiumDownload() {
 
       <Button className="mt-6" loading={download.isPending} onClick={() => void onClick()}>
         <Download aria-hidden className="size-4" />
-        {t('download.action')}
+        {actionLabel}
       </Button>
     </Card>
   )
