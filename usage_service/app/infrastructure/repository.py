@@ -168,7 +168,6 @@ class LaunchRepository:
                 func.count(distinct(case((LaunchModel.version.ilike('%VIP%'), LaunchModel.hwid)))).label("vip_all"),
                 func.count(LaunchModel.id).label("l_all")
             )
-            .where(LaunchModel.mode.notin_(['none', 'unknown']))
             .group_by("m_name")
             .order_by(desc("u_all"))
         )
