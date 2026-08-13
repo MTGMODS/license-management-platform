@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { usePublicStats } from '@/features/usage/usePublicStats'
-import { Card, ErrorState, Skeleton } from '@/shared/ui'
+import { Skeleton } from '@/shared/ui'
 
 import { ActivityCharts } from './ActivityCharts'
 import { DailyTrends } from './DailyTrends'
@@ -11,7 +11,26 @@ import { WorldMap } from './WorldMap'
 
 export function AnalyticsSection() {
   const { t } = useTranslation('helper')
-  const { data, isPending, isError, refetch, isFetching } = usePublicStats()
+  const { data, isPending, isError } = usePublicStats()
+
+  if (isError) return null
+
+  if (!data) {
+    if (!isPending) return null
+
+    return (
+      <section>
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">{t('analytics.title')}</h2>
+          <p className="mt-2 text-fg-muted">{t('analytics.subtitle')}</p>
+        </div>
+        <div className="mt-6 space-y-4">
+          <Skeleton className="h-80" label={t('analytics.loading')} />
+          <Skeleton className="h-72" />
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section>
@@ -20,35 +39,19 @@ export function AnalyticsSection() {
         <p className="mt-2 text-fg-muted">{t('analytics.subtitle')}</p>
       </div>
 
-      {isPending ? (
-        <div className="mt-6 space-y-4">
-          <Skeleton className="h-80" label={t('analytics.loading')} />
-          <Skeleton className="h-72" />
+      <div className="mt-6 space-y-4">
+        <WorldMap countries={data.distribution.countries} />
+        <ServersChart servers={data.distribution.servers} />
+        <DailyTrends daily={data.analytics.timeline.daily} />
+        <ActivityCharts
+          hourly={data.analytics.activity.hourly}
+          weekday={data.analytics.activity.weekday}
+        />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <FactionsChart factions={data.distribution.factions} />
+          <VersionsChart versions={data.distribution.versions} />
         </div>
-      ) : isError || !data ? (
-        <Card className="mt-6 p-5">
-          <ErrorState
-            compact
-            description={t('analytics.error')}
-            retrying={isFetching}
-            onRetry={() => void refetch()}
-          />
-        </Card>
-      ) : (
-        <div className="mt-6 space-y-4">
-          <WorldMap countries={data.distribution.countries} />
-          <ServersChart servers={data.distribution.servers} />
-          <DailyTrends daily={data.analytics.timeline.daily} />
-          <ActivityCharts
-            hourly={data.analytics.activity.hourly}
-            weekday={data.analytics.activity.weekday}
-          />
-          <div className="grid gap-4 lg:grid-cols-2">
-            <FactionsChart factions={data.distribution.factions} />
-            <VersionsChart versions={data.distribution.versions} />
-          </div>
-        </div>
-      )}
+      </div>
     </section>
   )
 }

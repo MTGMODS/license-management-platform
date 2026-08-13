@@ -1,9 +1,11 @@
 import { ArrowRight, Crown, Download, Sparkles } from 'lucide-react'
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
+import { toast } from 'sonner'
 
 import { useRelease } from '@/features/release/useRelease'
+import { usePublicStats } from '@/features/usage/usePublicStats'
 import { Badge, buttonStyles, Card, DeferredMount, Skeleton } from '@/shared/ui'
 import { MediaGallery } from '@/widgets/gallery/MediaGallery'
 import { QuickStats } from '@/widgets/stats/QuickStats'
@@ -123,17 +125,33 @@ function VipTeaser() {
 }
 
 export function HelperPage() {
+  const { t } = useTranslation('helper')
+  const { isError } = usePublicStats()
+  const toasted = useRef(false)
+
+  useEffect(() => {
+    if (!isError) {
+      toasted.current = false
+      return
+    }
+    if (toasted.current) return
+    toasted.current = true
+    toast.error(t('stats.error'))
+  }, [isError, t])
+
   return (
     <div className="shell space-y-20 py-16">
       <Hero />
-      <QuickStats />
+      {isError ? null : <QuickStats />}
       <ReleaseSection />
       <MediaGallery />
-      <DeferredMount fallback={<Skeleton className="h-96" />}>
-        <Suspense fallback={<Skeleton className="h-96" />}>
-          <AnalyticsSection />
-        </Suspense>
-      </DeferredMount>
+      {isError ? null : (
+        <DeferredMount fallback={<Skeleton className="h-96" />}>
+          <Suspense fallback={<Skeleton className="h-96" />}>
+            <AnalyticsSection />
+          </Suspense>
+        </DeferredMount>
+      )}
       <VipTeaser />
     </div>
   )
