@@ -43,7 +43,7 @@ export function Header() {
           end
           className={({ isActive }) =>
             cn(
-              'relative inline-flex items-center gap-2 rounded-lg py-1 pr-2 text-base font-semibold tracking-tight text-fg transition-colors duration-200 hover:text-fg',
+              'relative inline-flex items-center gap-2 rounded-lg px-2 py-1 text-base font-semibold tracking-tight text-fg transition-colors duration-200 hover:text-fg',
               isActive && ACTIVE_UNDERLINE,
             )
           }
