@@ -257,6 +257,20 @@ function VideoGuide() {
   )
 }
 
+function Changelog() {
+  const { t } = useTranslation('download')
+  const { data } = useRelease()
+  const notes = data?.free.notes
+  if (!notes) return null
+
+  return (
+    <section className="mt-12">
+      <h2 className="text-lg font-semibold tracking-tight">{t('changelog.title')}</h2>
+      <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-fg-muted">{notes}</p>
+    </section>
+  )
+}
+
 export function DownloadPage() {
   const { t } = useTranslation('download')
   const [device, setDevice] = useState<DeviceKind>('pc')
@@ -293,6 +307,7 @@ export function DownloadPage() {
 
       <div className="mt-8">{device === 'pc' ? <PcInstall /> : <MobileInstall />}</div>
 
+      <Changelog />
       <VideoGuide />
     </div>
   )

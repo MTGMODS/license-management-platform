@@ -96,7 +96,7 @@ export function MediaGallery({ compact = false }: { compact?: boolean }) {
         ? HELPER_SCREENSHOTS.map((shot) => ({
             kind: 'image' as const,
             src: shot.src,
-            alt: t(shot.altKey, { index: shot.index }),
+            alt: t('gallery.screenshotAlt', { index: shot.index }),
           }))
         : Array.from({ length: 9 }, (_, offset) => ({
             kind: 'image-placeholder' as const,
@@ -123,7 +123,7 @@ export function MediaGallery({ compact = false }: { compact?: boolean }) {
         className={cn(
           'overflow-hidden rounded-card border border-white/5 bg-ink-850',
           compact
-            ? 'mx-auto mt-0 aspect-video w-full max-w-xl'
+            ? 'mx-auto mt-0 aspect-video w-full max-w-lg'
             : 'mt-6 aspect-video',
         )}
       >

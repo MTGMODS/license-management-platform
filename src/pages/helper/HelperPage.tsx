@@ -1,4 +1,4 @@
-import { Crown, Download } from 'lucide-react'
+import { Download } from 'lucide-react'
 import { lazy, Suspense, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -6,7 +6,8 @@ import { toast } from 'sonner'
 
 import { useRelease } from '@/features/release/useRelease'
 import { usePublicStats } from '@/features/usage/usePublicStats'
-import { buttonStyles, Card, DeferredMount, Skeleton } from '@/shared/ui'
+import { cn } from '@/shared/lib/cn'
+import { buttonStyles, DeferredMount, Skeleton } from '@/shared/ui'
 import { MediaGallery } from '@/widgets/gallery/MediaGallery'
 import { QuickStats } from '@/widgets/stats/QuickStats'
 
@@ -34,15 +35,15 @@ function Hero() {
       <h1 className="text-gradient text-4xl font-semibold tracking-tight sm:text-5xl">
         {t('hero.title')}
       </h1>
-      <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-fg-muted">
+      <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-fg-muted sm:text-lg">
         {t('hero.subtitle')}
       </p>
 
-      <div className="mx-auto mt-6 max-w-3xl text-left">
+      <div className="mx-auto mt-5 max-w-lg">
         <MediaGallery compact />
       </div>
 
-      <div className="mt-6 flex flex-wrap justify-center gap-3">
+      <div className="mt-5 flex flex-wrap justify-center gap-3">
         <Link to="/helper/download" className={buttonStyles({ size: 'lg' })}>
           <Download aria-hidden className="size-4" />
           {downloadLabel}
@@ -52,43 +53,6 @@ function Hero() {
         </Link>
       </div>
     </section>
-  )
-}
-
-function Changelog() {
-  const { t } = useTranslation('helper')
-  const { data, isPending, isError } = useRelease()
-
-  if (isPending) {
-    return <Skeleton className="h-20" label={t('release.loading')} />
-  }
-
-  if (isError || !data?.free.notes) return null
-
-  return (
-    <Card className="p-5">
-      <p className="text-sm font-medium text-fg-muted">{t('release.changelog')}</p>
-      <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-fg-subtle">
-        {data.free.notes}
-      </p>
-    </Card>
-  )
-}
-
-function VipTeaser() {
-  const { t } = useTranslation('helper')
-
-  return (
-    <Card className="glow-accent overflow-hidden p-8 text-center">
-      <span className="grid mx-auto size-12 place-items-center rounded-2xl bg-accent-500/10 text-accent-300">
-        <Crown aria-hidden className="size-6" />
-      </span>
-      <h2 className="mt-5 text-2xl font-semibold tracking-tight">{t('vipTeaser.title')}</h2>
-      <p className="mx-auto mt-3 max-w-xl text-fg-muted">{t('vipTeaser.subtitle')}</p>
-      <Link to="/vip" className={buttonStyles({ className: 'mt-7' })}>
-        {t('vipTeaser.action')}
-      </Link>
-    </Card>
   )
 }
 
@@ -108,10 +72,14 @@ export function HelperPage() {
   }, [isError, t])
 
   return (
-    <div className="shell space-y-10 py-10">
+    <div
+      className={cn(
+        'shell flex flex-1 flex-col py-6',
+        isError ? 'justify-center' : 'space-y-8',
+      )}
+    >
       <Hero />
       {isError ? null : <QuickStats />}
-      <Changelog />
       {isError ? null : (
         <DeferredMount fallback={<Skeleton className="h-96" />}>
           <Suspense fallback={<Skeleton className="h-96" />}>
@@ -119,7 +87,6 @@ export function HelperPage() {
           </Suspense>
         </DeferredMount>
       )}
-      <VipTeaser />
     </div>
   )
 }

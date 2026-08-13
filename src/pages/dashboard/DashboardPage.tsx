@@ -330,6 +330,15 @@ function PremiumDownload() {
         <Download aria-hidden className="size-4" />
         {actionLabel}
       </Button>
+
+      {release?.vip?.notes ? (
+        <div className="mt-6 border-t border-white/5 pt-5">
+          <p className="text-sm font-medium text-fg-muted">{t('download.changelog')}</p>
+          <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-fg-subtle">
+            {release.vip.notes}
+          </p>
+        </div>
+      ) : null}
     </Card>
   )
 }

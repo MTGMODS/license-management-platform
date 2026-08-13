@@ -48,7 +48,8 @@
     "action": "Скачать VIP",
     "actionVersion": "Скачать VIP {{version}}",
     "success": "Файл готов",
-    "started": "Загрузка началась"
+    "started": "Загрузка началась",
+    "changelog": "Что нового"
   },
   "status": {
     "ACTIVE": "Активен",

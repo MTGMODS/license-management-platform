@@ -91,13 +91,12 @@ const SCREENSHOTS_BASE = normalizeCdnBase(readEnv('VITE_HELPER_SCREENSHOTS_BASE'
 const USE_PLACEHOLD_SHOTS =
   readEnv('VITE_HELPER_SCREENSHOTS_BASE').toLowerCase() === 'placehold'
 
-export const HELPER_SCREENSHOTS: { src: string; altKey: string; index: number }[] = USE_PLACEHOLD_SHOTS
+export const HELPER_SCREENSHOTS: { src: string; index: number }[] = USE_PLACEHOLD_SHOTS
   ? Array.from({ length: 9 }, (_, offset) => {
       const index = offset + 1
       return {
         index,
         src: `https://placehold.co/960x540/12121a/8b8ba3/png?text=${index}`,
-        altKey: 'gallery.screenshotAlt',
       }
     })
   : SCREENSHOTS_BASE
@@ -106,7 +105,6 @@ export const HELPER_SCREENSHOTS: { src: string; altKey: string; index: number }[
         return {
           index,
           src: `${SCREENSHOTS_BASE}/${index}.png`,
-          altKey: 'gallery.screenshotAlt',
         }
       })
     : []

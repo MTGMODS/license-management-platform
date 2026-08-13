@@ -31,7 +31,7 @@ function Footer() {
   const { t } = useTranslation('common')
 
   return (
-    <footer className="mt-24 border-t border-white/5 py-8">
+    <footer className="mt-8 border-t border-white/5 py-6">
       <div className="shell flex flex-col items-center justify-between gap-3 text-sm text-fg-subtle sm:flex-row">
         <span>© {new Date().getFullYear()} {t('brand')}</span>
         <div className="flex flex-wrap items-center justify-center gap-4">
@@ -68,7 +68,7 @@ export function AppLayout() {
 
       <Header />
 
-      <main id="content" className="flex-1">
+      <main id="content" className="flex flex-1 flex-col">
         <Outlet />
       </main>
 
