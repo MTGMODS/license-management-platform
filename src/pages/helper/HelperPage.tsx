@@ -25,7 +25,7 @@ const AnalyticsSection = lazy(() =>
 function Hero() {
   const { t } = useTranslation('helper')
   const { data } = useRelease()
-  const version = data?.free.version
+  const version = data?.free.rawVersion
   const downloadLabel = version
     ? t('hero.downloadVersion', { version })
     : t('hero.download')

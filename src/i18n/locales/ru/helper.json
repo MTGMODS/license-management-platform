@@ -2,8 +2,8 @@
   "hero": {
     "title": "Arizona&Rodina Helper",
     "subtitle": "Бесплатный* помощник, который берёт на себя рутину и оставляет вам саму игру.",
-    "download": "Скачать бесплатную* версию",
-    "downloadVersion": "Скачать бесплатную* версию {{version}}",
+    "download": "Скачать версию",
+    "downloadVersion": "Скачать версию {{version}}",
     "vip": "Что даёт VIP"
   },
   "stats": {

@@ -28,7 +28,7 @@ function VersionBadge() {
     <Badge tone="accent">
       <Sparkles aria-hidden className="size-3.5" />
       <span className="tabular">
-        {t('version.label')}: {data.free.version}
+        {t('version.label')}: {data.free.rawVersion}
       </span>
     </Badge>
   )
