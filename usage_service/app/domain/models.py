@@ -22,25 +22,21 @@ class LaunchPayload(BaseModel):
     @field_validator('mode')
     @classmethod
     def validate_mode(cls, v: Optional[str]) -> Optional[str]:
-        if not v: 
-            return None
         valid_modes = {
             "none", "police", "fbi", "prison", "army", "smi", "hospital", 
             "gov", "judge", "lc", "fd", "ins", "mafia", "ghetto"
         }
-        return v if v in valid_modes else "unknown"
+        if not v or v not in valid_modes:
+            raise ValueError(f"Invalid mode: {v}")
+        return v
 
     @field_validator("version")
     @classmethod
     def validate_strict_version(cls, v: str) -> str:
         if not re.match(r"^\d+(?:\.\d+)+\s+(Free|VIP|Launcher Edition)$", v):
             raise ValueError("Invalid version format.")
-        
         return v
-
-    @property
-    def is_vip(self) -> bool:
-        return "vip" in self.version.lower()
+        
 
 class Launch(BaseModel):
     id: Optional[int] = None
