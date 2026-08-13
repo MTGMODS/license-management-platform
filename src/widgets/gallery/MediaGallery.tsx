@@ -113,11 +113,10 @@ export function MediaGallery({ compact = false }: { compact?: boolean }) {
   const thumbs = (
     <div
       className={cn(
-        // min-w-0 keeps this strip the column width so overflow-x actually
-        // scrolls; justify-center would park the first thumbs in unreachable
-        // negative overflow.
-        'flex w-full min-w-0 gap-2 overflow-x-auto overscroll-x-contain pb-1',
-        compact ? 'mt-[clamp(0.4rem,1vh,0.75rem)] shrink-0' : 'mt-4 gap-3 pb-2',
+        // safe center: centered when the row fits, start-aligned when it
+        // overflows so the first thumbs stay reachable on phones.
+        'flex w-full min-w-0 gap-2 overflow-x-auto overscroll-x-contain pb-1 justify-safe-center',
+        compact ? 'mt-2 shrink-0' : 'mt-4 gap-3 pb-2',
       )}
     >
       {items.map((item, index) => (
@@ -158,16 +157,22 @@ export function MediaGallery({ compact = false }: { compact?: boolean }) {
 
   if (compact) {
     return (
-      <section aria-label={t('gallery.title')} className="flex min-h-0 w-full min-w-0 flex-1 basis-0 flex-col">
-        <div className="relative min-h-0 w-full min-w-0 flex-1 basis-0 [container-type:size]">
-          <div
-            className="absolute top-1/2 left-1/2 aspect-video -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-card border border-white/5 bg-ink-850"
-            style={{ width: 'min(100cqw, calc(100cqh * 16 / 9))' }}
-          >
+      <section
+        aria-label={t('gallery.title')}
+        className="flex min-h-0 w-full min-w-0 flex-1 basis-0 flex-col items-center [container-type:size]"
+      >
+        <div
+          className="my-auto flex w-full min-w-0 flex-col"
+          style={{
+            width:
+              'min(100cqw, calc((100cqh - 0.75rem - clamp(2.25rem, 5vh, 3.25rem)) * 16 / 9))',
+          }}
+        >
+          <div className="aspect-video w-full overflow-hidden rounded-card border border-white/5 bg-ink-850">
             <Viewer item={active} />
           </div>
+          {thumbs}
         </div>
-        {thumbs}
       </section>
     )
   }
