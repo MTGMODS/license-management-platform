@@ -11,6 +11,15 @@ export const CHART = {
   cursor: 'rgba(245, 246, 249, 0.05)',
 } as const
 
+/** Shared across every analytics chart and the map. */
+export type ChartMetric = 'users' | 'launches'
+
+export const CHART_METRICS = ['users', 'launches'] as const satisfies readonly ChartMetric[]
+
+export function chartColor(metric: ChartMetric): string {
+  return metric === 'users' ? CHART.users : CHART.launches
+}
+
 export const AXIS_PROPS = {
   stroke: CHART.axis,
   fontSize: 12,

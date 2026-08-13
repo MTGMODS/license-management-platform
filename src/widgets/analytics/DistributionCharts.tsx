@@ -5,7 +5,7 @@ import type { FactionStats, PeriodKey, VersionStats } from '@/shared/api/usage'
 import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
-import { AXIS_PROPS, barActiveProps, CHART } from './chartTheme'
+import { AXIS_PROPS, barActiveProps, CHART, type ChartMetric, chartColor } from './chartTheme'
 import { ChartTooltip } from './ChartTooltip'
 
 /**
@@ -49,12 +49,15 @@ interface FactionRow {
 export function FactionsChart({
   factions,
   period,
+  metric,
 }: {
   factions: FactionStats[]
   period: PeriodKey
+  metric: ChartMetric
 }) {
   const { t } = useTranslation('helper')
   const format = useFormatters()
+  const color = chartColor(metric)
 
   const rows: FactionRow[] = factions
     .map((stats) => {
@@ -72,8 +75,8 @@ export function FactionsChart({
         vip_percent: users > 0 ? (vipUsers / users) * 100 : stats.vip_percent,
       }
     })
-    .filter((row) => row.users > 0)
-    .sort((a, b) => b.users - a.users)
+    .filter((row) => row[metric] > 0)
+    .sort((a, b) => b[metric] - a[metric])
 
   return (
     <Card className="p-6">
@@ -110,6 +113,11 @@ export function FactionsChart({
                           color: CHART.users,
                         },
                         {
+                          label: t('analytics.metric.launches'),
+                          value: format.number(point.launches),
+                          color: CHART.launches,
+                        },
+                        {
                           label: t('analytics.factions.share'),
                           value: format.percent(point.user_share),
                         },
@@ -127,11 +135,11 @@ export function FactionsChart({
                 }}
               />
               <Bar
-                dataKey="users"
-                fill={CHART.users}
+                dataKey={metric}
+                fill={color}
                 radius={[0, 4, 4, 0]}
                 isAnimationActive={false}
-                activeBar={barActiveProps(CHART.users)}
+                activeBar={barActiveProps(color)}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -151,29 +159,37 @@ const VERSION_TAIL_THRESHOLD = 0.5
 export function VersionsChart({
   versions,
   period,
+  metric,
 }: {
   versions: VersionStats[]
   period: PeriodKey
+  metric: ChartMetric
 }) {
   const { t } = useTranslation('helper')
   const format = useFormatters()
+  const color = chartColor(metric)
 
   const main = versions.filter((item) => item.user_share >= VERSION_TAIL_THRESHOLD)
   const tail = versions.filter((item) => item.user_share < VERSION_TAIL_THRESHOLD)
 
   const rows = [
-    ...main.map((item) => ({ label: item.version, users: item.users[period] })),
+    ...main.map((item) => ({
+      label: item.version,
+      users: item.users[period],
+      launches: item.launches[period],
+    })),
     ...(tail.length > 0
       ? [
           {
             label: t('analytics.versions.other'),
             users: tail.reduce((sum, item) => sum + item.users[period], 0),
+            launches: tail.reduce((sum, item) => sum + item.launches[period], 0),
           },
         ]
       : []),
   ]
-    .filter((row) => row.users > 0)
-    .sort((a, b) => b.users - a.users)
+    .filter((row) => row[metric] > 0)
+    .sort((a, b) => b[metric] - a[metric])
 
   return (
     <Card className="p-6">
@@ -197,7 +213,7 @@ export function VersionsChart({
               <Tooltip
                 cursor={false}
                 content={({ active, payload }) => {
-                  const point = payload?.[0]?.payload as { label: string; users: number } | undefined
+                  const point = payload?.[0]?.payload as (typeof rows)[number] | undefined
                   if (!active || !point) return null
 
                   return (
@@ -205,9 +221,14 @@ export function VersionsChart({
                       title={point.label}
                       rows={[
                         {
-                          label: t('analytics.versions.users'),
+                          label: t('analytics.metric.users'),
                           value: format.number(point.users),
                           color: CHART.users,
+                        },
+                        {
+                          label: t('analytics.metric.launches'),
+                          value: format.number(point.launches),
+                          color: CHART.launches,
                         },
                       ]}
                     />
@@ -215,11 +236,11 @@ export function VersionsChart({
                 }}
               />
               <Bar
-                dataKey="users"
-                fill={CHART.users}
+                dataKey={metric}
+                fill={color}
                 radius={[0, 4, 4, 0]}
                 isAnimationActive={false}
-                activeBar={barActiveProps(CHART.users)}
+                activeBar={barActiveProps(color)}
               />
             </BarChart>
           </ResponsiveContainer>

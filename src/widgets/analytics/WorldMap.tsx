@@ -6,17 +6,17 @@ import type { CountryStats, PeriodKey } from '@/shared/api/usage'
 import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
+import { type ChartMetric, chartColor, HOVER_OUTLINE } from './chartTheme'
 import { CRIMEA_OVERLAY_PATHS, UKRAINE_NUMERIC_ID } from './crimeaOverlay'
 import { COUNTRY_SHAPES, MAP_HEIGHT, MAP_WIDTH } from './worldGeometry'
-import { HOVER_OUTLINE } from './chartTheme'
 
 const BASE_FILL = '#2a313c'
 const STROKE = 'rgba(245, 246, 249, 0.08)'
-const ACCENT = '#0fb0fa'
 
 interface WorldMapProps {
   countries: CountryStats[]
   period: PeriodKey
+  metric: ChartMetric
 }
 
 interface HoverState {
@@ -35,15 +35,16 @@ function intensityOf(value: number, max: number): number {
   return Math.log1p(value) / Math.log1p(max)
 }
 
-function fillFor(intensity: number): string {
+function fillFor(intensity: number, accent: string): string {
   if (intensity <= 0) return BASE_FILL
-  return `color-mix(in oklab, ${ACCENT} ${12 + intensity * 88}%, ${BASE_FILL})`
+  return `color-mix(in oklab, ${accent} ${12 + intensity * 88}%, ${BASE_FILL})`
 }
 
-export function WorldMap({ countries: rows, period }: WorldMapProps) {
+export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
   const { t, i18n } = useTranslation('helper')
   const format = useFormatters()
   const [hover, setHover] = useState<HoverState | null>(null)
+  const accent = chartColor(metric)
 
   const displayNames = useMemo(
     () => new Intl.DisplayNames([i18n.language], { type: 'region' }),
@@ -59,7 +60,7 @@ export function WorldMap({ countries: rows, period }: WorldMapProps) {
       if (row.code === 'UNKNOWN') continue
 
       code.set(row.code, row)
-      peak = Math.max(peak, row.users[period])
+      peak = Math.max(peak, row[metric][period])
 
       // world-atlas identifies features by ISO 3166-1 numeric, while the
       // payload uses alpha-2, so the two need bridging.
@@ -68,7 +69,7 @@ export function WorldMap({ countries: rows, period }: WorldMapProps) {
     }
 
     return { byNumericId: numeric, byCode: code, max: peak }
-  }, [rows, period])
+  }, [rows, period, metric])
 
   const hovered = hover ? byCode.get(hover.code) : null
 
@@ -84,7 +85,7 @@ export function WorldMap({ countries: rows, period }: WorldMapProps) {
         <span
           aria-hidden
           className="h-2 w-24 rounded-full"
-          style={{ background: `linear-gradient(to right, ${fillFor(0.08)}, ${fillFor(1)})` }}
+          style={{ background: `linear-gradient(to right, ${fillFor(0.08, accent)}, ${fillFor(1, accent)})` }}
         />
         <span>{t('analytics.map.more')}</span>
       </div>
@@ -99,14 +100,14 @@ export function WorldMap({ countries: rows, period }: WorldMapProps) {
         >
           {COUNTRY_SHAPES.map((shape) => {
             const row = byNumericId.get(shape.numericId)
-            const value = row?.users[period] ?? 0
+            const value = row?.[metric][period] ?? 0
             const isHovered = row != null && hover?.code === row.code
 
             return (
               <path
                 key={shape.numericId}
                 d={shape.path}
-                fill={fillFor(intensityOf(value, max))}
+                fill={fillFor(intensityOf(value, max), accent)}
                 stroke={isHovered ? HOVER_OUTLINE.stroke : STROKE}
                 strokeWidth={isHovered ? HOVER_OUTLINE.strokeWidth : 0.5}
                 className={row ? 'cursor-pointer' : undefined}
@@ -128,14 +129,14 @@ export function WorldMap({ countries: rows, period }: WorldMapProps) {
             const ukraine = byNumericId.get(UKRAINE_NUMERIC_ID)
             if (!ukraine) return null
 
-            const value = ukraine.users[period]
+            const value = ukraine[metric][period]
             const isHovered = hover?.code === ukraine.code
 
             return CRIMEA_OVERLAY_PATHS.map((path, index) => (
               <path
                 key={`crimea-${index}`}
                 d={path}
-                fill={fillFor(intensityOf(value, max))}
+                fill={fillFor(intensityOf(value, max), accent)}
                 stroke={isHovered ? HOVER_OUTLINE.stroke : STROKE}
                 strokeWidth={isHovered ? HOVER_OUTLINE.strokeWidth : 0.5}
                 className="cursor-pointer"

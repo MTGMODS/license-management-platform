@@ -5,7 +5,7 @@ import type { DeviceFamilyStats, PeriodKey } from '@/shared/api/usage'
 import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
-import { AXIS_PROPS, barActiveProps, CHART } from './chartTheme'
+import { AXIS_PROPS, barActiveProps, CHART, type ChartMetric, chartColor } from './chartTheme'
 import { ChartTooltip } from './ChartTooltip'
 
 interface DevicesChartProps {
@@ -14,11 +14,13 @@ interface DevicesChartProps {
     mobile: DeviceFamilyStats
   }
   period: PeriodKey
+  metric: ChartMetric
 }
 
-export function DevicesChart({ devices, period }: DevicesChartProps) {
+export function DevicesChart({ devices, period, metric }: DevicesChartProps) {
   const { t } = useTranslation('helper')
   const format = useFormatters()
+  const color = chartColor(metric)
 
   const rows = [
     {
@@ -34,8 +36,8 @@ export function DevicesChart({ devices, period }: DevicesChartProps) {
       launches: devices.mobile.launches[period],
     },
   ]
-    .filter((row) => row.users > 0 || row.launches > 0)
-    .sort((a, b) => b.users - a.users)
+    .filter((row) => row[metric] > 0)
+    .sort((a, b) => b[metric] - a[metric])
 
   return (
     <Card className="p-6">
@@ -82,11 +84,11 @@ export function DevicesChart({ devices, period }: DevicesChartProps) {
                 }}
               />
               <Bar
-                dataKey="users"
-                fill={CHART.users}
+                dataKey={metric}
+                fill={color}
                 radius={[0, 4, 4, 0]}
                 isAnimationActive={false}
-                activeBar={barActiveProps(CHART.users)}
+                activeBar={barActiveProps(color)}
               />
             </BarChart>
           </ResponsiveContainer>

@@ -7,7 +7,7 @@ import { formatServerLabel, getServer, UNKNOWN_SERVER_ID } from '@/shared/config
 import { useFormatters } from '@/shared/lib/format'
 import { Card, SegmentedControl } from '@/shared/ui'
 
-import { AXIS_PROPS, barActiveProps, CHART } from './chartTheme'
+import { AXIS_PROPS, barActiveProps, CHART, type ChartMetric, chartColor } from './chartTheme'
 import { ChartTooltip } from './ChartTooltip'
 
 type TopLimit = 5 | 10 | 20 | 0
@@ -27,11 +27,21 @@ interface ServersChartProps {
   servers: ServerStats[]
   products: ProductStats[]
   period: PeriodKey
+  metric: ChartMetric
 }
 
-function ProductsChart({ products, period }: { products: ProductStats[]; period: PeriodKey }) {
+function ProductsChart({
+  products,
+  period,
+  metric,
+}: {
+  products: ProductStats[]
+  period: PeriodKey
+  metric: ChartMetric
+}) {
   const { t } = useTranslation('helper')
   const format = useFormatters()
+  const color = chartColor(metric)
 
   const rows = [...products]
     .map((item) => ({
@@ -40,8 +50,8 @@ function ProductsChart({ products, period }: { products: ProductStats[]; period:
         ? t(`analytics.servers.products.name.${item.product}`)
         : item.product,
     }))
-    .filter((item) => item.users[period] > 0)
-    .sort((a, b) => b.users[period] - a.users[period])
+    .filter((item) => item[metric][period] > 0)
+    .sort((a, b) => b[metric][period] - a[metric][period])
 
   if (rows.length === 0) return null
 
@@ -84,11 +94,11 @@ function ProductsChart({ products, period }: { products: ProductStats[]; period:
               }}
             />
             <Bar
-              dataKey={`users.${period}`}
-              fill={CHART.users}
+              dataKey={`${metric}.${period}`}
+              fill={color}
               radius={[0, 4, 4, 0]}
               isAnimationActive={false}
-              activeBar={barActiveProps(CHART.users)}
+              activeBar={barActiveProps(color)}
             />
           </BarChart>
         </ResponsiveContainer>
@@ -97,10 +107,11 @@ function ProductsChart({ products, period }: { products: ProductStats[]; period:
   )
 }
 
-export function ServersChart({ servers, products, period }: ServersChartProps) {
+export function ServersChart({ servers, products, period, metric }: ServersChartProps) {
   const { t } = useTranslation('helper')
   const format = useFormatters()
   const [limit, setLimit] = useState<TopLimit>(10)
+  const color = chartColor(metric)
 
   const named = servers.map((item) => {
     const info = getServer(item.server)
@@ -119,8 +130,8 @@ export function ServersChart({ servers, products, period }: ServersChartProps) {
   })
 
   const ranked = named
-    .sort((a, b) => b.users[period] - a.users[period])
-    .filter((item) => item.users[period] > 0)
+    .sort((a, b) => b[metric][period] - a[metric][period])
+    .filter((item) => item[metric][period] > 0)
 
   const visible = limit === 0 ? ranked : ranked.slice(0, limit)
 
@@ -190,18 +201,18 @@ export function ServersChart({ servers, products, period }: ServersChartProps) {
                 }}
               />
               <Bar
-                dataKey={`users.${period}`}
-                fill={CHART.users}
+                dataKey={`${metric}.${period}`}
+                fill={color}
                 radius={[0, 4, 4, 0]}
                 isAnimationActive={false}
-                activeBar={barActiveProps(CHART.users)}
+                activeBar={barActiveProps(color)}
               />
             </BarChart>
           </ResponsiveContainer>
         </div>
       )}
 
-      <ProductsChart products={products} period={period} />
+      <ProductsChart products={products} period={period} metric={metric} />
     </Card>
   )
 }

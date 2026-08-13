@@ -1,20 +1,19 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import type { HourActivityPoint, WeekdayActivityPoint } from '@/shared/api/usage'
 import { useFormatters } from '@/shared/lib/format'
 import { shiftHourlyToLocal } from '@/shared/lib/timezone'
-import { Card, SegmentedControl } from '@/shared/ui'
+import { Card } from '@/shared/ui'
 
-import { AXIS_PROPS, barActiveProps, CHART, Y_AXIS_NUMERIC } from './chartTheme'
+import { AXIS_PROPS, barActiveProps, CHART, type ChartMetric, chartColor, Y_AXIS_NUMERIC } from './chartTheme'
 import { ChartTooltip } from './ChartTooltip'
-
-type Metric = 'users' | 'launches'
 
 interface ActivityChartsProps {
   hourly: HourActivityPoint[]
   weekday: WeekdayActivityPoint[]
+  metric: ChartMetric
 }
 
 /** PostgreSQL `dow` is Sunday=0; charts should read Mon→Sun. */
@@ -26,10 +25,9 @@ function weekdayOrder(day: number): number {
  * All-time aggregates with no per-period breakdown in the payload. They live
  * under the "global all-time" section rather than following the period selector.
  */
-export function ActivityCharts({ hourly, weekday }: ActivityChartsProps) {
+export function ActivityCharts({ hourly, weekday, metric }: ActivityChartsProps) {
   const { t } = useTranslation('helper')
   const format = useFormatters()
-  const [metric, setMetric] = useState<Metric>('users')
 
   const localHourly = useMemo(() => shiftHourlyToLocal(hourly), [hourly])
 
@@ -38,28 +36,14 @@ export function ActivityCharts({ hourly, weekday }: ActivityChartsProps) {
     [weekday],
   )
 
-  const color = metric === 'users' ? CHART.users : CHART.launches
-
-  const metricOptions = [
-    { id: 'users' as const, label: t('analytics.metric.users') },
-    { id: 'launches' as const, label: t('analytics.metric.launches') },
-  ]
+  const color = chartColor(metric)
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Card className="p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-            <h3 className="text-lg font-semibold tracking-tight">{t('analytics.activity.hours')}</h3>
-            <span className="text-xs text-fg-subtle">{t('analytics.activity.localTime')}</span>
-          </div>
-          <SegmentedControl
-            size="sm"
-            label={t('analytics.metric.users')}
-            value={metric}
-            onChange={setMetric}
-            options={metricOptions}
-          />
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h3 className="text-lg font-semibold tracking-tight">{t('analytics.activity.hours')}</h3>
+          <span className="text-xs text-fg-subtle">{t('analytics.activity.localTime')}</span>
         </div>
 
         <div className="mt-6 h-56">
@@ -111,18 +95,9 @@ export function ActivityCharts({ hourly, weekday }: ActivityChartsProps) {
       </Card>
 
       <Card className="p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <h3 className="text-lg font-semibold tracking-tight">
-            {t('analytics.activity.weekdays')}
-          </h3>
-          <SegmentedControl
-            size="sm"
-            label={t('analytics.metric.users')}
-            value={metric}
-            onChange={setMetric}
-            options={metricOptions}
-          />
-        </div>
+        <h3 className="text-lg font-semibold tracking-tight">
+          {t('analytics.activity.weekdays')}
+        </h3>
 
         <div className="mt-6 h-56">
           <ResponsiveContainer width="100%" height="100%">

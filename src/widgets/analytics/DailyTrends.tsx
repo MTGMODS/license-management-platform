@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Area,
@@ -12,22 +12,19 @@ import {
 
 import type { DailyPoint } from '@/shared/api/usage'
 import { useFormatters } from '@/shared/lib/format'
-import { Card, SegmentedControl } from '@/shared/ui'
+import { Card } from '@/shared/ui'
 
-import { AXIS_PROPS, CHART, Y_AXIS_NUMERIC } from './chartTheme'
+import { AXIS_PROPS, CHART, type ChartMetric, chartColor, Y_AXIS_NUMERIC } from './chartTheme'
 import { ChartTooltip } from './ChartTooltip'
-
-type Metric = 'users' | 'launches'
 
 /** UTC calendar day matching the backend daily buckets (`YYYY-MM-DD`). */
 function utcToday(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-export function DailyTrends({ daily }: { daily: DailyPoint[] }) {
+export function DailyTrends({ daily, metric }: { daily: DailyPoint[]; metric: ChartMetric }) {
   const { t } = useTranslation('helper')
   const format = useFormatters()
-  const [metric, setMetric] = useState<Metric>('users')
 
   // Today's bucket is still filling, so the last point collapses the series.
   const points = useMemo(() => {
@@ -35,26 +32,13 @@ export function DailyTrends({ daily }: { daily: DailyPoint[] }) {
     return daily.filter((point) => point.date !== today)
   }, [daily])
 
-  const color = metric === 'users' ? CHART.users : CHART.launches
+  const color = chartColor(metric)
 
   return (
     <Card className="p-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h3 className="text-lg font-semibold tracking-tight">{t('analytics.daily.title')}</h3>
-          <p className="mt-1 text-sm text-fg-muted">{t('analytics.daily.subtitle')}</p>
-        </div>
-
-        <SegmentedControl
-          size="sm"
-          label={t('analytics.metric.users')}
-          value={metric}
-          onChange={setMetric}
-          options={[
-            { id: 'users', label: t('analytics.metric.users') },
-            { id: 'launches', label: t('analytics.metric.launches') },
-          ]}
-        />
+      <div>
+        <h3 className="text-lg font-semibold tracking-tight">{t('analytics.daily.title')}</h3>
+        <p className="mt-1 text-sm text-fg-muted">{t('analytics.daily.subtitle')}</p>
       </div>
 
       {points.length === 0 ? (

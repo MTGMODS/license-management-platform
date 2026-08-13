@@ -6,9 +6,11 @@ import type { PeriodKey } from '@/shared/api/usage'
 import { Skeleton } from '@/shared/ui'
 
 import { ActivityCharts } from './ActivityCharts'
+import type { ChartMetric } from './chartTheme'
 import { DailyTrends } from './DailyTrends'
 import { DevicesChart } from './DevicesChart'
 import { FactionsChart, VersionsChart } from './DistributionCharts'
+import { MetricControl } from './MetricControl'
 import { PeriodControl } from './PeriodControl'
 import { ServersChart } from './ServersChart'
 import { WorldMap } from './WorldMap'
@@ -17,6 +19,7 @@ export function AnalyticsSection() {
   const { t } = useTranslation('helper')
   const { data, isPending, isError } = usePublicStats()
   const [period, setPeriod] = useState<PeriodKey>('all_time')
+  const [metric, setMetric] = useState<ChartMetric>('users')
 
   if (isError) return null
 
@@ -44,19 +47,23 @@ export function AnalyticsSection() {
           <h2 className="text-2xl font-semibold tracking-tight">{t('analytics.title')}</h2>
           <p className="mt-2 text-fg-muted">{t('analytics.subtitle')}</p>
         </div>
-        <PeriodControl value={period} onChange={setPeriod} />
+        <div className="flex flex-wrap items-center gap-3">
+          <MetricControl value={metric} onChange={setMetric} />
+          <PeriodControl value={period} onChange={setPeriod} />
+        </div>
       </div>
 
       <div className="mt-6 space-y-4">
-        <FactionsChart factions={data.distribution.factions} period={period} />
+        <FactionsChart factions={data.distribution.factions} period={period} metric={metric} />
         <ServersChart
           servers={data.distribution.servers}
           products={data.distribution.products}
           period={period}
+          metric={metric}
         />
-        <WorldMap countries={data.distribution.countries} period={period} />
-        <DevicesChart devices={data.overview.devices} period={period} />
-        <VersionsChart versions={data.distribution.versions} period={period} />
+        <WorldMap countries={data.distribution.countries} period={period} metric={metric} />
+        <DevicesChart devices={data.overview.devices} period={period} metric={metric} />
+        <VersionsChart versions={data.distribution.versions} period={period} metric={metric} />
       </div>
 
       <div className="mt-10">
@@ -65,10 +72,11 @@ export function AnalyticsSection() {
       </div>
 
       <div className="mt-6 space-y-4">
-        <DailyTrends daily={data.analytics.timeline.daily} />
+        <DailyTrends daily={data.analytics.timeline.daily} metric={metric} />
         <ActivityCharts
           hourly={data.analytics.activity.hourly}
           weekday={data.analytics.activity.weekday}
+          metric={metric}
         />
       </div>
     </section>
