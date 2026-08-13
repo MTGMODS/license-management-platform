@@ -41,16 +41,19 @@ export interface FactionStats {
   users: PeriodCounts
   launches: PeriodCounts
   vip_users: PeriodCounts
-  user_share: number
-  launches_per_user: number
-  vip_percent: number
+  /** Share of overview users for the window, 0–100. */
+  user_share: PeriodCounts
+  launches_per_user: PeriodCounts
+  /** Share of faction users with VIP for the window, 0–100. */
+  vip_percent: PeriodCounts
 }
 
 export interface ServerStats {
   /** Numeric SAMP server id; the backend has no human-readable names. */
   server: number
-  user_share: number
-  launches_per_user: number
+  /** Share of overview users for the window, 0–100. */
+  user_share: PeriodCounts
+  launches_per_user: PeriodCounts
   users: PeriodCounts
   launches: PeriodCounts
 }
@@ -58,8 +61,9 @@ export interface ServerStats {
 export interface CountryStats {
   /** ISO 3166-1 alpha-2, or the literal `UNKNOWN`. */
   code: string
-  user_share: number
-  launches_per_user: number
+  /** Share of overview users for the window, 0–100. */
+  user_share: PeriodCounts
+  launches_per_user: PeriodCounts
   users: PeriodCounts
   launches: PeriodCounts
 }
@@ -67,17 +71,19 @@ export interface CountryStats {
 export interface VersionStats {
   version: string
   users: PeriodCounts
-  user_share: number
+  /** Share of overview users for the window, 0–100. */
+  user_share: PeriodCounts
   launches: PeriodCounts
-  launches_per_user: number
+  launches_per_user: PeriodCounts
 }
 
 export type ProductKey = 'arizona_pc' | 'arizona_mobile' | 'rodina_pc' | 'rodina_mobile'
 
 export interface ProductStats {
   product: ProductKey | string
-  user_share: number
-  launches_per_user: number
+  /** Share of overview users for the window, 0–100. */
+  user_share: PeriodCounts
+  launches_per_user: PeriodCounts
   users: PeriodCounts
   launches: PeriodCounts
 }

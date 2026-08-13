@@ -7,6 +7,7 @@ import type {
   PeriodCounts,
   PeriodKey,
   ProductStats,
+  ServerStats,
   UsagePublicStats,
   VersionStats,
 } from './types'
@@ -43,9 +44,9 @@ function normalizeFaction(raw: Record<string, unknown>, fallbackMode = 'unknown'
     users: asPeriodCounts(raw.users ?? raw.total_users),
     launches: asPeriodCounts(raw.launches),
     vip_users: asPeriodCounts(raw.vip_users),
-    user_share: typeof raw.user_share === 'number' ? raw.user_share : 0,
-    launches_per_user: typeof raw.launches_per_user === 'number' ? raw.launches_per_user : 0,
-    vip_percent: typeof raw.vip_percent === 'number' ? raw.vip_percent : 0,
+    user_share: asPeriodCounts(raw.user_share),
+    launches_per_user: asPeriodCounts(raw.launches_per_user),
+    vip_percent: asPeriodCounts(raw.vip_percent),
   }
 }
 
@@ -68,13 +69,23 @@ function normalizeFactions(raw: unknown): FactionStats[] {
   return []
 }
 
+function normalizeServer(raw: Record<string, unknown>): ServerStats {
+  return {
+    server: typeof raw.server === 'number' && Number.isFinite(raw.server) ? raw.server : 0,
+    users: asPeriodCounts(raw.users),
+    launches: asPeriodCounts(raw.launches),
+    user_share: asPeriodCounts(raw.user_share),
+    launches_per_user: asPeriodCounts(raw.launches_per_user),
+  }
+}
+
 function normalizeVersion(raw: Record<string, unknown>): VersionStats {
   return {
     version: typeof raw.version === 'string' ? raw.version : 'unknown',
     users: asPeriodCounts(raw.users),
     launches: asPeriodCounts(raw.launches),
-    user_share: typeof raw.user_share === 'number' ? raw.user_share : 0,
-    launches_per_user: typeof raw.launches_per_user === 'number' ? raw.launches_per_user : 0,
+    user_share: asPeriodCounts(raw.user_share),
+    launches_per_user: asPeriodCounts(raw.launches_per_user),
   }
 }
 
@@ -83,8 +94,8 @@ function normalizeCountry(raw: Record<string, unknown>): CountryStats {
     code: typeof raw.code === 'string' ? raw.code : 'UNKNOWN',
     users: asPeriodCounts(raw.users),
     launches: asPeriodCounts(raw.launches),
-    user_share: typeof raw.user_share === 'number' ? raw.user_share : 0,
-    launches_per_user: typeof raw.launches_per_user === 'number' ? raw.launches_per_user : 0,
+    user_share: asPeriodCounts(raw.user_share),
+    launches_per_user: asPeriodCounts(raw.launches_per_user),
   }
 }
 
@@ -93,8 +104,8 @@ function normalizeProduct(raw: Record<string, unknown>): ProductStats {
     product: typeof raw.product === 'string' ? raw.product : 'unknown',
     users: asPeriodCounts(raw.users),
     launches: asPeriodCounts(raw.launches),
-    user_share: typeof raw.user_share === 'number' ? raw.user_share : 0,
-    launches_per_user: typeof raw.launches_per_user === 'number' ? raw.launches_per_user : 0,
+    user_share: asPeriodCounts(raw.user_share),
+    launches_per_user: asPeriodCounts(raw.launches_per_user),
   }
 }
 
@@ -113,8 +124,9 @@ function normalizeDeviceFamily(raw: unknown): DeviceFamilyStats {
 }
 
 function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
-  const versionsRaw = payload.distribution.versions as unknown as Record<string, unknown>[]
-  const countriesRaw = payload.distribution.countries as unknown as Record<string, unknown>[]
+  const serversRaw = (payload.distribution.servers ?? []) as unknown as Record<string, unknown>[]
+  const versionsRaw = (payload.distribution.versions ?? []) as unknown as Record<string, unknown>[]
+  const countriesRaw = (payload.distribution.countries ?? []) as unknown as Record<string, unknown>[]
   const productsRaw = (payload.distribution.products ?? []) as unknown as Record<string, unknown>[]
   const devicesRaw = payload.overview.devices as unknown as Record<string, unknown>
 
@@ -130,6 +142,7 @@ function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
     distribution: {
       ...payload.distribution,
       factions: normalizeFactions(payload.distribution.factions),
+      servers: serversRaw.map(normalizeServer),
       versions: versionsRaw.map(normalizeVersion),
       countries: countriesRaw.map(normalizeCountry),
       products: productsRaw.map(normalizeProduct),

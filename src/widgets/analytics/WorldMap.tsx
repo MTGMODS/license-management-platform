@@ -179,7 +179,7 @@ export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
                 <div className="flex items-center gap-4 text-fg-muted">
                   <span>{t('analytics.map.share')}</span>
                   <span className="tabular ml-auto font-medium text-fg">
-                    {format.percent(hovered.user_share)}
+                    {format.percent(hovered.user_share[period])}
                   </span>
                 </div>
               </div>

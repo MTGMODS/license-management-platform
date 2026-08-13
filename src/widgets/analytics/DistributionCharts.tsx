@@ -60,21 +60,17 @@ export function FactionsChart({
   const color = chartColor(metric)
 
   const rows: FactionRow[] = factions
-    .map((stats) => {
-      const users = stats.users[period]
-      const vipUsers = stats.vip_users[period]
-      return {
-        mode: stats.mode,
-        label: isKnownFaction(stats.mode)
-          ? t(`analytics.factionName.${stats.mode}`)
-          : stats.mode.toUpperCase(),
-        users,
-        launches: stats.launches[period],
-        user_share: stats.user_share,
-        launches_per_user: stats.launches_per_user,
-        vip_percent: users > 0 ? (vipUsers / users) * 100 : stats.vip_percent,
-      }
-    })
+    .map((stats) => ({
+      mode: stats.mode,
+      label: isKnownFaction(stats.mode)
+        ? t(`analytics.factionName.${stats.mode}`)
+        : stats.mode.toUpperCase(),
+      users: stats.users[period],
+      launches: stats.launches[period],
+      user_share: stats.user_share[period],
+      launches_per_user: stats.launches_per_user[period],
+      vip_percent: stats.vip_percent[period],
+    }))
     .filter((row) => row[metric] > 0)
     .sort((a, b) => b[metric] - a[metric])
 
@@ -169,8 +165,8 @@ export function VersionsChart({
   const format = useFormatters()
   const color = chartColor(metric)
 
-  const main = versions.filter((item) => item.user_share >= VERSION_TAIL_THRESHOLD)
-  const tail = versions.filter((item) => item.user_share < VERSION_TAIL_THRESHOLD)
+  const main = versions.filter((item) => item.user_share[period] >= VERSION_TAIL_THRESHOLD)
+  const tail = versions.filter((item) => item.user_share[period] < VERSION_TAIL_THRESHOLD)
 
   const rows = [
     ...main.map((item) => ({
