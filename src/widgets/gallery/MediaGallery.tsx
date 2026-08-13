@@ -113,8 +113,11 @@ export function MediaGallery({ compact = false }: { compact?: boolean }) {
   const thumbs = (
     <div
       className={cn(
-        'flex gap-2 overflow-x-auto pb-1',
-        compact ? 'mt-[clamp(0.4rem,1vh,0.75rem)] shrink-0 justify-center' : 'mt-4 gap-3 pb-2',
+        // min-w-0 keeps this strip the column width so overflow-x actually
+        // scrolls; justify-center would park the first thumbs in unreachable
+        // negative overflow.
+        'flex w-full min-w-0 gap-2 overflow-x-auto overscroll-x-contain pb-1',
+        compact ? 'mt-[clamp(0.4rem,1vh,0.75rem)] shrink-0' : 'mt-4 gap-3 pb-2',
       )}
     >
       {items.map((item, index) => (
@@ -155,12 +158,13 @@ export function MediaGallery({ compact = false }: { compact?: boolean }) {
 
   if (compact) {
     return (
-      <section aria-label={t('gallery.title')} className="flex min-h-0 flex-1 basis-0 flex-col">
-        <div className="relative min-h-0 w-full flex-1 basis-0">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="aspect-video h-full max-w-full overflow-hidden rounded-card border border-white/5 bg-ink-850">
-              <Viewer item={active} />
-            </div>
+      <section aria-label={t('gallery.title')} className="flex min-h-0 w-full min-w-0 flex-1 basis-0 flex-col">
+        <div className="relative min-h-0 w-full min-w-0 flex-1 basis-0 [container-type:size]">
+          <div
+            className="absolute top-1/2 left-1/2 aspect-video -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-card border border-white/5 bg-ink-850"
+            style={{ width: 'min(100cqw, calc(100cqh * 16 / 9))' }}
+          >
+            <Viewer item={active} />
           </div>
         </div>
         {thumbs}

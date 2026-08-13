@@ -39,7 +39,7 @@ function Hero() {
         {t('hero.subtitle')}
       </p>
 
-      <div className="mx-auto mt-[clamp(0.5rem,1.4vh,1rem)] flex min-h-0 w-full flex-1 basis-0 flex-col">
+      <div className="mx-auto mt-[clamp(0.5rem,1.4vh,1rem)] flex min-h-0 w-full min-w-0 flex-1 basis-0 flex-col">
         <MediaGallery compact />
       </div>
 
