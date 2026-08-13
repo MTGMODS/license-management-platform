@@ -35,15 +35,6 @@ export function ActivityCharts({ hourly, weekday }: ActivityChartsProps) {
     [weekday],
   )
 
-  const peakHour = useMemo(
-    () =>
-      localHourly.reduce<HourActivityPoint | null>(
-        (best, point) => (!best || point.launches > best.launches ? point : best),
-        null,
-      ),
-    [localHourly],
-  )
-
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Card className="p-6">
@@ -98,12 +89,6 @@ export function ActivityCharts({ hourly, weekday }: ActivityChartsProps) {
             </BarChart>
           </ResponsiveContainer>
         </div>
-
-        {peakHour ? (
-          <p className="mt-3 text-sm text-fg-subtle">
-            {t('analytics.activity.peakHour', { hour: format.hour(peakHour.hour) })}
-          </p>
-        ) : null}
       </Card>
 
       <Card className="p-6">
