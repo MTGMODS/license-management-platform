@@ -21,7 +21,7 @@ import {
 import { millisecondsUntil } from '@/shared/lib/datetime'
 import { triggerFileDownload } from '@/shared/lib/download'
 import { useFormatters } from '@/shared/lib/format'
-import { Badge, Button, buttonStyles, Card, ErrorState, Skeleton } from '@/shared/ui'
+import { Badge, Button, buttonStyles, Card, Skeleton } from '@/shared/ui'
 
 /** Formats the raw input into the backend's `XXXX-XXXX-XXXX-XXXX` shape. */
 function formatLicenseKey(raw: string): string {
@@ -334,7 +334,7 @@ function PremiumDownload() {
 }
 
 function LicenseSection() {
-  const { t } = useTranslation('dashboard')
+  const { t } = useTranslation(['dashboard', 'common'])
   const { data, isPending, isError, error, refetch, isFetching } = useLicenseInfo(true)
 
   if (isPending) {
@@ -349,12 +349,20 @@ function LicenseSection() {
   if (isError && (isServiceUnavailable(error) || (!isNoActiveLicense(error) && !(error instanceof ApiError && error.status === 404)))) {
     return (
       <Card className="p-5">
-        <ErrorState
-          compact
-          description={t('vip.unavailable')}
-          retrying={isFetching}
-          onRetry={() => void refetch()}
-        />
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="font-medium">{t('vip.unavailable')}</p>
+            <p className="mt-1 text-sm text-fg-muted">{t('vip.unavailableHint')}</p>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            loading={isFetching}
+            onClick={() => void refetch()}
+          >
+            {t('common:actions.retry')}
+          </Button>
+        </div>
       </Card>
     )
   }
