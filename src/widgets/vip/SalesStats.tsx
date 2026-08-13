@@ -16,7 +16,7 @@ import {
 import { useSalesStats } from '@/features/license/useSalesStats'
 import type { LicenseDurationStat, LicensePaymentStat } from '@/shared/api/license'
 import { useFormatters } from '@/shared/lib/format'
-import { Card, Skeleton } from '@/shared/ui'
+import { Card, ErrorState, Skeleton } from '@/shared/ui'
 import { AXIS_PROPS, barActiveProps, CHART, Y_AXIS_NUMERIC } from '@/widgets/analytics/chartTheme'
 import { ChartTooltip } from '@/widgets/analytics/ChartTooltip'
 
@@ -170,7 +170,7 @@ function PaymentsChart({ payments }: { payments: LicensePaymentStat[] }) {
 export function SalesStats() {
   const { t } = useTranslation('vip')
   const format = useFormatters()
-  const { data, isPending, isError } = useSalesStats()
+  const { data, isPending, isError, refetch, isFetching } = useSalesStats()
 
   if (isPending) {
     return (
@@ -189,7 +189,13 @@ export function SalesStats() {
       <section>
         <h2 className="text-2xl font-semibold tracking-tight">{t('stats.title')}</h2>
         <Card className="mt-6 p-6">
-          <p className="text-sm text-fg-muted">{t('stats.error')}</p>
+          <ErrorState
+            className="py-8"
+            title={t('stats.error')}
+            description={t('stats.errorHint')}
+            retrying={isFetching}
+            onRetry={() => void refetch()}
+          />
         </Card>
       </section>
     )

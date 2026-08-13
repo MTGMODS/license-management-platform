@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import { usePublicStats } from '@/features/usage/usePublicStats'
 import { useFormatters } from '@/shared/lib/format'
-import { Card, Skeleton } from '@/shared/ui'
+import { Card, ErrorState, Skeleton } from '@/shared/ui'
 
 interface StatItem {
   id: string
@@ -16,7 +16,7 @@ interface StatItem {
 export function QuickStats() {
   const { t } = useTranslation('helper')
   const format = useFormatters()
-  const { data, isPending, isError } = usePublicStats()
+  const { data, isPending, isError, refetch, isFetching } = usePublicStats()
 
   const items: StatItem[] = data
     ? [
@@ -74,7 +74,13 @@ export function QuickStats() {
         </div>
       ) : isError || !data ? (
         <Card className="mt-6 p-6">
-          <p className="text-sm text-fg-muted">{t('stats.error')}</p>
+          <ErrorState
+            className="py-8"
+            title={t('stats.error')}
+            description={t('stats.errorHint')}
+            retrying={isFetching}
+            onRetry={() => void refetch()}
+          />
         </Card>
       ) : (
         <>

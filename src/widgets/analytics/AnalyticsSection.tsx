@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { usePublicStats } from '@/features/usage/usePublicStats'
-import { Card, Skeleton } from '@/shared/ui'
+import { Card, ErrorState, Skeleton } from '@/shared/ui'
 
 import { ActivityCharts } from './ActivityCharts'
 import { DailyTrends } from './DailyTrends'
@@ -11,7 +11,7 @@ import { WorldMap } from './WorldMap'
 
 export function AnalyticsSection() {
   const { t } = useTranslation('helper')
-  const { data, isPending, isError } = usePublicStats()
+  const { data, isPending, isError, refetch, isFetching } = usePublicStats()
 
   return (
     <section>
@@ -27,7 +27,13 @@ export function AnalyticsSection() {
         </div>
       ) : isError || !data ? (
         <Card className="mt-6 p-6">
-          <p className="text-sm text-fg-muted">{t('analytics.error')}</p>
+          <ErrorState
+            className="py-8"
+            title={t('analytics.error')}
+            description={t('analytics.errorHint')}
+            retrying={isFetching}
+            onRetry={() => void refetch()}
+          />
         </Card>
       ) : (
         <div className="mt-6 space-y-4">

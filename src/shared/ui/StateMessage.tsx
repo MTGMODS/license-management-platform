@@ -43,22 +43,26 @@ export function EmptyState({ title, description }: { title?: string; description
 }
 
 interface ErrorStateProps {
+  title?: string
   /** Already-translated, user-facing sentence. Never a raw backend payload. */
   description?: string
   onRetry?: () => void
+  retrying?: boolean
+  className?: string
 }
 
-export function ErrorState({ description, onRetry }: ErrorStateProps) {
+export function ErrorState({ title, description, onRetry, retrying, className }: ErrorStateProps) {
   const { t } = useTranslation('common')
 
   return (
     <StateMessage
+      className={className}
       icon={<TriangleAlert aria-hidden className="size-7 text-caution" />}
-      title={t('state.error')}
+      title={title ?? t('state.error')}
       description={description ?? t('state.errorHint')}
       action={
         onRetry ? (
-          <Button variant="outline" size="sm" onClick={onRetry}>
+          <Button variant="outline" size="sm" loading={retrying} onClick={onRetry}>
             {t('actions.retry')}
           </Button>
         ) : null

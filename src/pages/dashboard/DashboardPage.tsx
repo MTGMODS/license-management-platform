@@ -11,7 +11,7 @@ import {
   usePremiumDownload,
   useResetDevice,
 } from '@/features/license/useLicense'
-import { ApiError, apiErrorTranslationKey } from '@/shared/api'
+import { ApiError, apiErrorTranslationKey, isNoActiveLicense, isServiceUnavailable } from '@/shared/api'
 import {
   LICENSE_KEY_LENGTH,
   LICENSE_KEY_PATTERN,
@@ -21,7 +21,7 @@ import {
 import { millisecondsUntil } from '@/shared/lib/datetime'
 import { triggerFileDownload } from '@/shared/lib/download'
 import { useFormatters } from '@/shared/lib/format'
-import { Badge, Button, buttonStyles, Card, Skeleton } from '@/shared/ui'
+import { Badge, Button, buttonStyles, Card, ErrorState, Skeleton } from '@/shared/ui'
 
 /** Formats the raw input into the backend's `XXXX-XXXX-XXXX-XXXX` shape. */
 function formatLicenseKey(raw: string): string {
@@ -335,7 +335,7 @@ function PremiumDownload() {
 
 function LicenseSection() {
   const { t } = useTranslation('dashboard')
-  const { data, isPending, isError } = useLicenseInfo(true)
+  const { data, isPending, isError, error, refetch, isFetching } = useLicenseInfo(true)
 
   if (isPending) {
     return (
@@ -343,6 +343,20 @@ function LicenseSection() {
         <Skeleton className="h-48" />
         <Skeleton className="h-32" />
       </div>
+    )
+  }
+
+  if (isError && (isServiceUnavailable(error) || (!isNoActiveLicense(error) && !(error instanceof ApiError && error.status === 404)))) {
+    return (
+      <Card className="p-6">
+        <ErrorState
+          className="py-8"
+          title={t('vip.unavailable')}
+          description={t('vip.unavailableHint')}
+          retrying={isFetching}
+          onRetry={() => void refetch()}
+        />
+      </Card>
     )
   }
 

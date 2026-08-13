@@ -17,5 +17,6 @@ export function usePublicStats() {
     queryFn: ({ signal }) => getUsagePublicStats(signal),
     staleTime: 5 * 60_000,
     gcTime: 15 * 60_000,
+    retry: 1,
   })
 }

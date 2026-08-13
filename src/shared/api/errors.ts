@@ -122,3 +122,18 @@ export function apiErrorTranslationKey(error: unknown): string {
 
   return 'errors:unexpected'
 }
+
+/** True when `/license/info` means "this account has no VIP", not a transport failure. */
+export function isNoActiveLicense(error: unknown): boolean {
+  return error instanceof ApiError && error.code === 'NO_ACTIVE_LICENSE'
+}
+
+/**
+ * Service is down, timed out, or returned 5xx — distinct from "you have no VIP"
+ * so the dashboard never pretends a licence is missing.
+ */
+export function isServiceUnavailable(error: unknown): boolean {
+  if (error instanceof NetworkError || error instanceof TimeoutError) return true
+  if (error instanceof ApiError && error.status >= 500) return true
+  return false
+}
