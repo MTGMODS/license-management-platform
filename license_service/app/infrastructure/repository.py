@@ -33,7 +33,7 @@ class DeviceModel(Base):
     device = Column(String, nullable=False)
     ip_address = Column(String, nullable=True)
     user_agent = Column(String, nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    first_used_at = Column(DateTime(timezone=True), server_default=func.now())
     last_used_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     license = relationship("LicenseModel", back_populates="devices")
@@ -131,18 +131,22 @@ class LicenseRepository:
         return False
 
     async def get_heavy_public_stats(self):
+        timed = LicenseModel.duration_days.isnot(None)
+        paid = TransactionModel.amount > 0
+        free = TransactionModel.amount == 0
+        completed = TransactionModel.status == "COMPLETED"
+        owned = LicenseModel.user_id.isnot(None)
+        active = LicenseModel.status == LicenseStatus.ACTIVE
+
         new_totals_stmt = select(
-            func.count(distinct(LicenseModel.id)).label("total_vips"),
-            func.count(distinct(case((LicenseModel.status == "ACTIVE", LicenseModel.id)))).label("active_total"),
-            func.sum(case((TransactionModel.amount > 0, TransactionModel.amount), else_=0)).label("total_money"),
-            func.count(distinct(case((TransactionModel.amount == 0, LicenseModel.id)))).label("total_free"),
-            func.count(distinct(case((and_(TransactionModel.amount == 0, LicenseModel.status == "ACTIVE"), LicenseModel.id)))).label("active_free")
+            func.count(distinct(case((and_(paid, owned), LicenseModel.id)))).label("total_vips"),
+            func.count(distinct(case((and_(paid, active), LicenseModel.id)))).label("active_total"),
+            func.sum(case((and_(paid, owned), TransactionModel.amount), else_=0)).label("total_money"),
+            func.count(distinct(case((free, LicenseModel.id)))).label("total_free"),
+            func.count(distinct(case((and_(free, active), LicenseModel.id)))).label("active_free")
         ).select_from(LicenseModel).outerjoin(
             TransactionModel, LicenseModel.id == TransactionModel.license_id
-        ).where(
-            LicenseModel.duration_days.isnot(None),
-            TransactionModel.status == "COMPLETED"
-        )
+        ).where(timed)
         
         n_res = (await self.db.execute(new_totals_stmt)).first()
 
@@ -150,11 +154,11 @@ class LicenseRepository:
             LicenseModel.duration_days,
             func.count(distinct(LicenseModel.id)).label("count"),
             func.sum(TransactionModel.amount).label("sum"),
-            func.count(distinct(case((LicenseModel.status == "ACTIVE", LicenseModel.id)))).label("active_count")
+            func.count(distinct(case((active, LicenseModel.id)))).label("active_count")
         ).select_from(LicenseModel).outerjoin(
             TransactionModel, LicenseModel.id == TransactionModel.license_id
         ).where(
-            and_(LicenseModel.duration_days.isnot(None), TransactionModel.amount > 0, TransactionModel.status == "COMPLETED")
+            and_(timed, paid, completed, owned)
         ).group_by(LicenseModel.duration_days).order_by(desc("sum"))
         
         durations = [{"days": r.duration_days, "count": r.count, "sum": r.sum or 0, "active": r.active_count} 
@@ -167,7 +171,7 @@ class LicenseRepository:
         ).select_from(TransactionModel).join(
             LicenseModel, TransactionModel.license_id == LicenseModel.id
         ).where(
-            and_(LicenseModel.duration_days.isnot(None), TransactionModel.amount > 0, TransactionModel.status == "COMPLETED")
+            and_(timed, paid, completed, owned)
         ).group_by(TransactionModel.payment_method).order_by(desc("sum"), desc("count"))
 
         payments = [{"method": r.payment_method, "count": r.count, "sum": r.sum or 0} 
@@ -180,7 +184,7 @@ class LicenseRepository:
             TransactionModel, LicenseModel.id == TransactionModel.license_id
         ).where(
             LicenseModel.duration_days.is_(None),
-            TransactionModel.status == "COMPLETED"
+            completed
         )
 
         o_res = (await self.db.execute(old_totals_stmt)).first()
