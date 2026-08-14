@@ -32,7 +32,7 @@ function Hero() {
 
   return (
     <section className="flex min-h-0 flex-1 basis-0 flex-col text-center">
-      <h1 className="text-gradient shrink-0 whitespace-nowrap text-[clamp(1.25rem,min(4.2vh,5.5vw),3.25rem)] font-semibold tracking-tight">
+      <h1 className="text-gradient shrink-0 whitespace-nowrap text-[clamp(1.75rem,4.2vh,3.25rem)] font-semibold tracking-tight">
         {t('hero.title')}
       </h1>
       <p className="mx-auto mt-[clamp(0.35rem,1vh,0.75rem)] max-w-2xl shrink-0 text-[clamp(0.875rem,1.6vh,1.125rem)] leading-relaxed text-fg-muted">
