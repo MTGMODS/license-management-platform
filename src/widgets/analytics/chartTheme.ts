@@ -38,6 +38,20 @@ export const Y_AXIS_NUMERIC = {
   width: 'auto' as const,
 }
 
+/**
+ * Horizontal-bar charts (factions, servers, products, devices, versions)
+ * share one label gutter and one row pitch so the coloured bars line up.
+ */
+export const CATEGORY_Y_WIDTH = 160
+export const CATEGORY_BAR_SIZE = 16
+export const CATEGORY_ROW_HEIGHT = 32
+export const CATEGORY_X_AXIS_HEIGHT = 36
+export const CATEGORY_CHART_MARGIN = { top: 4, right: 12, bottom: 0, left: 8 } as const
+
+export function categoryChartHeight(rowCount: number) {
+  return Math.max(rowCount, 1) * CATEGORY_ROW_HEIGHT + CATEGORY_X_AXIS_HEIGHT
+}
+
 /** Shared hover outline for chart bars and map countries. */
 export const HOVER_OUTLINE = {
   stroke: 'rgba(245, 246, 249, 0.55)',

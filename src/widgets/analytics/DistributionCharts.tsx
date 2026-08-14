@@ -1,11 +1,11 @@
 import { useTranslation } from 'react-i18next'
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import type { FactionStats, PeriodKey, VersionStats } from '@/shared/api/usage'
 import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
-import { AXIS_PROPS, barActiveProps, CHART, type ChartMetric, chartColor } from './chartTheme'
+import { CategoryBarChart } from './CategoryBarChart'
+import { type ChartMetric, chartColor } from './chartTheme'
 import { ChartTooltip, statsTooltipRows } from './ChartTooltip'
 
 /**
@@ -82,47 +82,23 @@ export function FactionsChart({
       {rows.length === 0 ? (
         <p className="mt-8 text-sm text-fg-subtle">{t('analytics.empty')}</p>
       ) : (
-        <div className="mt-6" style={{ height: Math.max(220, rows.length * 30 + 40) }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              accessibilityLayer={false}
-              data={rows}
-              layout="vertical"
-              margin={{ top: 4, right: 12, bottom: 0, left: 8 }}
-            >
-              <CartesianGrid stroke={CHART.grid} horizontal={false} />
-              <XAxis type="number" {...AXIS_PROPS} tickFormatter={format.compact} />
-              <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={168} />
-              <Tooltip
-                cursor={false}
-                content={({ active, payload }) => {
-                  const point = payload?.[0]?.payload as FactionRow | undefined
-                  if (!active || !point) return null
-
-                  return (
-                    <ChartTooltip
-                      title={point.label}
-                      rows={statsTooltipRows(t, format, {
-                        users: point.users,
-                        launches: point.launches,
-                        user_share: point.user_share,
-                        launches_per_user: point.launches_per_user,
-                        vip_percent: point.vip_percent,
-                      })}
-                    />
-                  )
-                }}
-              />
-              <Bar
-                dataKey={metric}
-                fill={color}
-                radius={[0, 4, 4, 0]}
-                isAnimationActive={false}
-                activeBar={barActiveProps(color)}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <CategoryBarChart
+          data={rows}
+          dataKey={metric}
+          color={color}
+          renderTooltip={(point) => (
+            <ChartTooltip
+              title={point.label}
+              rows={statsTooltipRows(t, format, {
+                users: point.users,
+                launches: point.launches,
+                user_share: point.user_share,
+                launches_per_user: point.launches_per_user,
+                vip_percent: point.vip_percent,
+              })}
+            />
+          )}
+        />
       )}
     </Card>
   )
@@ -187,41 +163,14 @@ export function VersionsChart({
       {rows.length === 0 ? (
         <p className="mt-8 text-sm text-fg-subtle">{t('analytics.empty')}</p>
       ) : (
-        <div className="mt-6" style={{ height: Math.max(220, rows.length * 30 + 40) }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              accessibilityLayer={false}
-              data={rows}
-              layout="vertical"
-              margin={{ top: 4, right: 12, bottom: 0, left: 8 }}
-            >
-              <CartesianGrid stroke={CHART.grid} horizontal={false} />
-              <XAxis type="number" {...AXIS_PROPS} tickFormatter={format.compact} />
-              <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={132} />
-              <Tooltip
-                cursor={false}
-                content={({ active, payload }) => {
-                  const point = payload?.[0]?.payload as (typeof rows)[number] | undefined
-                  if (!active || !point) return null
-
-                  return (
-                    <ChartTooltip
-                      title={point.label}
-                      rows={statsTooltipRows(t, format, point)}
-                    />
-                  )
-                }}
-              />
-              <Bar
-                dataKey={metric}
-                fill={color}
-                radius={[0, 4, 4, 0]}
-                isAnimationActive={false}
-                activeBar={barActiveProps(color)}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <CategoryBarChart
+          data={rows}
+          dataKey={metric}
+          color={color}
+          renderTooltip={(point) => (
+            <ChartTooltip title={point.label} rows={statsTooltipRows(t, format, point)} />
+          )}
+        />
       )}
     </Card>
   )

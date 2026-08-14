@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import type { PeriodKey, ProductKey, ProductStats, ServerStats } from '@/shared/api/usage'
 import { formatServerLabel, getServer, UNKNOWN_SERVER_ID } from '@/shared/config/servers'
 import { useFormatters } from '@/shared/lib/format'
 import { Card, SegmentedControl } from '@/shared/ui'
 
-import { AXIS_PROPS, barActiveProps, CHART, type ChartMetric, chartColor } from './chartTheme'
+import { CategoryBarChart } from './CategoryBarChart'
+import { type ChartMetric, chartColor } from './chartTheme'
 import { ChartTooltip, statsTooltipRows } from './ChartTooltip'
 
 type TopLimit = 5 | 10 | 20 | 0
@@ -57,46 +57,23 @@ function ProductsChart({
 
   return (
     <div className="mt-6 border-t border-white/5 pt-5">
-      <div style={{ height: Math.max(160, rows.length * 36 + 40) }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            accessibilityLayer={false}
-            data={rows}
-            layout="vertical"
-            margin={{ top: 4, right: 12, bottom: 0, left: 8 }}
-          >
-            <CartesianGrid stroke={CHART.grid} horizontal={false} />
-            <XAxis type="number" {...AXIS_PROPS} tickFormatter={format.compact} />
-            <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={148} />
-            <Tooltip
-              cursor={false}
-              content={({ active, payload }) => {
-                const point = payload?.[0]?.payload as (typeof rows)[number] | undefined
-                if (!active || !point) return null
-
-                return (
-                  <ChartTooltip
-                    title={point.label}
-                    rows={statsTooltipRows(t, format, {
-                      users: point.users[period],
-                      launches: point.launches[period],
-                      user_share: point.user_share[period],
-                      launches_per_user: point.launches_per_user[period],
-                    })}
-                  />
-                )
-              }}
-            />
-            <Bar
-              dataKey={`${metric}.${period}`}
-              fill={color}
-              radius={[0, 4, 4, 0]}
-              isAnimationActive={false}
-              activeBar={barActiveProps(color)}
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      <CategoryBarChart
+        data={rows}
+        dataKey={`${metric}.${period}`}
+        color={color}
+        className="mt-0"
+        renderTooltip={(point) => (
+          <ChartTooltip
+            title={point.label}
+            rows={statsTooltipRows(t, format, {
+              users: point.users[period],
+              launches: point.launches[period],
+              user_share: point.user_share[period],
+              launches_per_user: point.launches_per_user[period],
+            })}
+          />
+        )}
+      />
     </div>
   )
 }
@@ -154,48 +131,22 @@ export function ServersChart({ servers, products, period, metric }: ServersChart
       {visible.length === 0 ? (
         <p className="mt-8 text-sm text-fg-subtle">{t('analytics.empty')}</p>
       ) : (
-        // Horizontal bars with a row-proportional height: 45 servers would be
-        // unreadable squeezed into a fixed box.
-        <div className="mt-6" style={{ height: Math.max(220, visible.length * 26 + 40) }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              accessibilityLayer={false}
-              data={visible}
-              layout="vertical"
-              margin={{ top: 4, right: 12, bottom: 0, left: 8 }}
-            >
-              <CartesianGrid stroke={CHART.grid} horizontal={false} />
-              <XAxis type="number" {...AXIS_PROPS} tickFormatter={format.compact} />
-              <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={148} />
-              <Tooltip
-                cursor={false}
-                content={({ active, payload }) => {
-                  const point = payload?.[0]?.payload as (typeof visible)[number] | undefined
-                  if (!active || !point) return null
-
-                  return (
-                    <ChartTooltip
-                      title={point.project ? `${point.label} · ${point.project}` : point.label}
-                      rows={statsTooltipRows(t, format, {
-                        users: point.users[period],
-                        launches: point.launches[period],
-                        user_share: point.user_share[period],
-                        launches_per_user: point.launches_per_user[period],
-                      })}
-                    />
-                  )
-                }}
-              />
-              <Bar
-                dataKey={`${metric}.${period}`}
-                fill={color}
-                radius={[0, 4, 4, 0]}
-                isAnimationActive={false}
-                activeBar={barActiveProps(color)}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <CategoryBarChart
+          data={visible}
+          dataKey={`${metric}.${period}`}
+          color={color}
+          renderTooltip={(point) => (
+            <ChartTooltip
+              title={point.project ? `${point.label} · ${point.project}` : point.label}
+              rows={statsTooltipRows(t, format, {
+                users: point.users[period],
+                launches: point.launches[period],
+                user_share: point.user_share[period],
+                launches_per_user: point.launches_per_user[period],
+              })}
+            />
+          )}
+        />
       )}
 
       <ProductsChart products={products} period={period} metric={metric} />
