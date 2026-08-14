@@ -1,4 +1,4 @@
-import { LogOut } from 'lucide-react'
+import { LayoutDashboard, LogOut } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate } from 'react-router'
@@ -74,8 +74,9 @@ export function AccountControl() {
               role="menuitem"
               to="/dashboard"
               onClick={() => setOpen(false)}
-              className="block px-3 py-2.5 text-sm text-fg transition-colors hover:bg-ink-800"
+              className="flex items-center gap-2 px-3 py-2.5 text-sm text-fg transition-colors hover:bg-ink-800"
             >
+              <LayoutDashboard aria-hidden className="size-4 shrink-0" />
               {t('account.cabinet')}
             </Link>
           ) : null}
