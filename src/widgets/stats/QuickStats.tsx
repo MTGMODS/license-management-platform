@@ -64,7 +64,7 @@ export function QuickStats() {
     {
       id: 'devices',
       label: t('stats.devices'),
-      value: `${format.percent(data.overview.metrics.pc_ratio)} / ${format.percent(data.overview.metrics.mobile_ratio)}`,
+      value: `${format.number(Math.round(data.overview.metrics.pc_ratio))}%/${format.number(Math.round(data.overview.metrics.mobile_ratio))}%`,
       icon: MonitorSmartphone,
     },
     {
@@ -97,11 +97,11 @@ export function QuickStats() {
             <Card key={item.id} className="p-[clamp(0.65rem,1.4vh,1rem)] lg:p-3">
               <div className="flex items-center gap-2">
                 <Icon aria-hidden className="size-[clamp(1rem,2.2vh,1.25rem)] shrink-0 text-accent-300" />
-                <p className="min-w-0 text-[clamp(0.75rem,1.4vh,0.875rem)] leading-tight text-fg-subtle">
+                <p className="min-w-0 truncate text-[clamp(0.75rem,1.4vh,0.875rem)] text-fg-subtle">
                   {item.label}
                 </p>
               </div>
-              <p className="tabular mt-[clamp(0.35rem,1vh,0.75rem)] text-[clamp(1.15rem,2.6vh,1.5rem)] font-semibold tracking-tight">
+              <p className="tabular mt-[clamp(0.35rem,1vh,0.75rem)] truncate whitespace-nowrap text-[clamp(1.15rem,2.6vh,1.5rem)] font-semibold tracking-tight">
                 {item.value}
               </p>
             </Card>
