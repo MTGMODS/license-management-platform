@@ -44,12 +44,6 @@ export function QuickStats() {
 
   const items: StatItem[] = [
     {
-      id: 'launches',
-      label: t('stats.launches'),
-      value: format.number(data.overview.launches.all_time),
-      icon: Rocket,
-    },
-    {
       id: 'users',
       label: t('stats.users'),
       value: format.number(data.overview.users.total.all_time),
@@ -60,6 +54,12 @@ export function QuickStats() {
       label: t('stats.vip'),
       value: `${format.number(data.overview.users.vip.all_time)} (${format.percent(data.overview.metrics.vip_conversion)})`,
       icon: Crown,
+    },
+    {
+      id: 'launches',
+      label: t('stats.launches'),
+      value: format.number(data.overview.launches.all_time),
+      icon: Rocket,
     },
     {
       id: 'devices',
