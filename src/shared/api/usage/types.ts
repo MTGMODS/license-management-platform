@@ -19,9 +19,12 @@ export interface UsageOverviewMetrics {
 export interface DeviceFamilyStats {
   users: PeriodCounts
   launches: PeriodCounts
+  vip_users: PeriodCounts
   /** Share of overview users for the window, 0–100. */
   user_share: PeriodCounts
   launches_per_user: PeriodCounts
+  /** Share of device-family users with VIP for the window, 0–100. */
+  vip_percent: PeriodCounts
 }
 
 export interface UsageOverview {
@@ -59,6 +62,9 @@ export interface ServerStats {
   launches_per_user: PeriodCounts
   users: PeriodCounts
   launches: PeriodCounts
+  vip_users: PeriodCounts
+  /** Share of server users with VIP for the window, 0–100. */
+  vip_percent: PeriodCounts
 }
 
 export interface CountryStats {
@@ -69,6 +75,9 @@ export interface CountryStats {
   launches_per_user: PeriodCounts
   users: PeriodCounts
   launches: PeriodCounts
+  vip_users: PeriodCounts
+  /** Share of country users with VIP for the window, 0–100. */
+  vip_percent: PeriodCounts
 }
 
 export interface VersionStats {
@@ -89,6 +98,9 @@ export interface ProductStats {
   launches_per_user: PeriodCounts
   users: PeriodCounts
   launches: PeriodCounts
+  vip_users: PeriodCounts
+  /** Share of product users with VIP for the window, 0–100. */
+  vip_percent: PeriodCounts
 }
 
 export interface DailyPoint {

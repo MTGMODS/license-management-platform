@@ -28,16 +28,20 @@ export function DevicesChart({ devices, period, metric }: DevicesChartProps) {
       label: t('analytics.devices.pc'),
       users: devices.pc.users[period],
       launches: devices.pc.launches[period],
+      vip_users: devices.pc.vip_users[period],
       user_share: devices.pc.user_share[period],
       launches_per_user: devices.pc.launches_per_user[period],
+      vip_percent: devices.pc.vip_percent[period],
     },
     {
       id: 'mobile' as const,
       label: t('analytics.devices.mobile'),
       users: devices.mobile.users[period],
       launches: devices.mobile.launches[period],
+      vip_users: devices.mobile.vip_users[period],
       user_share: devices.mobile.user_share[period],
       launches_per_user: devices.mobile.launches_per_user[period],
+      vip_percent: devices.mobile.vip_percent[period],
     },
   ]
     .filter((row) => row[metric] > 0)

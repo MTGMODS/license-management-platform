@@ -82,8 +82,10 @@ function normalizeServer(raw: Record<string, unknown>): ServerStats {
     server: typeof raw.server === 'number' && Number.isFinite(raw.server) ? raw.server : 0,
     users: asPeriodCounts(raw.users),
     launches: asPeriodCounts(raw.launches),
+    vip_users: asPeriodCounts(raw.vip_users),
     user_share: asPeriodCounts(raw.user_share),
     launches_per_user: asPeriodCounts(raw.launches_per_user),
+    vip_percent: asPeriodCounts(raw.vip_percent),
   }
 }
 
@@ -102,8 +104,10 @@ function normalizeCountry(raw: Record<string, unknown>): CountryStats {
     code: typeof raw.code === 'string' ? raw.code : 'UNKNOWN',
     users: asPeriodCounts(raw.users),
     launches: asPeriodCounts(raw.launches),
+    vip_users: asPeriodCounts(raw.vip_users),
     user_share: asPeriodCounts(raw.user_share),
     launches_per_user: asPeriodCounts(raw.launches_per_user),
+    vip_percent: asPeriodCounts(raw.vip_percent),
   }
 }
 
@@ -112,8 +116,10 @@ function normalizeProduct(raw: Record<string, unknown>): ProductStats {
     product: typeof raw.product === 'string' ? raw.product : 'unknown',
     users: asPeriodCounts(raw.users),
     launches: asPeriodCounts(raw.launches),
+    vip_users: asPeriodCounts(raw.vip_users),
     user_share: asPeriodCounts(raw.user_share),
     launches_per_user: asPeriodCounts(raw.launches_per_user),
+    vip_percent: asPeriodCounts(raw.vip_percent),
   }
 }
 
@@ -123,15 +129,17 @@ function normalizeDeviceFamily(raw: unknown): DeviceFamilyStats {
     return {
       users: asPeriodCounts(source.users),
       launches: asPeriodCounts(source.launches),
+      vip_users: asPeriodCounts(source.vip_users),
       user_share: asPeriodCounts(source.user_share),
       launches_per_user: asPeriodCounts(source.launches_per_user),
+      vip_percent: asPeriodCounts(source.vip_percent),
     }
   }
 
   // Legacy shape was a bare PeriodCounts map for users only.
   const users = asPeriodCounts(raw)
   const empty = { all_time: 0, '30d': 0, '24h': 0, '1h': 0 }
-  return { users, launches: empty, user_share: empty, launches_per_user: empty }
+  return { users, launches: empty, vip_users: empty, user_share: empty, launches_per_user: empty, vip_percent: empty }
 }
 
 function normalizeDailyPoint(raw: Record<string, unknown>): DailyPoint {

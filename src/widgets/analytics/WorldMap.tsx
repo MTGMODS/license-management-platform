@@ -165,8 +165,10 @@ export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
               rows={statsTooltipRows(t, format, {
                 users: hovered.users[period],
                 launches: hovered.launches[period],
+                vip_users: hovered.vip_users[period],
                 user_share: hovered.user_share[period],
                 launches_per_user: hovered.launches_per_user[period],
+                vip_percent: hovered.vip_percent[period],
               })}
             />
           </div>

@@ -68,8 +68,10 @@ function ProductsChart({
             rows={statsTooltipRows(t, format, {
               users: point.users[period],
               launches: point.launches[period],
+              vip_users: point.vip_users[period],
               user_share: point.user_share[period],
               launches_per_user: point.launches_per_user[period],
+              vip_percent: point.vip_percent[period],
             })}
           />
         )}
@@ -141,8 +143,10 @@ export function ServersChart({ servers, products, period, metric }: ServersChart
               rows={statsTooltipRows(t, format, {
                 users: point.users[period],
                 launches: point.launches[period],
+                vip_users: point.vip_users[period],
                 user_share: point.user_share[period],
                 launches_per_user: point.launches_per_user[period],
+                vip_percent: point.vip_percent[period],
               })}
             />
           )}
