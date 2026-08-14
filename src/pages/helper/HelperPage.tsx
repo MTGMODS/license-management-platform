@@ -1,4 +1,4 @@
-import { Download } from 'lucide-react'
+import { Crown, Download } from 'lucide-react'
 import { lazy, Suspense, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -49,6 +49,7 @@ function Hero() {
           {downloadLabel}
         </Link>
         <Link to="/vip" className={buttonStyles({ size: 'lg', variant: 'secondary' })}>
+          <Crown aria-hidden className="size-4" />
           {t('hero.vip')}
         </Link>
       </div>
