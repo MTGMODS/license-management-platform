@@ -104,6 +104,16 @@ class LaunchRepository:
             func.count(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.launched_at >= d30), LaunchModel.id))).label("mob_l_30d"),
             func.count(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.launched_at >= d1), LaunchModel.id))).label("mob_l_24h"),
             func.count(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.launched_at >= d1h), LaunchModel.id))).label("mob_l_1h"),
+
+            func.count(distinct(case((and_(LaunchModel.device == 'PC', LaunchModel.version.ilike('%VIP%')), LaunchModel.hwid)))).label("pc_vip_all"),
+            func.count(distinct(case((and_(LaunchModel.device == 'PC', LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label("pc_vip_30d"),
+            func.count(distinct(case((and_(LaunchModel.device == 'PC', LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label("pc_vip_24h"),
+            func.count(distinct(case((and_(LaunchModel.device == 'PC', LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label("pc_vip_1h"),
+
+            func.count(distinct(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.version.ilike('%VIP%')), LaunchModel.hwid)))).label("mob_vip_all"),
+            func.count(distinct(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label("mob_vip_30d"),
+            func.count(distinct(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label("mob_vip_24h"),
+            func.count(distinct(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label("mob_vip_1h"),
         )
         res = (await self.db.execute(stmt)).first()
         
@@ -142,20 +152,24 @@ class LaunchRepository:
             "devices": {
                 "pc": {
                     "users": {"all_time": res.pc_all, "30d": res.pc_30d, "24h": res.pc_24h, "1h": res.pc_1h},
+                    "vip_users": {"all_time": res.pc_vip_all, "30d": res.pc_vip_30d, "24h": res.pc_vip_24h, "1h": res.pc_vip_1h},
                     "launches": {"all_time": res.pc_l_all, "30d": res.pc_l_30d, "24h": res.pc_l_24h, "1h": res.pc_l_1h},
                     **LaunchRepository._period_metrics(
                         {"all_time": res.pc_all, "30d": res.pc_30d, "24h": res.pc_24h, "1h": res.pc_1h},
                         {"all_time": res.pc_l_all, "30d": res.pc_l_30d, "24h": res.pc_l_24h, "1h": res.pc_l_1h},
                         g_users,
+                        {"all_time": res.pc_vip_all, "30d": res.pc_vip_30d, "24h": res.pc_vip_24h, "1h": res.pc_vip_1h},
                     ),
                 },
                 "mobile": {
                     "users": {"all_time": res.mob_all, "30d": res.mob_30d, "24h": res.mob_24h, "1h": res.mob_1h},
+                    "vip_users": {"all_time": res.mob_vip_all, "30d": res.mob_vip_30d, "24h": res.mob_vip_24h, "1h": res.mob_vip_1h},
                     "launches": {"all_time": res.mob_l_all, "30d": res.mob_l_30d, "24h": res.mob_l_24h, "1h": res.mob_l_1h},
                     **LaunchRepository._period_metrics(
                         {"all_time": res.mob_all, "30d": res.mob_30d, "24h": res.mob_24h, "1h": res.mob_1h},
                         {"all_time": res.mob_l_all, "30d": res.mob_l_30d, "24h": res.mob_l_24h, "1h": res.mob_l_1h},
                         g_users,
+                        {"all_time": res.mob_vip_all, "30d": res.mob_vip_30d, "24h": res.mob_vip_24h, "1h": res.mob_vip_1h},
                     ),
                 }
             }
@@ -170,6 +184,10 @@ class LaunchRepository:
                 func.count(distinct(case((LaunchModel.launched_at >= d30, LaunchModel.hwid)))).label("u_30d"),
                 func.count(distinct(case((LaunchModel.launched_at >= d1, LaunchModel.hwid)))).label("u_24h"),
                 func.count(distinct(case((LaunchModel.launched_at >= d1h, LaunchModel.hwid)))).label("u_1h"),
+                func.count(distinct(case((LaunchModel.version.ilike('%VIP%'), LaunchModel.hwid)))).label("vip_all"),
+                func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label("vip_30d"),
+                func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label("vip_24h"),
+                func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label("vip_1h"),
                 func.count(LaunchModel.id).label("l_all"),
                 func.count(case((LaunchModel.launched_at >= d30, LaunchModel.id))).label("l_30d"),
                 func.count(case((LaunchModel.launched_at >= d1, LaunchModel.id))).label("l_24h"),
@@ -184,12 +202,15 @@ class LaunchRepository:
         for row in res.all():
             users = {"all_time": row.u_all, "30d": row.u_30d, "24h": row.u_24h, "1h": row.u_1h}
             launches = {"all_time": row.l_all, "30d": row.l_30d, "24h": row.l_24h, "1h": row.l_1h}
-            metrics = self._period_metrics(users, launches, g_users)
+            vip_users = {"all_time": row.vip_all, "30d": row.vip_30d, "24h": row.vip_24h, "1h": row.vip_1h}
+            metrics = self._period_metrics(users, launches, g_users, vip_users)
             result.append({
                 "server": row.server,
                 "user_share": metrics["user_share"],
                 "launches_per_user": metrics["launches_per_user"],
+                "vip_percent": metrics["vip_percent"],
                 "users": users,
+                "vip_users": vip_users,
                 "launches": launches,
             })
         return result
@@ -202,6 +223,10 @@ class LaunchRepository:
                 func.count(distinct(case((LaunchModel.launched_at >= d30, LaunchModel.hwid)))).label("u_30d"),
                 func.count(distinct(case((LaunchModel.launched_at >= d1, LaunchModel.hwid)))).label("u_24h"),
                 func.count(distinct(case((LaunchModel.launched_at >= d1h, LaunchModel.hwid)))).label("u_1h"),
+                func.count(distinct(case((LaunchModel.version.ilike('%VIP%'), LaunchModel.hwid)))).label("vip_all"),
+                func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label("vip_30d"),
+                func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label("vip_24h"),
+                func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label("vip_1h"),
                 func.count(LaunchModel.id).label("l_all"),
                 func.count(case((LaunchModel.launched_at >= d30, LaunchModel.id))).label("l_30d"),
                 func.count(case((LaunchModel.launched_at >= d1, LaunchModel.id))).label("l_24h"),
@@ -215,12 +240,15 @@ class LaunchRepository:
         for row in res.all():
             users = {"all_time": row.u_all, "30d": row.u_30d, "24h": row.u_24h, "1h": row.u_1h}
             launches = {"all_time": row.l_all, "30d": row.l_30d, "24h": row.l_24h, "1h": row.l_1h}
-            metrics = self._period_metrics(users, launches, g_users)
+            vip_users = {"all_time": row.vip_all, "30d": row.vip_30d, "24h": row.vip_24h, "1h": row.vip_1h}
+            metrics = self._period_metrics(users, launches, g_users, vip_users)
             result.append({
                 "code": row.c_code,
                 "user_share": metrics["user_share"],
                 "launches_per_user": metrics["launches_per_user"],
+                "vip_percent": metrics["vip_percent"],
                 "users": users,
+                "vip_users": vip_users,
                 "launches": launches,
             })
         return result
@@ -309,6 +337,10 @@ class LaunchRepository:
                 func.count(distinct(case((and_(cond, LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label(f"{name}_u_30d"),
                 func.count(distinct(case((and_(cond, LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label(f"{name}_u_24h"),
                 func.count(distinct(case((and_(cond, LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label(f"{name}_u_1h"),
+                func.count(distinct(case((and_(cond, LaunchModel.version.ilike('%VIP%')), LaunchModel.hwid)))).label(f"{name}_vip_all"),
+                func.count(distinct(case((and_(cond, LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label(f"{name}_vip_30d"),
+                func.count(distinct(case((and_(cond, LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label(f"{name}_vip_24h"),
+                func.count(distinct(case((and_(cond, LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label(f"{name}_vip_1h"),
                 func.count(case((cond, LaunchModel.id))).label(f"{name}_l_all"),
                 func.count(case((and_(cond, LaunchModel.launched_at >= d30), LaunchModel.id))).label(f"{name}_l_30d"),
                 func.count(case((and_(cond, LaunchModel.launched_at >= d1), LaunchModel.id))).label(f"{name}_l_24h"),
@@ -330,12 +362,20 @@ class LaunchRepository:
                 "24h": getattr(res, f"{name}_l_24h") or 0,
                 "1h": getattr(res, f"{name}_l_1h") or 0,
             }
-            metrics = self._period_metrics(users, launches, g_users)
+            vip_users = {
+                "all_time": getattr(res, f"{name}_vip_all") or 0,
+                "30d": getattr(res, f"{name}_vip_30d") or 0,
+                "24h": getattr(res, f"{name}_vip_24h") or 0,
+                "1h": getattr(res, f"{name}_vip_1h") or 0,
+            }
+            metrics = self._period_metrics(users, launches, g_users, vip_users)
             products.append({
                 "product": name,
                 "user_share": metrics["user_share"],
                 "launches_per_user": metrics["launches_per_user"],
+                "vip_percent": metrics["vip_percent"],
                 "users": users,
+                "vip_users": vip_users,
                 "launches": launches,
             })
         return products
