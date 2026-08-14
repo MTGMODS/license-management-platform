@@ -48,7 +48,7 @@ function Hero() {
           <Download aria-hidden className="size-4" />
           {downloadLabel}
         </Link>
-        <Link to="/vip" className={buttonStyles({ size: 'lg', variant: 'gold' })}>
+        <Link to="/vip" className={buttonStyles({ size: 'lg', variant: 'secondary' })}>
           <Crown aria-hidden className="size-4" />
           {t('hero.vip')}
         </Link>
