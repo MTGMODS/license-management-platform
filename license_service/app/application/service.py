@@ -64,6 +64,7 @@ class LicenseService:
                 "id": d.id,
                 "hwid": hwid_masked,
                 "ip": ip_masked,
+                "first_used_at": format_utc(d.first_used_at),
                 "last_used_at": format_utc(d.last_used_at)
             })
 
@@ -245,6 +246,17 @@ class LicenseService:
                 "created_at": format_utc(lic.created_at),
                 "activated_at": format_utc(lic.activated_at),
                 "expires_at": format_utc(lic.expires_at),
+                "devices": [
+                    {
+                        "id": d.id,
+                        "device": d.device,
+                        "ip_address": d.ip_address,
+                        "user_agent": d.user_agent,
+                        "first_used_at": format_utc(d.first_used_at),
+                        "last_used_at": format_utc(d.last_used_at),
+                    }
+                    for d in lic.devices
+                ],
                 "transaction": {
                     "id": lic.transaction.id,
                     "amount": lic.transaction.amount,
