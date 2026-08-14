@@ -64,7 +64,7 @@ export function QuickStats() {
     {
       id: 'devices',
       label: t('stats.devices'),
-      value: `${format.number(Math.round(data.overview.metrics.pc_ratio))}%/${format.number(Math.round(data.overview.metrics.mobile_ratio))}%`,
+      value: `${format.percent(data.overview.metrics.pc_ratio)} / ${format.percent(data.overview.metrics.mobile_ratio)}`,
       icon: MonitorSmartphone,
     },
     {
@@ -101,7 +101,7 @@ export function QuickStats() {
                   {item.label}
                 </p>
               </div>
-              <p className="tabular mt-[clamp(0.35rem,1vh,0.75rem)] truncate whitespace-nowrap text-[clamp(1.15rem,2.6vh,1.5rem)] font-semibold tracking-tight">
+              <p className="tabular mt-[clamp(0.35rem,1vh,0.75rem)] line-clamp-1 text-[clamp(1.15rem,2.6vh,1.5rem)] font-semibold tracking-tight">
                 {item.value}
               </p>
             </Card>
