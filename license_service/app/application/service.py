@@ -55,15 +55,11 @@ class LicenseService:
         devices_list = []
         for d in db_sub.devices:
             hwid_masked = f"{d.device[:3]}******{d.device[-3:]}" if len(d.device) > 6 else "***"
-            ip_masked = "Unknown"
-            if d.ip_address:
-                parts = d.ip_address.split('.')
-                ip_masked = f"{parts[0]}.{parts[1]}.*.*" if len(parts) == 4 else "***"
 
             devices_list.append({
                 "id": d.id,
                 "hwid": hwid_masked,
-                "ip": ip_masked,
+                "ip": d.ip_address,
                 "first_used_at": format_utc(d.first_used_at),
                 "last_used_at": format_utc(d.last_used_at)
             })
