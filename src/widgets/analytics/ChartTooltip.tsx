@@ -14,12 +14,13 @@ export interface TooltipRow {
 export interface StatsTooltipValues {
   users: number
   launches: number
+  vip_users?: number
   user_share?: number
   launches_per_user?: number
   vip_percent?: number
 }
 
-/** Users / launches, then U/S, VIP, L/U — same order and colours on every chart. */
+/** Users, VIP users, launches, then U/S, VIP share, L/U. */
 export function statsTooltipRows(
   t: TFunction<'helper'>,
   format: Formatters,
@@ -31,12 +32,21 @@ export function statsTooltipRows(
       value: format.number(stats.users),
       color: CHART.users,
     },
-    {
-      label: t('analytics.metric.launches'),
-      value: format.number(stats.launches),
-      color: CHART.launches,
-    },
   ]
+
+  if (stats.vip_users != null) {
+    rows.push({
+      label: t('analytics.metric.vipUsers'),
+      value: format.number(stats.vip_users),
+      color: CHART.vip,
+    })
+  }
+
+  rows.push({
+    label: t('analytics.metric.launches'),
+    value: format.number(stats.launches),
+    color: CHART.launches,
+  })
 
   if (stats.user_share != null) {
     rows.push({
@@ -50,7 +60,7 @@ export function statsTooltipRows(
     rows.push({
       label: t('analytics.metric.vipShare'),
       value: format.percent(stats.vip_percent),
-      color: CHART.vip,
+      color: CHART.share,
     })
   }
 

@@ -41,6 +41,7 @@ interface FactionRow {
   label: string
   users: number
   launches: number
+  vip_users: number
   user_share: number
   launches_per_user: number
   vip_percent: number
@@ -67,6 +68,7 @@ export function FactionsChart({
         : stats.mode.toUpperCase(),
       users: stats.users[period],
       launches: stats.launches[period],
+      vip_users: stats.vip_users[period],
       user_share: stats.user_share[period],
       launches_per_user: stats.launches_per_user[period],
       vip_percent: stats.vip_percent[period],
@@ -92,6 +94,7 @@ export function FactionsChart({
               rows={statsTooltipRows(t, format, {
                 users: point.users,
                 launches: point.launches,
+                vip_users: point.vip_users,
                 user_share: point.user_share,
                 launches_per_user: point.launches_per_user,
                 vip_percent: point.vip_percent,
