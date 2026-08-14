@@ -116,6 +116,7 @@ class LicenseRepository:
         if activation:
             activation.ip_address = ip_address
             activation.user_agent = user_agent
+            activation.last_used_at = func.now()
         else:
             activation = DeviceModel(license_id=license_id, device=device, ip_address=ip_address, user_agent=user_agent)
             self.db.add(activation)
