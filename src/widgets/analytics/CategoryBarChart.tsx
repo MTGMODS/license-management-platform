@@ -40,7 +40,7 @@ export function CategoryBarChart<T>({
           layout="vertical"
           margin={CATEGORY_CHART_MARGIN}
           barSize={CATEGORY_BAR_SIZE}
-          barCategoryGap={8}
+          barCategoryGap={12}
         >
           <CartesianGrid stroke={CHART.grid} horizontal={false} />
           <XAxis type="number" {...AXIS_PROPS} tickFormatter={format.compact} />
