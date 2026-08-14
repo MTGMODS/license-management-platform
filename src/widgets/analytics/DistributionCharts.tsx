@@ -5,7 +5,7 @@ import type { FactionStats, PeriodKey, VersionStats } from '@/shared/api/usage'
 import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
-import { AXIS_PROPS, barActiveProps, CHART, type ChartMetric, chartColor, useCategoryYAxis } from './chartTheme'
+import { AXIS_PROPS, barActiveProps, CHART, type ChartMetric, chartColor } from './chartTheme'
 import { ChartTooltip, statsTooltipRows } from './ChartTooltip'
 
 /**
@@ -58,7 +58,6 @@ export function FactionsChart({
   const { t } = useTranslation('helper')
   const format = useFormatters()
   const color = chartColor(metric)
-  const yAxis = useCategoryYAxis(168)
 
   const rows: FactionRow[] = factions
     .map((stats) => ({
@@ -93,7 +92,7 @@ export function FactionsChart({
             >
               <CartesianGrid stroke={CHART.grid} horizontal={false} />
               <XAxis type="number" {...AXIS_PROPS} tickFormatter={format.compact} />
-              <YAxis type="category" dataKey="label" {...yAxis} />
+              <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={168} />
               <Tooltip
                 cursor={false}
                 content={({ active, payload }) => {
@@ -148,7 +147,6 @@ export function VersionsChart({
   const { t } = useTranslation('helper')
   const format = useFormatters()
   const color = chartColor(metric)
-  const yAxis = useCategoryYAxis(132)
 
   const main = versions.filter((item) => item.user_share[period] >= VERSION_TAIL_THRESHOLD)
   const tail = versions.filter((item) => item.user_share[period] < VERSION_TAIL_THRESHOLD)
@@ -199,7 +197,7 @@ export function VersionsChart({
             >
               <CartesianGrid stroke={CHART.grid} horizontal={false} />
               <XAxis type="number" {...AXIS_PROPS} tickFormatter={format.compact} />
-              <YAxis type="category" dataKey="label" {...yAxis} />
+              <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={132} />
               <Tooltip
                 cursor={false}
                 content={({ active, payload }) => {

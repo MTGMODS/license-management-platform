@@ -7,7 +7,7 @@ import { formatServerLabel, getServer, UNKNOWN_SERVER_ID } from '@/shared/config
 import { useFormatters } from '@/shared/lib/format'
 import { Card, SegmentedControl } from '@/shared/ui'
 
-import { AXIS_PROPS, barActiveProps, CHART, type ChartMetric, chartColor, useCategoryYAxis } from './chartTheme'
+import { AXIS_PROPS, barActiveProps, CHART, type ChartMetric, chartColor } from './chartTheme'
 import { ChartTooltip, statsTooltipRows } from './ChartTooltip'
 
 type TopLimit = 5 | 10 | 20 | 0
@@ -42,7 +42,6 @@ function ProductsChart({
   const { t } = useTranslation('helper')
   const format = useFormatters()
   const color = chartColor(metric)
-  const yAxis = useCategoryYAxis(148)
 
   const rows = [...products]
     .map((item) => ({
@@ -68,7 +67,7 @@ function ProductsChart({
           >
             <CartesianGrid stroke={CHART.grid} horizontal={false} />
             <XAxis type="number" {...AXIS_PROPS} tickFormatter={format.compact} />
-            <YAxis type="category" dataKey="label" {...yAxis} />
+            <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={148} />
             <Tooltip
               cursor={false}
               content={({ active, payload }) => {
@@ -107,7 +106,6 @@ export function ServersChart({ servers, products, period, metric }: ServersChart
   const format = useFormatters()
   const [limit, setLimit] = useState<TopLimit>(10)
   const color = chartColor(metric)
-  const yAxis = useCategoryYAxis(148)
 
   const named = servers.map((item) => {
     const info = getServer(item.server)
@@ -168,7 +166,7 @@ export function ServersChart({ servers, products, period, metric }: ServersChart
             >
               <CartesianGrid stroke={CHART.grid} horizontal={false} />
               <XAxis type="number" {...AXIS_PROPS} tickFormatter={format.compact} />
-              <YAxis type="category" dataKey="label" {...yAxis} />
+              <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={148} />
               <Tooltip
                 cursor={false}
                 content={({ active, payload }) => {
