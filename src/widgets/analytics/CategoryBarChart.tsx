@@ -32,7 +32,13 @@ export function CategoryBarChart<T>({
   const format = useFormatters()
 
   return (
-    <div className={cn('mt-6', className)} style={{ height: categoryChartHeight(data.length) }}>
+    <div
+      className={cn(
+        'relative z-0 mt-6 overflow-visible [&_.recharts-wrapper]:overflow-visible',
+        className,
+      )}
+      style={{ height: categoryChartHeight(data.length) }}
+    >
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           accessibilityLayer={false}
@@ -53,6 +59,8 @@ export function CategoryBarChart<T>({
           />
           <Tooltip
             cursor={false}
+            allowEscapeViewBox={{ x: true, y: true }}
+            wrapperStyle={{ zIndex: 40, outline: 'none' }}
             content={({ active, payload }) => {
               const point = payload?.[0]?.payload as T | undefined
               if (!active || !point) return null
