@@ -5,7 +5,7 @@ import type { DeviceFamilyStats, PeriodKey } from '@/shared/api/usage'
 import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
-import { AXIS_PROPS, barActiveProps, CHART, type ChartMetric, chartColor } from './chartTheme'
+import { AXIS_PROPS, barActiveProps, CHART, type ChartMetric, chartColor, useCategoryYAxis } from './chartTheme'
 import { ChartTooltip, statsTooltipRows } from './ChartTooltip'
 
 interface DevicesChartProps {
@@ -21,6 +21,7 @@ export function DevicesChart({ devices, period, metric }: DevicesChartProps) {
   const { t } = useTranslation('helper')
   const format = useFormatters()
   const color = chartColor(metric)
+  const yAxis = useCategoryYAxis(100)
 
   const rows = [
     {
@@ -61,7 +62,7 @@ export function DevicesChart({ devices, period, metric }: DevicesChartProps) {
             >
               <CartesianGrid stroke={CHART.grid} horizontal={false} />
               <XAxis type="number" {...AXIS_PROPS} tickFormatter={format.compact} />
-              <YAxis type="category" dataKey="label" {...AXIS_PROPS} width={100} />
+              <YAxis type="category" dataKey="label" {...yAxis} />
               <Tooltip
                 cursor={false}
                 content={({ active, payload }) => {

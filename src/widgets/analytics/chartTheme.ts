@@ -1,3 +1,6 @@
+import { createElement, useMemo, useSyncExternalStore } from 'react'
+import type { YAxisTickContentProps } from 'recharts'
+
 /**
  * Recharts takes colours as literal SVG attributes rather than classes, so the
  * palette is mirrored here from the design tokens in index.css.
@@ -36,6 +39,56 @@ export const AXIS_PROPS = {
 export const Y_AXIS_NUMERIC = {
   ...AXIS_PROPS,
   width: 'auto' as const,
+}
+
+const LG_QUERY = '(min-width: 1024px)'
+
+function subscribeLg(onStoreChange: () => void) {
+  const mq = window.matchMedia(LG_QUERY)
+  mq.addEventListener('change', onStoreChange)
+  return () => mq.removeEventListener('change', onStoreChange)
+}
+
+/** Same breakpoint as the helper hero: PC keeps the default right-aligned ticks. */
+function useDesktopChart() {
+  return useSyncExternalStore(
+    subscribeLg,
+    () => window.matchMedia(LG_QUERY).matches,
+    () => true,
+  )
+}
+
+/**
+ * Category ticks default to end-anchor at the inner edge, so on a phone the
+ * names sit around the middle of the label column. Start them at ~0.5/2 of
+ * that column instead, without shrinking the axis (that clipped "Полиция").
+ */
+function mobileCategoryTick(axisWidth: number) {
+  return function MobileCategoryTick({ x, y, payload }: YAxisTickContentProps) {
+    const tickX = Number(x)
+    const tickY = Number(y)
+    return createElement(
+      'text',
+      {
+        x: tickX - axisWidth * 0.75 + 8,
+        y: tickY,
+        textAnchor: 'start',
+        dominantBaseline: 'central',
+        fill: CHART.axis,
+        fontSize: AXIS_PROPS.fontSize,
+      },
+      payload.value,
+    )
+  }
+}
+
+export function useCategoryYAxis(width: number) {
+  const isDesktop = useDesktopChart()
+  const tick = useMemo(
+    () => (isDesktop ? true : mobileCategoryTick(width)),
+    [isDesktop, width],
+  )
+  return { ...AXIS_PROPS, width, tick }
 }
 
 /** Shared hover outline for chart bars and map countries. */
