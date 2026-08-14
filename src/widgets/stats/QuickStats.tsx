@@ -68,18 +68,18 @@ export function QuickStats() {
       icon: MonitorSmartphone,
     },
     {
+      id: 'servers',
+      label: t('stats.servers'),
+      value: format.number(data.distribution.servers.length),
+      icon: Server,
+    },
+    {
       id: 'countries',
       label: t('stats.countries'),
       value: format.number(
         data.distribution.countries.filter((item) => item.code !== 'UNKNOWN').length,
       ),
       icon: Globe2,
-    },
-    {
-      id: 'servers',
-      label: t('stats.servers'),
-      value: format.number(data.distribution.servers.length),
-      icon: Server,
     },
   ]
 
@@ -94,8 +94,8 @@ export function QuickStats() {
         {items.map((item) => {
           const Icon = item.icon
           return (
-            <Card key={item.id} className="p-[clamp(0.65rem,1.4vh,1rem)] lg:p-3">
-              <div className="flex items-center gap-2">
+            <Card key={item.id} className="p-[clamp(0.65rem,1.4vh,1rem)] text-center lg:p-3">
+              <div className="flex items-center justify-center gap-2">
                 <Icon aria-hidden className="size-[clamp(1rem,2.2vh,1.25rem)] shrink-0 text-accent-300" />
                 <p className="min-w-0 truncate text-[clamp(0.75rem,1.4vh,0.875rem)] text-fg-subtle">
                   {item.label}
