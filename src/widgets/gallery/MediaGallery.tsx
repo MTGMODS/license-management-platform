@@ -2,16 +2,14 @@ import { ImageIcon, PlayCircle } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import {
-  HELPER_SCREENSHOTS,
-  HELPER_VIDEO_ID,
-  youtubeThumbnailUrl,
-} from '@/shared/config/product'
+import { helperScreenshots } from '@/assets/screenshots'
+import { HELPER_VIDEO_ID, youtubeThumbnailUrl } from '@/shared/config/product'
 import { cn } from '@/shared/lib/cn'
+import { detectDevice } from '@/shared/lib/device'
 
 /**
- * Gallery is always video + up to nine CDN screenshots. Missing env values
- * keep the slots as placeholders so layout does not jump when media is added.
+ * Gallery is always video + nine local screenshots (PC or mobile set).
+ * Missing files keep the slots as placeholders so layout does not jump.
  */
 type GalleryItem =
   | { kind: 'video'; videoId: string | null }
@@ -91,17 +89,20 @@ function VideoThumb({ videoId }: { videoId: string | null }) {
 export function MediaGallery({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation('helper')
   const items = useMemo<GalleryItem[]>(() => {
-    const screens: GalleryItem[] =
-      HELPER_SCREENSHOTS.length > 0
-        ? HELPER_SCREENSHOTS.map((shot) => ({
+    const byIndex = new Map(
+      helperScreenshots(detectDevice()).map((shot) => [shot.index, shot.src]),
+    )
+    const screens: GalleryItem[] = Array.from({ length: 9 }, (_, offset) => {
+      const index = offset + 1
+      const src = byIndex.get(index)
+      return src
+        ? {
             kind: 'image' as const,
-            src: shot.src,
-            alt: t('gallery.screenshotAlt', { index: shot.index }),
-          }))
-        : Array.from({ length: 9 }, (_, offset) => ({
-            kind: 'image-placeholder' as const,
-            index: offset + 1,
-          }))
+            src,
+            alt: t('gallery.screenshotAlt', { index }),
+          }
+        : { kind: 'image-placeholder' as const, index }
+    })
 
     return [{ kind: 'video', videoId: HELPER_VIDEO_ID }, ...screens]
   }, [t])

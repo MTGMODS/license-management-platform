@@ -1,8 +1,9 @@
 /**
  * Business values the backend does not serve yet.
  *
- * Pricing lives here until the License Service exposes a catalog. Media URLs
- * come from Vite env so CDN / YouTube can change without a code edit.
+ * Pricing lives here until the License Service exposes a catalog. The helper
+ * video id comes from Vite env so the YouTube link can change without a code
+ * edit; screenshots are bundled from `src/assets/screenshots`.
  */
 
 export interface PricingTier {
@@ -70,44 +71,8 @@ export function parseYoutubeId(raw: string): string | null {
   }
 }
 
-function normalizeCdnBase(raw: string): string {
-  let base = raw.replace(/\/+$/, '')
-  if (!base) return ''
-  if (!/^https?:\/\//i.test(base)) base = `https://${base}`
-  return base
-}
-
 /** YouTube id for the gallery and the beginner guide (`VITE_HELPER_VIDEO_URL`). */
 export const HELPER_VIDEO_ID: string | null = parseYoutubeId(readEnv('VITE_HELPER_VIDEO_URL'))
-
-/**
- * Nine screenshots at `{base}/1.png` … `{base}/9.png`
- * (`VITE_HELPER_SCREENSHOTS_BASE`, e.g. `cdn.mtgmods.com/helper/logo`).
- *
- * Special value `placehold` fills the slots with numbered PNG placeholders
- * from placehold.co for local layout testing.
- */
-const SCREENSHOTS_BASE = normalizeCdnBase(readEnv('VITE_HELPER_SCREENSHOTS_BASE'))
-const USE_PLACEHOLD_SHOTS =
-  readEnv('VITE_HELPER_SCREENSHOTS_BASE').toLowerCase() === 'placehold'
-
-export const HELPER_SCREENSHOTS: { src: string; index: number }[] = USE_PLACEHOLD_SHOTS
-  ? Array.from({ length: 9 }, (_, offset) => {
-      const index = offset + 1
-      return {
-        index,
-        src: `https://placehold.co/960x540/12121a/8b8ba3/png?text=${index}`,
-      }
-    })
-  : SCREENSHOTS_BASE
-    ? Array.from({ length: 9 }, (_, offset) => {
-        const index = offset + 1
-        return {
-          index,
-          src: `${SCREENSHOTS_BASE}/${index}.png`,
-        }
-      })
-    : []
 
 /** YouTube poster used in gallery thumbnails. */
 export function youtubeThumbnailUrl(videoId: string): string {

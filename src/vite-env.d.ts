@@ -18,8 +18,6 @@ interface ImportMetaEnv {
 
   /** YouTube watch/embed URL or bare 11-char id for helper media. */
   readonly VITE_HELPER_VIDEO_URL?: string
-  /** CDN folder for screenshots 1.png…9.png (https optional). */
-  readonly VITE_HELPER_SCREENSHOTS_BASE?: string
 }
 
 interface ImportMeta {
