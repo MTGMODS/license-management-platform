@@ -1,4 +1,5 @@
-import { CreditCard, Crown, Wallet } from 'lucide-react'
+import { CircleDollarSign, Crown, ShoppingCart, TrendingUp } from 'lucide-react'
+import type { ComponentType } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Bar,
@@ -14,14 +15,52 @@ import {
 } from 'recharts'
 
 import { useSalesStats } from '@/features/license/useSalesStats'
+import { usePublicStats } from '@/features/usage/usePublicStats'
 import type { LicenseDurationStat, LicensePaymentStat } from '@/shared/api/license'
+import { cn } from '@/shared/lib/cn'
 import { useFormatters } from '@/shared/lib/format'
 import { Card, ErrorState, Skeleton } from '@/shared/ui'
 import { AXIS_PROPS, barActiveProps, CHART, Y_AXIS_NUMERIC } from '@/widgets/analytics/chartTheme'
 import { ChartTooltip } from '@/widgets/analytics/ChartTooltip'
 
-/** Distinct hues for the payment split; the chart is a true part-of-whole. */
-const PAYMENT_COLORS = ['#0fb0fa', '#34d399', '#fbbf24', '#fb7185', '#38bdf8']
+const PAYMENT_FALLBACK = ['#0fb0fa', '#34d399', '#f59e0b', '#fb7185', '#38bdf8']
+
+const PAYMENT_COLOR: Record<string, string> = {
+  FunPay: '#0fb0fa',
+  Stars: '#34d399',
+  Card: '#f59e0b',
+  Crypto: '#fb7185',
+  PayPal: '#38bdf8',
+  Promo: '#a78bfa',
+}
+
+function paymentColor(method: string, index: number): string {
+  return PAYMENT_COLOR[method] ?? PAYMENT_FALLBACK[index % PAYMENT_FALLBACK.length] ?? '#0fb0fa'
+}
+
+function money(format: ReturnType<typeof useFormatters>, value: number): string {
+  return `$${format.number(value)}`
+}
+
+function KpiCard({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string
+  value: string
+  icon: ComponentType<{ className?: string }>
+}) {
+  return (
+    <Card className="p-5">
+      <span className="grid size-10 place-items-center rounded-xl bg-accent-500/10 text-accent-300">
+        <Icon aria-hidden className="size-5" />
+      </span>
+      <p className="mt-4 text-sm text-fg-subtle">{label}</p>
+      <p className="tabular mt-1 text-3xl font-semibold tracking-tight">{value}</p>
+    </Card>
+  )
+}
 
 function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
   const { t } = useTranslation('vip')
@@ -34,7 +73,6 @@ function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
   return (
     <Card className="p-6">
       <h3 className="text-lg font-semibold tracking-tight">{t('stats.durations.title')}</h3>
-      <p className="mt-1 text-sm text-fg-muted">{t('stats.durations.subtitle')}</p>
 
       {rows.length === 0 ? (
         <p className="mt-8 text-sm text-fg-subtle">{t('stats.empty')}</p>
@@ -66,7 +104,7 @@ function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
                         },
                         {
                           label: t('stats.durations.sum'),
-                          value: `$${format.number(point.sum)}`,
+                          value: money(format, point.sum),
                         },
                       ]}
                     />
@@ -76,7 +114,7 @@ function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
               <Bar
                 dataKey="count"
                 fill={CHART.users}
-                radius={[4, 4, 0, 0]}
+                radius={[6, 6, 0, 0]}
                 isAnimationActive={false}
                 activeBar={barActiveProps(CHART.users)}
               />
@@ -91,33 +129,31 @@ function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
 function PaymentsChart({ payments }: { payments: LicensePaymentStat[] }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
-
   const total = payments.reduce((sum, item) => sum + item.sum, 0)
 
   return (
     <Card className="p-6">
       <h3 className="text-lg font-semibold tracking-tight">{t('stats.payments.title')}</h3>
-      <p className="mt-1 text-sm text-fg-muted">{t('stats.payments.subtitle')}</p>
 
       {payments.length === 0 ? (
         <p className="mt-8 text-sm text-fg-subtle">{t('stats.empty')}</p>
       ) : (
-        <>
-          <div className="mt-6 h-52">
+        <div className="mt-4 grid items-center gap-6 lg:grid-cols-2">
+          <div className="relative mx-auto h-56 w-full max-w-xs">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={payments}
                   dataKey="sum"
                   nameKey="method"
-                  innerRadius="58%"
+                  innerRadius="62%"
                   outerRadius="88%"
                   paddingAngle={2}
                   stroke="none"
                   isAnimationActive={false}
                 >
                   {payments.map((item, index) => (
-                    <Cell key={item.method} fill={PAYMENT_COLORS[index % PAYMENT_COLORS.length]} />
+                    <Cell key={item.method} fill={paymentColor(item.method, index)} />
                   ))}
                 </Pie>
                 <Tooltip
@@ -135,7 +171,7 @@ function PaymentsChart({ payments }: { payments: LicensePaymentStat[] }) {
                           },
                           {
                             label: t('stats.payments.sum'),
-                            value: `$${format.number(point.sum)}`,
+                            value: money(format, point.sum),
                           },
                         ]}
                       />
@@ -144,24 +180,70 @@ function PaymentsChart({ payments }: { payments: LicensePaymentStat[] }) {
                 />
               </PieChart>
             </ResponsiveContainer>
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+              <p className="tabular text-2xl font-semibold tracking-tight">{money(format, total)}</p>
+              <p className="mt-0.5 text-xs text-fg-subtle">{t('stats.payments.total')}</p>
+            </div>
           </div>
 
-          <ul className="mt-4 space-y-2">
+          <ul className="space-y-3">
             {payments.map((item, index) => (
-              <li key={item.method} className="flex items-center gap-2.5 text-sm">
+              <li key={item.method} className="flex items-center gap-3 text-sm">
                 <span
                   aria-hidden
                   className="size-2.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: PAYMENT_COLORS[index % PAYMENT_COLORS.length] }}
+                  style={{ backgroundColor: paymentColor(item.method, index) }}
                 />
-                <span className="text-fg-muted">{item.method}</span>
-                <span className="tabular ml-auto font-medium">
+                <span className="min-w-0 flex-1 truncate text-fg-muted">{item.method}</span>
+                <span className="tabular font-medium">{money(format, item.sum)}</span>
+                <span className="tabular w-14 text-right text-fg-subtle">
                   {total > 0 ? format.percent((item.sum / total) * 100) : '—'}
                 </span>
               </li>
             ))}
           </ul>
-        </>
+        </div>
+      )}
+    </Card>
+  )
+}
+
+function TopDurations({ durations }: { durations: LicenseDurationStat[] }) {
+  const { t } = useTranslation('vip')
+  const format = useFormatters()
+  const rows = [...durations].sort((a, b) => b.count - a.count)
+  const total = rows.reduce((sum, item) => sum + item.count, 0)
+
+  return (
+    <Card className="p-6">
+      <h3 className="text-lg font-semibold tracking-tight">{t('stats.top.title')}</h3>
+
+      {rows.length === 0 ? (
+        <p className="mt-8 text-sm text-fg-subtle">{t('stats.empty')}</p>
+      ) : (
+        <ul className="mt-6 space-y-5">
+          {rows.map((item) => {
+            const share = total > 0 ? (item.count / total) * 100 : 0
+            return (
+              <li key={item.days}>
+                <div className="flex items-baseline justify-between gap-3 text-sm">
+                  <span className="font-medium">
+                    {t('stats.top.product', { plan: t('pricing.days', { count: item.days }) })}
+                  </span>
+                  <span className="tabular text-fg-subtle">
+                    {format.number(item.count)} · {format.percent(share)}
+                  </span>
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink-800">
+                  <div
+                    className="h-full rounded-full bg-accent-500"
+                    style={{ width: `${Math.max(share, share > 0 ? 1.5 : 0)}%` }}
+                  />
+                </div>
+              </li>
+            )
+          })}
+        </ul>
       )}
     </Card>
   )
@@ -171,15 +253,19 @@ export function SalesStats() {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const { data, isPending, isError, refetch, isFetching } = useSalesStats()
+  const { data: usage } = usePublicStats()
 
   if (isPending) {
     return (
       <section>
-        <h2 className="text-2xl font-semibold tracking-tight">{t('stats.title')}</h2>
-        <div className="mt-6 space-y-4">
-          <Skeleton className="h-28" label={t('stats.loading')} />
-          <Skeleton className="h-64" />
+        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">{t('stats.title')}</h2>
+        <p className="mt-2 text-fg-muted">{t('stats.subtitle')}</p>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }, (_, index) => (
+            <Skeleton key={index} className="h-32" label={index === 0 ? t('stats.loading') : undefined} />
+          ))}
         </div>
+        <Skeleton className="mt-4 h-80" />
       </section>
     )
   }
@@ -187,7 +273,7 @@ export function SalesStats() {
   if (isError || !data) {
     return (
       <section>
-        <h2 className="text-2xl font-semibold tracking-tight">{t('stats.title')}</h2>
+        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">{t('stats.title')}</h2>
         <Card className="mt-6 p-5">
           <ErrorState
             compact
@@ -201,39 +287,28 @@ export function SalesStats() {
   }
 
   const { new_subs: subs, old_forever: legacy } = data
-
-  const headline = [
-    { id: 'sold', label: t('stats.totalSold'), value: format.number(subs.total_vips), icon: Crown },
-    {
-      id: 'active',
-      label: t('stats.activeNow'),
-      value: format.number(subs.active_total),
-      icon: CreditCard,
-    },
-    {
-      id: 'money',
-      label: t('stats.totalMoney'),
-      value: `$${format.number(subs.total_money)}`,
-      icon: Wallet,
-    },
-  ]
+  const conversion = usage?.overview.metrics.vip_conversion
+  const hasSide = legacy.total_sold > 0 || subs.free_issued > 0
 
   return (
     <section>
-      <h2 className="text-2xl font-semibold tracking-tight">{t('stats.title')}</h2>
-      <p className="mt-2 text-fg-muted">{t('stats.subtitle')}</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">{t('stats.title')}</h2>
+          <p className="mt-2 text-fg-muted">{t('stats.subtitle')}</p>
+        </div>
+        <p className="text-sm text-fg-subtle">{t('stats.updated', { time: format.dateTime(data.updated_at) })}</p>
+      </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        {headline.map((item) => {
-          const Icon = item.icon
-          return (
-            <Card key={item.id} className="p-5">
-              <Icon aria-hidden className="size-5 text-accent-300" />
-              <p className="tabular mt-4 text-3xl font-semibold tracking-tight">{item.value}</p>
-              <p className="mt-1 text-sm text-fg-subtle">{item.label}</p>
-            </Card>
-          )
-        })}
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard icon={ShoppingCart} label={t('stats.sales')} value={format.number(subs.total_vips)} />
+        <KpiCard icon={CircleDollarSign} label={t('stats.revenue')} value={money(format, subs.total_money)} />
+        <KpiCard icon={Crown} label={t('stats.active')} value={format.number(subs.active_total)} />
+        <KpiCard
+          icon={TrendingUp}
+          label={t('stats.conversion')}
+          value={conversion == null ? '—' : format.percent(conversion)}
+        />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -241,44 +316,45 @@ export function SalesStats() {
         <PaymentsChart payments={subs.top_payments} />
       </div>
 
-      {/* Both blocks below are zero on a fresh install, and an empty card reads
-          as a bug rather than as "none yet", so they only appear with data. */}
-      {legacy.total_sold > 0 ? (
-        <Card className="mt-4 p-6">
-          <h3 className="text-lg font-semibold tracking-tight">{t('stats.legacy.title')}</h3>
-          <p className="mt-1 text-sm text-fg-muted">{t('stats.legacy.subtitle')}</p>
-          <div className="mt-4 flex flex-wrap gap-8">
-            <div>
-              <p className="tabular text-2xl font-semibold">{format.number(legacy.total_sold)}</p>
-              <p className="mt-1 text-sm text-fg-subtle">{t('stats.legacy.sold')}</p>
-            </div>
-            <div>
-              <p className="tabular text-2xl font-semibold">${format.number(legacy.total_money)}</p>
-              <p className="mt-1 text-sm text-fg-subtle">{t('stats.legacy.money')}</p>
-            </div>
-          </div>
-        </Card>
-      ) : null}
+      <div className={cn('mt-4 grid gap-4', hasSide ? 'lg:grid-cols-2' : null)}>
+        <TopDurations durations={subs.top_durations} />
 
-      {subs.free_issued > 0 ? (
-        <Card className="mt-4 p-6">
-          <h3 className="text-lg font-semibold tracking-tight">{t('stats.free.title')}</h3>
-          <div className="mt-4 flex flex-wrap gap-8">
-            <div>
-              <p className="tabular text-2xl font-semibold">{format.number(subs.free_issued)}</p>
-              <p className="mt-1 text-sm text-fg-subtle">{t('stats.free.issued')}</p>
-            </div>
-            <div>
-              <p className="tabular text-2xl font-semibold">{format.number(subs.free_active)}</p>
-              <p className="mt-1 text-sm text-fg-subtle">{t('stats.free.active')}</p>
-            </div>
+        {legacy.total_sold > 0 || subs.free_issued > 0 ? (
+          <div className="space-y-4">
+            {legacy.total_sold > 0 ? (
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold tracking-tight">{t('stats.legacy.title')}</h3>
+                <p className="mt-1 text-sm text-fg-muted">{t('stats.legacy.subtitle')}</p>
+                <div className="mt-4 flex flex-wrap gap-8">
+                  <div>
+                    <p className="tabular text-2xl font-semibold">{format.number(legacy.total_sold)}</p>
+                    <p className="mt-1 text-sm text-fg-subtle">{t('stats.legacy.sold')}</p>
+                  </div>
+                  <div>
+                    <p className="tabular text-2xl font-semibold">{money(format, legacy.total_money)}</p>
+                    <p className="mt-1 text-sm text-fg-subtle">{t('stats.legacy.money')}</p>
+                  </div>
+                </div>
+              </Card>
+            ) : null}
+            {subs.free_issued > 0 ? (
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold tracking-tight">{t('stats.free.title')}</h3>
+                <div className="mt-4 flex flex-wrap gap-8">
+                  <div>
+                    <p className="tabular text-2xl font-semibold">{format.number(subs.free_issued)}</p>
+                    <p className="mt-1 text-sm text-fg-subtle">{t('stats.free.issued')}</p>
+                  </div>
+                  <div>
+                    <p className="tabular text-2xl font-semibold">{format.number(subs.free_active)}</p>
+                    <p className="mt-1 text-sm text-fg-subtle">{t('stats.free.active')}</p>
+                  </div>
+                </div>
+              </Card>
+            ) : null}
           </div>
-        </Card>
-      ) : null}
-
-      <p className="mt-4 text-sm text-fg-subtle">
-        {t('stats.updated', { time: format.dateTime(data.updated_at) })}
-      </p>
+        ) : null}
+      </div>
     </section>
   )
 }

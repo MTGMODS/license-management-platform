@@ -29,13 +29,13 @@ export function VipPage() {
         </p>
       </section>
 
-      <PricingGrid />
-
       <DeferredMount fallback={<Skeleton className="h-96" />}>
         <Suspense fallback={<Skeleton className="h-96" />}>
           <SalesStats />
         </Suspense>
       </DeferredMount>
+
+      <PricingGrid />
     </div>
   )
 }
