@@ -15,6 +15,8 @@ interface SegmentedControlProps<T extends string | number> {
   /** Names the group for screen readers, since the buttons alone lack context. */
   label: string
   size?: 'sm' | 'md'
+  /** Stretch to the container width with equal-width segments. */
+  fullWidth?: boolean
   className?: string
 }
 
@@ -24,6 +26,7 @@ export function SegmentedControl<T extends string | number>({
   onChange,
   label,
   size = 'md',
+  fullWidth = false,
   className,
 }: SegmentedControlProps<T>) {
   return (
@@ -31,7 +34,8 @@ export function SegmentedControl<T extends string | number>({
       role="group"
       aria-label={label}
       className={cn(
-        'inline-flex max-w-full shrink-0 overflow-x-auto rounded-xl bg-ink-800 p-1 ring-1 ring-white/5',
+        'flex max-w-full shrink-0 overflow-x-auto rounded-xl bg-ink-800 p-1 ring-1 ring-white/5',
+        fullWidth ? 'w-full' : 'inline-flex',
         className,
       )}
     >
@@ -48,6 +52,8 @@ export function SegmentedControl<T extends string | number>({
             className={cn(
               'inline-flex items-center gap-2 rounded-lg font-medium transition-colors duration-200',
               size === 'sm' ? 'px-3 py-1.5 text-xs' : 'px-3.5 py-2 text-sm',
+              fullWidth && size === 'md' && 'px-4 py-2.5',
+              fullWidth && 'flex-1 justify-center',
               active ? 'bg-ink-700 text-fg' : 'text-fg-subtle hover:text-fg-muted',
             )}
           >

@@ -3,7 +3,7 @@ import type { ApiDateTime } from '@/shared/lib/datetime'
 export type LicenseStatus = 'NOT_ACTIVATED' | 'ACTIVE' | 'EXPIRED' | 'BANNED'
 
 /** Values of the backend `PaymentMethod` enum. */
-export type PaymentMethod = 'Stars' | 'FunPay' | 'Crypto' | 'PayPal' | 'Card'
+export type PaymentMethod = 'Stars' | 'FunPay' | 'Crypto' | 'PayPal' | 'Card' | 'Steam' | 'Gift' | 'Promo'
 
 export interface LicenseDevice {
   id: number
@@ -11,6 +11,8 @@ export interface LicenseDevice {
   hwid: string
   /** Masked server-side, e.g. `192.168.*.*`, or `Unknown`. */
   ip: string
+  /** First bind time (`created_at` on the device row). */
+  first_used_at?: ApiDateTime | null
   last_used_at: ApiDateTime | null
 }
 

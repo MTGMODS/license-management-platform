@@ -1,57 +1,80 @@
 {
   "title": "Личный кабинет",
-  "subtitle": "Управление VIP и загрузка премиум-версии.",
+  "subtitle": "Подписка, файл и устройства — в одном месте.",
+  "sections": {
+    "vip": "MTGVIP",
+    "account": "Аккаунт"
+  },
   "activate": {
-    "title": "Активация ключа",
+    "title": "Активация нового ключа",
     "subtitle": "Введите ключ формата XXXX-XXXX-XXXX-XXXX.",
     "placeholder": "XXXX-XXXX-XXXX-XXXX",
     "action": "Активировать",
-    "success": "VIP активирован",
-    "forceTitle": "У вас уже есть активный VIP",
+    "success": "MTGVIP активирован",
+    "forceTitle": "У вас уже есть активный MTGVIP",
     "forceBody": "Новый ключ заменит текущий. Оставшееся время не переносится.",
     "forceConfirm": "Заменить",
     "forceCancel": "Отмена"
   },
   "vip": {
-    "title": "Активный VIP",
-    "inactive": "Активного VIP пока нет",
-    "inactiveHint": "Активируйте ключ выше или купите подписку на странице VIP.",
-    "unavailable": "Сервис временно недоступен",
-    "unavailableHint": "Подписка (или ключ) в безопасности, просто попробуйте позже.",
-    "status": "Статус",
-    "duration": "Срок",
-    "activated": "Активирован",
-    "expires": "Действует до",
+    "headlineActive": "Подписка MTGVIP активна",
+    "headlineExpired": "Подписка MTGVIP истекла",
+    "headlineBanned": "Подписка MTGVIP заблокирована",
+    "headlinePast": "Прошедшая подписка",
     "remaining": "Осталось",
-    "expired": "Истёк",
-    "payment": "Оплата",
-    "amount": "Сумма",
-    "method": "Способ",
-    "purchased": "Куплено",
+    "inactive": "Нет активного MTGVIP",
+    "inactiveHint": "Активируйте ключ ниже или выберите тариф — и платный файл появится здесь.",
+    "unavailable": "Сервис временно недоступен",
+    "unavailableHint": "Подписка в безопасности. Попробуйте ещё раз через минуту.",
+    "until": "Действительна до",
+    "activated": "Активирована",
+    "paid": "Получена через {{method}} за ${{amount}}",
+    "key": "Ваш ключ",
+    "showKey": "Показать ключ",
+    "hideKey": "Скрыть ключ",
     "devices": "Устройства",
-    "devicesCount": "{{used}} из {{max}}",
-    "noDevices": "Пока не привязано ни одно устройство",
-    "resetsLimit": "Сбросов: до {{count}}",
+    "devicesCount": "{{used}} из {{max}} устройств использовано",
+    "resetsCount": "Можно сбросить ещё {{count}}",
+    "slotFreeTitle": "Свободный слот",
+    "slotFreeHint": "Войдите в хелпер с нового устройства — слот займётся сам.",
+    "slotOccupied": "Устройство {{index}}",
+    "hwid": "HWID",
+    "ip": "Последний IP",
+    "firstUsed": "Первое использование",
+    "lastUsed": "Последнее использование",
     "resetDevice": "Сбросить",
     "resetConfirm": "Отвязать это устройство?",
     "resetConfirmAction": "Да, сбросить",
     "resetCancel": "Отмена",
     "resetSuccess": "Устройство отвязано",
-    "goVip": "Тарифы VIP"
+    "goVip": "Выбрать тариф"
+  },
+  "past": {
+    "title": "Прошедшие подписки"
   },
   "download": {
-    "title": "Премиум-файл",
-    "subtitle": "Персональная VIP-сборка. Ссылка одноразовая.",
-    "action": "Скачать VIP",
-    "actionVersion": "Скачать VIP {{version}}",
+    "subtitle": "Персональный файл только для вас.",
+    "action": "Скачать версию",
+    "actionVersion": "Скачать версию {{version}}",
     "success": "Файл готов",
-    "started": "Загрузка началась",
-    "changelog": "Что нового"
+    "started": "Загрузка началась"
   },
-  "status": {
-    "ACTIVE": "Активен",
-    "EXPIRED": "Истёк",
-    "BANNED": "Заблокирован",
-    "NOT_ACTIVATED": "Не активирован"
+  "account": {
+    "memberSince": "с {{date}}",
+    "roles": {
+      "USER": "Пользователь",
+      "SMART": "Smart",
+      "ADMIN": "Админ"
+    },
+    "telegram": "Telegram",
+    "discord": "Discord",
+    "linked": "Привязан",
+    "notLinked": "Не привязан",
+    "deleteHint": "Аккаунт будет помечен как удалённый. Войти снова с теми же соцсетями не получится.",
+    "deleteAction": "Удалить аккаунт",
+    "deleteConfirm": "Точно удалить аккаунт? Это действие нельзя отменить.",
+    "deleteConfirmAction": "Да, удалить",
+    "deleteCancel": "Отмена",
+    "deleteSuccess": "Аккаунт удалён"
   }
 }

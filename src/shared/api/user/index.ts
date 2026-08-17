@@ -44,6 +44,17 @@ export function getCurrentUser(signal?: AbortSignal): Promise<User> {
   return request<User>({ service: 'user', path: '/me', auth: true, signal })
 }
 
+/** Soft-deletes the signed-in account and clears social links server-side. */
+export function deleteMyAccount(signal?: AbortSignal): Promise<{ detail: string }> {
+  return request<{ detail: string }>({
+    service: 'user',
+    path: '/me',
+    method: 'DELETE',
+    auth: true,
+    signal,
+  })
+}
+
 /**
  * Telegram Mini App sign-in. `initData` is the raw query-string blob from
  * `Telegram.WebApp.initData`; the backend verifies its HMAC against the bot

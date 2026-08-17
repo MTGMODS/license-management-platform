@@ -1,57 +1,80 @@
 {
   "title": "Особистий кабінет",
-  "subtitle": "Керування VIP і завантаження преміум-версії.",
+  "subtitle": "Підписка, файл і пристрої — в одному місці.",
+  "sections": {
+    "vip": "MTGVIP",
+    "account": "Акаунт"
+  },
   "activate": {
-    "title": "Активація ключа",
+    "title": "Активація нового ключа",
     "subtitle": "Введіть ключ формату XXXX-XXXX-XXXX-XXXX.",
     "placeholder": "XXXX-XXXX-XXXX-XXXX",
     "action": "Активувати",
-    "success": "VIP активовано",
-    "forceTitle": "У вас уже є активний VIP",
+    "success": "MTGVIP активовано",
+    "forceTitle": "У вас уже є активний MTGVIP",
     "forceBody": "Новий ключ замінить поточний. Час, що лишився, не переноситься.",
     "forceConfirm": "Замінити",
     "forceCancel": "Скасувати"
   },
   "vip": {
-    "title": "Активний VIP",
-    "inactive": "Активного VIP поки немає",
-    "inactiveHint": "Активуйте ключ вище або купіть підписку на сторінці VIP.",
-    "unavailable": "Сервіс тимчасово недоступний",
-    "unavailableHint": "Підписка (або ключ) у безпеці, просто спробуйте пізніше.",
-    "status": "Статус",
-    "duration": "Термін",
-    "activated": "Активовано",
-    "expires": "Діє до",
+    "headlineActive": "Підписка MTGVIP активна",
+    "headlineExpired": "Підписка MTGVIP закінчилась",
+    "headlineBanned": "Підписка MTGVIP заблокована",
+    "headlinePast": "Минула підписка",
     "remaining": "Залишилось",
-    "expired": "Закінчився",
-    "payment": "Оплата",
-    "amount": "Сума",
-    "method": "Спосіб",
-    "purchased": "Куплено",
+    "inactive": "Немає активного MTGVIP",
+    "inactiveHint": "Активуйте ключ нижче або оберіть тариф — і платний файл з’явиться тут.",
+    "unavailable": "Сервіс тимчасово недоступний",
+    "unavailableHint": "Підписка в безпеці. Спробуйте ще раз за хвилину.",
+    "until": "Дійсна до",
+    "activated": "Активована",
+    "paid": "Отримана через {{method}} за ${{amount}}",
+    "key": "Ваш ключ",
+    "showKey": "Показати ключ",
+    "hideKey": "Сховати ключ",
     "devices": "Пристрої",
-    "devicesCount": "{{used}} з {{max}}",
-    "noDevices": "Поки не прив'язано жодного пристрою",
-    "resetsLimit": "Скидань: до {{count}}",
+    "devicesCount": "{{used}} із {{max}} пристроїв використано",
+    "resetsCount": "Можна скинути ще {{count}}",
+    "slotFreeTitle": "Вільний слот",
+    "slotFreeHint": "Увійдіть у хелпер з нового пристрою — слот займеться сам.",
+    "slotOccupied": "Пристрій {{index}}",
+    "hwid": "HWID",
+    "ip": "Останній IP",
+    "firstUsed": "Перше використання",
+    "lastUsed": "Останнє використання",
     "resetDevice": "Скинути",
     "resetConfirm": "Відв'язати цей пристрій?",
     "resetConfirmAction": "Так, скинути",
     "resetCancel": "Скасувати",
     "resetSuccess": "Пристрій відв'язано",
-    "goVip": "Тарифи VIP"
+    "goVip": "Обрати тариф"
+  },
+  "past": {
+    "title": "Минулі підписки"
   },
   "download": {
-    "title": "Преміум-файл",
-    "subtitle": "Персональна VIP-збірка. Посилання одноразове.",
-    "action": "Завантажити VIP",
-    "actionVersion": "Завантажити VIP {{version}}",
+    "subtitle": "Персональний файл тільки для вас.",
+    "action": "Завантажити версію",
+    "actionVersion": "Завантажити версію {{version}}",
     "success": "Файл готовий",
-    "started": "Завантаження почалося",
-    "changelog": "Що нового"
+    "started": "Завантаження почалося"
   },
-  "status": {
-    "ACTIVE": "Активний",
-    "EXPIRED": "Закінчився",
-    "BANNED": "Заблокований",
-    "NOT_ACTIVATED": "Не активований"
+  "account": {
+    "memberSince": "з {{date}}",
+    "roles": {
+      "USER": "Користувач",
+      "SMART": "Smart",
+      "ADMIN": "Адмін"
+    },
+    "telegram": "Telegram",
+    "discord": "Discord",
+    "linked": "Прив’язано",
+    "notLinked": "Не прив’язано",
+    "deleteHint": "Акаунт буде позначено як видалений. Увійти знову з тими самими соцмережами не вийде.",
+    "deleteAction": "Видалити акаунт",
+    "deleteConfirm": "Точно видалити акаунт? Цю дію не можна скасувати.",
+    "deleteConfirmAction": "Так, видалити",
+    "deleteCancel": "Скасувати",
+    "deleteSuccess": "Акаунт видалено"
   }
 }

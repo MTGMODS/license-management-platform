@@ -33,6 +33,13 @@ export function useFormatters() {
       year: 'numeric',
     })
     const dateTime = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' })
+    const dateTimeLong = new Intl.DateTimeFormat(locale, {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
     const weekdayLong = new Intl.DateTimeFormat(locale, { weekday: 'long', timeZone: 'UTC' })
     const weekdayShort = new Intl.DateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' })
 
@@ -56,6 +63,8 @@ export function useFormatters() {
       fullDate: (isoDate: string) => fullDate.format(parseApiCalendarDate(isoDate)),
       /** API datetimes: `YYYY-MM-DDTHH:mm:ssZ`, shown in the visitor's locale. */
       dateTime: (iso: string) => dateTime.format(parseApiDateTime(iso)),
+      /** Full month and year, for cabinets and other places where space is not tight. */
+      dateTimeLong: (iso: string) => dateTimeLong.format(parseApiDateTime(iso)),
       dateOnly: (iso: string) => fullDate.format(parseApiDateTime(iso)),
       hour: (hour: number) => `${String(hour).padStart(2, '0')}:00`,
       /** Index 0 is Sunday, matching the payload's PostgreSQL `dow` values. */
