@@ -5,7 +5,8 @@
     "helper": "Arizona&Rodina Helper",
     "vip": "Підписка MTG VIP для хелпера",
     "login": "Вхід в особистий кабінет",
-    "dashboard": "Особистий кабінет"
+    "dashboard": "Особистий кабінет",
+    "admin": "Адмінка"
   },
   "footer": {
     "terms": "Умови та конфіденційність"

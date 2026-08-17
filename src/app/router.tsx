@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router'
 
+import { AdminPage } from '@/pages/admin/AdminPage'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { DownloadPage } from '@/pages/helper/DownloadPage'
 import { HelperPage } from '@/pages/helper/HelperPage'
@@ -11,6 +12,7 @@ import { TermsPage } from '@/pages/terms/TermsPage'
 import { VipPage } from '@/pages/vip/VipPage'
 
 import { AppLayout } from './AppLayout'
+import { RequireAdmin } from './RequireAdmin'
 import { RequireAuth } from './RequireAuth'
 
 export function AppRoutes() {
@@ -27,6 +29,9 @@ export function AppRoutes() {
 
         <Route element={<RequireAuth />}>
           <Route path="dashboard" element={<DashboardPage />} />
+          <Route element={<RequireAdmin />}>
+            <Route path="admin" element={<AdminPage />} />
+          </Route>
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

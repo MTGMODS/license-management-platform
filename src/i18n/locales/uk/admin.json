@@ -1,0 +1,89 @@
+{
+  "title": "Адмінка",
+  "subtitle": "Користувачі, ключі та генерація MTGVIP.",
+  "tabs": {
+    "users": "Користувачі",
+    "licenses": "Ключі"
+  },
+  "users": {
+    "searchLabel": "Пошук",
+    "byNickname": "Нікнейм",
+    "byTelegram": "Telegram ID",
+    "byDiscord": "Discord ID",
+    "placeholder": "Введіть запит",
+    "action": "Знайти",
+    "empty": "Нікого не знайдено",
+    "hint": "Шукайте за нікнеймом або ID соцмережі.",
+    "id": "ID",
+    "role": "Роль",
+    "status": "Статус",
+    "created": "Створено",
+    "telegram": "Telegram",
+    "discord": "Discord",
+    "unlink": "Відв'язати",
+    "save": "Зберегти",
+    "saved": "Користувача оновлено",
+    "licenses": "Ключі користувача",
+    "roles": {
+      "USER": "Користувач",
+      "SMART": "Smart",
+      "ADMIN": "Адмін"
+    },
+    "statuses": {
+      "ACTIVE": "Активний",
+      "BANNED": "Заблокований",
+      "DELETED": "Видалений"
+    }
+  },
+  "licenses": {
+    "searchLabel": "Пошук ключа",
+    "byKey": "Ключ",
+    "byUser": "User ID",
+    "placeholderKey": "XXXX-XXXX-XXXX-XXXX",
+    "placeholderUser": "ID користувача",
+    "action": "Знайти",
+    "empty": "Ключів не знайдено",
+    "hint": "Шукайте за точним ключем або ID власника.",
+    "owner": "Власник",
+    "noOwner": "Не активований на акаунт",
+    "status": "Статус",
+    "duration": "Термін",
+    "created": "Створено",
+    "activated": "Активовано",
+    "expires": "Діє до",
+    "devices": "Пристрої",
+    "maxDevices": "Макс. пристроїв",
+    "resetLimit": "Скидів залишилось",
+    "hwid": "HWID",
+    "ip": "IP",
+    "ua": "User-Agent",
+    "firstUsed": "Перше",
+    "lastUsed": "Останнє",
+    "removeDevice": "Зняти пристрій",
+    "removeDeviceConfirm": "Зняти цей HWID без витрати скиду користувача?",
+    "removed": "Пристрій знято",
+    "save": "Зберегти",
+    "saved": "Ключ оновлено",
+    "payment": "Оплата",
+    "copy": "Копіювати ключ",
+    "copied": "Ключ скопійовано",
+    "statuses": {
+      "NOT_ACTIVATED": "Не активований",
+      "ACTIVE": "Активний",
+      "EXPIRED": "Закінчився",
+      "BANNED": "Заблокований"
+    }
+  },
+  "generate": {
+    "title": "Згенерувати ключі",
+    "duration": "Тариф, днів",
+    "amount": "Сума USD",
+    "method": "Спосіб",
+    "maxDevices": "Макс. пристроїв",
+    "count": "Кількість",
+    "action": "Згенерувати",
+    "successOne": "Ключ створено",
+    "successMany": "Створено {{count}} ключів",
+    "copyAll": "Скопіювати всі"
+  }
+}

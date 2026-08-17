@@ -1,0 +1,89 @@
+{
+  "title": "Админка",
+  "subtitle": "Пользователи, ключи и генерация MTGVIP.",
+  "tabs": {
+    "users": "Пользователи",
+    "licenses": "Ключи"
+  },
+  "users": {
+    "searchLabel": "Поиск",
+    "byNickname": "Никнейм",
+    "byTelegram": "Telegram ID",
+    "byDiscord": "Discord ID",
+    "placeholder": "Введите запрос",
+    "action": "Найти",
+    "empty": "Никого не найдено",
+    "hint": "Ищите по никнейму или ID соцсети.",
+    "id": "ID",
+    "role": "Роль",
+    "status": "Статус",
+    "created": "Создан",
+    "telegram": "Telegram",
+    "discord": "Discord",
+    "unlink": "Отвязать",
+    "save": "Сохранить",
+    "saved": "Пользователь обновлён",
+    "licenses": "Ключи пользователя",
+    "roles": {
+      "USER": "Пользователь",
+      "SMART": "Smart",
+      "ADMIN": "Админ"
+    },
+    "statuses": {
+      "ACTIVE": "Активен",
+      "BANNED": "Заблокирован",
+      "DELETED": "Удалён"
+    }
+  },
+  "licenses": {
+    "searchLabel": "Поиск ключа",
+    "byKey": "Ключ",
+    "byUser": "User ID",
+    "placeholderKey": "XXXX-XXXX-XXXX-XXXX",
+    "placeholderUser": "ID пользователя",
+    "action": "Найти",
+    "empty": "Ключи не найдены",
+    "hint": "Ищите по точному ключу или ID владельца.",
+    "owner": "Владелец",
+    "noOwner": "Не активирован на аккаунт",
+    "status": "Статус",
+    "duration": "Срок",
+    "created": "Создан",
+    "activated": "Активирован",
+    "expires": "Действует до",
+    "devices": "Устройства",
+    "maxDevices": "Макс. устройств",
+    "resetLimit": "Сбросов осталось",
+    "hwid": "HWID",
+    "ip": "IP",
+    "ua": "User-Agent",
+    "firstUsed": "Первое",
+    "lastUsed": "Последнее",
+    "removeDevice": "Снять устройство",
+    "removeDeviceConfirm": "Снять этот HWID без расхода сброса пользователя?",
+    "removed": "Устройство снято",
+    "save": "Сохранить",
+    "saved": "Ключ обновлён",
+    "payment": "Оплата",
+    "copy": "Скопировать ключ",
+    "copied": "Ключ скопирован",
+    "statuses": {
+      "NOT_ACTIVATED": "Не активирован",
+      "ACTIVE": "Активен",
+      "EXPIRED": "Истёк",
+      "BANNED": "Заблокирован"
+    }
+  },
+  "generate": {
+    "title": "Сгенерировать ключи",
+    "duration": "Тариф, дней",
+    "amount": "Сумма USD",
+    "method": "Способ",
+    "maxDevices": "Макс. устройств",
+    "count": "Количество",
+    "action": "Сгенерировать",
+    "successOne": "Ключ создан",
+    "successMany": "Создано {{count}} ключей",
+    "copyAll": "Скопировать все"
+  }
+}

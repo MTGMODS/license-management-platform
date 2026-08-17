@@ -28,4 +28,5 @@ export const queryClient = new QueryClient({
 /** License (and future private) queries must not leak across accounts. */
 export function clearUserQueries(): void {
   void queryClient.removeQueries({ queryKey: ['license'] })
+  void queryClient.removeQueries({ queryKey: ['admin'] })
 }

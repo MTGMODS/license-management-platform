@@ -1,3 +1,4 @@
+import ruAdmin from './locales/ru/admin.json'
 import ruCommon from './locales/ru/common.json'
 import ruDashboard from './locales/ru/dashboard.json'
 import ruDownload from './locales/ru/download.json'
@@ -8,6 +9,7 @@ import ruHome from './locales/ru/home.json'
 import ruLogin from './locales/ru/login.json'
 import ruTerms from './locales/ru/terms.json'
 import ruVip from './locales/ru/vip.json'
+import ukAdmin from './locales/uk/admin.json'
 import ukCommon from './locales/uk/common.json'
 import ukDashboard from './locales/uk/dashboard.json'
 import ukDownload from './locales/uk/download.json'
@@ -23,6 +25,7 @@ export const defaultNS = 'common'
 
 export const resources = {
   ru: {
+    admin: ruAdmin,
     common: ruCommon,
     dashboard: ruDashboard,
     download: ruDownload,
@@ -35,6 +38,7 @@ export const resources = {
     vip: ruVip,
   },
   uk: {
+    admin: ukAdmin,
     common: ukCommon,
     dashboard: ukDashboard,
     download: ukDownload,

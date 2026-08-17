@@ -1,4 +1,4 @@
-import { LayoutDashboard, LogOut } from 'lucide-react'
+import { LayoutDashboard, LogOut, Settings } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate } from 'react-router'
@@ -16,6 +16,8 @@ export function AccountControl() {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const onDashboard = location.pathname.startsWith('/dashboard')
+  const onAdmin = location.pathname.startsWith('/admin')
+  const isAdmin = user?.role === 'ADMIN'
 
   useEffect(() => {
     if (!open) return
@@ -69,6 +71,17 @@ export function AccountControl() {
           role="menu"
           className="absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-xl border border-ink-700 bg-ink-900 py-1 shadow-[0_16px_48px_-16px_rgba(0,0,0,0.75)]"
         >
+          {isAdmin && !onAdmin ? (
+            <Link
+              role="menuitem"
+              to="/admin"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-3 py-2.5 text-sm text-fg transition-colors hover:bg-ink-800"
+            >
+              <Settings aria-hidden className="size-4 shrink-0" />
+              {t('account.admin')}
+            </Link>
+          ) : null}
           {!onDashboard ? (
             <Link
               role="menuitem"
