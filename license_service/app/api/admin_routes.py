@@ -49,6 +49,12 @@ async def admin_update_license(license_id: int, payload: UpdateLicenseDTO, admin
     result = await service.admin_update_license(license_id, payload)
     return {"status": "success", "message": "License updated successfully", "data": result}
 
+@router.delete("/{license_id}", description="Delete a license with its purchase and device activations")
+async def admin_delete_license(license_id: int, admin_id: int = Depends(get_admin_user_id), db: AsyncSession = Depends(get_db)):
+    service = LicenseService(db)
+    await service.admin_delete_license(license_id)
+    return {"status": "success", "message": "License deleted successfully"}
+
 @router.delete("/devices/{device_id}", description="Manually remove a HWID lock (Admin override)")
 async def admin_reset_device(device_id: int, admin_id: int = Depends(get_admin_user_id), db: AsyncSession = Depends(get_db)):
     service = LicenseService(db)

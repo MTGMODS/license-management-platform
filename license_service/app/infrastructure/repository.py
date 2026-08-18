@@ -23,7 +23,7 @@ class LicenseModel(Base):
     expires_at = Column(DateTime(timezone=True), nullable=True)
 
     devices = relationship("DeviceModel", back_populates="license", cascade="all, delete-orphan")
-    transaction = relationship("TransactionModel", back_populates="license", uselist=False)
+    transaction = relationship("TransactionModel", back_populates="license", uselist=False, cascade="all, delete-orphan")
 
 class DeviceModel(Base):
     __tablename__ = "license_activations"
@@ -43,7 +43,7 @@ class TransactionModel(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, index=True, nullable=True)
-    license_id = Column(Integer, ForeignKey("licenses.id"), unique=True, nullable=True)
+    license_id = Column(Integer, ForeignKey("licenses.id", ondelete="CASCADE"), unique=True, nullable=True)
     amount = Column(Float, nullable=False)
     payment_method = Column(String, nullable=False)
     status = Column(String, default="COMPLETED")
@@ -130,6 +130,14 @@ class LicenseRepository:
             await self.db.commit()
             return True
         return False
+
+    async def delete_license(self, license_id: int) -> bool:
+        license_obj = await self.get_by_id(license_id)
+        if not license_obj:
+            return False
+        await self.db.delete(license_obj)
+        await self.db.commit()
+        return True
 
     async def get_heavy_public_stats(self):
         timed = LicenseModel.duration_days.isnot(None)

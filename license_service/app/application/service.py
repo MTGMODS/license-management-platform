@@ -282,6 +282,11 @@ class LicenseService:
         await self.db.refresh(license_obj)
         return license_obj
 
+    async def admin_delete_license(self, license_id: int):
+        deleted = await self.license_repo.delete_license(license_id)
+        if not deleted:
+            raise DomainException(message="License not found", status_code=404, error_code="NOT_FOUND")
+
 class LicenseStatsService:
     _cached_stats = None
     _cache_expires_at = None
