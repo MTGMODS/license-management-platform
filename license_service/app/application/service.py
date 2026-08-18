@@ -152,7 +152,8 @@ class LicenseService:
                 key=k,
                 duration_days=payload.duration_days,
                 status=LicenseStatus.NOT_ACTIVATED,
-                max_devices=payload.max_devices
+                max_devices=payload.max_devices,
+                reset_limit=payload.reset_limit,
             ) for k in keys
         ]
         
