@@ -91,3 +91,20 @@ export interface DownloadRequestResult {
   /** Single-use URL served by the Distribution Service; expires after 1 hour. */
   download_url: string
 }
+
+/** Defaults from `GET /license/tariffs`. Generate still accepts overrides. */
+export interface TariffLimits {
+  max_devices: number
+  reset_limit: number
+}
+
+export interface TariffPlan extends TariffLimits {
+  duration_days: number
+  price: number
+}
+
+export interface TariffsCatalog {
+  currency: string
+  fallback: TariffLimits
+  plans: TariffPlan[]
+}

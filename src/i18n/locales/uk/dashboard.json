@@ -60,7 +60,7 @@
     "started": "Завантаження почалося"
   },
   "account": {
-    "memberSince": "з {{date}}",
+    "registered": "Дата реєстрації: {{date}}",
     "roles": {
       "USER": "Користувач",
       "SMART": "Smart",
@@ -70,11 +70,17 @@
     "discord": "Discord",
     "linked": "Прив’язано",
     "notLinked": "Не прив’язано",
-    "deleteHint": "Акаунт буде позначено як видалений. Увійти знову з тими самими соцмережами не вийде.",
-    "deleteAction": "Видалити акаунт",
-    "deleteConfirm": "Точно видалити акаунт? Цю дію не можна скасувати.",
-    "deleteConfirmAction": "Так, видалити",
-    "deleteCancel": "Скасувати",
-    "deleteSuccess": "Акаунт видалено"
+    "linkAction": "Прив’язати",
+    "linkSuccess": "Соцмережу прив’язано",
+    "unlinkAction": "Відв’язати",
+    "unlinkSuccess": "Соцмережу відв’язано",
+    "telegramChatTitle": "Наш Telegram-чат",
+    "telegramChatText": "Чат VIP-підписників",
+    "telegramChatAction": "Увійти",
+    "telegramChatLocked": "Прив’яжіть Telegram, щоб увійти",
+    "discordServerTitle": "Наш Discord-сервер",
+    "discordServerText": "VIP-чат і ексклюзивна VIP-роль",
+    "discordServerHint": "Щоб отримати VIP-роль, введіть /role у чаті Discord.",
+    "discordServerAction": "Увійти"
   }
 }

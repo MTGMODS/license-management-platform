@@ -1,5 +1,6 @@
 export { AuthProvider } from './AuthProvider'
 export { useAuthStore, type AuthStatus } from './authStore'
+export { AuthPopupBlockedDialog } from './AuthPopupBlockedDialog'
 export { AuthPopupError } from './popupAuth'
 export { getTelegramInitData, isInsideTelegramShell, isTelegramMiniApp } from './telegram'
 export { useOAuthSignIn } from './useOAuthSignIn'

@@ -60,7 +60,7 @@
     "started": "Загрузка началась"
   },
   "account": {
-    "memberSince": "с {{date}}",
+    "registered": "Дата регистрации: {{date}}",
     "roles": {
       "USER": "Пользователь",
       "SMART": "Smart",
@@ -70,11 +70,17 @@
     "discord": "Discord",
     "linked": "Привязан",
     "notLinked": "Не привязан",
-    "deleteHint": "Аккаунт будет помечен как удалённый. Войти снова с теми же соцсетями не получится.",
-    "deleteAction": "Удалить аккаунт",
-    "deleteConfirm": "Точно удалить аккаунт? Это действие нельзя отменить.",
-    "deleteConfirmAction": "Да, удалить",
-    "deleteCancel": "Отмена",
-    "deleteSuccess": "Аккаунт удалён"
+    "linkAction": "Привязать",
+    "linkSuccess": "Соцсеть привязана",
+    "unlinkAction": "Отвязать",
+    "unlinkSuccess": "Соцсеть отвязана",
+    "telegramChatTitle": "Наш Telegram чат",
+    "telegramChatText": "Чат VIP подписчиков",
+    "telegramChatAction": "Войти",
+    "telegramChatLocked": "Привяжите Telegram, чтобы войти",
+    "discordServerTitle": "Наш Discord сервер",
+    "discordServerText": "VIP чат и эксклюзивная VIP роль",
+    "discordServerHint": "Чтобы получить VIP-роль, введите /role в чате Discord.",
+    "discordServerAction": "Войти"
   }
 }

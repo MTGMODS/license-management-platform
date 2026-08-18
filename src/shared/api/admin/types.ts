@@ -49,6 +49,7 @@ export interface GenerateKeysPayload {
   method: PaymentMethod
   status?: 'PENDING' | 'COMPLETED'
   max_devices: number
+  reset_limit: number
 }
 
 export interface GenerateOneResult {

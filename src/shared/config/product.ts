@@ -45,6 +45,9 @@ export const FREE_LUA_FALLBACK_URL =
  */
 export const PC_INSTALLER_URL = '/helper/download/installer.exe'
 
+export const TELEGRAM_VIP_CHAT_URL = 'https://t.me/+bi-SlBWfG7o3NDgy'
+export const DISCORD_SERVER_URL = 'https://discord.gg/qBPEYjfNhv'
+
 function readEnv(name: keyof ImportMetaEnv): string {
   const value = import.meta.env[name]
   return typeof value === 'string' ? value.trim() : ''

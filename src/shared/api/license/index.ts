@@ -5,6 +5,7 @@ import type {
   DownloadRequestResult,
   LicenseInfo,
   LicenseSalesStats,
+  TariffsCatalog,
 } from './types'
 
 /** Length enforced by the backend DTO: `XXXX-XXXX-XXXX-XXXX`. */
@@ -30,6 +31,15 @@ export async function getLicenseSalesStats(signal?: AbortSignal): Promise<Licens
     signal,
   })
 
+  return response.data
+}
+
+export async function getTariffs(signal?: AbortSignal): Promise<TariffsCatalog> {
+  const response = await request<{ status: string; data: TariffsCatalog }>({
+    service: 'license',
+    path: '/tariffs',
+    signal,
+  })
   return response.data
 }
 
@@ -82,4 +92,6 @@ export type {
   LicenseStatus,
   LicenseTransaction,
   PaymentMethod,
+  TariffPlan,
+  TariffsCatalog,
 } from './types'

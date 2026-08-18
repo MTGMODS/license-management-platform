@@ -30,27 +30,65 @@ function oauthServiceRoot(): string | null {
  * Entry point of the provider OAuth flow. Always absolute so a blank popup
  * can navigate here (relative URLs would resolve against about:blank).
  */
-export function oauthLoginUrl(provider: OAuthProvider): string {
+export function oauthLoginUrl(provider: OAuthProvider, options?: { ticket?: string }): string {
   const suffix = `/v1/users/auth/${provider}/login`
   const root = oauthServiceRoot()
-  if (root) return `${root}${suffix}`
+  let href: string
+  if (root) {
+    href = `${root}${suffix}`
+  } else {
+    const path = serviceUrl('user', `/auth/${provider}/login`)
+    href = /^https?:\/\//i.test(path) ? path : new URL(path, window.location.origin).href
+  }
 
-  const path = serviceUrl('user', `/auth/${provider}/login`)
-  if (/^https?:\/\//i.test(path)) return path
-  return new URL(path, window.location.origin).href
+  if (!options?.ticket) return href
+  const url = new URL(href)
+  url.searchParams.set('ticket', options.ticket)
+  return url.href
 }
 
 export function getCurrentUser(signal?: AbortSignal): Promise<User> {
   return request<User>({ service: 'user', path: '/me', auth: true, signal })
 }
 
-/** Soft-deletes the signed-in account and clears social links server-side. */
-export function deleteMyAccount(signal?: AbortSignal): Promise<{ detail: string }> {
-  return request<{ detail: string }>({
+export function createLinkTicket(
+  provider: OAuthProvider,
+  signal?: AbortSignal,
+): Promise<{ ticket: string }> {
+  return request<{ ticket: string }>({
     service: 'user',
-    path: '/me',
-    method: 'DELETE',
+    path: '/me/link-ticket',
+    method: 'POST',
     auth: true,
+    body: { provider },
+    signal,
+  })
+}
+
+export function linkSocialAccount(
+  payload: { telegram_id?: string; discord_id?: string },
+  signal?: AbortSignal,
+): Promise<User> {
+  return request<User>({
+    service: 'user',
+    path: '/me/link',
+    method: 'POST',
+    auth: true,
+    body: payload,
+    signal,
+  })
+}
+
+export function unlinkSocialAccount(
+  provider: OAuthProvider,
+  signal?: AbortSignal,
+): Promise<User> {
+  return request<User>({
+    service: 'user',
+    path: '/me/unlink',
+    method: 'POST',
+    auth: true,
+    body: { provider },
     signal,
   })
 }

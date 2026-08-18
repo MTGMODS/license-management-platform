@@ -12,9 +12,11 @@ import {
   type UpdateLicensePayload,
   type UpdateUserPayload,
 } from '@/shared/api/admin'
+import { getTariffs } from '@/shared/api/license'
 
 export const ADMIN_USERS_KEY = ['admin', 'users'] as const
 export const ADMIN_LICENSES_KEY = ['admin', 'licenses'] as const
+export const ADMIN_TARIFFS_KEY = ['admin', 'tariffs'] as const
 
 export function useAdminUserSearch(
   query: { nickname?: string; telegram_id?: string; discord_id?: string } | null,
@@ -35,6 +37,13 @@ export function useAdminLicenseSearch(query: { user_id?: number; key?: string } 
     queryKey: [...ADMIN_LICENSES_KEY, query],
     queryFn: ({ signal }) => findLicenses(query!, signal),
     enabled,
+  })
+}
+
+export function useTariffs() {
+  return useQuery({
+    queryKey: ADMIN_TARIFFS_KEY,
+    queryFn: ({ signal }) => getTariffs(signal),
   })
 }
 

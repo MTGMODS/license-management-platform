@@ -8,12 +8,18 @@ import {
   useDeleteAdminDevice,
   useGenerateLicense,
   useGenerateLicensesBulk,
+  useTariffs,
   useUpdateAdminLicense,
 } from '@/features/admin/useAdmin'
 import { apiErrorTranslationKey } from '@/shared/api'
 import type { AdminLicense } from '@/shared/api/admin'
-import { LICENSE_KEY_LENGTH, LICENSE_KEY_PATTERN, type LicenseStatus, type PaymentMethod } from '@/shared/api/license'
-import { PRICING_TIERS } from '@/shared/config/product'
+import {
+  LICENSE_KEY_LENGTH,
+  LICENSE_KEY_PATTERN,
+  type LicenseStatus,
+  type PaymentMethod,
+  type TariffPlan,
+} from '@/shared/api/license'
 import { useFormatters } from '@/shared/lib/format'
 import { Badge, Button, Card, SegmentedControl, Skeleton } from '@/shared/ui'
 
@@ -150,22 +156,55 @@ export function LicensesPanel({
   )
 }
 
+function applyTariffDefaults(
+  plan: TariffPlan,
+  setters: {
+    setDuration: (value: string) => void
+    setAmount: (value: string) => void
+    setMaxDevices: (value: string) => void
+    setResetLimit: (value: string) => void
+  },
+) {
+  setters.setDuration(String(plan.duration_days))
+  setters.setAmount(String(plan.price))
+  setters.setMaxDevices(String(plan.max_devices))
+  setters.setResetLimit(String(plan.reset_limit))
+}
+
 function GenerateCard() {
   const { t } = useTranslation(['admin', 'vip'])
   const { t: te } = useTranslation('errors')
+  const { data: tariffs } = useTariffs()
   const generateOne = useGenerateLicense()
   const generateBulk = useGenerateLicensesBulk()
-  const [duration, setDuration] = useState(String(PRICING_TIERS[1]?.days ?? 30))
-  const [amount, setAmount] = useState(String(PRICING_TIERS[1]?.priceUsd ?? 3))
+  const plans = tariffs?.plans ?? []
+  const [duration, setDuration] = useState('30')
+  const [amount, setAmount] = useState('3')
   const [method, setMethod] = useState<PaymentMethod>('FunPay')
   const [maxDevices, setMaxDevices] = useState('2')
+  const [resetLimit, setResetLimit] = useState('0')
   const [count, setCount] = useState('1')
   const [created, setCreated] = useState<string[]>([])
+  const [defaultsApplied, setDefaultsApplied] = useState(false)
+
+  useEffect(() => {
+    if (defaultsApplied || plans.length === 0) return
+    const preferred = plans.find((plan) => plan.duration_days === 30) ?? plans[0]
+    if (!preferred) return
+    applyTariffDefaults(preferred, { setDuration, setAmount, setMaxDevices, setResetLimit })
+    setDefaultsApplied(true)
+  }, [defaultsApplied, plans])
 
   const busy = generateOne.isPending || generateBulk.isPending
   const days = Number(duration)
   const qty = Number(count)
-  const valid = days > 0 && qty >= 1 && qty <= 100 && Number(amount) >= 0 && Number(maxDevices) >= 1
+  const valid =
+    days > 0 &&
+    qty >= 1 &&
+    qty <= 100 &&
+    Number(amount) >= 0 &&
+    Number(maxDevices) >= 1 &&
+    Number(resetLimit) >= 0
 
   const onGenerate = async () => {
     if (!valid) return
@@ -174,6 +213,7 @@ function GenerateCard() {
       amount: Number(amount),
       method,
       max_devices: Number(maxDevices),
+      reset_limit: Number(resetLimit),
       status: 'COMPLETED' as const,
     }
     try {
@@ -194,22 +234,25 @@ function GenerateCard() {
   return (
     <Card className="p-6">
       <h2 className="text-lg font-semibold tracking-tight">{t('generate.title')}</h2>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <label className="text-sm">
           <span className="text-fg-subtle">{t('generate.duration')}</span>
           <select
             value={duration}
             onChange={(event) => {
               const next = event.target.value
+              const plan = plans.find((item) => String(item.duration_days) === next)
+              if (plan) {
+                applyTariffDefaults(plan, { setDuration, setAmount, setMaxDevices, setResetLimit })
+                return
+              }
               setDuration(next)
-              const tier = PRICING_TIERS.find((item) => item.days === Number(next))
-              if (tier) setAmount(String(tier.priceUsd))
             }}
             className={`${inputClass} mt-1.5 w-full`}
           >
-            {PRICING_TIERS.map((tier) => (
-              <option key={tier.days} value={tier.days}>
-                {t('vip:pricing.days', { count: tier.days })} · ${tier.priceUsd}
+            {plans.map((plan) => (
+              <option key={plan.duration_days} value={plan.duration_days}>
+                {t('vip:pricing.days', { count: plan.duration_days })} · ${plan.price}
               </option>
             ))}
           </select>
@@ -240,6 +283,15 @@ function GenerateCard() {
           <input
             value={maxDevices}
             onChange={(event) => setMaxDevices(event.target.value.replace(/\D/g, ''))}
+            inputMode="numeric"
+            className={`${inputClass} tabular mt-1.5 w-full`}
+          />
+        </label>
+        <label className="text-sm">
+          <span className="text-fg-subtle">{t('generate.resetLimit')}</span>
+          <input
+            value={resetLimit}
+            onChange={(event) => setResetLimit(event.target.value.replace(/\D/g, ''))}
             inputMode="numeric"
             className={`${inputClass} tabular mt-1.5 w-full`}
           />

@@ -1,10 +1,12 @@
-import { Crown, Download, Eye, EyeOff, KeyRound, Loader2, Monitor, Plus, Trash2, TriangleAlert, UserRound } from 'lucide-react'
+import { Crown, Download, Eye, EyeOff, KeyRound, Link2, Loader2, LogIn, Monitor, Plus, Trash2, TriangleAlert, Unlink, UserRound } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router'
+import { Link } from 'react-router'
 import { toast } from 'sonner'
 
+import { AuthPopupBlockedDialog } from '@/features/auth/AuthPopupBlockedDialog'
 import { useAuthStore } from '@/features/auth/authStore'
+import { useOAuthSignIn } from '@/features/auth/useOAuthSignIn'
 import { useActivateKey, useLicenseInfo, usePremiumDownload, useResetDevice } from '@/features/license/useLicense'
 import { useRelease } from '@/features/release/useRelease'
 import { ApiError, apiErrorTranslationKey, isNoActiveLicense, isServiceUnavailable } from '@/shared/api'
@@ -14,7 +16,9 @@ import {
   type LicenseDevice,
   type LicenseInfo,
 } from '@/shared/api/license'
-import { deleteMyAccount, type User } from '@/shared/api/user'
+import { unlinkSocialAccount, type OAuthProvider, type User } from '@/shared/api/user'
+import { DISCORD_SERVER_URL, TELEGRAM_VIP_CHAT_URL } from '@/shared/config/product'
+import { cn } from '@/shared/lib/cn'
 import { millisecondsUntil, remainingTickMs, remainingTimeParts } from '@/shared/lib/datetime'
 import { triggerFileDownload } from '@/shared/lib/download'
 import { useFormatters } from '@/shared/lib/format'
@@ -482,45 +486,163 @@ function VipColumn() {
   )
 }
 
+function SocialStatus({
+  label,
+  value,
+  icon: Icon,
+  color,
+  linking,
+  unlinking,
+  canUnlink,
+  disabled,
+  onLink,
+  onUnlink,
+}: {
+  label: string
+  value: string | null
+  icon: typeof TelegramIcon
+  color: string
+  linking: boolean
+  unlinking: boolean
+  canUnlink: boolean
+  disabled?: boolean
+  onLink: () => void
+  onUnlink: () => void
+}) {
+  const { t } = useTranslation('dashboard')
+  const linked = Boolean(value)
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl bg-ink-800/70 px-4 py-3.5">
+      <div className="flex min-w-0 items-center gap-3">
+        <Icon className={`size-5 ${color}`} />
+        <div className="min-w-0">
+          <p className="text-sm font-medium">{label}</p>
+          <p className="truncate text-xs text-fg-subtle">{value ?? t('account.notLinked')}</p>
+        </div>
+      </div>
+      {linked ? (
+        canUnlink ? (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="shrink-0"
+            loading={unlinking}
+            disabled={disabled}
+            onClick={onUnlink}
+          >
+            <Unlink aria-hidden className="size-3.5" />
+            {t('account.unlinkAction')}
+          </Button>
+        ) : (
+          <Badge tone="positive">{t('account.linked')}</Badge>
+        )
+      ) : (
+        <Button
+          size="sm"
+          variant="secondary"
+          className="shrink-0"
+          loading={linking}
+          disabled={disabled}
+          onClick={onLink}
+        >
+          <Link2 aria-hidden className="size-3.5" />
+          {t('account.linkAction')}
+        </Button>
+      )}
+    </div>
+  )
+}
+
+function CommunityInvite({
+  title,
+  text,
+  hint,
+  href,
+  action,
+  enabled,
+  icon: Icon,
+  color,
+}: {
+  title: string
+  text: string
+  hint?: string
+  href: string
+  action: string
+  enabled: boolean
+  icon: typeof TelegramIcon
+  color: string
+}) {
+  return (
+    <div
+      className={cn(
+        'flex items-center justify-between gap-3 rounded-xl bg-ink-800/70 px-4 py-3.5',
+        !enabled && 'text-fg-subtle',
+      )}
+    >
+      <div className="flex min-w-0 items-start gap-3">
+        <Icon className={cn('mt-0.5 size-5 shrink-0', enabled ? color : 'text-fg-subtle')} />
+        <div className="min-w-0">
+          <p className={cn('text-sm font-medium', !enabled && 'text-fg-subtle')}>{title}</p>
+          <p className={cn('mt-0.5 text-xs', enabled ? 'text-fg-muted' : 'text-fg-subtle')}>{text}</p>
+          {hint ? <p className="mt-1 text-xs text-fg-subtle">{hint}</p> : null}
+        </div>
+      </div>
+      {enabled ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noreferrer noopener"
+          className={buttonStyles({ size: 'sm', variant: 'secondary', className: 'shrink-0' })}
+        >
+          <LogIn aria-hidden className="size-3.5" />
+          {action}
+        </a>
+      ) : (
+        <Button size="sm" variant="secondary" disabled className="shrink-0">
+          <LogIn aria-hidden className="size-3.5" />
+          {action}
+        </Button>
+      )}
+    </div>
+  )
+}
+
 function AccountPanel({ user }: { user: User }) {
   const { t } = useTranslation('dashboard')
   const { t: te } = useTranslation(['errors'])
   const format = useFormatters()
-  const navigate = useNavigate()
-  const signOut = useAuthStore((state) => state.signOut)
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const [deleting, setDeleting] = useState(false)
+  const setUser = useAuthStore((state) => state.setUser)
+  const {
+    pendingProvider,
+    blockedProvider,
+    link,
+    retryAfterAllowingPopups,
+    dismissPopupBlock,
+  } = useOAuthSignIn()
+  const [unlinkingProvider, setUnlinkingProvider] = useState<OAuthProvider | null>(null)
+  const telegramLinked = Boolean(user.telegram_id)
+  const discordLinked = Boolean(user.discord_id)
+  const canUnlink = telegramLinked && discordLinked
+  const busy = pendingProvider !== null || unlinkingProvider !== null
 
-  const onDelete = async () => {
-    setDeleting(true)
+  const onLink = async (provider: OAuthProvider) => {
+    const ok = await link(provider)
+    if (ok) toast.success(t('account.linkSuccess'))
+  }
+
+  const onUnlink = async (provider: OAuthProvider) => {
+    setUnlinkingProvider(provider)
     try {
-      await deleteMyAccount()
-      toast.success(t('account.deleteSuccess'))
-      signOut()
-      void navigate('/', { replace: true })
+      const next = await unlinkSocialAccount(provider)
+      setUser(next)
+      toast.success(t('account.unlinkSuccess'))
     } catch (error) {
       toast.error(te(apiErrorTranslationKey(error), { defaultValue: te('errors:unexpected') }))
     } finally {
-      setDeleting(false)
+      setUnlinkingProvider(null)
     }
   }
-
-  const socials = [
-    {
-      id: 'telegram',
-      label: t('account.telegram'),
-      value: user.telegram_id,
-      icon: TelegramIcon,
-      color: 'text-[#2AABEE]',
-    },
-    {
-      id: 'discord',
-      label: t('account.discord'),
-      value: user.discord_id,
-      icon: DiscordIcon,
-      color: 'text-[#5865F2]',
-    },
-  ] as const
 
   return (
     <div className="space-y-4">
@@ -528,57 +650,72 @@ function AccountPanel({ user }: { user: User }) {
         <div className="flex flex-col items-center text-center">
           <Avatar src={user.avatar_url} name={user.nickname} className="size-20 text-xl" />
           <h2 className="mt-4 text-2xl font-semibold tracking-tight">{user.nickname}</h2>
-          <p className="mt-1 text-sm text-fg-subtle">
-            {t(`account.roles.${user.role}`)}
-            {user.created_at ? ` · ${t('account.memberSince', { date: format.dateTimeLong(user.created_at) })}` : null}
-          </p>
+          <p className="mt-1 text-sm text-fg-subtle">{t(`account.roles.${user.role}`)}</p>
+          {user.created_at ? (
+            <p className="mt-0.5 text-sm text-fg-subtle">
+              {t('account.registered', { date: format.dateOnly(user.created_at) })}
+            </p>
+          ) : null}
         </div>
 
-        <ul className="mt-8 grid gap-3 sm:grid-cols-2">
-          {socials.map((social) => {
-            const Icon = social.icon
-            const linked = Boolean(social.value)
-            return (
-              <li key={social.id} className="flex items-center justify-between gap-3 rounded-xl bg-ink-800/70 px-4 py-3.5">
-                <div className="flex min-w-0 items-center gap-3">
-                  <Icon className={`size-5 ${social.color}`} />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">{social.label}</p>
-                    <p className="truncate text-xs text-fg-subtle">
-                      {social.value ?? t('account.notLinked')}
-                    </p>
-                  </div>
-                </div>
-                <Badge tone={linked ? 'positive' : 'neutral'}>
-                  {linked ? t('account.linked') : t('account.notLinked')}
-                </Badge>
-              </li>
-            )
-          })}
-        </ul>
+        <div className="mt-8 grid gap-3 sm:grid-cols-2">
+          <div className="space-y-3">
+            <SocialStatus
+              label={t('account.telegram')}
+              value={user.telegram_id}
+              icon={TelegramIcon}
+              color="text-[#2AABEE]"
+              linking={pendingProvider === 'telegram'}
+              unlinking={unlinkingProvider === 'telegram'}
+              canUnlink={canUnlink}
+              disabled={busy && pendingProvider !== 'telegram' && unlinkingProvider !== 'telegram'}
+              onLink={() => void onLink('telegram')}
+              onUnlink={() => void onUnlink('telegram')}
+            />
+            <CommunityInvite
+              title={t('account.telegramChatTitle')}
+              text={t('account.telegramChatText')}
+              hint={telegramLinked ? undefined : t('account.telegramChatLocked')}
+              href={TELEGRAM_VIP_CHAT_URL}
+              action={t('account.telegramChatAction')}
+              enabled={telegramLinked}
+              icon={TelegramIcon}
+              color="text-[#2AABEE]"
+            />
+          </div>
+          <div className="space-y-3">
+            <SocialStatus
+              label={t('account.discord')}
+              value={user.discord_id}
+              icon={DiscordIcon}
+              color="text-[#5865F2]"
+              linking={pendingProvider === 'discord'}
+              unlinking={unlinkingProvider === 'discord'}
+              canUnlink={canUnlink}
+              disabled={busy && pendingProvider !== 'discord' && unlinkingProvider !== 'discord'}
+              onLink={() => void onLink('discord')}
+              onUnlink={() => void onUnlink('discord')}
+            />
+            <CommunityInvite
+              title={t('account.discordServerTitle')}
+              text={t('account.discordServerText')}
+              hint={t('account.discordServerHint')}
+              href={DISCORD_SERVER_URL}
+              action={t('account.discordServerAction')}
+              enabled
+              icon={DiscordIcon}
+              color="text-[#5865F2]"
+            />
+          </div>
+        </div>
       </Card>
 
-      <Card className="p-6 sm:p-8">
-        <p className="text-sm text-fg-muted">{t('account.deleteHint')}</p>
-        {confirmDelete ? (
-          <div className="mt-5 rounded-xl border border-negative/25 bg-negative/10 p-4">
-            <p className="text-sm text-fg-muted">{t('account.deleteConfirm')}</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button variant="primary" loading={deleting} onClick={() => void onDelete()}>
-                {t('account.deleteConfirmAction')}
-              </Button>
-              <Button variant="secondary" disabled={deleting} onClick={() => setConfirmDelete(false)}>
-                {t('account.deleteCancel')}
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <Button className="mt-5" variant="ghost" onClick={() => setConfirmDelete(true)}>
-            <Trash2 aria-hidden className="size-4" />
-            {t('account.deleteAction')}
-          </Button>
-        )}
-      </Card>
+      {blockedProvider ? (
+        <AuthPopupBlockedDialog
+          onRetry={() => void retryAfterAllowingPopups()}
+          onDismiss={dismissPopupBlock}
+        />
+      ) : null}
     </div>
   )
 }

@@ -93,6 +93,19 @@ export function getTelegramInitData(): string | null {
   return null
 }
 
+export function getTelegramUserIdFromInitData(initData: string): string | null {
+  const userRaw = new URLSearchParams(initData).get('user')
+  if (!userRaw) return null
+  try {
+    const parsed: unknown = JSON.parse(userRaw)
+    if (typeof parsed !== 'object' || parsed === null || !('id' in parsed)) return null
+    const id = parsed.id
+    return typeof id === 'number' || typeof id === 'string' ? String(id) : null
+  } catch {
+    return null
+  }
+}
+
 /**
  * Capture initData as early as possible (before SPA routes rewrite the URL).
  */

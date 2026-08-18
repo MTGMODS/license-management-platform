@@ -20,6 +20,10 @@
     "USER_DELETED": "Цей акаунт видалено.",
     "USER_NOT_FOUND": "Акаунт не знайдено.",
     "ALREADY_LINKED": "Цей акаунт уже прив'язаний до іншого профілю.",
+    "ALL_SOCIALS_ALREADY_LINKED": "Telegram і Discord уже прив'язані.",
+    "CANNOT_OVERWRITE_TELEGRAM": "Telegram уже прив'язаний до цього акаунта.",
+    "CANNOT_OVERWRITE_DISCORD": "Discord уже прив'язаний до цього акаунта.",
+    "LAST_SOCIAL_UNLINK": "Не можна відв'язати останню соцмережу.",
     "FILE_NOT_FOUND": "Посилання на завантаження застаріло. Запросіть файл заново.",
     "VALIDATION_ERROR": "Перевірте введені дані."
   },

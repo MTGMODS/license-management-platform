@@ -80,6 +80,7 @@
     "amount": "Сумма USD",
     "method": "Способ",
     "maxDevices": "Макс. устройств",
+    "resetLimit": "Лимит сбросов",
     "count": "Количество",
     "action": "Сгенерировать",
     "successOne": "Ключ создан",

@@ -69,8 +69,8 @@ export function shouldUseFullPageOAuth(): boolean {
   return false
 }
 
-export function startFullPageOAuth(provider: OAuthProvider): void {
-  window.location.assign(oauthLoginUrl(provider))
+export function startFullPageOAuth(provider: OAuthProvider, options?: { ticket?: string }): void {
+  window.location.assign(oauthLoginUrl(provider, options))
 }
 
 /**
@@ -123,9 +123,13 @@ function isLikelyTabNotPopup(win: Window): boolean {
  * for the callback. Pass the window from `tryOpenAuthWindow()` so the open
  * stays tied to the click that unlocked the popup.
  */
-export function openAuthPopup(provider: OAuthProvider, popup: Window): Promise<TokenResponse> {
+export function openAuthPopup(
+  provider: OAuthProvider,
+  popup: Window,
+  options?: { ticket?: string },
+): Promise<TokenResponse> {
   const expectedOrigin = serviceOrigin('user')
-  const loginUrl = oauthLoginUrl(provider)
+  const loginUrl = oauthLoginUrl(provider, options)
 
   try {
     popup.location.assign(loginUrl)

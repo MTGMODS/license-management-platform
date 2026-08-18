@@ -80,6 +80,7 @@
     "amount": "Сума USD",
     "method": "Спосіб",
     "maxDevices": "Макс. пристроїв",
+    "resetLimit": "Ліміт скидів",
     "count": "Кількість",
     "action": "Згенерувати",
     "successOne": "Ключ створено",
