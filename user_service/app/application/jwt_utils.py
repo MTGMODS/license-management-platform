@@ -96,6 +96,41 @@ def verify_telegram_webapp_hash(init_data: str, bot_token: str) -> bool:
     except Exception:
         return False
     
+def create_link_ticket(user_id: int, provider: str) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(minutes=5)
+    payload = {
+        "sub": str(user_id),
+        "type": "link",
+        "provider": provider,
+        "exp": expire,
+    }
+    return jwt.encode(payload, settings.JWT_SECRET, algorithm=ALGORITHM)
+
+def verify_link_ticket(ticket: str) -> tuple[int, str]:
+    try:
+        payload = jwt.decode(ticket, settings.JWT_SECRET, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+        token_type = payload.get("type")
+        provider = payload.get("provider")
+
+        if user_id is None or token_type != "link" or provider not in ("telegram", "discord"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid link ticket",
+            )
+
+        return int(user_id), provider
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Link ticket has expired",
+        )
+    except jwt.PyJWTError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid link ticket",
+        )
+
 # User authentication dependency
   
 security = HTTPBearer()

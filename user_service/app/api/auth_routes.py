@@ -8,10 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.shared.database import get_db
 from app.application.auth_service import AuthService
+from app.application.user_service import UserService
 from app.domain.schemas import TokenResponse, RefreshRequest, TelegramAuthPayload
 from app.application.jwt_utils import (
     create_access_token,
     create_refresh_token,
+    verify_link_ticket,
     verify_refresh_token,
     verify_telegram_oidc,
     verify_telegram_webapp_hash,
@@ -25,6 +27,61 @@ router = APIRouter(prefix="/api/v1/users/auth", tags=["Authentication"])
 def _frontend_origin() -> str:
     return settings.FRONTEND_URL.rstrip("/")
 
+def _oauth_cookie_kwargs() -> dict:
+    return {
+        "httponly": True,
+        "max_age": 300,
+        "secure": not settings.DEBUG_MODE,
+        "samesite": "lax",
+    }
+
+def _apply_oauth_cookies(response: RedirectResponse, *, state: str, ticket: str | None, expected_provider: str) -> RedirectResponse:
+    response.set_cookie(key="oauth_state", value=state, **_oauth_cookie_kwargs())
+    response.delete_cookie("oauth_link_user_id")
+    if not ticket:
+        return response
+
+    user_id, provider = verify_link_ticket(ticket)
+    if provider != expected_provider:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Link ticket provider mismatch",
+        )
+    response.set_cookie(key="oauth_link_user_id", value=str(user_id), **_oauth_cookie_kwargs())
+    return response
+
+async def _complete_oauth(request: Request, db: AsyncSession, *, telegram_id: int | None = None, discord_id: int | None = None, nickname: str, avatar_url: str | None) -> HTMLResponse:
+    link_user_id = request.cookies.get("oauth_link_user_id")
+    if link_user_id:
+        user = await UserService(db).link_social(
+            user_id=int(link_user_id),
+            telegram_id=telegram_id,
+            discord_id=discord_id,
+        )
+    else:
+        service = AuthService(db)
+        if telegram_id is not None:
+            user = await service.login_with_telegram(
+                telegram_id=telegram_id,
+                nickname=nickname,
+                avatar_url=avatar_url,
+            )
+        else:
+            user = await service.login_with_discord(
+                discord_id=discord_id,
+                nickname=nickname,
+                avatar_url=avatar_url,
+            )
+
+    token = TokenResponse(
+        access_token=create_access_token(user_id=user.id, role=user.role),
+        refresh_token=create_refresh_token(user_id=user.id),
+        user=user,
+    )
+    response = _oauth_success(token)
+    response.delete_cookie("oauth_state")
+    response.delete_cookie("oauth_link_user_id")
+    return response
 
 def _json_for_script(value) -> str:
     return (
@@ -35,7 +92,6 @@ def _json_for_script(value) -> str:
         .replace("\u2028", "\\u2028")
         .replace("\u2029", "\\u2029")
     )
-
 
 def _oauth_popup_html(*, payload: dict | None = None, error_code: str | None = None, message: str | None = None,) -> HTMLResponse:
     target = _json_for_script(_frontend_origin())
@@ -107,7 +163,6 @@ def _oauth_popup_html(*, payload: dict | None = None, error_code: str | None = N
 """
     return HTMLResponse(content=body, headers={"Cache-Control": "no-store"})
 
-
 def _oauth_success(token: TokenResponse) -> HTMLResponse:
     return _oauth_popup_html(payload=jsonable_encoder(token))
 
@@ -125,26 +180,21 @@ def _oauth_exception_to_html(exc: Exception) -> HTMLResponse:
 
 
 @router.get("/telegram/login")
-async def telegram_login_init():
-    state = secrets.token_urlsafe(16)
-    url = (
-        "https://oauth.telegram.org/auth"
-        f"?client_id={settings.TELEGRAM_CLIENT_ID}"
-        f"&redirect_uri={settings.TELEGRAM_CALLBACK_URL}"
-        "&response_type=code"
-        "&scope=openid%20profile"
-        f"&state={state}"
-    )
-    response = RedirectResponse(url)
-    response.set_cookie(
-        key="oauth_state", 
-        value=state, 
-        httponly=True, 
-        max_age=300,
-        secure=not settings.DEBUG_MODE, 
-        samesite="lax"
-    )
-    return response
+async def telegram_login_init(ticket: str | None = None):
+    try:
+        state = secrets.token_urlsafe(16)
+        url = (
+            "https://oauth.telegram.org/auth"
+            f"?client_id={settings.TELEGRAM_CLIENT_ID}"
+            f"&redirect_uri={settings.TELEGRAM_CALLBACK_URL}"
+            "&response_type=code"
+            "&scope=openid%20profile"
+            f"&state={state}"
+        )
+        response = RedirectResponse(url)
+        return _apply_oauth_cookies(response, state=state, ticket=ticket, expected_provider="telegram")
+    except HTTPException as exc:
+        return _oauth_exception_to_html(exc)
 
 @router.get("/telegram/callback", response_class=HTMLResponse)
 async def telegram_auth_callback(request: Request, code: str, state: str = None, db: AsyncSession = Depends(get_db)):
@@ -178,21 +228,13 @@ async def telegram_auth_callback(request: Request, code: str, state: str = None,
         nickname = token_data.get("preferred_username") or token_data.get("name") or tg_id
         avatar_url = token_data.get("picture")
 
-        service = AuthService(db)
-        user = await service.login_with_telegram(
+        return await _complete_oauth(
+            request,
+            db,
             telegram_id=tg_id,
-            nickname=nickname,
+            nickname=str(nickname),
             avatar_url=avatar_url,
         )
-
-        token = TokenResponse(
-            access_token=create_access_token(user_id=user.id, role=user.role),
-            refresh_token=create_refresh_token(user_id=user.id),
-            user=user,
-        )
-        response = _oauth_success(token)
-        response.delete_cookie("oauth_state")
-        return response
     except (HTTPException, DomainException) as exc:
         return _oauth_exception_to_html(exc)
 
@@ -235,26 +277,21 @@ async def telegram_webapp_auth(payload: TelegramAuthPayload, db: AsyncSession = 
 
 
 @router.get("/discord/login", summary="Initiate Discord OAuth2 Flow")
-async def discord_oauth_login():
-    state = secrets.token_urlsafe(16)
-    url = (
-        f"https://discord.com/api/oauth2/authorize"
-        f"?client_id={settings.DISCORD_CLIENT_ID}"
-        f"&redirect_uri={settings.DISCORD_REDIRECT_URI}"
-        f"&response_type=code"
-        f"&scope=identify"
-        f"&state={state}"
-    )
-    response = RedirectResponse(url)
-    response.set_cookie(
-        key="oauth_state", 
-        value=state, 
-        httponly=True, 
-        max_age=300,
-        secure=not settings.DEBUG_MODE,
-        samesite="lax"
-    )
-    return response
+async def discord_oauth_login(ticket: str | None = None):
+    try:
+        state = secrets.token_urlsafe(16)
+        url = (
+            f"https://discord.com/api/oauth2/authorize"
+            f"?client_id={settings.DISCORD_CLIENT_ID}"
+            f"&redirect_uri={settings.DISCORD_REDIRECT_URI}"
+            f"&response_type=code"
+            f"&scope=identify"
+            f"&state={state}"
+        )
+        response = RedirectResponse(url)
+        return _apply_oauth_cookies(response, state=state, ticket=ticket, expected_provider="discord")
+    except HTTPException as exc:
+        return _oauth_exception_to_html(exc)
 
 @router.get("/discord/callback", response_class=HTMLResponse, summary="Discord OAuth2 Callback Receiver")
 async def discord_oauth_callback(request: Request, code: str, state: str = None, db: AsyncSession = Depends(get_db)):
@@ -310,21 +347,13 @@ async def discord_oauth_callback(request: Request, code: str, state: str = None,
         if avatar_hash:
             avatar_url = f"https://cdn.discordapp.com/avatars/{discord_id}/{avatar_hash}.png"
 
-        service = AuthService(db)
-        user = await service.login_with_discord(
+        return await _complete_oauth(
+            request,
+            db,
             discord_id=discord_id,
-            nickname=nickname,
+            nickname=str(nickname),
             avatar_url=avatar_url,
         )
-
-        token = TokenResponse(
-            access_token=create_access_token(user_id=user.id, role=user.role),
-            refresh_token=create_refresh_token(user_id=user.id),
-            user=user,
-        )
-        response = _oauth_success(token)
-        response.delete_cookie("oauth_state")
-        return response
     except (HTTPException, DomainException) as exc:
         return _oauth_exception_to_html(exc)
 

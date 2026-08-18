@@ -63,15 +63,31 @@ class UserService:
         
         db_user = await self.repo.update(db_user)
         return User.model_validate(db_user)
-    
-    async def delete_my_account(self, user_id: int):
-        db_user = await self._get_active_user(user_id)
-        db_user.status = UserStatus.DELETED
-        db_user.telegram_id = None
-        db_user.discord_id = None
-        await self.repo.update(db_user)
-        return {"detail": "Account successfully deleted."}
 
+    async def unlink_social(self, user_id: int, provider: str) -> User:
+        db_user = await self._get_active_user(user_id)
+
+        if db_user.telegram_id is None or db_user.discord_id is None:
+            raise DomainException(
+                "Keep at least one social account linked.",
+                status_code=400,
+                error_code="LAST_SOCIAL_UNLINK",
+            )
+
+        if provider == "telegram":
+            db_user.telegram_id = None
+        elif provider == "discord":
+            db_user.discord_id = None
+        else:
+            raise DomainException(
+                "Unknown social provider.",
+                status_code=400,
+                error_code="VALIDATION_ERROR",
+            )
+
+        db_user = await self.repo.update(db_user)
+        return User.model_validate(db_user)
+    
     # BOT METHODS
     async def resolve_social_id(self, telegram_id: int = None, discord_id: int = None) -> int | None:
         if telegram_id:

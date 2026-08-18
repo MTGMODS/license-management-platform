@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 from pydantic import BaseModel, Field, model_validator
 from app.domain.models import User, UserStatus, UserRole
 
@@ -22,6 +22,15 @@ class LinkSocialPayload(BaseModel):
             raise ValueError('Must provide exactly one of: telegram_id or discord_id')
         return self
 
+class LinkTicketPayload(BaseModel):
+    provider: Literal['telegram', 'discord']
+
+class LinkTicketResponse(BaseModel):
+    ticket: str
+
+class UnlinkSocialPayload(BaseModel):
+    provider: Literal['telegram', 'discord']
+
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
@@ -30,4 +39,3 @@ class TokenResponse(BaseModel):
 
 class RefreshRequest(BaseModel):
     refresh_token: str
-
