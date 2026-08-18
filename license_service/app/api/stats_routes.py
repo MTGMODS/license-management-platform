@@ -14,4 +14,4 @@ async def get_public_stats(background_tasks: BackgroundTasks, db: AsyncSession =
 
 @router.get("/tariffs", description="Get prices and limits.")
 async def get_tariffs():
-    return public_tariffs()
+    return {"status": "success", "data": public_tariffs()}
