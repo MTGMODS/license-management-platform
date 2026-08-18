@@ -1,0 +1,9 @@
+{
+  "currency": "USD",
+  "plans": [
+    { "duration_days": 7, "price": 1, "telegram_stars_price": 75, "max_devices": 1, "reset_limit": 0 },
+    { "duration_days": 30, "price": 3, "telegram_stars_price": 250, "max_devices": 2, "reset_limit": 0 },
+    { "duration_days": 90, "price": 6, "telegram_stars_price": 500, "max_devices": 2, "reset_limit": 1 },
+    { "duration_days": 365, "price": 15, "telegram_stars_price": 1150, "max_devices": 2, "reset_limit": 2 }
+  ]
+}
