@@ -65,6 +65,13 @@ export function useFormatters() {
       dateTime: (iso: string) => dateTime.format(parseApiDateTime(iso)),
       /** Full month and year, for cabinets and other places where space is not tight. */
       dateTimeLong: (iso: string) => dateTimeLong.format(parseApiDateTime(iso)),
+      /** Local long datetime plus a compact UTC stamp, e.g. `17 февраля 2026 г. в 18:34 [17.02.2026 15:34 UTC]`. */
+      dateTimeWithUtc: (iso: string) => {
+        const date = parseApiDateTime(iso)
+        const pad = (value: number) => String(value).padStart(2, '0')
+        const utc = `${pad(date.getUTCDate())}.${pad(date.getUTCMonth() + 1)}.${date.getUTCFullYear()} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())} UTC`
+        return `${dateTimeLong.format(date)} [${utc}]`
+      },
       dateOnly: (iso: string) => fullDate.format(parseApiDateTime(iso)),
       hour: (hour: number) => `${String(hour).padStart(2, '0')}:00`,
       /** Index 0 is Sunday, matching the payload's PostgreSQL `dow` values. */

@@ -2,18 +2,21 @@
   "title": "Админка",
   "subtitle": "Пользователи, ключи и генерация MTGVIP.",
   "tabs": {
-    "users": "Пользователи",
-    "licenses": "Ключи"
+    "generate": "Генерация подписок",
+    "users": "Поиск пользователей",
+    "licenses": "Поиск подписок"
   },
   "users": {
     "searchLabel": "Поиск",
+    "byId": "ID",
     "byNickname": "Никнейм",
     "byTelegram": "Telegram ID",
     "byDiscord": "Discord ID",
     "placeholder": "Введите запрос",
+    "placeholderId": "ID пользователя",
     "action": "Найти",
     "empty": "Никого не найдено",
-    "hint": "Ищите по никнейму или ID соцсети.",
+    "hint": "Ищите по ID аккаунта, никнейму или ID соцсети.",
     "id": "ID",
     "role": "Роль",
     "status": "Статус",
@@ -51,6 +54,8 @@
     "created": "Создан",
     "activated": "Активирован",
     "expires": "Действует до",
+    "ended": "Закончилась",
+    "bannedAt": "Заблокирована",
     "devices": "Устройства",
     "maxDevices": "Макс. устройств",
     "resetLimit": "Сбросов осталось",
@@ -64,6 +69,9 @@
     "removed": "Устройство снято",
     "save": "Сохранить",
     "saved": "Ключ обновлён",
+    "delete": "Удалить",
+    "deleted": "Ключ удалён",
+    "forever": "FOREVER",
     "payment": "Оплата",
     "copy": "Скопировать ключ",
     "copied": "Ключ скопирован",
@@ -75,7 +83,7 @@
     }
   },
   "generate": {
-    "title": "Сгенерировать ключи",
+    "title": "Генерация подписок",
     "duration": "Тариф, дней",
     "amount": "Сумма USD",
     "method": "Способ",

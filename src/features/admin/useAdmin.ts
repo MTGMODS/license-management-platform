@@ -1,10 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
+import { ApiError } from '@/shared/api'
 import {
   deleteAdminDevice,
+  deleteAdminLicense,
   findLicenses,
   generateLicense,
   generateLicensesBulk,
+  getAdminUser,
   searchUsers,
   updateAdminLicense,
   updateAdminUser,
@@ -14,19 +17,32 @@ import {
 } from '@/shared/api/admin'
 import { getTariffs } from '@/shared/api/license'
 
+export type AdminUserLookup =
+  | { user_id: number }
+  | { nickname: string }
+  | { telegram_id: string }
+  | { discord_id: string }
+
 export const ADMIN_USERS_KEY = ['admin', 'users'] as const
 export const ADMIN_LICENSES_KEY = ['admin', 'licenses'] as const
 export const ADMIN_TARIFFS_KEY = ['admin', 'tariffs'] as const
 
-export function useAdminUserSearch(
-  query: { nickname?: string; telegram_id?: string; discord_id?: string } | null,
-) {
-  const enabled = Boolean(query && (query.nickname || query.telegram_id || query.discord_id))
-
+export function useAdminUserSearch(query: AdminUserLookup | null) {
   return useQuery({
     queryKey: [...ADMIN_USERS_KEY, query],
-    queryFn: ({ signal }) => searchUsers(query!, signal),
-    enabled,
+    queryFn: async ({ signal }) => {
+      if (!query) return []
+      if ('user_id' in query) {
+        try {
+          return [await getAdminUser(query.user_id, signal)]
+        } catch (error) {
+          if (error instanceof ApiError && error.status === 404) return []
+          throw error
+        }
+      }
+      return searchUsers(query, signal)
+    },
+    enabled: query != null,
   })
 }
 
@@ -93,6 +109,16 @@ export function useDeleteAdminDevice() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (deviceId: number) => deleteAdminDevice(deviceId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ADMIN_LICENSES_KEY })
+    },
+  })
+}
+
+export function useDeleteAdminLicense() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (licenseId: number) => deleteAdminLicense(licenseId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ADMIN_LICENSES_KEY })
     },

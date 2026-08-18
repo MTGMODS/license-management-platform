@@ -1,15 +1,15 @@
 import { Search, Unlink } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
-import { useAdminUserSearch, useUpdateAdminUser } from '@/features/admin/useAdmin'
+import { useAdminUserSearch, useUpdateAdminUser, type AdminUserLookup } from '@/features/admin/useAdmin'
 import { apiErrorTranslationKey } from '@/shared/api'
 import type { User, UserRole, UserStatus } from '@/shared/api/user'
 import { useFormatters } from '@/shared/lib/format'
 import { Avatar, Badge, Button, Card, SegmentedControl, Skeleton } from '@/shared/ui'
 
-const SEARCH_TYPES = ['nickname', 'telegram_id', 'discord_id'] as const
+const SEARCH_TYPES = ['id', 'telegram_id', 'discord_id', 'nickname'] as const
 type SearchType = (typeof SEARCH_TYPES)[number]
 
 const ROLES: UserRole[] = ['USER', 'SMART', 'ADMIN']
@@ -24,24 +24,50 @@ function statusTone(status: UserStatus): 'positive' | 'negative' | 'neutral' {
   return 'neutral'
 }
 
-export function UsersPanel({ onOpenLicenses }: { onOpenLicenses: (userId: number) => void }) {
+function isNumericSearch(type: SearchType): boolean {
+  return type === 'id' || type === 'telegram_id' || type === 'discord_id'
+}
+
+export function UsersPanel({
+  initialUserId,
+  onConsumedInitialUserId,
+  onOpenLicenses,
+}: {
+  initialUserId: number | null
+  onConsumedInitialUserId: () => void
+  onOpenLicenses: (userId: number) => void
+}) {
   const { t } = useTranslation('admin')
   const { t: te } = useTranslation('errors')
   const format = useFormatters()
-  const [searchType, setSearchType] = useState<SearchType>('nickname')
+  const [searchType, setSearchType] = useState<SearchType>('id')
   const [draft, setDraft] = useState('')
-  const [query, setQuery] = useState<{ nickname?: string; telegram_id?: string; discord_id?: string } | null>(
-    null,
-  )
+  const [query, setQuery] = useState<AdminUserLookup | null>(null)
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const users = useAdminUserSearch(query)
   const updateUser = useUpdateAdminUser()
+
+  useEffect(() => {
+    if (initialUserId == null) return
+    setSearchType('id')
+    setDraft(String(initialUserId))
+    setQuery({ user_id: initialUserId })
+    setSelectedId(initialUserId)
+    onConsumedInitialUserId()
+  }, [initialUserId, onConsumedInitialUserId])
 
   const onSearch = (event: FormEvent) => {
     event.preventDefault()
     const value = draft.trim()
     if (!value) return
-    setQuery({ [searchType]: value })
+    if (searchType === 'id') {
+      const userId = Number(value)
+      if (!Number.isInteger(userId) || userId <= 0) return
+      setQuery({ user_id: userId })
+      setSelectedId(userId)
+      return
+    }
+    setQuery({ [searchType]: value } as AdminUserLookup)
   }
 
   const selected = users.data?.find((user) => user.id === selectedId) ?? users.data?.[0] ?? null
@@ -67,51 +93,55 @@ export function UsersPanel({ onOpenLicenses }: { onOpenLicenses: (userId: number
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-      <div className="space-y-4">
-        <Card className="p-5">
-          <p className="text-sm font-medium">{t('users.searchLabel')}</p>
-          <SegmentedControl
-            className="mt-3"
-            size="sm"
-            label={t('users.searchLabel')}
-            value={searchType}
-            onChange={setSearchType}
-            options={[
-              { id: 'nickname', label: t('users.byNickname') },
-              { id: 'telegram_id', label: t('users.byTelegram') },
-              { id: 'discord_id', label: t('users.byDiscord') },
-            ]}
+    <div className="space-y-4">
+      <Card className="p-6 sm:p-8">
+        <h2 className="text-lg font-semibold tracking-tight">{t('tabs.users')}</h2>
+        <SegmentedControl
+          className="mt-5"
+          fullWidth
+          label={t('users.searchLabel')}
+          value={searchType}
+          onChange={(next) => {
+            setSearchType(next)
+            setDraft('')
+          }}
+          options={[
+            { id: 'id', label: t('users.byId') },
+            { id: 'telegram_id', label: t('users.byTelegram') },
+            { id: 'discord_id', label: t('users.byDiscord') },
+            { id: 'nickname', label: t('users.byNickname') },
+          ]}
+        />
+        <form onSubmit={onSearch} className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <input
+            value={draft}
+            onChange={(event) =>
+              setDraft(isNumericSearch(searchType) ? event.target.value.replace(/\D/g, '') : event.target.value)
+            }
+            placeholder={searchType === 'id' ? t('users.placeholderId') : t('users.placeholder')}
+            inputMode={isNumericSearch(searchType) ? 'numeric' : 'text'}
+            className={`${inputClass} min-w-0 w-full flex-1`}
           />
-          <form onSubmit={onSearch} className="mt-3 flex gap-2">
-            <input
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              placeholder={t('users.placeholder')}
-              className={`${inputClass} min-w-0 flex-1`}
-            />
-            <Button type="submit" disabled={!draft.trim()} loading={users.isFetching}>
-              <Search aria-hidden className="size-4" />
-              {t('users.action')}
-            </Button>
-          </form>
-        </Card>
+          <Button type="submit" disabled={!draft.trim()} loading={users.isFetching} className="sm:w-auto">
+            <Search aria-hidden className="size-4" />
+            {t('users.action')}
+          </Button>
+        </form>
+        <p className="mt-4 text-sm text-fg-muted">{t('users.hint')}</p>
+      </Card>
 
-        {!query ? (
-          <Card className="p-6">
-            <p className="text-sm text-fg-muted">{t('users.hint')}</p>
-          </Card>
-        ) : users.isPending ? (
-          <Skeleton className="h-48" />
-        ) : users.isError ? (
-          <Card className="p-6">
-            <p className="text-sm text-fg-muted">{te('unexpected')}</p>
-          </Card>
-        ) : users.data.length === 0 ? (
-          <Card className="p-6">
-            <p className="font-medium">{t('users.empty')}</p>
-          </Card>
-        ) : (
+      {!query ? null : users.isPending ? (
+        <Skeleton className="h-48" />
+      ) : users.isError ? (
+        <Card className="p-6">
+          <p className="text-sm text-fg-muted">{te('unexpected')}</p>
+        </Card>
+      ) : users.data.length === 0 ? (
+        <Card className="p-6">
+          <p className="font-medium">{t('users.empty')}</p>
+        </Card>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
           <ul className="space-y-2">
             {users.data.map((user) => {
               const active = user.id === (selected?.id ?? null)
@@ -139,20 +169,20 @@ export function UsersPanel({ onOpenLicenses }: { onOpenLicenses: (userId: number
               )
             })}
           </ul>
-        )}
-      </div>
 
-      {selected && selected.id != null ? (
-        <UserEditor
-          key={selected.id}
-          user={selected}
-          saving={updateUser.isPending}
-          onSave={onSave}
-          onUnlink={onUnlink}
-          onOpenLicenses={onOpenLicenses}
-          formatDate={format.dateTimeLong}
-        />
-      ) : null}
+          {selected && selected.id != null ? (
+            <UserEditor
+              key={selected.id}
+              user={selected}
+              saving={updateUser.isPending}
+              onSave={onSave}
+              onUnlink={onUnlink}
+              onOpenLicenses={onOpenLicenses}
+              formatDate={format.dateTimeWithUtc}
+            />
+          ) : null}
+        </div>
+      )}
     </div>
   )
 }
@@ -184,8 +214,8 @@ function UserEditor({
           <p className="truncate text-lg font-semibold">{user.nickname}</p>
           <p className="tabular text-sm text-fg-subtle">
             {t('users.id')} {user.id}
-            {user.created_at ? ` · ${formatDate(user.created_at)}` : null}
           </p>
+          {user.created_at ? <p className="mt-1 text-sm text-fg-muted">{formatDate(user.created_at)}</p> : null}
         </div>
       </div>
 

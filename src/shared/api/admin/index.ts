@@ -111,6 +111,15 @@ export function deleteAdminDevice(deviceId: number): Promise<{ status: string; m
   })
 }
 
+export function deleteAdminLicense(licenseId: number): Promise<{ status: string; message: string }> {
+  return request({
+    service: 'license',
+    path: `/${licenseId}`,
+    method: 'DELETE',
+    auth: true,
+  })
+}
+
 export type {
   AdminLicense,
   AdminLicenseDevice,

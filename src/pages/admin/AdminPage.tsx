@@ -1,20 +1,21 @@
-import { KeyRound, Loader2, Users } from 'lucide-react'
+import { KeyRound, Loader2, Users, Wand2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useAuthStore } from '@/features/auth/authStore'
 import { SegmentedControl } from '@/shared/ui'
 
-import { LicensesPanel } from './LicensesPanel'
+import { GenerateCard, LicensesPanel } from './LicensesPanel'
 import { UsersPanel } from './UsersPanel'
 
-export type AdminTab = 'users' | 'licenses'
+export type AdminTab = 'generate' | 'users' | 'licenses'
 
 export function AdminPage() {
   const { t } = useTranslation('admin')
   const status = useAuthStore((state) => state.status)
-  const [tab, setTab] = useState<AdminTab>('users')
+  const [tab, setTab] = useState<AdminTab>('generate')
   const [licenseUserId, setLicenseUserId] = useState<number | null>(null)
+  const [profileUserId, setProfileUserId] = useState<number | null>(null)
 
   if (status === 'initialising') {
     return (
@@ -38,21 +39,33 @@ export function AdminPage() {
         onChange={setTab}
         className="p-1.5"
         options={[
-          { id: 'users', label: t('tabs.users'), icon: Users },
+          { id: 'generate', label: t('tabs.generate'), icon: Wand2 },
           { id: 'licenses', label: t('tabs.licenses'), icon: KeyRound },
+          { id: 'users', label: t('tabs.users'), icon: Users },
         ]}
       />
 
+      {tab === 'generate' ? <GenerateCard /> : null}
       {tab === 'users' ? (
         <UsersPanel
+          initialUserId={profileUserId}
+          onConsumedInitialUserId={() => setProfileUserId(null)}
           onOpenLicenses={(userId) => {
             setLicenseUserId(userId)
             setTab('licenses')
           }}
         />
-      ) : (
-        <LicensesPanel initialUserId={licenseUserId} onConsumedInitialUserId={() => setLicenseUserId(null)} />
-      )}
+      ) : null}
+      {tab === 'licenses' ? (
+        <LicensesPanel
+          initialUserId={licenseUserId}
+          onConsumedInitialUserId={() => setLicenseUserId(null)}
+          onOpenUser={(userId) => {
+            setProfileUserId(userId)
+            setTab('users')
+          }}
+        />
+      ) : null}
     </div>
   )
 }
