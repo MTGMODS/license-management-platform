@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.shared.database import get_db
+from app.shared.tariffs import public_tariffs
 from app.application.service import LicenseStatsService
 
 router = APIRouter(prefix="/api/v1/license", tags=["Stats"])
@@ -10,3 +11,7 @@ async def get_public_stats(background_tasks: BackgroundTasks, db: AsyncSession =
     service = LicenseStatsService(db)
     stats = await service.get_website_stats(background_tasks)
     return {"status": "success", "data": stats}
+
+@router.get("/tariffs", description="Get prices and limits.")
+async def get_tariffs():
+    return public_tariffs()
