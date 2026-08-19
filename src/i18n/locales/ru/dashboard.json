@@ -61,6 +61,7 @@
   },
   "account": {
     "registered": "Дата регистрации: {{date}}",
+    "roleWithId": "{{role}} #{{id}}",
     "roles": {
       "USER": "Пользователь",
       "SMART": "Smart",
@@ -79,8 +80,7 @@
     "telegramChatAction": "Войти",
     "telegramChatLocked": "Привяжите Telegram, чтобы войти",
     "discordServerTitle": "Наш Discord сервер",
-    "discordServerText": "VIP чат и эксклюзивная VIP роль",
-    "discordServerHint": "Чтобы получить VIP-роль, введите /role в чате Discord.",
+    "discordServerText": "VIP роль (команда /role)",
     "discordServerAction": "Войти"
   }
 }

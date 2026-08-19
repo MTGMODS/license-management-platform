@@ -548,29 +548,31 @@ function LicenseCard({
         )}
       </div>
 
-      <div className="mt-5 flex flex-wrap gap-2">
-        <Button
-          size="sm"
-          disabled={!canSave}
-          loading={updateLicense.isPending}
-          onClick={() => void onSave()}
-        >
-          {t('licenses.save')}
-        </Button>
+      <div className="mt-5 grid grid-cols-2 gap-2">
         {confirmDelete ? (
           <>
-            <Button size="sm" loading={deleteLicense.isPending} onClick={() => void onDelete()}>
+            <Button fullWidth loading={deleteLicense.isPending} variant="danger" onClick={() => void onDelete()}>
               {t('common:actions.confirm')}
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(false)}>
+            <Button fullWidth variant="secondary" onClick={() => setConfirmDelete(false)}>
               {t('common:actions.cancel')}
             </Button>
           </>
         ) : (
-          <Button size="sm" variant="outline" onClick={() => setConfirmDelete(true)}>
-            <Trash2 aria-hidden className="size-3.5" />
-            {t('licenses.delete')}
-          </Button>
+          <>
+            <Button
+              fullWidth
+              disabled={!canSave}
+              loading={updateLicense.isPending}
+              onClick={() => void onSave()}
+            >
+              {t('licenses.save')}
+            </Button>
+            <Button fullWidth variant="danger" onClick={() => setConfirmDelete(true)}>
+              <Trash2 aria-hidden className="size-3.5" />
+              {t('licenses.delete')}
+            </Button>
+          </>
         )}
       </div>
     </Card>

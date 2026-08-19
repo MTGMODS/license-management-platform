@@ -650,7 +650,9 @@ function AccountPanel({ user }: { user: User }) {
         <div className="flex flex-col items-center text-center">
           <Avatar src={user.avatar_url} name={user.nickname} className="size-20 text-xl" />
           <h2 className="mt-4 text-2xl font-semibold tracking-tight">{user.nickname}</h2>
-          <p className="mt-1 text-sm text-fg-subtle">{t(`account.roles.${user.role}`)}</p>
+          <p className="mt-1 text-sm text-fg-subtle">
+            {t('account.roleWithId', { role: t(`account.roles.${user.role}`), id: user.id })}
+          </p>
           {user.created_at ? (
             <p className="mt-0.5 text-sm text-fg-subtle">
               {t('account.registered', { date: format.dateOnly(user.created_at) })}
@@ -699,7 +701,6 @@ function AccountPanel({ user }: { user: User }) {
             <CommunityInvite
               title={t('account.discordServerTitle')}
               text={t('account.discordServerText')}
-              hint={t('account.discordServerHint')}
               href={DISCORD_SERVER_URL}
               action={t('account.discordServerAction')}
               enabled
