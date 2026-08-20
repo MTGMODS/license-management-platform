@@ -42,30 +42,19 @@ class LicenseService:
         await self.license_repo.log_device(db_sub.id, device, ip_address, user_agent)
         return {"user_id": db_sub.user_id, "expires_at": format_utc(db_sub.expires_at)}
 
-    async def get_license_info(self, user_id: int) -> dict:
-        db_sub = await self.license_repo.get_active_by_user(user_id)
-        
-        if not db_sub:
-            raise DomainException(
-                message="You don't have an active license.", 
-                status_code=404, 
-                error_code="NO_ACTIVE_LICENSE"
-            )
-
+    def _serialize_dashboard_license(self, db_sub: LicenseModel) -> dict:
         devices_list = []
         for d in db_sub.devices:
             hwid_masked = f"{d.device[:3]}******{d.device[-3:]}" if len(d.device) > 6 else "***"
-
             devices_list.append({
                 "id": d.id,
                 "hwid": hwid_masked,
                 "ip": d.ip_address,
                 "first_used_at": format_utc(d.first_used_at),
-                "last_used_at": format_utc(d.last_used_at)
+                "last_used_at": format_utc(d.last_used_at),
             })
 
         tx = db_sub.transaction
-        
         return {
             "license": {
                 "id": db_sub.id,
@@ -83,9 +72,23 @@ class LicenseService:
                 "amount": tx.amount,
                 "method": tx.payment_method,
                 "status": tx.status,
-                "purchased_at": format_utc(tx.purchased_at)
-            } if tx else None
+                "purchased_at": format_utc(tx.purchased_at),
+            } if tx else None,
         }
+
+    async def get_license_info(self, user_id: int) -> dict:
+        db_sub = await self.license_repo.get_active_by_user(user_id)
+        if not db_sub:
+            raise DomainException(
+                message="You don't have an active license.",
+                status_code=404,
+                error_code="NO_ACTIVE_LICENSE",
+            )
+        return self._serialize_dashboard_license(db_sub)
+
+    async def get_license_history(self, user_id: int) -> list:
+        licenses = await self.license_repo.get_history_by_user(user_id)
+        return [self._serialize_dashboard_license(lic) for lic in licenses]
 
     async def reset_device(self, user_id: int, device_id: int):
         db_sub = await self.license_repo.get_active_by_user(user_id)
