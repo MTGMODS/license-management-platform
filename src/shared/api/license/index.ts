@@ -17,6 +17,11 @@ export function getLicenseInfo(signal?: AbortSignal): Promise<LicenseInfo> {
   return request<LicenseInfo>({ service: 'license', path: '/info', auth: true, signal })
 }
 
+/** Past licences for the signed-in user. Empty array when there is no history. */
+export function getLicenseHistory(signal?: AbortSignal): Promise<LicenseInfo[]> {
+  return request<LicenseInfo[]>({ service: 'license', path: '/history', auth: true, signal })
+}
+
 /**
  * Public sales figures behind the VIP page.
  *

@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { AuthPopupBlockedDialog } from '@/features/auth/AuthPopupBlockedDialog'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useOAuthSignIn } from '@/features/auth/useOAuthSignIn'
-import { useActivateKey, useLicenseInfo, usePremiumDownload, useResetDevice } from '@/features/license/useLicense'
+import { useActivateKey, useLicenseHistory, useLicenseInfo, usePremiumDownload, useResetDevice } from '@/features/license/useLicense'
 import { useRelease } from '@/features/release/useRelease'
 import { ApiError, apiErrorTranslationKey, isNoActiveLicense, isServiceUnavailable } from '@/shared/api'
 import {
@@ -381,19 +381,20 @@ function SubscriptionCard({
         </div>
       </div>
 
+      {!(isPast && devices.length === 0) ? (
       <div className="border-t border-white/5 px-6 py-5 sm:px-8">
         <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
           <p className="text-sm font-medium">{t('vip.devices')}</p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm tabular text-fg-subtle">
             <span>{t('vip.devicesCount', { used: devices.length, max: license.max_devices })}</span>
-            {license.reset_limit > 0 ? (
+            {!isPast && license.reset_limit > 0 ? (
               <span>{t('vip.resetsCount', { count: license.reset_limit })}</span>
             ) : null}
           </div>
         </div>
 
         <div className="space-y-2">
-          {slots.map((device, index) => (
+          {(isPast ? devices : slots).map((device, index) => (
             <DeviceSlot
               key={device?.id ?? `empty-${index}`}
               device={device}
@@ -412,6 +413,7 @@ function SubscriptionCard({
           ))}
         </div>
       </div>
+      ) : null}
     </Card>
   )
 }
@@ -430,16 +432,24 @@ function PastSubscriptions({ items }: { items: LicenseInfo[] }) {
   )
 }
 
+function LicenseHistory() {
+  const { data, isPending } = useLicenseHistory(true)
+
+  if (isPending) return <Skeleton className="h-36" />
+
+  return <PastSubscriptions items={data ?? []} />
+}
+
 function VipColumn() {
   const { t } = useTranslation(['dashboard', 'common'])
   const { data, isPending, isError, error, refetch, isFetching } = useLicenseInfo(true)
-  const pastSubscriptions: LicenseInfo[] = []
 
   if (isPending) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-56" />
         <Skeleton className="h-36" />
+        <LicenseHistory />
       </div>
     )
   }
@@ -455,6 +465,7 @@ function VipColumn() {
           </Button>
         </Card>
         <ActivateForm />
+        <LicenseHistory />
       </div>
     )
   }
@@ -471,6 +482,7 @@ function VipColumn() {
           </Link>
         </Card>
         <ActivateForm />
+        <LicenseHistory />
       </div>
     )
   }
@@ -481,7 +493,7 @@ function VipColumn() {
     <div className="space-y-4">
       <SubscriptionCard info={data} variant={active ? 'active' : 'past'} />
       <ActivateForm />
-      <PastSubscriptions items={pastSubscriptions} />
+      <LicenseHistory />
     </div>
   )
 }

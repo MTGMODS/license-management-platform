@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/features/auth/authStore'
 import {
   activateKey,
+  getLicenseHistory,
   getLicenseInfo,
   requestPremiumDownload,
   resetDevice,
@@ -12,6 +13,7 @@ import {
 } from '@/shared/api/license'
 
 export const LICENSE_INFO_KEY = ['license', 'info'] as const
+export const LICENSE_HISTORY_KEY = ['license', 'history'] as const
 
 function licenseOwnerKey(user: { id: number | null; discord_id: string | null; telegram_id: string | null } | null) {
   if (!user) return 'anonymous'
@@ -33,6 +35,18 @@ export function useLicenseInfo(enabled: boolean) {
   })
 }
 
+export function useLicenseHistory(enabled: boolean) {
+  const user = useAuthStore((state) => state.user)
+  const owner = licenseOwnerKey(user)
+
+  return useQuery<LicenseInfo[]>({
+    queryKey: [...LICENSE_HISTORY_KEY, owner],
+    queryFn: ({ signal }) => getLicenseHistory(signal),
+    enabled: enabled && owner !== 'anonymous',
+    staleTime: 60_000,
+  })
+}
+
 export function useActivateKey() {
   const queryClient = useQueryClient()
 
@@ -40,6 +54,7 @@ export function useActivateKey() {
     mutationFn: ({ key, force }) => activateKey(key, force),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: LICENSE_INFO_KEY })
+      void queryClient.invalidateQueries({ queryKey: LICENSE_HISTORY_KEY })
     },
   })
 }
