@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, LabeledPrice
 from telegram.ext import (
@@ -9,6 +10,21 @@ from telegram.ext import (
 from app.config import TELEGRAM_BOT_TOKEN, TELEGRAM_VIP_CHAT_ID, WEB_APP_URL
 from app.api import api_client
 from app.rabbitmq import start_rabbitmq_consumer
+
+def format_datetime(value: str | None) -> str:
+    if not value or value == "FOREVER":
+        return value or "—"
+    try:
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return dt.astimezone(timezone.utc).strftime("%d.%m.%Y %H:%M")
+    except (TypeError, ValueError):
+        return value
+
+def format_price(value) -> str:
+    try:
+        return str(int(float(value)))
+    except (TypeError, ValueError):
+        return str(value)
 
 async def load_plans() -> dict | None:
     res = await api_client.get_tariffs()
@@ -129,8 +145,8 @@ async def handle_join_request(update: Update, context: ContextTypes.DEFAULT_TYPE
         await context.bot.send_message(chat_id=telegram_id, text="✅ Вы добавлены в VIP чат ✅")
 
         license_info = vip_data.get("license")
-        expires_at = license_info.get("expires_at", "FOREVER")
-        price = license_info.get("purchase_price")
+        expires_at = format_datetime(license_info.get("expires_at", "FOREVER"))
+        price = format_price(license_info.get("purchase_price"))
         method = license_info.get("purchase_method")
 
         welcome_text = (
@@ -172,10 +188,10 @@ async def vip_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     license_info = vip_data.get("license", {})
-    activated_at = license_info.get("activated_at")
-    expires_at = license_info.get("expires_at",  "FOREVER")
+    activated_at = format_datetime(license_info.get("activated_at"))
+    expires_at = format_datetime(license_info.get("expires_at", "FOREVER"))
     method = license_info.get("purchase_method")
-    price = license_info.get("purchase_price")
+    price = format_price(license_info.get("purchase_price"))
 
     text = (
         f"📅 <b>Активация VIP:</b> {activated_at}\n"
