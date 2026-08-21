@@ -1,3 +1,5 @@
+import json
+
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, LabeledPrice
 from telegram.ext import (
     ApplicationBuilder, CommandHandler, CallbackQueryHandler,
@@ -8,12 +10,26 @@ from app.config import TELEGRAM_BOT_TOKEN, TELEGRAM_VIP_CHAT_ID, WEB_APP_URL
 from app.api import api_client
 from app.rabbitmq import start_rabbitmq_consumer
 
-PRICES = {
-    "buy_7":   {"stars": 75,   "duration": 7,   "price": 1,  "title": "VIP на 7 дней"},
-    "buy_30":  {"stars": 250,  "duration": 30,  "price": 3,  "title": "VIP на 30 дней"},
-    "buy_90":  {"stars": 500,  "duration": 90,  "price": 6,  "title": "VIP на 90 дней"},
-    "buy_365": {"stars": 1150, "duration": 365, "price": 15, "title": "VIP на 365 дней"},
-}
+async def load_plans() -> dict | None:
+    res = await api_client.get_tariffs()
+    if res.get("error") or res.get("status") != "success":
+        return None
+
+    plans = res.get("data", {}).get("plans") or []
+    if not plans:
+        return None
+
+    return {
+        f"buy_{plan['duration_days']}": {
+            "stars": plan["telegram_stars_price"],
+            "duration": plan["duration_days"],
+            "price": plan["price"],
+            "max_devices": plan["max_devices"],
+            "reset_limit": plan["reset_limit"],
+            "title": f"VIP на {plan['duration_days']} дней",
+        }
+        for plan in plans
+    }
 
 async def start_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = ("👋 Привет!\n\nArizona&Rodina Helper теперь доступен через удобный сайт")
@@ -21,26 +37,43 @@ async def start_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text, reply_markup=markup)
 
 async def pay_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    plans = await load_plans()
+    if not plans:
+        await update.message.reply_text("⚠️ Не удалось загрузить тарифы. Попробуйте позже.")
+        return
+
     keyboard = [
         [InlineKeyboardButton(f"{p['duration']} дней — {p['stars']} ⭐", callback_data=k)]
-        for k, p in PRICES.items()
+        for k, p in plans.items()
     ]
-    await update.message.reply_text( "👉 Выберите срок для покупки VIP через Stars:", reply_markup=InlineKeyboardMarkup(keyboard))
+    await update.message.reply_text(
+        "👉 Выберите срок для покупки VIP через Stars:",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
 
 async def pay_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    plan = PRICES.get(query.data)
+    plans = await load_plans()
+    plan = plans.get(query.data) if plans else None
     if not plan:
+        await query.edit_message_text("⚠️ Не удалось загрузить тарифы. Попробуйте позже.")
         return
 
     prices = [LabeledPrice(plan["title"], plan["stars"])]
+    payload = json.dumps({
+        "duration": plan["duration"],
+        "price": plan["price"],
+        "max_devices": plan["max_devices"],
+        "reset_limit": plan["reset_limit"],
+    }, separators=(",", ":"))
+
     await context.bot.send_invoice(
         chat_id=update.effective_user.id,
         title=plan["title"],
         description="Оплата за VIP доступ",
-        payload=query.data,
+        payload=payload,
         provider_token="",
         currency="XTR",
         prices=prices,
@@ -50,13 +83,18 @@ async def precheckout_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     await update.pre_checkout_query.answer(ok=True)
 
 async def successful_payment_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    payload = update.message.successful_payment.invoice_payload
-    plan = PRICES.get(payload)
-    
-    if not plan:
+    try:
+        plan = json.loads(update.message.successful_payment.invoice_payload)
+    except (TypeError, json.JSONDecodeError):
+        await update.message.reply_text("❌ Произошла ошибка при генерации ключа!\n👉 Обратитесь к @mtg_mods")
         return
 
-    res = await api_client.generate_license(duration_days=plan["duration"], amount=plan["price"])
+    res = await api_client.generate_license(
+        duration_days=plan["duration"],
+        amount=plan["price"],
+        max_devices=plan["max_devices"],
+        reset_limit=plan["reset_limit"],
+    )
 
     if res.get("error") or res.get("status") != "success" or not res.get("data").get("key"):
         await update.message.reply_text("❌ Произошла ошибка при генерации ключа!\n👉 Обратитесь к @mtg_mods")
