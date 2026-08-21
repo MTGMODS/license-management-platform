@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 32" role="img" aria-label="Bank card">
+  <title>Bank card</title>
+  <defs>
+    <linearGradient id="card-face" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#B8D4F0"/>
+      <stop offset="42%" stop-color="#9EC4E8"/>
+      <stop offset="42%" stop-color="#7EB0DC"/>
+      <stop offset="100%" stop-color="#6FA3D4"/>
+    </linearGradient>
+  </defs>
+  <rect width="48" height="32" rx="4.5" fill="url(#card-face)"/>
+  <rect y="5" width="48" height="6.5" fill="#2F3A4A"/>
+  <rect x="5.5" y="16.5" width="12" height="1.6" rx="0.8" fill="#FFFFFF"/>
+  <rect x="5.5" y="19.2" width="10" height="1.6" rx="0.8" fill="#FFFFFF"/>
+  <rect x="5.5" y="21.9" width="16" height="1.6" rx="0.8" fill="#FFFFFF"/>
+  <rect x="5.5" y="24.6" width="14" height="1.6" rx="0.8" fill="#FFFFFF"/>
+  <rect x="35.5" y="18.5" width="7" height="7" rx="1.4" fill="#F5C542"/>
+</svg>

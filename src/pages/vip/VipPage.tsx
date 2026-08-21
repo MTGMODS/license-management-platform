@@ -4,6 +4,7 @@ import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 
+import { useLocalUsdPrice } from '@/features/geo/useLocalUsdPrice'
 import { useSalesStats } from '@/features/license/useSalesStats'
 import { useTariffs } from '@/features/license/useTariffs'
 import { cn } from '@/shared/lib/cn'
@@ -83,18 +84,19 @@ function GalleryLink({ children }: { children?: ReactNode }) {
   )
 }
 
+/** Four stacked rows — content-sized, never stretched. */
 function VipBenefits() {
   const { t } = useTranslation('vip')
 
   return (
-    <Card className="@container w-full p-4 text-left sm:p-5">
-      <ul className="grid grid-cols-1 gap-4 @min-[36rem]:grid-cols-2 @min-[36rem]:gap-x-6 @min-[36rem]:gap-y-4">
+    <Card className="w-full shrink-0 p-4 text-left sm:p-5 lg:p-[clamp(0.65rem,1.2vh,1rem)]">
+      <ul className="grid grid-cols-1 gap-3 sm:gap-3.5 lg:gap-[clamp(0.35rem,1vh,0.65rem)]">
         {BENEFITS.map((item) => {
           const Icon = item.icon
           return (
-            <li key={item.titleKey} className="flex gap-3">
-              <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-accent-500/10 text-accent-300">
-                <Icon aria-hidden className="size-4" />
+            <li key={item.titleKey} className="flex gap-2.5 sm:gap-3">
+              <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg bg-accent-500/10 text-accent-300 sm:size-8">
+                <Icon aria-hidden className="size-3.5 sm:size-4" />
               </span>
               <div className="min-w-0">
                 <p className="text-sm font-medium text-fg sm:text-[0.95rem]">{t(item.titleKey)}</p>
@@ -128,8 +130,10 @@ export function VipPage() {
     refetch: refetchTariffs,
     isFetching: tariffsFetching,
   } = useTariffs()
+  const { ready: localFxReady } = useLocalUsdPrice()
   const toasted = useRef(false)
   const tariffsReady = !tariffsPending && !tariffsError && Boolean(tariffs?.plans.length)
+  const foldOk = tariffsReady && !statsError
 
   useEffect(() => {
     if (!statsError) {
@@ -142,64 +146,95 @@ export function VipPage() {
   }, [statsError, t])
 
   return (
-    <div className="shell space-y-8 py-8 sm:space-y-10 sm:py-10">
-      <header className="w-full min-w-0 space-y-1.5 overflow-x-clip text-center">
-        <FitLine as="h1" maxRem={2.25} className="text-gradient font-semibold tracking-tight">
-          {t('hero.title')}
-        </FitLine>
-        <FitLine maxRem={1.35} className="leading-tight text-fg-muted">
-          {t('hero.subtitle')}
-        </FitLine>
-        <FitLine maxRem={0.875} className="leading-tight text-fg-subtle">
-          {t('hero.currency')}
-        </FitLine>
-      </header>
+    <div className="shell flex min-h-0 flex-1 flex-col">
+      {/* Desktop fold: spare height between subtitle and tariffs. Mobile: normal scroll. */}
+      <div
+        className={cn(
+          'flex flex-col py-6 sm:py-8',
+          tariffsError || !tariffsReady
+            ? 'flex-1'
+            : 'lg:h-[calc(100dvh-4rem)] lg:overflow-hidden lg:py-[clamp(0.55rem,1.4vh,1.1rem)]',
+        )}
+      >
+        <header className="w-full min-w-0 shrink-0 space-y-1.5 overflow-x-clip text-center lg:space-y-1">
+          <FitLine as="h1" maxRem={2.25} className="text-gradient font-semibold tracking-tight">
+            {t('hero.title')}
+          </FitLine>
+          <FitLine maxRem={1.25} className="leading-tight text-fg-muted">
+            {t('hero.subtitle')}
+          </FitLine>
+          {localFxReady ? null : (
+            <FitLine maxRem={0.875} className="leading-tight text-fg-subtle">
+              {t('hero.currency')}
+            </FitLine>
+          )}
+        </header>
 
-      {tariffsError || (!tariffsPending && !tariffsReady) ? (
-        <Card className="px-6 py-10 text-center sm:px-10">
-          <p className="text-lg font-semibold tracking-tight">{t('pricing.error')}</p>
-          <p className="mx-auto mt-2 max-w-md text-sm text-fg-muted">{t('pricing.errorHint')}</p>
-          <Button
-            className="mt-6"
-            variant="secondary"
-            loading={tariffsFetching}
-            onClick={() => void refetchTariffs()}
-          >
-            {t('common:actions.retry')}
-          </Button>
-        </Card>
-      ) : (
-        <>
-          <PricingGrid />
-          {tariffsReady ? (
-            <>
-              <VipBenefits />
-              <div className="flex justify-center">
-                <Button size="lg" onClick={scrollToPayment}>
-                  <CreditCard aria-hidden className="size-4" />
-                  {t('hero.pay')}
-                </Button>
+        {tariffsError || (!tariffsPending && !tariffsReady) ? (
+          <Card className="mt-8 px-6 py-10 text-center sm:px-10">
+            <p className="text-lg font-semibold tracking-tight">{t('pricing.error')}</p>
+            <p className="mx-auto mt-2 max-w-md text-sm text-fg-muted">{t('pricing.errorHint')}</p>
+            <Button
+              className="mt-6"
+              variant="secondary"
+              loading={tariffsFetching}
+              onClick={() => void refetchTariffs()}
+            >
+              {t('common:actions.retry')}
+            </Button>
+          </Card>
+        ) : (
+          <>
+            {/* Desktop only: breathe between subtitle and tariffs. */}
+            <div className="hidden min-h-0 flex-1 lg:block" aria-hidden />
+
+            <div className="mt-6 flex flex-col gap-5 lg:mt-0 lg:gap-[clamp(0.4rem,1.1vh,0.75rem)]">
+              <div className="lg:hidden">
+                <PricingGrid />
               </div>
-            </>
-          ) : null}
-        </>
-      )}
+              <div className="hidden lg:block">
+                <PricingGrid compact />
+              </div>
 
-      {statsError ? null : (
-        <div className="border-t border-white/5 pt-8">
-          <SalesOverview />
-        </div>
-      )}
+              {tariffsReady ? (
+                <>
+                  <VipBenefits />
+                  <div className="flex justify-center">
+                    <Button size="lg" onClick={scrollToPayment}>
+                      <CreditCard aria-hidden className="size-4" />
+                      {t('hero.pay')}
+                    </Button>
+                  </div>
+                </>
+              ) : null}
 
-      {tariffsReady ? <PaymentSection /> : null}
+              {foldOk ? (
+                <div className="hidden shrink-0 border-t border-white/5 pt-[clamp(0.4rem,1.1vh,0.75rem)] lg:block">
+                  <SalesOverview compact />
+                </div>
+              ) : null}
+            </div>
+          </>
+        )}
+      </div>
 
-      {statsError ? null : (
-        <DeferredMount fallback={<Skeleton className="h-96" />}>
-          <Suspense fallback={<Skeleton className="h-96" />}>
-            <SalesStats />
-          </Suspense>
-        </DeferredMount>
-      )}
+      <div className="space-y-8 pb-10">
+        {foldOk ? (
+          <div className="border-t border-white/5 pt-6 lg:hidden">
+            <SalesOverview />
+          </div>
+        ) : null}
+
+        {tariffsReady ? <PaymentSection /> : null}
+
+        {statsError ? null : (
+          <DeferredMount fallback={<Skeleton className="h-96" />}>
+            <Suspense fallback={<Skeleton className="h-96" />}>
+              <SalesStats />
+            </Suspense>
+          </DeferredMount>
+        )}
+      </div>
     </div>
   )
 }

@@ -107,26 +107,25 @@
       "stars": {
         "title": "Зірки Telegram",
         "blurb": "Вбудована оплата в Telegram — списуємо ⭐ з балансу",
-        "what": "Telegram Stars — це внутрішня валюта Telegram. Якщо зірки вже є на акаунті, VIP оплачується командою в боті.",
-        "rate": "Курс для розрахунку: <b>${{rate}} за 1 ⭐</b> (за курсом виводу).",
+        "what": "Telegram Stars — внутрішня валюта Telegram. Якщо зірки вже є на акаунті, VIP оплачується в один клік у боті.",
+        "rate": "Чому зірками дорожче виходить? Тому що курс виведення <b>1 ⭐ = ${{rate}}</b> :(",
         "buyHint": "Немає зірок? Їх можна купити в самому Telegram карткою, або через Fragment за TON.",
-        "cta": "Відкрити бота й оплатити",
-        "ctaHint": "У боті використайте команду /tgstars"
+        "cta": "Оплатити зірками в боті"
       },
       "fragment": {
         "title": "Купити зірки → оплатити VIP",
         "blurb": "Спочатку ⭐, потім автоматична оплата в боті",
-        "whatCard": "Купіть Telegram Stars у самому Telegram з картки, потім спишіть їх у VIP-боті.",
+        "whatCard": "Купіть Telegram Stars у самому Telegram з картки, потім оплатіть VIP у боті.",
         "whatCrypto": "Конвертуйте крипту в TON, купіть ⭐ на офіційному Fragment, потім оплатіть VIP у боті.",
         "stepCard1": "У Telegram купіть Stars з банківської карти",
         "stepCard2": "Дочекайтеся появи ⭐ на балансі",
-        "stepCard3": "У <bot>@mtgmods_vip_bot</bot> виконайте /tgstars",
+        "stepCard3": "Відкрийте <bot>оплату зірками в VIP-боті</bot>",
         "stepCrypto1": "<fragment>Купіть Stars за TON на Fragment</fragment>",
         "stepCrypto2": "Дочекайтеся зарахування ⭐ у Telegram",
-        "stepCrypto3": "У <bot>@mtgmods_vip_bot</bot> виконайте /tgstars",
+        "stepCrypto3": "Відкрийте <bot>оплату зірками в VIP-боті</bot>",
         "example": "Приклад: VIP {{days}} дн. ≈ <b>${{vip}}</b> → потрібно <b>{{stars}} ⭐</b> → через Fragment ≈ <b>${{cost}}</b> (~{{fee}}% комісія).",
         "openFragment": "Відкрити Fragment",
-        "openBot": "Відкрити VIP-бота"
+        "openBot": "Оплатити зірками в боті"
       },
       "crypto": {
         "title": "Прямий переказ крипти",

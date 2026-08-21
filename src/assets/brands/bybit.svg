@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img">
+  <title>Bybit</title>
+  <rect width="24" height="24" rx="5" fill="#F7A600" />
+  <path
+    fill="#111111"
+    d="M7 6.5h5.1c2.55 0 4.15 1.35 4.15 3.45 0 1.55-.9 2.7-2.35 3.2L16.7 17.5h-2.85l-2.45-3.95H9.55V17.5H7V6.5zm2.55 2.05v3.15h2.35c1.2 0 1.9-.55 1.9-1.6s-.7-1.55-1.9-1.55H9.55z"
+  />
+</svg>

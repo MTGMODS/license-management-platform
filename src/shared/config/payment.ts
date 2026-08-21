@@ -13,6 +13,7 @@ export const VIP_BOT_START = {
   funpay: `${VIP_BOT_URL}?start=funpay`,
   crypto: `${VIP_BOT_URL}?start=crypto`,
   activate: `${VIP_BOT_URL}?start=activate`,
+  pay: `${VIP_BOT_URL}?start=pay`,
 } as const
 
 /** Stars withdrawal rate quoted in the bot (~USD per ⭐). */
@@ -40,8 +41,8 @@ export const CRYPTO_BOT_INVOICES: readonly DurationOffer[] = [
 ]
 
 export const CRYPTO_EXCHANGES = [
-  { id: 'binance', label: 'Binance ID', value: '311112419' },
-  { id: 'bybit', label: 'Bybit ID', value: '70782166' },
+  { id: 'binance', label: 'Binance ID', value: '311112419', brand: 'binance' as const },
+  { id: 'bybit', label: 'Bybit ID', value: '70782166', brand: 'bybit' as const },
 ] as const
 
 export const CRYPTO_NETWORKS = [
@@ -50,12 +51,14 @@ export const CRYPTO_NETWORKS = [
     assets: 'TON, USDT',
     label: 'TON',
     address: 'UQAKaddkmi4klTHic7jOk9Z3e7qpl8Z-J9LUB6GRG5Of8NQC',
+    brand: 'ton' as const,
   },
   {
     id: 'bep20',
     assets: 'BNB, USDT',
     label: 'BEP-20',
     address: '0x7fe30da48b02495cf757e33a3e404f3dad9447cb',
+    brand: 'binance' as const,
   },
   {
     id: 'erc20',
@@ -68,6 +71,7 @@ export const CRYPTO_NETWORKS = [
     assets: 'TRON, USDT',
     label: 'TRC-20',
     address: 'TQUzuD2wA5ZCoT7zzuh3kKb5xwEizMhCpc',
+    brand: 'tether' as const,
   },
 ] as const
 
@@ -99,14 +103,15 @@ export type WalletId = 'card' | 'crypto' | 'stars' | 'paypal'
  */
 export type CheckoutRouteId = 'funpay' | 'stars' | 'fragment' | 'crypto' | 'paypal' | 'bank'
 
-export const WALLETS: readonly WalletId[] = ['card', 'crypto', 'stars', 'paypal']
+export const WALLETS: readonly WalletId[] = ['stars', 'card', 'crypto', 'paypal']
 
-const CARD_ROUTES_BASE = ['funpay', 'paypal', 'fragment'] as const satisfies readonly CheckoutRouteId[]
+/** Stars before FunPay — preferred auto path when the buyer already has ⭐. */
+const CARD_ROUTES_BASE = ['stars', 'funpay', 'paypal', 'fragment'] as const satisfies readonly CheckoutRouteId[]
 
 /** Routes shown for each starting wallet (bank injected when allowed). */
 export const WALLET_ROUTES: Readonly<Record<WalletId, readonly CheckoutRouteId[]>> = {
   card: CARD_ROUTES_BASE,
-  crypto: ['funpay', 'fragment', 'crypto'],
+  crypto: ['stars', 'funpay', 'fragment', 'crypto'],
   stars: ['stars'],
   paypal: ['paypal'],
 }

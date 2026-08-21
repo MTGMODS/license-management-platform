@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import { useSalesStats } from '@/features/license/useSalesStats'
 import { usePublicStats } from '@/features/usage/usePublicStats'
+import { cn } from '@/shared/lib/cn'
 import { useFormatters } from '@/shared/lib/format'
 import { Card, Skeleton } from '@/shared/ui'
 
@@ -14,7 +15,7 @@ interface StatItem {
   icon: ComponentType<{ className?: string }>
 }
 
-export function SalesOverview() {
+export function SalesOverview({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const { data, isPending, isError } = useSalesStats()
@@ -27,13 +28,27 @@ export function SalesOverview() {
 
     return (
       <section>
-        <h2 className="text-lg font-semibold tracking-tight sm:text-xl">{t('stats.title')}</h2>
-        <p className="mt-1 text-sm text-fg-muted">{t('stats.subtitle')}</p>
-        <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <h2
+          className={cn(
+            'font-semibold tracking-tight',
+            compact ? 'text-[clamp(1rem,2vh,1.25rem)]' : 'text-lg sm:text-xl',
+          )}
+        >
+          {t('stats.title')}
+        </h2>
+        <p className={cn('text-fg-muted', compact ? 'mt-0.5 text-xs' : 'mt-1 text-sm')}>
+          {t('stats.subtitle')}
+        </p>
+        <div
+          className={cn(
+            'grid grid-cols-2 lg:grid-cols-4',
+            compact ? 'mt-[clamp(0.4rem,1vh,0.75rem)] gap-2' : 'mt-4 gap-3',
+          )}
+        >
           {Array.from({ length: 4 }, (_, index) => (
             <Skeleton
               key={index}
-              className="h-20"
+              className={compact ? 'h-[clamp(3.25rem,8vh,4.5rem)]' : 'h-20'}
               label={index === 0 ? t('stats.loading') : undefined}
             />
           ))}
@@ -74,19 +89,43 @@ export function SalesOverview() {
 
   return (
     <section>
-      <h2 className="text-lg font-semibold tracking-tight sm:text-xl">{t('stats.title')}</h2>
-      <p className="mt-1 text-sm text-fg-muted">{t('stats.subtitle')}</p>
+      <h2
+        className={cn(
+          'font-semibold tracking-tight',
+          compact ? 'text-[clamp(1rem,2vh,1.25rem)]' : 'text-lg sm:text-xl',
+        )}
+      >
+        {t('stats.title')}
+      </h2>
+      <p className={cn('text-fg-muted', compact ? 'mt-0.5 text-xs' : 'mt-1 text-sm')}>
+        {t('stats.subtitle')}
+      </p>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div
+        className={cn(
+          'grid grid-cols-2 lg:grid-cols-4',
+          compact ? 'mt-[clamp(0.4rem,1vh,0.75rem)] gap-2' : 'mt-4 gap-3',
+        )}
+      >
         {items.map((item) => {
           const Icon = item.icon
           return (
-            <Card key={item.id} className="p-3 text-center sm:p-4">
+            <Card
+              key={item.id}
+              className={cn('text-center', compact ? 'p-[clamp(0.45rem,1vh,0.75rem)]' : 'p-3 sm:p-4')}
+            >
               <div className="flex items-center justify-center gap-2">
-                <Icon aria-hidden className="size-4 shrink-0 text-accent-300" />
-                <p className="min-w-0 truncate text-xs text-fg-subtle sm:text-sm">{item.label}</p>
+                <Icon aria-hidden className="size-3.5 shrink-0 text-accent-300 sm:size-4" />
+                <p className="min-w-0 truncate text-[0.7rem] text-fg-subtle sm:text-sm">{item.label}</p>
               </div>
-              <p className="tabular mt-2 text-xl font-semibold tracking-tight sm:text-2xl">
+              <p
+                className={cn(
+                  'tabular font-semibold tracking-tight',
+                  compact
+                    ? 'mt-1 text-[clamp(1rem,2.2vh,1.35rem)]'
+                    : 'mt-2 text-xl sm:text-2xl',
+                )}
+              >
                 {item.value}
               </p>
             </Card>
@@ -94,7 +133,12 @@ export function SalesOverview() {
         })}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-fg-subtle sm:text-sm">
+      <div
+        className={cn(
+          'flex flex-wrap items-center justify-between gap-2 text-fg-subtle',
+          compact ? 'mt-2 text-[0.7rem] sm:text-xs' : 'mt-3 text-xs sm:text-sm',
+        )}
+      >
         <span>{t('stats.updated', { time: format.dateTime(data.updated_at) })}</span>
         <span className="inline-flex items-center gap-1.5">
           <ArrowDown aria-hidden className="size-3.5" />

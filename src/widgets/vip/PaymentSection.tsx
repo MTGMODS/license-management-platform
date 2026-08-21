@@ -1,20 +1,17 @@
-import {
-  Check,
-  Coins,
-  Copy,
-  CreditCard,
-  ExternalLink as ExternalLinkIcon,
-  Star,
-  WalletCards,
-  type LucideIcon,
-} from 'lucide-react'
+import { Check, Copy, ExternalLink as ExternalLinkIcon } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 
-import { useTariffs } from '@/features/license/useTariffs'
 import { useBankCardAllowed } from '@/features/geo/useViewerCountry'
+import { useTariffs } from '@/features/license/useTariffs'
+import {
+  BRAND_ASSETS,
+  ROUTE_BRANDS,
+  WALLET_BRANDS,
+  type BrandId,
+} from '@/shared/config/brands'
 import {
   BANK_TRANSFER,
   CONTACT_URL,
@@ -29,7 +26,6 @@ import {
   STAR_WITHDRAW_RATE_USD,
   TON_EXAMPLE,
   VIP_BOT_START,
-  VIP_BOT_URL,
   WALLETS,
   routesForWallet,
   type CheckoutRouteId,
@@ -38,20 +34,16 @@ import {
 import { cn } from '@/shared/lib/cn'
 import { Badge, Button, buttonStyles, Card } from '@/shared/ui'
 
-const WALLET_ICONS: Record<WalletId, LucideIcon> = {
-  card: CreditCard,
-  crypto: Coins,
-  stars: Star,
-  paypal: WalletCards,
-}
-
-const ROUTE_ICONS: Record<CheckoutRouteId, LucideIcon> = {
-  funpay: WalletCards,
-  stars: Star,
-  fragment: Coins,
-  crypto: Coins,
-  paypal: WalletCards,
-  bank: CreditCard,
+function BrandMark({ brand, className }: { brand: BrandId; className?: string }) {
+  return (
+    <img
+      src={BRAND_ASSETS[brand]}
+      alt=""
+      aria-hidden
+      className={cn('size-5 object-contain', className)}
+      draggable={false}
+    />
+  )
 }
 
 async function copyText(value: string) {
@@ -74,14 +66,25 @@ function ExternalLink({ href, children, className }: { href: string; children?: 
   )
 }
 
-function CopyRow({ label, value }: { label: string; value: string }) {
+function CopyRow({
+  label,
+  value,
+  brand,
+}: {
+  label: string
+  value: string
+  brand?: BrandId
+}) {
   const { t } = useTranslation('common')
   const [copied, setCopied] = useState(false)
 
   return (
     <div className="flex flex-col gap-2 rounded-xl bg-ink-900/50 p-3 ring-1 ring-white/6 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
       <div className="min-w-0">
-        <p className="text-xs text-fg-subtle">{label}</p>
+        <p className="inline-flex items-center gap-2 text-xs text-fg-subtle">
+          {brand ? <BrandMark brand={brand} className="size-4" /> : null}
+          {label}
+        </p>
         <p className="mt-0.5 break-all font-mono text-[0.8rem] leading-snug text-fg sm:text-sm">{value}</p>
       </div>
       <Button
@@ -139,14 +142,21 @@ function StarsPrices() {
   if (rows.length === 0) return null
 
   return (
-    <div className="grid gap-2 sm:grid-cols-3">
+    <div
+      className="grid gap-2"
+      style={{ gridTemplateColumns: `repeat(${rows.length}, minmax(0, 1fr))` }}
+    >
       {rows.map((row) => (
         <div
           key={row.days}
-          className="rounded-xl bg-ink-900/50 px-3 py-2.5 text-center ring-1 ring-white/6"
+          className="min-w-0 rounded-xl bg-ink-900/50 px-2 py-2.5 text-center ring-1 ring-white/6 sm:px-3"
         >
-          <p className="text-xs text-fg-subtle">{t('payment.daysShort', { count: row.days })}</p>
-          <p className="mt-0.5 text-lg font-semibold tabular-nums text-fg">{row.stars} ⭐</p>
+          <p className="truncate text-[0.65rem] text-fg-subtle sm:text-xs">
+            {t('payment.daysShort', { count: row.days })}
+          </p>
+          <p className="mt-0.5 truncate text-sm font-semibold tabular-nums text-fg sm:text-lg">
+            {row.stars} ⭐
+          </p>
         </div>
       ))}
     </div>
@@ -233,11 +243,15 @@ function StarsBody({ wallet }: { wallet: WalletId }) {
         <p className="text-sm text-fg-muted">{t('payment.routes.stars.buyHint')}</p>
       )}
 
-      <a href={VIP_BOT_URL} target="_blank" rel="noreferrer" className={buttonStyles({ size: 'lg' })}>
+      <a
+        href={VIP_BOT_START.pay}
+        target="_blank"
+        rel="noreferrer"
+        className={buttonStyles({ size: 'lg' })}
+      >
         {t('payment.routes.stars.cta')}
         <ExternalLinkIcon aria-hidden className="size-4" />
       </a>
-      <p className="text-xs text-fg-subtle">{t('payment.routes.stars.ctaHint')}</p>
     </div>
   )
 }
@@ -273,7 +287,7 @@ function FragmentBody({ wallet }: { wallet: WalletId }) {
                 <Trans
                   i18nKey={`payment.routes.fragment.${key}`}
                   ns="vip"
-                  components={{ bot: <ExternalLink href={VIP_BOT_URL} /> }}
+                  components={{ bot: <ExternalLink href={VIP_BOT_START.pay} /> }}
                 />
               ) : (
                 t(`payment.routes.fragment.${key}`)
@@ -311,7 +325,7 @@ function FragmentBody({ wallet }: { wallet: WalletId }) {
           </a>
         ) : null}
         <a
-          href={VIP_BOT_URL}
+          href={VIP_BOT_START.pay}
           target="_blank"
           rel="noreferrer"
           className={buttonStyles({ variant: wallet === 'crypto' ? 'secondary' : 'primary' })}
@@ -334,7 +348,7 @@ function CryptoBody() {
       <div className="space-y-2">
         <p className="text-sm font-medium text-fg">{t('payment.routes.crypto.exchanges')}</p>
         {CRYPTO_EXCHANGES.map((item) => (
-          <CopyRow key={item.id} label={item.label} value={item.value} />
+          <CopyRow key={item.id} label={item.label} value={item.value} brand={item.brand} />
         ))}
       </div>
 
@@ -345,6 +359,7 @@ function CryptoBody() {
             key={network.id}
             label={`${network.label} (${network.assets})`}
             value={network.address}
+            brand={'brand' in network ? network.brand : undefined}
           />
         ))}
       </div>
@@ -482,14 +497,14 @@ function routeBadges(route: CheckoutRouteId, feeLabel: string, labels: {
 export function PaymentSection() {
   const { t } = useTranslation('vip')
   const { allowed: allowBankCard } = useBankCardAllowed()
-  const [wallet, setWallet] = useState<WalletId>('card')
+  const [wallet, setWallet] = useState<WalletId>('stars')
   const routes = routesForWallet(wallet, allowBankCard)
-  const [route, setRoute] = useState<CheckoutRouteId>('funpay')
+  const [route, setRoute] = useState<CheckoutRouteId>('stars')
 
   const selectWallet = (next: WalletId) => {
     const nextRoutes = routesForWallet(next, allowBankCard)
     setWallet(next)
-    setRoute(nextRoutes[0] ?? 'funpay')
+    setRoute(nextRoutes[0] ?? 'stars')
   }
 
   const badgeLabels = {
@@ -500,7 +515,7 @@ export function PaymentSection() {
     inTelegram: t('payment.badges.inTelegram'),
   }
 
-  const activeRoute = routes.includes(route) ? route : (routes[0] ?? 'funpay')
+  const activeRoute = routes.includes(route) ? route : (routes[0] ?? 'stars')
 
   return (
     <section id="vip-payment" className="scroll-mt-24 space-y-6 sm:space-y-8">
@@ -524,7 +539,6 @@ export function PaymentSection() {
 
         <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
           {WALLETS.map((id) => {
-            const Icon = WALLET_ICONS[id]
             const active = wallet === id
             return (
               <button
@@ -542,10 +556,10 @@ export function PaymentSection() {
                 <span
                   className={cn(
                     'grid size-9 place-items-center rounded-xl',
-                    active ? 'bg-accent-500/20 text-accent-200' : 'bg-ink-800 text-fg-muted',
+                    active ? 'bg-accent-500/20' : 'bg-ink-800',
                   )}
                 >
-                  <Icon aria-hidden className="size-4" />
+                  <BrandMark brand={WALLET_BRANDS[id]} />
                 </span>
                 <span className="text-sm font-semibold text-fg sm:text-[0.95rem]">
                   {t(`payment.wallets.${id}.title`)}
@@ -572,7 +586,6 @@ export function PaymentSection() {
 
         <div className={cn('grid gap-2.5', routes.length > 1 ? 'sm:grid-cols-2 lg:grid-cols-3' : 'max-w-xl')}>
           {routes.map((id) => {
-            const Icon = ROUTE_ICONS[id]
             const active = activeRoute === id
             const badges = routeBadges(
               id,
@@ -598,10 +611,10 @@ export function PaymentSection() {
                   <span
                     className={cn(
                       'grid size-9 place-items-center rounded-xl',
-                      active ? 'bg-accent-500/20 text-accent-200' : 'bg-ink-800 text-fg-muted',
+                      active ? 'bg-accent-500/20' : 'bg-ink-800',
                     )}
                   >
-                    <Icon aria-hidden className="size-4" />
+                    <BrandMark brand={ROUTE_BRANDS[id]} />
                   </span>
                   <div className="flex flex-wrap justify-end gap-1">
                     {badges.map((badge) => (

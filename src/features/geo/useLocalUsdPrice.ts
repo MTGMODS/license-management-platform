@@ -75,6 +75,8 @@ export function useLocalUsdPrice() {
 
   return {
     currency,
+    /** True once a local unit rate is available for the visitor's country. */
+    ready: unitRate !== null,
     formatApprox(usd: number): string | null {
       if (!currency || unitRate === null) return null
       return formatLocalMoney(usd * unitRate, currency)

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import { useLocalUsdPrice } from '@/features/geo/useLocalUsdPrice'
 import { useTariffs } from '@/features/license/useTariffs'
+import { cn } from '@/shared/lib/cn'
 import { useFormatters } from '@/shared/lib/format'
 import { Badge, Card, Skeleton } from '@/shared/ui'
 
@@ -19,19 +20,23 @@ function catalogPrice(price: number, format: ReturnType<typeof useFormatters>): 
   return Number.isInteger(price) ? String(price) : format.money(price)
 }
 
-export function PricingGrid() {
+export function PricingGrid({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const { data, isPending, isError } = useTariffs()
   const { formatApprox } = useLocalUsdPrice()
+  const gridClass = cn(
+    'grid w-full grid-cols-2 items-stretch lg:grid-cols-4',
+    compact ? 'gap-[clamp(0.4rem,1vh,0.75rem)]' : 'gap-3 lg:gap-4',
+  )
 
   if (isPending) {
     return (
-      <div className="grid w-full grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+      <div className={gridClass}>
         {Array.from({ length: 4 }, (_, index) => (
           <Skeleton
             key={index}
-            className="h-36"
+            className={compact ? 'h-[clamp(7.5rem,18vh,11rem)]' : 'h-36'}
             label={index === 0 ? t('pricing.loading') : undefined}
           />
         ))}
@@ -44,7 +49,7 @@ export function PricingGrid() {
   }
 
   return (
-    <div className="grid w-full grid-cols-2 items-stretch gap-3 lg:grid-cols-4 lg:gap-4">
+    <div className={gridClass}>
       {data.plans.map((plan) => {
         const badge = planBadge(plan.duration_days)
         const devices = t('pricing.devices', { count: plan.max_devices })
@@ -60,10 +65,18 @@ export function PricingGrid() {
         return (
           <Card
             key={plan.duration_days}
-            className="flex flex-col border border-accent-500/40 p-3.5 text-left sm:p-4"
+            className={cn(
+              'flex flex-col border border-accent-500/40 text-left',
+              compact ? 'p-[clamp(0.55rem,1.1vh,0.85rem)]' : 'p-3.5 sm:p-4',
+            )}
           >
             <div className="flex items-start justify-between gap-2">
-              <p className="text-xs text-fg-muted sm:text-sm">
+              <p
+                className={cn(
+                  'text-fg-muted',
+                  compact ? 'text-[clamp(0.7rem,1.2vh,0.85rem)]' : 'text-xs sm:text-sm',
+                )}
+              >
                 {t('pricing.days', { count: plan.duration_days })}
               </p>
               {badge === '2+1' ? (
@@ -77,26 +90,65 @@ export function PricingGrid() {
               ) : null}
             </div>
 
-            <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-              <p className="tabular text-2xl font-semibold tracking-tight sm:text-3xl">
+            <div
+              className={cn(
+                'flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5',
+                compact ? 'mt-[clamp(0.25rem,0.7vh,0.5rem)]' : 'mt-1.5 gap-x-2',
+              )}
+            >
+              <p
+                className={cn(
+                  'tabular font-semibold tracking-tight',
+                  compact
+                    ? 'text-[clamp(1.25rem,2.8vh,1.875rem)]'
+                    : 'text-2xl sm:text-3xl',
+                )}
+              >
                 ${catalogPrice(plan.price, format)}
               </p>
               {localApprox ? (
                 <>
-                  <span className="text-2xl font-semibold text-fg-subtle sm:text-3xl" aria-hidden>
+                  <span
+                    className={cn(
+                      'font-semibold text-fg-subtle',
+                      compact
+                        ? 'text-[clamp(1.25rem,2.8vh,1.875rem)]'
+                        : 'text-2xl sm:text-3xl',
+                    )}
+                    aria-hidden
+                  >
                     ≈
                   </span>
-                  <p className="tabular text-2xl font-semibold tracking-tight sm:text-3xl">
+                  <p
+                    className={cn(
+                      'tabular font-semibold tracking-tight',
+                      compact
+                        ? 'text-[clamp(1.25rem,2.8vh,1.875rem)]'
+                        : 'text-2xl sm:text-3xl',
+                    )}
+                  >
                     {localApprox}
                   </p>
                 </>
               ) : null}
             </div>
-            <p className="tabular mt-0.5 text-xs text-fg-subtle">
+            <p
+              className={cn(
+                'tabular text-fg-subtle',
+                compact ? 'mt-0.5 text-[clamp(0.65rem,1.1vh,0.75rem)]' : 'mt-0.5 text-xs',
+              )}
+            >
               {t('pricing.perDay', { price: format.money(plan.price / plan.duration_days) })}
             </p>
 
-            <p className="mt-3 flex items-center gap-1.5 border-t border-white/8 pt-2.5 text-xs text-fg-muted sm:text-sm">
+            <p
+              className={cn(
+                'flex items-center gap-1.5 border-t border-white/8 text-fg-muted',
+                compact
+                  ? 'mt-[clamp(0.4rem,1vh,0.7rem)] pt-[clamp(0.35rem,0.9vh,0.6rem)] text-[clamp(0.65rem,1.15vh,0.8rem)]'
+                  : 'mt-3 pt-2.5 text-xs sm:text-sm',
+              )}
+            >
               <Smartphone aria-hidden className="size-3.5 shrink-0 text-fg-subtle" />
               <span className="min-w-0 leading-snug">{devicesLine}</span>
             </p>
