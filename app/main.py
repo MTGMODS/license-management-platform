@@ -16,7 +16,13 @@ def format_datetime(value: str | None) -> str:
         return value or "—"
     try:
         dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
-        return dt.astimezone(timezone.utc).strftime("%d.%m.%Y %H:%M")
+        unix = int(dt.timestamp())
+        fallback = dt.astimezone(timezone.utc).strftime("%d.%m.%Y %H:%M")
+        # Telegram allows date_time only up to now + 1098 days
+        max_unix = int(datetime.now(timezone.utc).timestamp()) + 1098 * 86400
+        if unix < 0 or unix > max_unix:
+            return fallback
+        return f'<tg-time unix="{unix}" format="dt">{fallback}</tg-time>'
     except (TypeError, ValueError):
         return value
 
