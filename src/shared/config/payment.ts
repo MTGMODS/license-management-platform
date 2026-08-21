@@ -1,6 +1,6 @@
 /**
  * Hard facts for VIP checkout: links, wallets, invoices.
- * Copy/UI strings live in i18n; bank-card details are intentionally omitted.
+ * Copy/UI strings live in i18n. Direct bank card is gated by IP country (not locale).
  */
 
 export const VIP_BOT_URL = 'https://t.me/mtgmods_vip_bot'
@@ -27,6 +27,7 @@ export interface DurationOffer {
 }
 
 export const FUNPAY_OFFERS: readonly DurationOffer[] = [
+  { days: 7, url: 'https://funpay.com/lots/offer?id=75311029' },
   { days: 30, url: 'https://funpay.com/lots/offer?id=53395293' },
   { days: 90, url: 'https://funpay.com/lots/offer?id=53392702' },
   { days: 365, url: 'https://funpay.com/lots/offer?id=65052581' },
@@ -70,6 +71,15 @@ export const CRYPTO_NETWORKS = [
   },
 ] as const
 
+/** Monobank Visa + SWIFT — shown only when IP country is not RU/BY. */
+export const BANK_TRANSFER = {
+  cardNumber: '4441 1110 5391 5983',
+  cardBrand: 'Visa · Monobank',
+  iban: 'UA313220010000026205317880285',
+  swift: 'UNJSUAUKXXX',
+  recipient: 'Marher Bohdan',
+} as const
+
 /** Used when `GET /license/tariffs` omits `telegram_stars_price`. */
 export const STARS_FALLBACK: Readonly<Record<number, number>> = {
   30: 250,
@@ -92,15 +102,28 @@ export type WalletId = 'card' | 'crypto' | 'stars' | 'paypal'
 /**
  * Concrete checkout paths.
  * `fragment` = buy Telegram Stars (card in TG or crypto→TON on Fragment), then pay VIP.
+ * `bank` = direct Monobank / SWIFT (hidden for RU/BY by IP).
  */
-export type CheckoutRouteId = 'funpay' | 'stars' | 'fragment' | 'crypto' | 'paypal'
+export type CheckoutRouteId = 'funpay' | 'stars' | 'fragment' | 'crypto' | 'paypal' | 'bank'
 
 export const WALLETS: readonly WalletId[] = ['card', 'crypto', 'stars', 'paypal']
 
-/** Routes shown for each starting wallet. */
+const CARD_ROUTES_BASE = ['funpay', 'paypal', 'fragment'] as const satisfies readonly CheckoutRouteId[]
+
+/** Routes shown for each starting wallet (bank injected when allowed). */
 export const WALLET_ROUTES: Readonly<Record<WalletId, readonly CheckoutRouteId[]>> = {
-  card: ['funpay', 'paypal', 'fragment'],
+  card: CARD_ROUTES_BASE,
   crypto: ['funpay', 'fragment', 'crypto'],
   stars: ['stars'],
   paypal: ['paypal'],
+}
+
+export function routesForWallet(
+  wallet: WalletId,
+  allowBankCard: boolean,
+): readonly CheckoutRouteId[] {
+  if (wallet === 'card' && allowBankCard) {
+    return ['bank', ...CARD_ROUTES_BASE]
+  }
+  return WALLET_ROUTES[wallet]
 }

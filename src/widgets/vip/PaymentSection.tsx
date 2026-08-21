@@ -14,7 +14,9 @@ import { Link } from 'react-router'
 import { toast } from 'sonner'
 
 import { useTariffs } from '@/features/license/useTariffs'
+import { useBankCardAllowed } from '@/features/geo/useViewerCountry'
 import {
+  BANK_TRANSFER,
   CONTACT_URL,
   CRYPTO_BOT_INVOICES,
   CRYPTO_EXCHANGES,
@@ -29,8 +31,8 @@ import {
   TON_EXAMPLE,
   VIP_BOT_START,
   VIP_BOT_URL,
-  WALLET_ROUTES,
   WALLETS,
+  routesForWallet,
   type CheckoutRouteId,
   type WalletId,
 } from '@/shared/config/payment'
@@ -50,6 +52,7 @@ const ROUTE_ICONS: Record<CheckoutRouteId, LucideIcon> = {
   fragment: Coins,
   crypto: Coins,
   paypal: WalletCards,
+  bank: CreditCard,
 }
 
 async function copyText(value: string) {
@@ -387,6 +390,44 @@ function PaypalBody() {
   )
 }
 
+function BankBody() {
+  const { t } = useTranslation('vip')
+
+  return (
+    <div className="space-y-5">
+      <p className="text-sm leading-relaxed text-fg-muted">{t('payment.routes.bank.what')}</p>
+
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-fg">{t('payment.routes.bank.cardTitle')}</p>
+        <CopyRow label={BANK_TRANSFER.cardBrand} value={BANK_TRANSFER.cardNumber} />
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-fg">{t('payment.routes.bank.swiftTitle')}</p>
+        <CopyRow label="IBAN" value={BANK_TRANSFER.iban} />
+        <CopyRow label="SWIFT / BIC" value={BANK_TRANSFER.swift} />
+        <CopyRow label={t('payment.routes.bank.recipient')} value={BANK_TRANSFER.recipient} />
+      </div>
+
+      <p className="rounded-xl bg-amber-500/10 px-3.5 py-2.5 text-sm text-amber-100/90 ring-1 ring-amber-400/20">
+        <Trans
+          i18nKey="payment.routes.bank.rubNote"
+          ns="vip"
+          components={{ funpay: <ExternalLink href={VIP_BOT_START.funpay} /> }}
+        />
+      </p>
+
+      <p className="text-sm text-fg-muted">
+        <Trans
+          i18nKey="payment.afterContact"
+          ns="vip"
+          components={{ contact: <ExternalLink href={CONTACT_URL} /> }}
+        />
+      </p>
+    </div>
+  )
+}
+
 function RouteBody({ route, wallet }: { route: CheckoutRouteId; wallet: WalletId }) {
   switch (route) {
     case 'funpay':
@@ -399,6 +440,8 @@ function RouteBody({ route, wallet }: { route: CheckoutRouteId; wallet: WalletId
       return <CryptoBody />
     case 'paypal':
       return <PaypalBody />
+    case 'bank':
+      return <BankBody />
   }
 }
 
@@ -430,6 +473,11 @@ function routeBadges(route: CheckoutRouteId, feeLabel: string, labels: {
         { tone: 'accent' as const, label: labels.cheapest },
         { tone: 'neutral' as const, label: labels.manual },
       ]
+    case 'bank':
+      return [
+        { tone: 'accent' as const, label: labels.cheapest },
+        { tone: 'neutral' as const, label: labels.manual },
+      ]
     case 'paypal':
       return [
         { tone: 'accent' as const, label: labels.cheapest },
@@ -440,12 +488,13 @@ function routeBadges(route: CheckoutRouteId, feeLabel: string, labels: {
 
 export function PaymentSection() {
   const { t } = useTranslation('vip')
+  const { allowed: allowBankCard } = useBankCardAllowed()
   const [wallet, setWallet] = useState<WalletId>('card')
-  const routes = WALLET_ROUTES[wallet]
+  const routes = routesForWallet(wallet, allowBankCard)
   const [route, setRoute] = useState<CheckoutRouteId>('funpay')
 
   const selectWallet = (next: WalletId) => {
-    const nextRoutes = WALLET_ROUTES[next]
+    const nextRoutes = routesForWallet(next, allowBankCard)
     setWallet(next)
     setRoute(nextRoutes[0] ?? 'funpay')
   }
