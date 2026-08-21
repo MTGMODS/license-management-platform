@@ -45,7 +45,7 @@ export const WALLET_BRANDS: Record<WalletId, BrandId> = {
 export const ROUTE_BRANDS: Record<CheckoutRouteId, BrandId> = {
   funpay: 'funpay',
   stars: 'telegram',
-  fragment: 'ton',
+  fragment: 'telegram',
   crypto: 'tether',
   paypal: 'paypal',
   bank: 'card',

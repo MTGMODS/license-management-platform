@@ -107,15 +107,15 @@ export type WalletId = 'card' | 'crypto' | 'stars' | 'paypal'
  */
 export type CheckoutRouteId = 'funpay' | 'stars' | 'fragment' | 'crypto' | 'paypal' | 'bank'
 
-export const WALLETS: readonly WalletId[] = ['stars', 'card', 'crypto', 'paypal']
+export const WALLETS: readonly WalletId[] = ['card', 'crypto', 'stars', 'paypal']
 
-/** Stars before FunPay — preferred auto path when the buyer already has ⭐. */
-const CARD_ROUTES_BASE = ['stars', 'funpay', 'paypal', 'fragment'] as const satisfies readonly CheckoutRouteId[]
+/** Buy-stars (Fragment) before FunPay; direct Stars only via the Stars wallet. */
+const CARD_ROUTES_BASE = ['fragment', 'funpay', 'paypal'] as const satisfies readonly CheckoutRouteId[]
 
 /** Routes shown for each starting wallet (bank injected when allowed). */
 export const WALLET_ROUTES: Readonly<Record<WalletId, readonly CheckoutRouteId[]>> = {
   card: CARD_ROUTES_BASE,
-  crypto: ['stars', 'funpay', 'fragment', 'crypto'],
+  crypto: ['fragment', 'funpay', 'crypto'],
   stars: ['stars'],
   paypal: ['paypal'],
 }
@@ -125,7 +125,7 @@ export function routesForWallet(
   allowBankCard: boolean,
 ): readonly CheckoutRouteId[] {
   if (wallet === 'card' && allowBankCard) {
-    return ['bank', ...CARD_ROUTES_BASE]
+    return [...CARD_ROUTES_BASE, 'bank']
   }
   return WALLET_ROUTES[wallet]
 }

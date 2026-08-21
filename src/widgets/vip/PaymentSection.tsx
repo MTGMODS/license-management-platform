@@ -504,9 +504,10 @@ function routeBadges(route: CheckoutRouteId, feeLabel: string, labels: {
 export function PaymentSection() {
   const { t } = useTranslation('vip')
   const { allowed: allowBankCard } = useBankCardAllowed()
-  const [wallet, setWallet] = useState<WalletId>('stars')
+  const [wallet, setWallet] = useState<WalletId>('card')
   const routes = routesForWallet(wallet, allowBankCard)
-  const [route, setRoute] = useState<CheckoutRouteId>('stars')
+  const [route, setRoute] = useState<CheckoutRouteId>(routes[0] ?? 'funpay')
+  const showRoutePicker = routes.length > 1
 
   const selectWallet = (next: WalletId) => {
     const nextRoutes = routesForWallet(next, allowBankCard)
@@ -554,7 +555,7 @@ export function PaymentSection() {
                 aria-pressed={active}
                 onClick={() => selectWallet(id)}
                 className={cn(
-                  'flex flex-col items-start gap-2 rounded-2xl p-3.5 text-left transition-[background-color,border-color,box-shadow] sm:p-4',
+                  'flex items-center gap-3 rounded-2xl p-3.5 text-left transition-[background-color,border-color,box-shadow] sm:p-4',
                   active
                     ? 'border border-accent-400/50 bg-accent-500/10 shadow-[0_0_0_1px_rgba(56,189,248,0.12)]'
                     : 'border border-white/8 bg-ink-850/80 hover:border-white/15 hover:bg-ink-800',
@@ -562,17 +563,19 @@ export function PaymentSection() {
               >
                 <span
                   className={cn(
-                    'grid size-9 place-items-center rounded-xl',
+                    'grid size-9 shrink-0 place-items-center rounded-xl',
                     active ? 'bg-accent-500/20' : 'bg-ink-800',
                   )}
                 >
                   <BrandMark brand={WALLET_BRANDS[id]} />
                 </span>
-                <span className="text-sm font-semibold text-fg sm:text-[0.95rem]">
-                  {t(`payment.wallets.${id}.title`)}
-                </span>
-                <span className="text-xs leading-snug text-fg-subtle sm:text-[0.8rem]">
-                  {t(`payment.wallets.${id}.hint`)}
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold leading-snug text-fg sm:text-[0.95rem]">
+                    {t(`payment.wallets.${id}.title`)}
+                  </span>
+                  <span className="mt-0.5 block text-xs leading-snug text-fg-subtle sm:text-[0.8rem]">
+                    {t(`payment.wallets.${id}.hint`)}
+                  </span>
                 </span>
               </button>
             )
@@ -580,72 +583,77 @@ export function PaymentSection() {
         </div>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-baseline gap-2">
-          <span className="grid size-7 place-items-center rounded-full bg-accent-500/20 text-xs font-semibold text-accent-200">
-            2
-          </span>
-          <div>
-            <h3 className="text-base font-semibold tracking-tight sm:text-lg">{t('payment.step2.title')}</h3>
-            <p className="text-sm text-fg-subtle">{t(`payment.step2.hint.${wallet}`)}</p>
+      {showRoutePicker ? (
+        <div className="space-y-3">
+          <div className="flex items-baseline gap-2">
+            <span className="grid size-7 place-items-center rounded-full bg-accent-500/20 text-xs font-semibold text-accent-200">
+              2
+            </span>
+            <div>
+              <h3 className="text-base font-semibold tracking-tight sm:text-lg">{t('payment.step2.title')}</h3>
+              <p className="text-sm text-fg-subtle">{t(`payment.step2.hint.${wallet}`)}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
+            {routes.map((id) => {
+              const active = activeRoute === id
+              const badges = routeBadges(
+                id,
+                t('payment.badges.fee', {
+                  fee: id === 'funpay' ? FUNPAY_FEE_PERCENT : FRAGMENT_FEE_PERCENT,
+                }),
+                badgeLabels,
+              )
+              const fullRow =
+                id === 'crypto' || (id === 'paypal' && !routes.includes('bank'))
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setRoute(id)}
+                  className={cn(
+                    'flex flex-col gap-2.5 rounded-2xl p-4 text-left transition-[background-color,border-color]',
+                    fullRow && 'md:col-span-2',
+                    active
+                      ? 'border border-accent-400/55 bg-gradient-to-b from-accent-500/15 to-transparent'
+                      : 'border border-white/8 bg-ink-850/70 hover:border-white/14 hover:bg-ink-800/90',
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span
+                      className={cn(
+                        'grid size-9 place-items-center rounded-xl',
+                        active ? 'bg-accent-500/20' : 'bg-ink-800',
+                      )}
+                    >
+                      <BrandMark brand={ROUTE_BRANDS[id]} />
+                    </span>
+                    <div className="flex flex-wrap justify-end gap-1">
+                      {badges.map((badge) => (
+                        <Badge
+                          key={badge.label}
+                          tone={badge.tone === 'accent' ? 'accent' : 'neutral'}
+                          className="px-2 py-0.5 text-[0.65rem]"
+                        >
+                          {badge.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-fg">{t(`payment.routes.${id}.title`)}</p>
+                    <p className="mt-1 text-xs leading-snug text-fg-muted sm:text-sm">
+                      {t(`payment.routes.${id}.blurb`)}
+                    </p>
+                  </div>
+                </button>
+              )
+            })}
           </div>
         </div>
-
-        <div className={cn('grid gap-2.5', routes.length > 1 ? 'sm:grid-cols-2 lg:grid-cols-3' : 'max-w-xl')}>
-          {routes.map((id) => {
-            const active = activeRoute === id
-            const badges = routeBadges(
-              id,
-              t('payment.badges.fee', {
-                fee: id === 'funpay' ? FUNPAY_FEE_PERCENT : FRAGMENT_FEE_PERCENT,
-              }),
-              badgeLabels,
-            )
-            return (
-              <button
-                key={id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => setRoute(id)}
-                className={cn(
-                  'flex flex-col gap-2.5 rounded-2xl p-4 text-left transition-[background-color,border-color]',
-                  active
-                    ? 'border border-accent-400/55 bg-gradient-to-b from-accent-500/15 to-transparent'
-                    : 'border border-white/8 bg-ink-850/70 hover:border-white/14 hover:bg-ink-800/90',
-                )}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <span
-                    className={cn(
-                      'grid size-9 place-items-center rounded-xl',
-                      active ? 'bg-accent-500/20' : 'bg-ink-800',
-                    )}
-                  >
-                    <BrandMark brand={ROUTE_BRANDS[id]} />
-                  </span>
-                  <div className="flex flex-wrap justify-end gap-1">
-                    {badges.map((badge) => (
-                      <Badge
-                        key={badge.label}
-                        tone={badge.tone === 'accent' ? 'accent' : 'neutral'}
-                        className="px-2 py-0.5 text-[0.65rem]"
-                      >
-                        {badge.label}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="font-semibold text-fg">{t(`payment.routes.${id}.title`)}</p>
-                  <p className="mt-1 text-xs leading-snug text-fg-muted sm:text-sm">
-                    {t(`payment.routes.${id}.blurb`)}
-                  </p>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      </div>
+      ) : null}
 
       <Card className="space-y-4 border-accent-500/20 p-4 sm:p-6">
         <div>

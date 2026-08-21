@@ -46,8 +46,8 @@
     "step2": {
       "title": "Выберите способ",
       "hint": {
-        "card": "Для карты: прямой перевод на Monobank (если доступен), FunPay или PayPal. Также можно купить звёзды в Telegram.",
-        "crypto": "Авто через FunPay / Fragment, или более дешёвый прямой перевод.",
+        "card": "Для карты: FunPay, PayPal, покупка звёзд в Telegram или прямой перевод на Monobank (если доступен).",
+        "crypto": "Покупка звёзд через Fragment, FunPay, или более дешёвый прямой перевод.",
         "stars": "Спишите звёзды с баланса Telegram в боте — ключ выдаётся сразу.",
         "paypal": "Прямой перевод на PayPal, затем короткое сообщение в ЛС."
       }
@@ -55,11 +55,11 @@
     "wallets": {
       "card": {
         "title": "Банковская карта",
-        "hint": "Visa / Mastercard / МИР, любая страна"
+        "hint": "VISA / MasterCard / МИР"
       },
       "crypto": {
         "title": "Криптовалюта",
-        "hint": "USDT, TON и другие"
+        "hint": "USDT, USDC, TON и другие"
       },
       "stars": {
         "title": "Звёзды Telegram",
@@ -88,7 +88,7 @@
     "buyDays_few": "{{count}} дня",
     "buyDays_many": "{{count}} дней",
     "buyDays_other": "{{count}} дней",
-    "afterContact": "После оплаты напишите <contact>MTG MODS в ЛС</contact> — выдадим ключ.",
+    "afterContact": "После оплаты напишите <contact>MTG MODS в ЛС</contact> для получения ключа.",
     "routes": {
       "funpay": {
         "title": "FunPay — маркетплейс",
@@ -96,7 +96,7 @@
         "what": "FunPay — это маркетплейс (как магазин). Вы покупаете лот VIP, а ключ приходит в чат на сайте сразу после оплаты.",
         "acceptsTitle": "Что подходит для оплаты",
         "accepts": {
-          "card": "Любая банковская карта любой страны и валюты (Visa / Mastercard / МИР)",
+          "card": "Банковская карта (VISA / MasterCard / МИР)",
           "wallets": "Google Pay / Apple Pay",
           "usdt": "Крипта USDT на FunPay"
         },

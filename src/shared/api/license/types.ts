@@ -107,6 +107,5 @@ export interface TariffPlan extends TariffLimits {
 
 export interface TariffsCatalog {
   currency: string
-  fallback?: TariffLimits
   plans: TariffPlan[]
 }
