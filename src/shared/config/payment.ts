@@ -21,6 +21,8 @@ export const STAR_WITHDRAW_RATE_USD = 0.013
 
 export const FUNPAY_FEE_PERCENT = 20
 export const FRAGMENT_FEE_PERCENT = 15
+/** Flat Crypto Bot (@send) invoice fee in USD. */
+export const CRYPTO_BOT_INVOICE_FEE_USD = 0.5
 
 export interface DurationOffer {
   days: number
@@ -35,6 +37,7 @@ export const FUNPAY_OFFERS: readonly DurationOffer[] = [
 ]
 
 export const CRYPTO_BOT_INVOICES: readonly DurationOffer[] = [
+  { days: 7, url: 'https://t.me/send?start=IV8PhmOnRBEk' },
   { days: 30, url: 'https://t.me/send?start=IVlf1GJfoAsx' },
   { days: 90, url: 'https://t.me/send?start=IVwtjvcrdSUP' },
   { days: 365, url: 'https://t.me/send?start=IVbjbBr50bKw' },
@@ -65,6 +68,7 @@ export const CRYPTO_NETWORKS = [
     assets: 'ETH, USDC',
     label: 'ERC-20',
     address: '0x2bb655acd50304a2c91373cd4f5776367abd7fa9',
+    brand: 'ethereum' as const,
   },
   {
     id: 'trc20',

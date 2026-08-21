@@ -1,6 +1,8 @@
 import binanceUrl from '@/assets/brands/binance.svg'
 import bybitUrl from '@/assets/brands/bybit.svg'
 import cardUrl from '@/assets/brands/card.svg'
+import cryptobotUrl from '@/assets/brands/cryptobot.svg'
+import ethereumUrl from '@/assets/brands/ethereum.svg'
 import funpayUrl from '@/assets/brands/funpay.svg'
 import paypalUrl from '@/assets/brands/paypal.svg'
 import telegramUrl from '@/assets/brands/telegram.svg'
@@ -12,6 +14,8 @@ export type BrandId =
   | 'binance'
   | 'bybit'
   | 'card'
+  | 'cryptobot'
+  | 'ethereum'
   | 'funpay'
   | 'paypal'
   | 'telegram'
@@ -22,6 +26,8 @@ export const BRAND_ASSETS: Record<BrandId, string> = {
   binance: binanceUrl,
   bybit: bybitUrl,
   card: cardUrl,
+  cryptobot: cryptobotUrl,
+  ethereum: ethereumUrl,
   funpay: funpayUrl,
   paypal: paypalUrl,
   telegram: telegramUrl,

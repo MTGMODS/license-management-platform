@@ -15,6 +15,7 @@ import {
 import {
   BANK_TRANSFER,
   CONTACT_URL,
+  CRYPTO_BOT_INVOICE_FEE_USD,
   CRYPTO_BOT_INVOICES,
   CRYPTO_EXCHANGES,
   CRYPTO_NETWORKS,
@@ -359,13 +360,19 @@ function CryptoBody() {
             key={network.id}
             label={`${network.label} (${network.assets})`}
             value={network.address}
-            brand={'brand' in network ? network.brand : undefined}
+            brand={network.brand}
           />
         ))}
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm font-medium text-fg">{t('payment.routes.crypto.cryptoBot')}</p>
+        <p className="flex items-center gap-2 text-sm font-medium text-fg">
+          <BrandMark brand="cryptobot" className="size-5" />
+          {t('payment.routes.crypto.cryptoBot')}
+        </p>
+        <p className="text-sm text-fg-muted">
+          {t('payment.routes.crypto.cryptoBotFee', { fee: CRYPTO_BOT_INVOICE_FEE_USD })}
+        </p>
         <OfferButtons offers={CRYPTO_BOT_INVOICES} />
       </div>
 
