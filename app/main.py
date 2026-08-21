@@ -32,6 +32,10 @@ async def load_plans() -> dict | None:
     }
 
 async def start_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if context.args and context.args[0].lower() == "pay":
+        await pay_cmd(update, context)
+        return
+
     text = ("👋 Привет!\n\nArizona&Rodina Helper теперь доступен через удобный сайт")
     markup = InlineKeyboardMarkup([[InlineKeyboardButton("Войти", web_app=WebAppInfo(url=WEB_APP_URL))]])
     await update.message.reply_text(text, reply_markup=markup)
