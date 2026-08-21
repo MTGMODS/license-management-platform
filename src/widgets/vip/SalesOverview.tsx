@@ -27,15 +27,13 @@ export function SalesOverview() {
 
     return (
       <section>
-        <h2 className="text-[clamp(1.05rem,2.2vh,1.25rem)] font-semibold tracking-tight">
-          {t('stats.title')}
-        </h2>
-        <p className="mt-1 text-[clamp(0.75rem,1.4vh,0.875rem)] text-fg-muted">{t('stats.subtitle')}</p>
-        <div className="mt-[clamp(0.5rem,1.2vh,1rem)] grid grid-cols-2 gap-[clamp(0.5rem,1.2vh,1rem)] lg:grid-cols-4 lg:gap-3">
+        <h2 className="text-lg font-semibold tracking-tight sm:text-xl">{t('stats.title')}</h2>
+        <p className="mt-1 text-sm text-fg-muted">{t('stats.subtitle')}</p>
+        <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {Array.from({ length: 4 }, (_, index) => (
             <Skeleton
               key={index}
-              className="h-[clamp(3.75rem,10vh,5rem)]"
+              className="h-20"
               label={index === 0 ? t('stats.loading') : undefined}
             />
           ))}
@@ -76,23 +74,19 @@ export function SalesOverview() {
 
   return (
     <section>
-      <h2 className="text-[clamp(1.05rem,2.2vh,1.25rem)] font-semibold tracking-tight">
-        {t('stats.title')}
-      </h2>
-      <p className="mt-1 text-[clamp(0.75rem,1.4vh,0.875rem)] text-fg-muted">{t('stats.subtitle')}</p>
+      <h2 className="text-lg font-semibold tracking-tight sm:text-xl">{t('stats.title')}</h2>
+      <p className="mt-1 text-sm text-fg-muted">{t('stats.subtitle')}</p>
 
-      <div className="mt-[clamp(0.5rem,1.2vh,1rem)] grid grid-cols-2 gap-[clamp(0.5rem,1.2vh,1rem)] lg:grid-cols-4 lg:gap-3">
+      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {items.map((item) => {
           const Icon = item.icon
           return (
-            <Card key={item.id} className="p-[clamp(0.65rem,1.4vh,1rem)] text-center lg:p-3">
+            <Card key={item.id} className="p-3 text-center sm:p-4">
               <div className="flex items-center justify-center gap-2">
-                <Icon aria-hidden className="size-[clamp(1rem,2.2vh,1.25rem)] shrink-0 text-accent-300" />
-                <p className="min-w-0 truncate text-[clamp(0.75rem,1.4vh,0.875rem)] text-fg-subtle">
-                  {item.label}
-                </p>
+                <Icon aria-hidden className="size-4 shrink-0 text-accent-300" />
+                <p className="min-w-0 truncate text-xs text-fg-subtle sm:text-sm">{item.label}</p>
               </div>
-              <p className="tabular mt-[clamp(0.35rem,1vh,0.75rem)] whitespace-nowrap text-[clamp(1.15rem,2.6vh,1.5rem)] font-semibold tracking-tight">
+              <p className="tabular mt-2 text-xl font-semibold tracking-tight sm:text-2xl">
                 {item.value}
               </p>
             </Card>
@@ -100,10 +94,10 @@ export function SalesOverview() {
         })}
       </div>
 
-      <div className="mt-[clamp(0.5rem,1.2vh,1rem)] flex flex-wrap items-center justify-between gap-2 text-[clamp(0.75rem,1.4vh,0.875rem)] text-fg-subtle">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-fg-subtle sm:text-sm">
         <span>{t('stats.updated', { time: format.dateTime(data.updated_at) })}</span>
         <span className="inline-flex items-center gap-1.5">
-          <ArrowDown aria-hidden className="size-4" />
+          <ArrowDown aria-hidden className="size-3.5" />
           {t('stats.more')}
         </span>
       </div>

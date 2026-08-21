@@ -5,7 +5,6 @@ import { Link } from 'react-router'
 import { toast } from 'sonner'
 
 import { useSalesStats } from '@/features/license/useSalesStats'
-import { cn } from '@/shared/lib/cn'
 import { Button, Card, DeferredMount, Skeleton } from '@/shared/ui'
 import { PricingGrid } from '@/widgets/vip/PricingGrid'
 import { SalesOverview } from '@/widgets/vip/SalesOverview'
@@ -43,18 +42,18 @@ function VipBenefits() {
   const { t } = useTranslation('vip')
 
   return (
-    <Card className="w-full shrink-0 p-[clamp(0.65rem,1.4vh,1rem)] text-left">
-      <ul className="space-y-[clamp(0.45rem,1.1vh,0.75rem)]">
+    <Card className="@container w-full p-4 text-left sm:p-5">
+      <ul className="grid grid-cols-1 gap-4 @min-[36rem]:grid-cols-2 @min-[36rem]:gap-x-6 @min-[36rem]:gap-y-4">
         {BENEFITS.map((item) => {
           const Icon = item.icon
           return (
-            <li key={item.titleKey} className="flex gap-[clamp(0.5rem,1vh,0.75rem)]">
-              <span className="mt-0.5 grid size-[clamp(1.75rem,3.6vh,2.25rem)] shrink-0 place-items-center rounded-lg bg-accent-500/10 text-accent-300">
-                <Icon aria-hidden className="size-[clamp(0.85rem,1.8vh,1rem)]" />
+            <li key={item.titleKey} className="flex gap-3">
+              <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-accent-500/10 text-accent-300">
+                <Icon aria-hidden className="size-4" />
               </span>
               <div className="min-w-0">
-                <p className="text-[clamp(0.8rem,1.45vh,0.95rem)] font-medium text-fg">{t(item.titleKey)}</p>
-                <p className="mt-0.5 text-[clamp(0.7rem,1.3vh,0.85rem)] leading-snug text-fg-muted">
+                <p className="text-sm font-medium text-fg sm:text-[0.95rem]">{t(item.titleKey)}</p>
+                <p className="mt-0.5 text-xs leading-snug text-fg-muted sm:text-sm">
                   {'withGuide' in item && item.withGuide ? (
                     <Trans
                       i18nKey={item.textKey}
@@ -74,45 +73,12 @@ function VipBenefits() {
   )
 }
 
-function Hero() {
-  const { t } = useTranslation('vip')
-
-  return (
-    <section className="flex min-h-0 flex-1 basis-0 flex-col text-center">
-      <h1 className="text-gradient shrink-0 text-[clamp(1.35rem,min(3.8vh,4.8vw),2.75rem)] font-semibold tracking-tight">
-        {t('hero.title')}
-      </h1>
-      <p className="mx-auto mt-[clamp(0.3rem,0.9vh,0.6rem)] max-w-2xl shrink-0 text-[clamp(0.8rem,1.45vh,1.05rem)] leading-relaxed text-fg-muted">
-        {t('hero.subtitle')}
-      </p>
-      <p className="mx-auto mt-[clamp(0.15rem,0.5vh,0.35rem)] max-w-2xl shrink-0 text-[clamp(0.7rem,1.25vh,0.85rem)] text-fg-subtle">
-        {t('hero.currency')}
-      </p>
-
-      <div className="mx-auto mt-[clamp(0.5rem,1.3vh,0.95rem)] flex min-h-0 w-full min-w-0 flex-1 basis-0 flex-col justify-center">
-        <PricingGrid />
-      </div>
-
-      <div className="mt-[clamp(0.5rem,1.3vh,0.95rem)] shrink-0">
-        <VipBenefits />
-      </div>
-
-      <div className="mt-[clamp(0.5rem,1.3vh,0.95rem)] flex shrink-0 justify-center">
-        <Button size="lg" onClick={scrollToPayment}>
-          <CreditCard aria-hidden className="size-4" />
-          {t('hero.pay')}
-        </Button>
-      </div>
-    </section>
-  )
-}
-
 function PaymentStub() {
   const { t } = useTranslation('vip')
 
   return (
-    <section id={PAYMENT_SECTION_ID} className="scroll-mt-24 pt-8">
-      <Card className="flex min-h-64 flex-col items-center justify-center border-dashed p-8 text-center">
+    <section id={PAYMENT_SECTION_ID} className="scroll-mt-24">
+      <Card className="flex min-h-48 flex-col items-center justify-center border-dashed p-8 text-center sm:min-h-56">
         <h2 className="text-2xl font-semibold tracking-tight">{t('payment.title')}</h2>
         <p className="mt-2 max-w-md text-fg-muted">{t('payment.placeholder')}</p>
       </Card>
@@ -136,35 +102,44 @@ export function VipPage() {
   }, [isError, t])
 
   return (
-    <div className="shell flex min-h-0 flex-1 flex-col">
-      <div
-        className={cn(
-          'flex min-h-0 flex-col overflow-hidden py-[clamp(0.75rem,1.8vh,1.5rem)]',
-          isError ? 'h-full flex-1' : 'h-[calc(100dvh-4rem)]',
-        )}
-      >
-        <Hero />
-        {isError ? null : (
-          <div className="mt-[clamp(0.85rem,2.2vh,1.75rem)] hidden shrink-0 border-t border-white/5 pt-[clamp(0.75rem,1.8vh,1.25rem)] lg:block">
-            <SalesOverview />
-          </div>
-        )}
+    <div className="shell space-y-8 py-8 sm:space-y-10 sm:py-10">
+      <header className="@container space-y-1.5 text-center">
+        <h1 className="text-gradient mx-auto max-w-full whitespace-nowrap text-[length:min(2.25rem,calc(100cqi/18))] font-semibold tracking-tight">
+          {t('hero.title')}
+        </h1>
+        <p className="mx-auto max-w-full whitespace-nowrap text-[length:min(1.05rem,calc(100cqi/28))] leading-none text-fg-muted">
+          {t('hero.subtitle')}
+        </p>
+        <p className="mx-auto max-w-full whitespace-nowrap text-[length:min(0.875rem,calc(100cqi/36))] leading-none text-fg-subtle">
+          {t('hero.currency')}
+        </p>
+      </header>
+
+      <PricingGrid />
+      <VipBenefits />
+
+      <div className="flex justify-center">
+        <Button size="lg" onClick={scrollToPayment}>
+          <CreditCard aria-hidden className="size-4" />
+          {t('hero.pay')}
+        </Button>
       </div>
-      <div className="pb-10">
-        {isError ? null : (
-          <div className="border-t border-white/5 pt-4 lg:hidden">
-            <SalesOverview />
-          </div>
-        )}
-        <PaymentStub />
-        {isError ? null : (
-          <DeferredMount fallback={<Skeleton className="mt-8 h-96" />}>
-            <Suspense fallback={<Skeleton className="mt-8 h-96" />}>
-              <SalesStats />
-            </Suspense>
-          </DeferredMount>
-        )}
-      </div>
+
+      {isError ? null : (
+        <div className="border-t border-white/5 pt-8">
+          <SalesOverview />
+        </div>
+      )}
+
+      <PaymentStub />
+
+      {isError ? null : (
+        <DeferredMount fallback={<Skeleton className="h-96" />}>
+          <Suspense fallback={<Skeleton className="h-96" />}>
+            <SalesStats />
+          </Suspense>
+        </DeferredMount>
+      )}
     </div>
   )
 }
