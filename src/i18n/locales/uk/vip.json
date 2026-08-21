@@ -37,7 +37,110 @@
   },
   "payment": {
     "title": "Оплата",
-    "placeholder": "Тут з’явиться вибір способу оплати."
+    "subtitle": "Спочатку оберіть, чим зручніше платити — далі покажемо лише підходящі варіанти простими словами.",
+    "step1": {
+      "title": "Що у вас є для оплати?",
+      "hint": "Картка, крипта, зірки Telegram або PayPal"
+    },
+    "step2": {
+      "title": "Оберіть спосіб",
+      "hint": {
+        "card": "Для картки найзручніше FunPay або PayPal. Також можна купити зірки в Telegram.",
+        "crypto": "Авто через FunPay / Fragment, або дешевший прямий переказ.",
+        "stars": "Спишіть зірки з балансу Telegram у боті — ключ видається одразу.",
+        "paypal": "Прямий переказ на PayPal, потім коротке повідомлення в ЛС."
+      }
+    },
+    "wallets": {
+      "card": {
+        "title": "Банківська карта",
+        "hint": "Visa / Mastercard / МИР, будь-яка країна"
+      },
+      "crypto": {
+        "title": "Криптовалюта",
+        "hint": "USDT, TON та інші"
+      },
+      "stars": {
+        "title": "Зірки Telegram",
+        "hint": "Уже є ⭐ на акаунті"
+      },
+      "paypal": {
+        "title": "PayPal",
+        "hint": "USD / EUR, міжнародно"
+      }
+    },
+    "badges": {
+      "instant": "Миттєво",
+      "auto": "Авто 24/7",
+      "cheapest": "Дешевше",
+      "manual": "Після ЛС",
+      "inTelegram": "У Telegram",
+      "fee": "~{{fee}}% комісія"
+    },
+    "detailsLabel": "Як оплатити",
+    "pickPlan": "Оберіть термін",
+    "daysShort_one": "{{count}} день",
+    "daysShort_few": "{{count}} дні",
+    "daysShort_many": "{{count}} днів",
+    "daysShort_other": "{{count}} днів",
+    "buyDays_one": "{{count}} день",
+    "buyDays_few": "{{count}} дні",
+    "buyDays_many": "{{count}} днів",
+    "buyDays_other": "{{count}} днів",
+    "afterContact": "Після оплати напишіть <contact>MTG MODS в ЛС</contact> — видамо ключ.",
+    "routes": {
+      "funpay": {
+        "title": "FunPay — маркетплейс",
+        "blurb": "Звичайний онлайн-магазин: оплатили → ключ у чаті одразу",
+        "what": "FunPay — це маркетплейс (як магазин). Ви купуєте лот VIP, а ключ приходить у чат на сайті одразу після оплати.",
+        "acceptsTitle": "Що підходить для оплати",
+        "accepts": {
+          "card": "Будь-яка банківська карта будь-якої країни й валюти (Visa / Mastercard / МИР)",
+          "wallets": "Google Pay / Apple Pay",
+          "usdt": "Крипта USDT на FunPay"
+        },
+        "fee": "Комісія FunPay ~{{fee}}% — її бере платформа за свої послуги.",
+        "after": "Одразу після оплати ключ з’явиться в чаті замовлення на FunPay.",
+        "activate": "Активуйте ключ у <cabinet>кабінеті</cabinet> або через <bot>Telegram-бота</bot>."
+      },
+      "stars": {
+        "title": "Зірки Telegram",
+        "blurb": "Вбудована оплата в Telegram — списуємо ⭐ з балансу",
+        "what": "Telegram Stars — це внутрішня валюта Telegram. Якщо зірки вже є на акаунті, VIP оплачується командою в боті.",
+        "rate": "Курс для розрахунку: <b>${{rate}} за 1 ⭐</b> (за курсом виводу).",
+        "buyHint": "Немає зірок? Їх можна купити в самому Telegram карткою, або через Fragment за TON.",
+        "cta": "Відкрити бота й оплатити",
+        "ctaHint": "У боті використайте команду /tgstars"
+      },
+      "fragment": {
+        "title": "Купити зірки → оплатити VIP",
+        "blurb": "Спочатку ⭐, потім автоматична оплата в боті",
+        "whatCard": "Купіть Telegram Stars у самому Telegram з картки, потім спишіть їх у VIP-боті.",
+        "whatCrypto": "Конвертуйте крипту в TON, купіть ⭐ на офіційному Fragment, потім оплатіть VIP у боті.",
+        "stepCard1": "У Telegram купіть Stars з банківської карти",
+        "stepCard2": "Дочекайтеся появи ⭐ на балансі",
+        "stepCard3": "У <bot>@mtgmods_vip_bot</bot> виконайте /tgstars",
+        "stepCrypto1": "<fragment>Купіть Stars за TON на Fragment</fragment>",
+        "stepCrypto2": "Дочекайтеся зарахування ⭐ у Telegram",
+        "stepCrypto3": "У <bot>@mtgmods_vip_bot</bot> виконайте /tgstars",
+        "example": "Приклад: VIP {{days}} дн. ≈ <b>${{vip}}</b> → потрібно <b>{{stars}} ⭐</b> → через Fragment ≈ <b>${{cost}}</b> (~{{fee}}% комісія).",
+        "openFragment": "Відкрити Fragment",
+        "openBot": "Відкрити VIP-бота"
+      },
+      "crypto": {
+        "title": "Прямий переказ крипти",
+        "blurb": "Без комісії маркетплейсу — ключ після повідомлення в ЛС",
+        "what": "Надішліть оплату на біржу / гаманець нижче. Це зазвичай найдешевший варіант, але ключ видаємо після підтвердження в ЛС.",
+        "exchanges": "Криптобіржі",
+        "networks": "Мережі та адреси",
+        "cryptoBot": "Або рахунок @CryptoBot"
+      },
+      "paypal": {
+        "title": "PayPal",
+        "blurb": "Міжнародно: підходить будь-яка карта через PayPal",
+        "what": "Перекажіть суму тарифу на PayPal (USD/EUR). Працює з картами більшості країн. Після оплати напишіть у ЛС — видамо ключ."
+      }
+    }
   },
   "stats": {
     "title": "MTGVIP у цифрах",

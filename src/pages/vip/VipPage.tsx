@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { useSalesStats } from '@/features/license/useSalesStats'
 import { cn } from '@/shared/lib/cn'
 import { Button, Card, DeferredMount, Skeleton } from '@/shared/ui'
+import { PaymentSection } from '@/widgets/vip/PaymentSection'
 import { PricingGrid } from '@/widgets/vip/PricingGrid'
 import { SalesOverview } from '@/widgets/vip/SalesOverview'
 
@@ -116,19 +117,6 @@ function VipBenefits() {
   )
 }
 
-function PaymentStub() {
-  const { t } = useTranslation('vip')
-
-  return (
-    <section id={PAYMENT_SECTION_ID} className="scroll-mt-24">
-      <Card className="flex min-h-48 flex-col items-center justify-center border-dashed p-8 text-center sm:min-h-56">
-        <h2 className="text-2xl font-semibold tracking-tight">{t('payment.title')}</h2>
-        <p className="mt-2 max-w-md text-fg-muted">{t('payment.placeholder')}</p>
-      </Card>
-    </section>
-  )
-}
-
 export function VipPage() {
   const { t } = useTranslation('vip')
   const { isError } = useSalesStats()
@@ -174,7 +162,7 @@ export function VipPage() {
         </div>
       )}
 
-      <PaymentStub />
+      <PaymentSection />
 
       {isError ? null : (
         <DeferredMount fallback={<Skeleton className="h-96" />}>
