@@ -1,10 +1,11 @@
 import { CreditCard, Infinity, MessageSquareText, Sparkles, Users } from 'lucide-react'
-import { lazy, Suspense, useEffect, useRef, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 
 import { useSalesStats } from '@/features/license/useSalesStats'
+import { cn } from '@/shared/lib/cn'
 import { Button, Card, DeferredMount, Skeleton } from '@/shared/ui'
 import { PricingGrid } from '@/widgets/vip/PricingGrid'
 import { SalesOverview } from '@/widgets/vip/SalesOverview'
@@ -25,6 +26,48 @@ const SalesStats = lazy(() =>
 
 function scrollToPayment() {
   document.getElementById(PAYMENT_SECTION_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+/** Shrinks a single line to the parent width; CSS cqi/`nowrap` alone can overflow. */
+function FitLine({
+  as: Tag = 'p',
+  className,
+  maxRem,
+  children,
+}: {
+  as?: 'h1' | 'p'
+  className?: string
+  maxRem: number
+  children: ReactNode
+}) {
+  const ref = useRef<HTMLHeadingElement | HTMLParagraphElement>(null)
+
+  useLayoutEffect(() => {
+    const el = ref.current
+    const parent = el?.parentElement
+    if (!el || !parent) return
+
+    const fit = () => {
+      el.style.fontSize = `${maxRem}rem`
+      const available = parent.clientWidth
+      const needed = el.scrollWidth
+      if (needed > available && needed > 0) {
+        el.style.fontSize = `${((maxRem * available) / needed) * 0.98}rem`
+      }
+    }
+
+    fit()
+    void document.fonts?.ready.then(fit)
+    const observer = new ResizeObserver(fit)
+    observer.observe(parent)
+    return () => observer.disconnect()
+  }, [children, maxRem])
+
+  return (
+    <Tag ref={ref} className={cn('mx-auto block w-max whitespace-nowrap', className)}>
+      {children}
+    </Tag>
+  )
 }
 
 function GalleryLink({ children }: { children?: ReactNode }) {
@@ -103,16 +146,16 @@ export function VipPage() {
 
   return (
     <div className="shell space-y-8 py-8 sm:space-y-10 sm:py-10">
-      <header className="@container space-y-1.5 text-center">
-        <h1 className="text-gradient mx-auto max-w-full whitespace-nowrap text-[length:min(2.25rem,calc(100cqi/18))] font-semibold tracking-tight">
+      <header className="w-full min-w-0 space-y-1.5 overflow-x-clip text-center">
+        <FitLine as="h1" maxRem={2.25} className="text-gradient font-semibold tracking-tight">
           {t('hero.title')}
-        </h1>
-        <p className="mx-auto max-w-full whitespace-nowrap text-[length:min(1.05rem,calc(100cqi/28))] leading-none text-fg-muted">
+        </FitLine>
+        <FitLine maxRem={1.05} className="leading-tight text-fg-muted">
           {t('hero.subtitle')}
-        </p>
-        <p className="mx-auto max-w-full whitespace-nowrap text-[length:min(0.875rem,calc(100cqi/36))] leading-none text-fg-subtle">
+        </FitLine>
+        <FitLine maxRem={0.875} className="leading-tight text-fg-subtle">
           {t('hero.currency')}
-        </p>
+        </FitLine>
       </header>
 
       <PricingGrid />
