@@ -150,7 +150,7 @@ export function VipPage() {
         <FitLine as="h1" maxRem={2.25} className="text-gradient font-semibold tracking-tight">
           {t('hero.title')}
         </FitLine>
-        <FitLine maxRem={1.05} className="leading-tight text-fg-muted">
+        <FitLine maxRem={1.35} className="leading-tight text-fg-muted">
           {t('hero.subtitle')}
         </FitLine>
         <FitLine maxRem={0.875} className="leading-tight text-fg-subtle">
