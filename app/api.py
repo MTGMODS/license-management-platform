@@ -38,14 +38,30 @@ class APIClient:
             print(f"[API Error] Failed to connect to backend: {e}")
             return {"error": True}
 
-    async def generate_license(self, duration_days: int, amount: float) -> dict:
+    async def get_tariffs(self) -> dict:
+        if not self.session:
+            return {"error": True}
+
+        url = f"{BACKEND_API_URL}/tariffs"
+        
+        try:
+            async with self.session.get(url) as response:
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    return {"error": True}
+        except Exception as e:
+            print(f"[API] Get tariffs Error: {e}")
+            return {"error": True}
+
+    async def generate_license(self, duration_days: int, amount: float, max_devices: int, reset_limit: int) -> dict:
         if not self.session: return {"error": True}
 
         url = f"{BACKEND_API_URL}/generate/telegram_bot"
 
         headers = {"x-bot-token": BOT_SECRET_TOKEN}
 
-        payload = {"duration_days": duration_days, "amount": amount}
+        payload = {"duration_days": duration_days, "amount": amount, "max_devices": max_devices, "reset_limit": reset_limit}
         
         try:
             async with self.session.post(url, headers=headers, json=payload) as response:
