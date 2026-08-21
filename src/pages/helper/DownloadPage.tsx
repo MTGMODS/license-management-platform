@@ -1,38 +1,35 @@
-import { Download, FileCode2, Monitor, PlayCircle, Smartphone, Sparkles, Wand2 } from 'lucide-react'
-import { useEffect, useState, type ReactNode } from 'react'
-import { useTranslation, Trans } from 'react-i18next'
+import {
+  Check,
+  Download,
+  ExternalLink,
+  FileCode2,
+  Monitor,
+  PlayCircle,
+  Smartphone,
+  Wand2,
+  X,
+} from 'lucide-react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 
 import { isInstallerAvailable } from '@/features/download/installer'
 import { useRelease } from '@/features/release/useRelease'
-import { FREE_LUA_FALLBACK_URL, HELPER_VIDEO_ID, PC_INSTALLER_URL } from '@/shared/config/product'
+import {
+  FREE_LUA_FALLBACK_URL,
+  MOBILE_MANUAL_GUIDE_URL,
+  MOBILE_X32_GUIDE_URL,
+  MOBILE_X64_GUIDE_URL,
+  MONETLOADER_X32_URL,
+  MONETLOADER_X64_URL,
+  PC_INSTALLER_URL,
+  PC_MANUAL_GUIDE_URL,
+} from '@/shared/config/product'
+import { cn } from '@/shared/lib/cn'
 import { detectDevice, type DeviceKind } from '@/shared/lib/device'
 import { triggerFileDownload } from '@/shared/lib/download'
-import { cn } from '@/shared/lib/cn'
-import { Badge, Button, Card, Skeleton } from '@/shared/ui'
-
-function VersionBadge() {
-  const { t } = useTranslation('download')
-  const { data, isPending, isError } = useRelease()
-
-  if (isPending) {
-    return <Skeleton className="h-7 w-36" label={t('version.loading')} />
-  }
-
-  if (isError || !data) {
-    return <Badge tone="neutral">{t('version.unknown')}</Badge>
-  }
-
-  return (
-    <Badge tone="accent">
-      <Sparkles aria-hidden className="size-3.5" />
-      <span className="tabular">
-        {t('version.label')}: {data.free.rawVersion}
-      </span>
-    </Badge>
-  )
-}
+import { Badge, Button, buttonStyles, Card } from '@/shared/ui'
 
 function DeviceToggle({
   device,
@@ -49,45 +46,59 @@ function DeviceToggle({
   ]
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <span className="text-sm text-fg-muted">{t('device.label')}</span>
-      <div role="group" className="flex rounded-xl bg-ink-800 p-1 ring-1 ring-white/5">
-        {options.map((option) => {
-          const Icon = option.icon
-          const active = option.id === device
-          return (
-            <button
-              key={option.id}
-              type="button"
-              aria-pressed={active}
-              onClick={() => onChange(option.id)}
-              className={cn(
-                'inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors duration-200',
-                active ? 'bg-ink-700 text-fg' : 'text-fg-subtle hover:text-fg-muted',
-              )}
-            >
-              <Icon aria-hidden className="size-4" />
-              {option.label}
-            </button>
-          )
-        })}
-      </div>
+    <div role="group" className="grid w-full grid-cols-2 gap-2 sm:gap-3">
+      {options.map((option) => {
+        const Icon = option.icon
+        const active = option.id === device
+        return (
+          <button
+            key={option.id}
+            type="button"
+            aria-pressed={active}
+            onClick={() => onChange(option.id)}
+            className={cn(
+              'inline-flex items-center justify-center gap-2.5 rounded-2xl px-4 py-3.5 text-sm font-semibold transition-[background-color,border-color,color] sm:py-4 sm:text-base',
+              active
+                ? 'border border-accent-400/50 bg-accent-500/10 text-fg shadow-[0_0_0_1px_rgba(56,189,248,0.12)]'
+                : 'border border-white/8 bg-ink-850/80 text-fg-muted hover:border-white/14 hover:bg-ink-800 hover:text-fg',
+            )}
+          >
+            <Icon aria-hidden className="size-5 shrink-0" />
+            {option.label}
+          </button>
+        )
+      })}
     </div>
   )
 }
 
-function Steps({ items }: { items: string[] }) {
+function Steps({ items }: { items: ReactNode[] }) {
   return (
-    <ol className="mt-5 space-y-3">
+    <ol className="space-y-3">
       {items.map((item, index) => (
-        <li key={item} className="flex gap-3 text-sm text-fg-muted">
+        <li key={index} className="flex gap-3 text-sm text-fg-muted">
           <span className="tabular grid size-6 shrink-0 place-items-center rounded-full bg-ink-750 text-xs font-semibold text-fg-subtle">
             {index + 1}
           </span>
-          <span className="pt-0.5 leading-relaxed">{item}</span>
+          <span className="min-w-0 pt-0.5 leading-relaxed">{item}</span>
         </li>
       ))}
     </ol>
+  )
+}
+
+function GuideLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className={buttonStyles({ variant: 'secondary', fullWidth: true })}
+    >
+      <PlayCircle aria-hidden className="size-4" />
+      {children}
+      <ExternalLink aria-hidden className="size-3.5 opacity-60" />
+    </a>
   )
 }
 
@@ -97,28 +108,37 @@ function InstallCard({
   body,
   badge,
   children,
+  actions,
+  className,
 }: {
   icon: ReactNode
   title: string
-  body: string
+  body?: string
   badge?: string
-  children: ReactNode
+  children?: ReactNode
+  actions: ReactNode
+  className?: string
 }) {
   return (
-    <Card className="flex h-full flex-col p-6">
+    <Card className={cn('flex h-full flex-col p-5 sm:p-6', className)}>
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent-500/10 text-accent-300">
             {icon}
           </span>
           <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
         </div>
-        {badge ? <Badge tone="accent">{badge}</Badge> : null}
+        {badge ? (
+          <Badge tone="accent" className="shrink-0 px-2 py-0.5 text-[0.65rem]">
+            {badge}
+          </Badge>
+        ) : null}
       </div>
 
-      <p className="mt-4 text-sm leading-relaxed text-fg-muted">{body}</p>
+      {body ? <p className="mt-4 text-sm leading-relaxed text-fg-muted">{body}</p> : null}
+      {children ? <div className="mt-4 flex-1">{children}</div> : <div className="flex-1" />}
 
-      <div className="mt-auto">{children}</div>
+      <div className="mt-5 flex flex-col gap-2.5">{actions}</div>
     </Card>
   )
 }
@@ -128,8 +148,6 @@ function useLuaDownload() {
   const { data } = useRelease()
 
   return () => {
-    // The manifest carries the canonical link, so the download always matches
-    // the version shown above. The config value is only a safety net.
     triggerFileDownload(data?.freeDownloadUrl ?? FREE_LUA_FALLBACK_URL)
     toast.success(t('toast.started'))
   }
@@ -166,36 +184,106 @@ function PcInstall() {
         title={t('pc.auto.title')}
         body={t('pc.auto.body')}
         badge={t('pc.auto.badge')}
-      >
-        <Button
-          className="mt-6"
-          fullWidth
-          loading={checkingInstaller}
-          onClick={() => void handleInstaller()}
-        >
-          <Download aria-hidden className="size-4" />
-          {t('pc.auto.action')}
-        </Button>
-      </InstallCard>
+        actions={
+          <Button fullWidth loading={checkingInstaller} onClick={() => void handleInstaller()}>
+            <Download aria-hidden className="size-4" />
+            {t('pc.auto.action')}
+          </Button>
+        }
+      />
 
       <InstallCard
         icon={<FileCode2 aria-hidden className="size-5" />}
         title={t('pc.manual.title')}
         body={t('pc.manual.body')}
+        actions={
+          <>
+            <Button variant="secondary" fullWidth onClick={downloadLua}>
+              <Download aria-hidden className="size-4" />
+              {t('pc.manual.action')}
+            </Button>
+            <GuideLink href={PC_MANUAL_GUIDE_URL}>{t('pc.manual.guide')}</GuideLink>
+          </>
+        }
       >
         <Steps
           items={[
+            t('pc.manual.steps.moonloader'),
             t('pc.manual.steps.download'),
-            t('pc.manual.steps.openFolder'),
-            t('pc.manual.steps.moveFile'),
+            <span key="move">
+              {t('pc.manual.steps.moveFile')}
+              <span className="mt-1 block text-fg-subtle">{t('pc.manual.steps.rootHint')}</span>
+            </span>,
             t('pc.manual.steps.restart'),
           ]}
         />
-        <Button className="mt-6" variant="secondary" fullWidth onClick={downloadLua}>
-          <Download aria-hidden className="size-4" />
-          {t('pc.manual.action')}
-        </Button>
       </InstallCard>
+    </div>
+  )
+}
+
+function TraitRow({ ok, label }: { ok: boolean; label: string }) {
+  return (
+    <div className="flex items-center gap-2.5 text-sm leading-snug">
+      <span
+        className={cn(
+          'grid size-5 shrink-0 place-items-center rounded-full',
+          ok ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300',
+        )}
+      >
+        {ok ? <Check aria-hidden className="size-3" /> : <X aria-hidden className="size-3" />}
+      </span>
+      <span className={ok ? 'font-medium text-fg' : 'text-fg-muted'}>{label}</span>
+    </div>
+  )
+}
+
+function ArchPanel({
+  title,
+  badge,
+  luaOk,
+  gameOk,
+  lua,
+  game,
+  phones,
+  how,
+  actions,
+}: {
+  title: string
+  badge: string
+  luaOk: boolean
+  gameOk: boolean
+  lua: string
+  game: string
+  phones: string
+  how: string
+  actions: ReactNode
+}) {
+  return (
+    <div className="flex h-full flex-col rounded-2xl border border-white/8 bg-ink-900/40 p-4 sm:p-5">
+      <div className="flex h-8 items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent-500/10 text-accent-300">
+            <Smartphone aria-hidden className="size-4" />
+          </span>
+          <h3 className="truncate font-semibold tracking-tight text-fg">{title}</h3>
+        </div>
+        <Badge tone="accent" className="shrink-0 px-2 py-0.5 text-[0.65rem]">
+          {badge}
+        </Badge>
+      </div>
+
+      <div className="mt-4 grid gap-2.5">
+        <TraitRow ok={luaOk} label={lua} />
+        <TraitRow ok={gameOk} label={game} />
+        <p className="pl-[1.875rem] text-xs leading-snug text-fg-subtle">{phones}</p>
+      </div>
+
+      <div className="mt-4 flex min-h-[3.25rem] items-center rounded-xl bg-ink-950/50 px-3 py-2.5 text-sm leading-snug text-fg-subtle ring-1 ring-white/5">
+        {how}
+      </div>
+
+      <div className="mt-auto flex flex-col gap-2.5 pt-5">{actions}</div>
     </div>
   )
 }
@@ -205,110 +293,190 @@ function MobileInstall() {
   const downloadLua = useLuaDownload()
 
   return (
-    <InstallCard
-      icon={<Smartphone aria-hidden className="size-5" />}
-      title={t('mobile.title')}
-      body={t('mobile.body')}
-    >
-      <Steps
-        items={[
-          t('mobile.steps.monet'),
-          t('mobile.steps.download'),
-          t('mobile.steps.moveFile'),
-          t('mobile.steps.restart'),
-        ]}
-      />
-      <Button className="mt-6" fullWidth onClick={downloadLua}>
-        <Download aria-hidden className="size-4" />
-        {t('mobile.action')}
-      </Button>
-    </InstallCard>
+    <div className="space-y-6">
+      <Card className="p-5 sm:p-6">
+        <div className="flex items-center gap-3">
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent-500/10 text-accent-300">
+            <Smartphone aria-hidden className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <h2 className="text-lg font-semibold tracking-tight sm:text-xl">
+              {t('mobile.auto.title')}
+            </h2>
+            <p className="mt-0.5 text-sm text-fg-muted">{t('mobile.auto.subtitle')}</p>
+          </div>
+        </div>
+
+        <div className="mt-5 grid items-stretch gap-3 lg:grid-cols-2 lg:gap-4">
+          <ArchPanel
+            title={t('mobile.auto.x32.title')}
+            badge={t('mobile.auto.x32.badge')}
+            luaOk
+            gameOk={false}
+            lua={t('mobile.auto.x32.lua')}
+            game={t('mobile.auto.x32.game')}
+            phones={t('mobile.auto.x32.phones')}
+            how={t('mobile.auto.x32.how')}
+            actions={
+              <>
+                <a
+                  href={MONETLOADER_X32_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={buttonStyles({ fullWidth: true })}
+                >
+                  <Download aria-hidden className="size-4" />
+                  {t('mobile.auto.x32.action')}
+                  <ExternalLink aria-hidden className="size-3.5 opacity-70" />
+                </a>
+                <GuideLink href={MOBILE_X32_GUIDE_URL}>{t('mobile.auto.x32.guide')}</GuideLink>
+              </>
+            }
+          />
+
+          <ArchPanel
+            title={t('mobile.auto.x64.title')}
+            badge={t('mobile.auto.x64.badge')}
+            luaOk={false}
+            gameOk
+            lua={t('mobile.auto.x64.lua')}
+            game={t('mobile.auto.x64.game')}
+            phones={t('mobile.auto.x64.phones')}
+            how={t('mobile.auto.x64.how')}
+            actions={
+              <>
+                <a
+                  href={MONETLOADER_X64_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={buttonStyles({ fullWidth: true })}
+                >
+                  <Download aria-hidden className="size-4" />
+                  {t('mobile.auto.x64.action')}
+                  <ExternalLink aria-hidden className="size-3.5 opacity-70" />
+                </a>
+                <GuideLink href={MOBILE_X64_GUIDE_URL}>{t('mobile.auto.x64.guide')}</GuideLink>
+              </>
+            }
+          />
+        </div>
+      </Card>
+
+      <InstallCard
+        icon={<FileCode2 aria-hidden className="size-5" />}
+        title={t('mobile.manual.title')}
+        body={t('mobile.manual.body')}
+        actions={
+          <div className="flex flex-col gap-2.5 sm:flex-row">
+            <Button className="sm:flex-1" onClick={downloadLua}>
+              <Download aria-hidden className="size-4" />
+              {t('mobile.manual.action')}
+            </Button>
+            <a
+              href={MOBILE_MANUAL_GUIDE_URL}
+              target="_blank"
+              rel="noreferrer"
+              className={cn(buttonStyles({ variant: 'secondary' }), 'sm:flex-1')}
+            >
+              <PlayCircle aria-hidden className="size-4" />
+              {t('mobile.manual.guide')}
+              <ExternalLink aria-hidden className="size-3.5 opacity-60" />
+            </a>
+          </div>
+        }
+      >
+        <Steps
+          items={[
+            t('mobile.manual.steps.launcher'),
+            t('mobile.manual.steps.download'),
+            t('mobile.manual.steps.moveFile'),
+            t('mobile.manual.steps.restart'),
+          ]}
+        />
+      </InstallCard>
+    </div>
   )
 }
 
-function VideoGuide() {
-  const { t } = useTranslation('download')
+/** Shrinks a single line to the parent width. */
+function FitLine({
+  className,
+  maxRem,
+  children,
+}: {
+  className?: string
+  maxRem: number
+  children: ReactNode
+}) {
+  const ref = useRef<HTMLParagraphElement>(null)
+
+  useLayoutEffect(() => {
+    const el = ref.current
+    const parent = el?.parentElement
+    if (!el || !parent) return
+
+    const fit = () => {
+      el.style.fontSize = `${maxRem}rem`
+      const available = parent.clientWidth
+      const needed = el.scrollWidth
+      if (needed > available && needed > 0) {
+        el.style.fontSize = `${((maxRem * available) / needed) * 0.98}rem`
+      }
+    }
+
+    fit()
+    void document.fonts?.ready.then(fit)
+    const observer = new ResizeObserver(fit)
+    observer.observe(parent)
+    return () => observer.disconnect()
+  }, [children, maxRem])
 
   return (
-    <section className="mt-12">
-      <h2 className="text-lg font-semibold tracking-tight">{t('guide.title')}</h2>
-      <p className="mt-1 text-sm text-fg-muted">{t('guide.body')}</p>
-
-      <div className="mt-5 overflow-hidden rounded-card border border-white/5 bg-ink-850">
-        {HELPER_VIDEO_ID ? (
-          <div className="aspect-video">
-            <iframe
-              src={`https://www.youtube-nocookie.com/embed/${HELPER_VIDEO_ID}`}
-              title={t('guide.title')}
-              allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture"
-              allowFullScreen
-              loading="lazy"
-              className="size-full border-0"
-            />
-          </div>
-        ) : (
-          <div className="flex aspect-video flex-col items-center justify-center gap-3 text-fg-subtle">
-            <PlayCircle aria-hidden className="size-10" />
-            <p className="text-sm">{t('guide.soon')}</p>
-          </div>
-        )}
-      </div>
-    </section>
-  )
-}
-
-function Changelog() {
-  const { t } = useTranslation('download')
-  const { data } = useRelease()
-  const notes = data?.free.notes
-  if (!notes) return null
-
-  return (
-    <section className="mt-12">
-      <h2 className="text-lg font-semibold tracking-tight">{t('changelog.title')}</h2>
-      <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-fg-muted">{notes}</p>
-    </section>
+    <p ref={ref} className={cn('block w-max max-w-full whitespace-nowrap', className)}>
+      {children}
+    </p>
   )
 }
 
 export function DownloadPage() {
   const { t } = useTranslation('download')
+  const { data } = useRelease()
   const [device, setDevice] = useState<DeviceKind>('pc')
+  const version = data?.free.rawVersion
 
-  // Detection runs after mount so the markup stays deterministic and the
-  // manual override is never overwritten on a later render.
   useEffect(() => {
     setDevice(detectDevice())
   }, [])
 
   return (
-    <div className="shell py-16">
-      <div className="flex flex-wrap items-center gap-4">
-        <h1 className="text-4xl font-semibold tracking-tight">{t('title')}</h1>
-        <VersionBadge />
-      </div>
-      <p className="mt-3 text-fg-muted">{t('subtitle')}</p>
+    <div className="shell py-10 sm:py-14">
+      <header className="w-full min-w-0 overflow-x-clip">
+        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+          {version ? t('titleVersion', { version }) : t('title')}
+        </h1>
+        <div className="mt-3 w-full min-w-0">
+          <FitLine maxRem={0.875} className="leading-snug text-fg-subtle">
+            <Trans
+              i18nKey="legalNotice"
+              ns="download"
+              components={{
+                terms: (
+                  <Link
+                    to="/terms"
+                    className="text-accent-300 underline decoration-accent-500/40 underline-offset-2 transition-colors hover:text-accent-200"
+                  />
+                ),
+              }}
+            />
+          </FitLine>
+        </div>
+      </header>
 
-      <p className="mt-4 max-w-2xl text-sm leading-relaxed text-fg-subtle">
-        <Trans
-          i18nKey="legalNotice"
-          ns="download"
-          components={{
-            terms: (
-              <Link to="/terms" className="text-accent-300 underline decoration-accent-500/40 underline-offset-2 transition-colors hover:text-accent-200" />
-            ),
-          }}
-        />
-      </p>
-
-      <div className="mt-8">
+      <div className="mt-8 sm:mt-10">
         <DeviceToggle device={device} onChange={setDevice} />
       </div>
 
-      <div className="mt-8">{device === 'pc' ? <PcInstall /> : <MobileInstall />}</div>
-
-      <Changelog />
-      <VideoGuide />
+      <div className="mt-6 sm:mt-8">{device === 'pc' ? <PcInstall /> : <MobileInstall />}</div>
     </div>
   )
 }
