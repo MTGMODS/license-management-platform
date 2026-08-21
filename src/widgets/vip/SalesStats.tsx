@@ -1,5 +1,3 @@
-import { CircleDollarSign, Crown, ShoppingCart, TrendingUp } from 'lucide-react'
-import type { ComponentType } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Bar,
@@ -15,7 +13,6 @@ import {
 } from 'recharts'
 
 import { useSalesStats } from '@/features/license/useSalesStats'
-import { usePublicStats } from '@/features/usage/usePublicStats'
 import type { LicenseDurationStat, LicensePaymentStat } from '@/shared/api/license'
 import { cn } from '@/shared/lib/cn'
 import { useFormatters } from '@/shared/lib/format'
@@ -40,26 +37,6 @@ function paymentColor(method: string, index: number): string {
 
 function money(format: ReturnType<typeof useFormatters>, value: number): string {
   return `$${format.number(value)}`
-}
-
-function KpiCard({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string
-  value: string
-  icon: ComponentType<{ className?: string }>
-}) {
-  return (
-    <Card className="p-5">
-      <span className="grid size-10 place-items-center rounded-xl bg-accent-500/10 text-accent-300">
-        <Icon aria-hidden className="size-5" />
-      </span>
-      <p className="mt-4 text-sm text-fg-subtle">{label}</p>
-      <p className="tabular mt-1 text-3xl font-semibold tracking-tight">{value}</p>
-    </Card>
-  )
 }
 
 function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
@@ -253,19 +230,14 @@ export function SalesStats() {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const { data, isPending, isError, refetch, isFetching } = useSalesStats()
-  const { data: usage } = usePublicStats()
 
   if (isPending) {
     return (
       <section>
-        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">{t('stats.title')}</h2>
-        <p className="mt-2 text-fg-muted">{t('stats.subtitle')}</p>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 4 }, (_, index) => (
-            <Skeleton key={index} className="h-32" label={index === 0 ? t('stats.loading') : undefined} />
-          ))}
-        </div>
-        <Skeleton className="mt-4 h-80" />
+        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">{t('stats.detailsTitle')}</h2>
+        <p className="mt-2 text-fg-muted">{t('stats.detailsSubtitle')}</p>
+        <Skeleton className="mt-8 h-80" label={t('stats.loading')} />
+        <Skeleton className="mt-4 h-64" />
       </section>
     )
   }
@@ -273,7 +245,7 @@ export function SalesStats() {
   if (isError || !data) {
     return (
       <section>
-        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">{t('stats.title')}</h2>
+        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">{t('stats.detailsTitle')}</h2>
         <Card className="mt-6 p-5">
           <ErrorState
             compact
@@ -287,31 +259,14 @@ export function SalesStats() {
   }
 
   const { new_subs: subs, old_forever: legacy } = data
-  const conversion = usage?.overview.metrics.vip_conversion
   const hasSide = legacy.total_sold > 0 || subs.free_issued > 0
 
   return (
     <section>
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">{t('stats.title')}</h2>
-          <p className="mt-2 text-fg-muted">{t('stats.subtitle')}</p>
-        </div>
-        <p className="text-sm text-fg-subtle">{t('stats.updated', { time: format.dateTime(data.updated_at) })}</p>
-      </div>
+      <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">{t('stats.detailsTitle')}</h2>
+      <p className="mt-2 text-fg-muted">{t('stats.detailsSubtitle')}</p>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard icon={ShoppingCart} label={t('stats.sales')} value={format.number(subs.total_vips)} />
-        <KpiCard icon={CircleDollarSign} label={t('stats.revenue')} value={money(format, subs.total_money)} />
-        <KpiCard icon={Crown} label={t('stats.active')} value={format.number(subs.active_total)} />
-        <KpiCard
-          icon={TrendingUp}
-          label={t('stats.conversion')}
-          value={conversion == null ? '—' : format.percent(conversion)}
-        />
-      </div>
-
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <div className="mt-8 grid gap-4 lg:grid-cols-2">
         <DurationsChart durations={subs.top_durations} />
         <PaymentsChart payments={subs.top_payments} />
       </div>

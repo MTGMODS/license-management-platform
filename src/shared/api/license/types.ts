@@ -100,11 +100,13 @@ export interface TariffLimits {
 
 export interface TariffPlan extends TariffLimits {
   duration_days: number
+  /** Catalog price in `TariffsCatalog.currency`. */
   price: number
+  telegram_stars_price?: number
 }
 
 export interface TariffsCatalog {
   currency: string
-  fallback: TariffLimits
+  fallback?: TariffLimits
   plans: TariffPlan[]
 }

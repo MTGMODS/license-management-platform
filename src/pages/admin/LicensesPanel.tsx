@@ -9,9 +9,9 @@ import {
   useDeleteAdminLicense,
   useGenerateLicense,
   useGenerateLicensesBulk,
-  useTariffs,
   useUpdateAdminLicense,
 } from '@/features/admin/useAdmin'
+import { useTariffs } from '@/features/license/useTariffs'
 import { apiErrorTranslationKey } from '@/shared/api'
 import type { AdminLicense } from '@/shared/api/admin'
 import {

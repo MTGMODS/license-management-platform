@@ -1,27 +1,8 @@
 /**
- * Business values the backend does not serve yet.
- *
- * Pricing lives here until the License Service exposes a catalog. The helper
- * video id comes from Vite env so the YouTube link can change without a code
- * edit; screenshots are bundled from `src/assets/screenshots`.
+ * Values the backend does not serve. The helper video id comes from Vite env
+ * so the YouTube link can change without a code edit; screenshots are bundled
+ * from `src/assets/screenshots`. VIP prices come from `GET /license/tariffs`.
  */
-
-export interface PricingTier {
-  /** Matches `duration_days` on a generated licence. */
-  days: number
-  priceUsd: number
-  /** Highlighted in the pricing grid as the recommended option. */
-  featured?: boolean
-}
-
-export const PRICING_CURRENCY = 'USD'
-
-export const PRICING_TIERS: PricingTier[] = [
-  { days: 7, priceUsd: 1 },
-  { days: 30, priceUsd: 3 },
-  { days: 90, priceUsd: 6, featured: true },
-  { days: 365, priceUsd: 15 },
-]
 
 /**
  * Version manifest published alongside the helper. Served from raw
