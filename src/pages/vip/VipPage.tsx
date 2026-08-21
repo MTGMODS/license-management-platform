@@ -5,6 +5,7 @@ import { Link } from 'react-router'
 import { toast } from 'sonner'
 
 import { useSalesStats } from '@/features/license/useSalesStats'
+import { useTariffs } from '@/features/license/useTariffs'
 import { cn } from '@/shared/lib/cn'
 import { Button, Card, DeferredMount, Skeleton } from '@/shared/ui'
 import { PaymentSection } from '@/widgets/vip/PaymentSection'
@@ -118,19 +119,27 @@ function VipBenefits() {
 }
 
 export function VipPage() {
-  const { t } = useTranslation('vip')
-  const { isError } = useSalesStats()
+  const { t } = useTranslation(['vip', 'common'])
+  const { isError: statsError } = useSalesStats()
+  const {
+    data: tariffs,
+    isPending: tariffsPending,
+    isError: tariffsError,
+    refetch: refetchTariffs,
+    isFetching: tariffsFetching,
+  } = useTariffs()
   const toasted = useRef(false)
+  const tariffsReady = !tariffsPending && !tariffsError && Boolean(tariffs?.plans.length)
 
   useEffect(() => {
-    if (!isError) {
+    if (!statsError) {
       toasted.current = false
       return
     }
     if (toasted.current) return
     toasted.current = true
     toast(t('stats.error'), { icon: null })
-  }, [isError, t])
+  }, [statsError, t])
 
   return (
     <div className="shell space-y-8 py-8 sm:space-y-10 sm:py-10">
@@ -146,25 +155,45 @@ export function VipPage() {
         </FitLine>
       </header>
 
-      <PricingGrid />
-      <VipBenefits />
+      {tariffsError || (!tariffsPending && !tariffsReady) ? (
+        <Card className="px-6 py-10 text-center sm:px-10">
+          <p className="text-lg font-semibold tracking-tight">{t('pricing.error')}</p>
+          <p className="mx-auto mt-2 max-w-md text-sm text-fg-muted">{t('pricing.errorHint')}</p>
+          <Button
+            className="mt-6"
+            variant="secondary"
+            loading={tariffsFetching}
+            onClick={() => void refetchTariffs()}
+          >
+            {t('common:actions.retry')}
+          </Button>
+        </Card>
+      ) : (
+        <>
+          <PricingGrid />
+          {tariffsReady ? (
+            <>
+              <VipBenefits />
+              <div className="flex justify-center">
+                <Button size="lg" onClick={scrollToPayment}>
+                  <CreditCard aria-hidden className="size-4" />
+                  {t('hero.pay')}
+                </Button>
+              </div>
+            </>
+          ) : null}
+        </>
+      )}
 
-      <div className="flex justify-center">
-        <Button size="lg" onClick={scrollToPayment}>
-          <CreditCard aria-hidden className="size-4" />
-          {t('hero.pay')}
-        </Button>
-      </div>
-
-      {isError ? null : (
+      {statsError ? null : (
         <div className="border-t border-white/5 pt-8">
           <SalesOverview />
         </div>
       )}
 
-      <PaymentSection />
+      {tariffsReady ? <PaymentSection /> : null}
 
-      {isError ? null : (
+      {statsError ? null : (
         <DeferredMount fallback={<Skeleton className="h-96" />}>
           <Suspense fallback={<Skeleton className="h-96" />}>
             <SalesStats />

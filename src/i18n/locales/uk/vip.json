@@ -32,7 +32,8 @@
     "resetShort_many": "{{count}} скидань",
     "resetShort_other": "{{count}} скидань",
     "devicesWithReset": "{{devices}} (+{{reset}})",
-    "error": "Тарифи зараз недоступні",
+    "error": "Тарифи тимчасово недоступні",
+    "errorHint": "Спробуйте ще раз за хвилину.",
     "loading": "Завантаження тарифів"
   },
   "payment": {

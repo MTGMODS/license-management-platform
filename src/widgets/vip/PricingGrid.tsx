@@ -1,9 +1,10 @@
 import { Smartphone } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import { useLocalUsdPrice } from '@/features/geo/useLocalUsdPrice'
 import { useTariffs } from '@/features/license/useTariffs'
 import { useFormatters } from '@/shared/lib/format'
-import { Badge, Card, ErrorState, Skeleton } from '@/shared/ui'
+import { Badge, Card, Skeleton } from '@/shared/ui'
 
 const BEST_VALUE_DAYS = 365
 
@@ -21,7 +22,8 @@ function catalogPrice(price: number, format: ReturnType<typeof useFormatters>): 
 export function PricingGrid() {
   const { t } = useTranslation('vip')
   const format = useFormatters()
-  const { data, isPending, isError, refetch, isFetching } = useTariffs()
+  const { data, isPending, isError } = useTariffs()
+  const { formatApprox } = useLocalUsdPrice()
 
   if (isPending) {
     return (
@@ -38,16 +40,7 @@ export function PricingGrid() {
   }
 
   if (isError || !data || data.plans.length === 0) {
-    return (
-      <Card className="w-full p-5">
-        <ErrorState
-          compact
-          description={t('pricing.error')}
-          retrying={isFetching}
-          onRetry={() => void refetch()}
-        />
-      </Card>
-    )
+    return null
   }
 
   return (
@@ -62,6 +55,7 @@ export function PricingGrid() {
                 reset: t('pricing.resetShort', { count: plan.reset_limit }),
               })
             : devices
+        const localApprox = formatApprox(plan.price)
 
         return (
           <Card
@@ -83,9 +77,21 @@ export function PricingGrid() {
               ) : null}
             </div>
 
-            <p className="tabular mt-1.5 text-2xl font-semibold tracking-tight sm:text-3xl">
-              ${catalogPrice(plan.price, format)}
-            </p>
+            <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <p className="tabular text-2xl font-semibold tracking-tight sm:text-3xl">
+                ${catalogPrice(plan.price, format)}
+              </p>
+              {localApprox ? (
+                <>
+                  <span className="text-2xl font-semibold text-fg-subtle sm:text-3xl" aria-hidden>
+                    ≈
+                  </span>
+                  <p className="tabular text-2xl font-semibold tracking-tight sm:text-3xl">
+                    {localApprox}
+                  </p>
+                </>
+              ) : null}
+            </div>
             <p className="tabular mt-0.5 text-xs text-fg-subtle">
               {t('pricing.perDay', { price: format.money(plan.price / plan.duration_days) })}
             </p>

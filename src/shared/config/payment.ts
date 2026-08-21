@@ -80,13 +80,6 @@ export const BANK_TRANSFER = {
   recipient: 'Marher Bohdan',
 } as const
 
-/** Used when `GET /license/tariffs` omits `telegram_stars_price`. */
-export const STARS_FALLBACK: Readonly<Record<number, number>> = {
-  30: 250,
-  90: 500,
-  365: 1150,
-}
-
 /** Static Fragment walkthrough numbers from the bot copy. */
 export const TON_EXAMPLE = {
   days: 30,

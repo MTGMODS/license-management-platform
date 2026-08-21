@@ -464,7 +464,6 @@ function VipColumn() {
             {t('common:actions.retry')}
           </Button>
         </Card>
-        <ActivateForm />
         <LicenseHistory />
       </div>
     )

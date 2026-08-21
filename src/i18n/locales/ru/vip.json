@@ -32,7 +32,8 @@
     "resetShort_many": "{{count}} сбросов",
     "resetShort_other": "{{count}} сбросов",
     "devicesWithReset": "{{devices}} (+{{reset}})",
-    "error": "Тарифы сейчас недоступны",
+    "error": "Тарифы временно недоступны",
+    "errorHint": "Попробуйте ещё раз через минуту.",
     "loading": "Загрузка тарифов"
   },
   "payment": {

@@ -27,7 +27,6 @@ import {
   FUNPAY_OFFERS,
   PAYPAL_EMAIL,
   STAR_WITHDRAW_RATE_USD,
-  STARS_FALLBACK,
   TON_EXAMPLE,
   VIP_BOT_START,
   VIP_BOT_URL,
@@ -130,20 +129,14 @@ function StarsPrices() {
   const { t } = useTranslation('vip')
   const { data } = useTariffs()
 
-  const plans = (data?.plans ?? [])
+  const rows = (data?.plans ?? [])
     .map((plan) => ({
       days: plan.duration_days,
-      stars: plan.telegram_stars_price ?? STARS_FALLBACK[plan.duration_days],
+      stars: plan.telegram_stars_price,
     }))
     .filter((plan): plan is { days: number; stars: number } => typeof plan.stars === 'number')
 
-  const rows =
-    plans.length > 0
-      ? plans
-      : Object.entries(STARS_FALLBACK).map(([days, stars]) => ({
-          days: Number(days),
-          stars,
-        }))
+  if (rows.length === 0) return null
 
   return (
     <div className="grid gap-2 sm:grid-cols-3">
