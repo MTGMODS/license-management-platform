@@ -146,6 +146,7 @@ function normalizeDailyPoint(raw: Record<string, unknown>): DailyPoint {
   return {
     date: typeof raw.date === 'string' ? raw.date : '',
     users: asNumber(raw.users),
+    vip_users: asNumber(raw.vip_users),
     launches: asNumber(raw.launches),
     launches_per_user: asNumber(raw.launches_per_user),
   }
@@ -156,6 +157,7 @@ function normalizeHourlyTimelinePoint(raw: Record<string, unknown>): HourlyTimel
     date: typeof raw.date === 'string' ? raw.date : '',
     hour: asNumber(raw.hour),
     users: asNumber(raw.users),
+    vip_users: asNumber(raw.vip_users),
     launches: asNumber(raw.launches),
     launches_per_user: asNumber(raw.launches_per_user),
   }

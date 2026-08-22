@@ -10,6 +10,7 @@ import {
   useGenerateLicense,
   useGenerateLicensesBulk,
   useUpdateAdminLicense,
+  type AdminLicenseLookup,
 } from '@/features/admin/useAdmin'
 import { useTariffs } from '@/features/license/useTariffs'
 import { apiErrorTranslationKey } from '@/shared/api'
@@ -58,10 +59,11 @@ export function LicensesPanel({
 }) {
   const { t } = useTranslation('admin')
   const { t: te } = useTranslation('errors')
-  const [mode, setMode] = useState<'key' | 'user'>('key')
+  const [mode, setMode] = useState<'key' | 'user' | 'id'>('key')
   const [keyDraft, setKeyDraft] = useState('')
   const [userDraft, setUserDraft] = useState('')
-  const [query, setQuery] = useState<{ user_id?: number; key?: string } | null>(null)
+  const [idDraft, setIdDraft] = useState('')
+  const [query, setQuery] = useState<AdminLicenseLookup | null>(null)
   const licenses = useAdminLicenseSearch(query)
 
   useEffect(() => {
@@ -77,6 +79,12 @@ export function LicensesPanel({
     if (mode === 'key') {
       if (!LICENSE_KEY_PATTERN.test(keyDraft)) return
       setQuery({ key: keyDraft })
+      return
+    }
+    if (mode === 'id') {
+      const licenseId = Number(idDraft)
+      if (!Number.isInteger(licenseId) || licenseId <= 0) return
+      setQuery({ license_id: licenseId })
       return
     }
     const userId = Number(userDraft)
@@ -96,6 +104,7 @@ export function LicensesPanel({
           onChange={setMode}
           options={[
             { id: 'key', label: t('licenses.byKey') },
+            { id: 'id', label: t('licenses.byId') },
             { id: 'user', label: t('licenses.byUser') },
           ]}
         />
@@ -109,6 +118,14 @@ export function LicensesPanel({
               spellCheck={false}
               className={`${inputClass} tabular min-w-0 w-full flex-1 tracking-wider`}
             />
+          ) : mode === 'id' ? (
+            <input
+              value={idDraft}
+              onChange={(event) => setIdDraft(event.target.value.replace(/\D/g, ''))}
+              placeholder={t('licenses.placeholderId')}
+              inputMode="numeric"
+              className={`${inputClass} tabular min-w-0 w-full flex-1`}
+            />
           ) : (
             <input
               value={userDraft}
@@ -121,7 +138,13 @@ export function LicensesPanel({
           <Button
             type="submit"
             loading={licenses.isFetching}
-            disabled={mode === 'key' ? !LICENSE_KEY_PATTERN.test(keyDraft) : !userDraft}
+            disabled={
+              mode === 'key'
+                ? !LICENSE_KEY_PATTERN.test(keyDraft)
+                : mode === 'id'
+                  ? !idDraft
+                  : !userDraft
+            }
           >
             <Search aria-hidden className="size-4" />
             {t('licenses.action')}
@@ -144,7 +167,7 @@ export function LicensesPanel({
         <div className="space-y-4">
           {licenses.data.map((license) => (
             <LicenseCard
-              key={`${license.id}-${license.status}-${license.reset_limit}-${license.devices.length}`}
+              key={license.id}
               license={license}
               onOpenUser={onOpenUser}
             />
@@ -353,16 +376,45 @@ function LicenseCard({
   const [status, setStatus] = useState(license.status)
   const [maxDevices, setMaxDevices] = useState(String(license.max_devices))
   const [resetLimit, setResetLimit] = useState(String(license.reset_limit))
+  const [userId, setUserId] = useState(license.user_id != null ? String(license.user_id) : '')
+  const [duration, setDuration] = useState(
+    license.duration_days != null ? String(license.duration_days) : '',
+  )
+  const [amount, setAmount] = useState(
+    license.transaction != null ? String(license.transaction.amount) : '',
+  )
   const [confirmDeviceId, setConfirmDeviceId] = useState<number | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
+  useEffect(() => {
+    setStatus(license.status)
+    setMaxDevices(String(license.max_devices))
+    setResetLimit(String(license.reset_limit))
+    setUserId(license.user_id != null ? String(license.user_id) : '')
+    setDuration(license.duration_days != null ? String(license.duration_days) : '')
+    setAmount(license.transaction != null ? String(license.transaction.amount) : '')
+  }, [license])
+
   const maxDevicesNum = Number(maxDevices)
   const resetLimitNum = Number(resetLimit)
+  const userIdNum = userId === '' ? null : Number(userId)
+  const durationNum = duration === '' ? null : Number(duration)
+  const amountNum = amount === '' ? NaN : Number(amount)
+  const currentAmount = license.transaction?.amount
   const dirty =
     status !== license.status ||
     maxDevicesNum !== license.max_devices ||
-    resetLimitNum !== license.reset_limit
-  const canSave = dirty && maxDevicesNum >= 1 && resetLimitNum >= 0
+    resetLimitNum !== license.reset_limit ||
+    userIdNum !== license.user_id ||
+    durationNum !== license.duration_days ||
+    (license.transaction != null && amountNum !== currentAmount)
+  const canSave =
+    dirty &&
+    maxDevicesNum >= 1 &&
+    resetLimitNum >= 0 &&
+    (userIdNum === null || (Number.isInteger(userIdNum) && userIdNum > 0)) &&
+    (durationNum === null || (Number.isInteger(durationNum) && durationNum > 0)) &&
+    (license.transaction == null || (Number.isFinite(amountNum) && amountNum >= 0))
 
   const onSave = async () => {
     try {
@@ -370,8 +422,13 @@ function LicenseCard({
         licenseId: license.id,
         payload: {
           status,
-          max_devices: Number(maxDevices),
-          reset_limit: Number(resetLimit),
+          max_devices: maxDevicesNum,
+          reset_limit: resetLimitNum,
+          user_id: userIdNum,
+          duration_days: durationNum,
+          ...(license.transaction != null && Number.isFinite(amountNum)
+            ? { amount: amountNum }
+            : {}),
         },
       })
       toast.success(t('licenses.saved'))
@@ -404,6 +461,7 @@ function LicenseCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="tabular font-mono text-sm tracking-wider">{license.key}</p>
+          <p className="mt-1 text-xs text-fg-subtle">#{license.id}</p>
           {license.user_id != null ? (
             <Button
               className="mt-2"
@@ -435,25 +493,9 @@ function LicenseCard({
 
       <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
         <div>
-          <dt className="text-fg-subtle">{t('licenses.duration')}</dt>
-          <dd className="mt-0.5">
-            {license.duration_days != null
-              ? t('common:units.days', { count: license.duration_days })
-              : t('licenses.forever')}
-          </dd>
-        </div>
-        <div>
           <dt className="text-fg-subtle">{t('licenses.activated')}</dt>
           <dd className="mt-0.5">
             {license.activated_at ? format.dateTimeWithUtc(license.activated_at) : '—'}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-fg-subtle">{t('licenses.payment')}</dt>
-          <dd className="mt-0.5">
-            {license.transaction
-              ? `$${format.money(license.transaction.amount)} · ${license.transaction.method}`
-              : '—'}
           </dd>
         </div>
         <div>
@@ -466,9 +508,19 @@ function LicenseCard({
           </dt>
           <dd className="mt-0.5">{license.expires_at ? format.dateTimeWithUtc(license.expires_at) : '—'}</dd>
         </div>
+        <div>
+          <dt className="text-fg-subtle">{t('licenses.payment')}</dt>
+          <dd className="mt-0.5">
+            {license.transaction
+              ? `$${format.money(license.transaction.amount)} · ${license.transaction.method}`
+              : '—'}
+          </dd>
+        </div>
       </dl>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+      <div className="mt-5">
+        <p className="text-sm font-medium">{t('licenses.edit')}</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <label className="text-sm">
           <span className="text-fg-subtle">{t('licenses.status')}</span>
           <select
@@ -482,6 +534,39 @@ function LicenseCard({
               </option>
             ))}
           </select>
+        </label>
+        <label className="text-sm">
+          <span className="text-fg-subtle">{t('licenses.userId')}</span>
+          <input
+            value={userId}
+            onChange={(event) => setUserId(event.target.value.replace(/\D/g, ''))}
+            placeholder={t('licenses.noOwner')}
+            inputMode="numeric"
+            className={`${inputClass} tabular mt-1.5 w-full`}
+          />
+        </label>
+        <label className="text-sm">
+          <span className="text-fg-subtle">{t('licenses.duration')}</span>
+          <input
+            value={duration}
+            onChange={(event) => setDuration(event.target.value.replace(/\D/g, ''))}
+            placeholder={t('licenses.forever')}
+            inputMode="numeric"
+            className={`${inputClass} tabular mt-1.5 w-full`}
+          />
+        </label>
+        <label className="text-sm">
+          <span className="text-fg-subtle">{t('licenses.amount')}</span>
+          <input
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
+            type="number"
+            min={0}
+            step="0.01"
+            disabled={license.transaction == null}
+            placeholder={license.transaction == null ? t('licenses.noTransaction') : undefined}
+            className={`${inputClass} tabular mt-1.5 w-full disabled:opacity-50`}
+          />
         </label>
         <label className="text-sm">
           <span className="text-fg-subtle">{t('licenses.maxDevices')}</span>
@@ -499,6 +584,7 @@ function LicenseCard({
             className={`${inputClass} tabular mt-1.5 w-full`}
           />
         </label>
+        </div>
       </div>
 
       <div className="mt-6 border-t border-white/5 pt-5">

@@ -1,7 +1,7 @@
 /**
  * Minimal surface of the Telegram Mini App SDK that this app relies on.
- * The script is loaded from `index.html`, so the global may legitimately be
- * absent when the site runs in a normal browser.
+ * The script is injected only inside Telegram (Mini App or in-app browser),
+ * so the global is absent for ordinary site visitors.
  */
 interface TelegramWebApp {
   initData: string
@@ -21,9 +21,58 @@ declare global {
 }
 
 const INIT_DATA_STORAGE_KEY = 'mtg_tg_init_data'
+const TELEGRAM_SDK_URL = 'https://telegram.org/js/telegram-web-app.js'
+const TELEGRAM_SDK_ATTR = 'data-mtg-telegram-sdk'
 
 export function getTelegramWebApp(): TelegramWebApp | null {
   return window.Telegram?.WebApp ?? null
+}
+
+function hasTelegramLaunchHint(): boolean {
+  if (typeof window === 'undefined') return false
+
+  const hash = window.location.hash.startsWith('#')
+    ? window.location.hash.slice(1)
+    : window.location.hash
+  if (hash.includes('tgWebAppData=') || window.location.search.includes('tgWebAppData=')) {
+    return true
+  }
+
+  try {
+    if (sessionStorage.getItem(INIT_DATA_STORAGE_KEY)) return true
+  } catch {
+    // private mode
+  }
+
+  return /Telegram/i.test(navigator.userAgent)
+}
+
+/**
+ * Loads Telegram's WebApp SDK only when this visit looks like a Mini App or
+ * Telegram in-app browser. Regular browsers never fetch telegram.org.
+ */
+export function loadTelegramWebAppScript(): Promise<void> {
+  if (!hasTelegramLaunchHint()) return Promise.resolve()
+  if (getTelegramWebApp()) return Promise.resolve()
+
+  const existing = document.querySelector<HTMLScriptElement>(`script[${TELEGRAM_SDK_ATTR}]`)
+  if (existing) {
+    if (getTelegramWebApp()) return Promise.resolve()
+    return new Promise((resolve) => {
+      existing.addEventListener('load', () => resolve(), { once: true })
+      existing.addEventListener('error', () => resolve(), { once: true })
+    })
+  }
+
+  return new Promise((resolve) => {
+    const script = document.createElement('script')
+    script.src = TELEGRAM_SDK_URL
+    script.async = true
+    script.setAttribute(TELEGRAM_SDK_ATTR, '1')
+    script.addEventListener('load', () => resolve(), { once: true })
+    script.addEventListener('error', () => resolve(), { once: true })
+    document.head.append(script)
+  })
 }
 
 /**
@@ -56,8 +105,7 @@ function persistInitData(value: string): string {
 
 /**
  * True only when Telegram actually handed us signed launch data. The SDK
- * script is present on every page, so checking for the global alone would
- * misreport a plain browser as a Mini App.
+ * may be absent in a normal browser, so the global alone is not enough.
  */
 export function isTelegramMiniApp(): boolean {
   return getTelegramInitData() !== null
@@ -115,8 +163,7 @@ export function captureTelegramInitData(): void {
 
 /**
  * Tells Telegram the UI is ready and matches the chrome to the dark theme.
- * No-ops outside a Mini App: the SDK script is present on every page, and
- * calling into it from a plain browser only emits unsupported-method warnings.
+ * No-ops outside a Mini App: the SDK is only loaded inside Telegram.
  */
 export function initTelegramChrome(): void {
   captureTelegramInitData()

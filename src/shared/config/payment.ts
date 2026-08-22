@@ -5,6 +5,7 @@
 
 export const VIP_BOT_URL = 'https://t.me/mtgmods_vip_bot'
 export const CONTACT_URL = 'https://t.me/mtg_mods'
+export const CONTACT_DISCORD_URL = 'https://discord.com/users/514135796685602827'
 export const FRAGMENT_STARS_URL = 'https://fragment.com/stars/buy'
 export const PAYPAL_EMAIL = 'bogdan.mtg@gmail.com'
 
@@ -78,24 +79,6 @@ export const CRYPTO_NETWORKS = [
     brand: 'tether' as const,
   },
 ] as const
-
-/** Monobank Visa + SWIFT — shown only when IP country is not RU/BY. */
-export const BANK_TRANSFER = {
-  cardNumber: '4441 1110 5391 5983',
-  cardBrand: 'Visa · Monobank',
-  iban: 'UA313220010000026205317880285',
-  swift: 'UNJSUAUKXXX',
-  recipient: 'Marher Bohdan',
-} as const
-
-/** Static Fragment walkthrough numbers from the bot copy. */
-export const TON_EXAMPLE = {
-  days: 30,
-  vipUsd: 3,
-  stars: 250,
-  fragmentUsd: 3.75,
-  feePercent: FRAGMENT_FEE_PERCENT,
-} as const
 
 /** What the buyer already has — first step of checkout. */
 export type WalletId = 'card' | 'crypto' | 'stars' | 'paypal'

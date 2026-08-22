@@ -61,6 +61,9 @@ export interface UpdateLicensePayload {
   status?: LicenseStatus
   reset_limit?: number
   max_devices?: number
+  user_id?: number | null
+  duration_days?: number | null
+  amount?: number
 }
 
 export type { User }

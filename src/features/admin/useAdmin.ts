@@ -7,6 +7,7 @@ import {
   findLicenses,
   generateLicense,
   generateLicensesBulk,
+  getAdminLicense,
   getAdminUser,
   searchUsers,
   updateAdminLicense,
@@ -44,13 +45,24 @@ export function useAdminUserSearch(query: AdminUserLookup | null) {
   })
 }
 
-export function useAdminLicenseSearch(query: { user_id?: number; key?: string } | null) {
-  const enabled = Boolean(query && (query.user_id != null || query.key))
+export type AdminLicenseLookup = { user_id: number } | { key: string } | { license_id: number }
 
+export function useAdminLicenseSearch(query: AdminLicenseLookup | null) {
   return useQuery({
     queryKey: [...ADMIN_LICENSES_KEY, query],
-    queryFn: ({ signal }) => findLicenses(query!, signal),
-    enabled,
+    queryFn: async ({ signal }) => {
+      if (!query) return []
+      if ('license_id' in query) {
+        try {
+          return [await getAdminLicense(query.license_id, signal)]
+        } catch (error) {
+          if (error instanceof ApiError && error.status === 404) return []
+          throw error
+        }
+      }
+      return findLicenses(query, signal)
+    },
+    enabled: query != null,
   })
 }
 

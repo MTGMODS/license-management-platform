@@ -13,7 +13,7 @@ import {
   type BrandId,
 } from '@/shared/config/brands'
 import {
-  BANK_TRANSFER,
+  CONTACT_DISCORD_URL,
   CONTACT_URL,
   CRYPTO_BOT_INVOICE_FEE_USD,
   CRYPTO_BOT_INVOICES,
@@ -25,7 +25,6 @@ import {
   FUNPAY_OFFERS,
   PAYPAL_EMAIL,
   STAR_WITHDRAW_RATE_USD,
-  TON_EXAMPLE,
   VIP_BOT_START,
   WALLETS,
   routesForWallet,
@@ -34,6 +33,7 @@ import {
 } from '@/shared/config/payment'
 import { cn } from '@/shared/lib/cn'
 import { Badge, Button, buttonStyles, Card } from '@/shared/ui'
+import { DiscordIcon, TelegramIcon } from '@/shared/ui/BrandIcons'
 
 function BrandMark({ brand, className }: { brand: BrandId; className?: string }) {
   return (
@@ -259,6 +259,19 @@ function StarsBody({ wallet }: { wallet: WalletId }) {
 
 function FragmentBody({ wallet }: { wallet: WalletId }) {
   const { t } = useTranslation('vip')
+  const { data } = useTariffs()
+  const plan = data?.plans.find((item) => item.duration_days === 30) ?? data?.plans[0]
+  const stars = plan?.telegram_stars_price
+  const example =
+    plan && typeof stars === 'number'
+      ? {
+          days: plan.duration_days,
+          vip: plan.price,
+          stars,
+          cost: Number((plan.price * (1 + FRAGMENT_FEE_PERCENT / 100)).toFixed(2)),
+          fee: FRAGMENT_FEE_PERCENT,
+        }
+      : null
 
   return (
     <div className="space-y-5">
@@ -298,20 +311,16 @@ function FragmentBody({ wallet }: { wallet: WalletId }) {
         ))}
       </ol>
 
-      <p className="rounded-xl bg-ink-900/50 px-3.5 py-2.5 text-sm text-fg-muted ring-1 ring-white/6">
-        <Trans
-          i18nKey="payment.routes.fragment.example"
-          ns="vip"
-          values={{
-            days: TON_EXAMPLE.days,
-            vip: TON_EXAMPLE.vipUsd,
-            stars: TON_EXAMPLE.stars,
-            cost: TON_EXAMPLE.fragmentUsd,
-            fee: FRAGMENT_FEE_PERCENT,
-          }}
-          components={{ b: <span className="font-semibold text-fg" /> }}
-        />
-      </p>
+      {example ? (
+        <p className="rounded-xl bg-ink-900/50 px-3.5 py-2.5 text-sm text-fg-muted ring-1 ring-white/6">
+          <Trans
+            i18nKey="payment.routes.fragment.example"
+            ns="vip"
+            values={example}
+            components={{ b: <span className="font-semibold text-fg" /> }}
+          />
+        </p>
+      ) : null}
 
       <div className="flex flex-wrap gap-2">
         {wallet === 'crypto' ? (
@@ -411,17 +420,27 @@ function BankBody() {
   return (
     <div className="space-y-5">
       <p className="text-sm leading-relaxed text-fg-muted">{t('payment.routes.bank.what')}</p>
+      <p className="text-sm leading-relaxed text-fg-muted">{t('payment.routes.bank.dm')}</p>
 
-      <div className="space-y-2">
-        <p className="text-sm font-medium text-fg">{t('payment.routes.bank.cardTitle')}</p>
-        <CopyRow label={BANK_TRANSFER.cardBrand} value={BANK_TRANSFER.cardNumber} />
-      </div>
-
-      <div className="space-y-2">
-        <p className="text-sm font-medium text-fg">{t('payment.routes.bank.swiftTitle')}</p>
-        <CopyRow label="IBAN" value={BANK_TRANSFER.iban} />
-        <CopyRow label="SWIFT / BIC" value={BANK_TRANSFER.swift} />
-        <CopyRow label={t('payment.routes.bank.recipient')} value={BANK_TRANSFER.recipient} />
+      <div className="flex flex-col gap-2.5 sm:flex-row">
+        <a
+          href={CONTACT_URL}
+          target="_blank"
+          rel="noreferrer"
+          className={buttonStyles({ fullWidth: true })}
+        >
+          <TelegramIcon className="size-4" />
+          {t('payment.routes.bank.telegram')}
+        </a>
+        <a
+          href={CONTACT_DISCORD_URL}
+          target="_blank"
+          rel="noreferrer"
+          className={buttonStyles({ variant: 'secondary', fullWidth: true })}
+        >
+          <DiscordIcon className="size-4" />
+          {t('payment.routes.bank.discord')}
+        </a>
       </div>
 
       <p className="rounded-xl bg-amber-500/10 px-3.5 py-2.5 text-sm text-amber-100/90 ring-1 ring-amber-400/20">
@@ -429,14 +448,6 @@ function BankBody() {
           i18nKey="payment.routes.bank.rubNote"
           ns="vip"
           components={{ funpay: <ExternalLink href={VIP_BOT_START.funpay} /> }}
-        />
-      </p>
-
-      <p className="text-sm text-fg-muted">
-        <Trans
-          i18nKey="payment.afterContact"
-          ns="vip"
-          components={{ contact: <ExternalLink href={CONTACT_URL} /> }}
         />
       </p>
     </div>

@@ -19,11 +19,7 @@ export const RELEASE_MANIFEST_URL =
 export const FREE_LUA_FALLBACK_URL =
   'https://github.com/MTGMODS/arizona-helper/raw/refs/heads/main/Arizona%20Helper.lua'
 
-/**
- * Placeholder path: no installer has been built yet. The download button
- * probes this URL first and reports that the installer is still being prepared
- * rather than navigating the user into a 404 page.
- */
+/** Same-origin path for the PC installer. Missing file is a 404 until uploaded. */
 export const PC_INSTALLER_URL = '/helper/download/installer.exe'
 
 /** MonetLoader launchers for mobile auto / manual install. */

@@ -107,6 +107,8 @@ export interface DailyPoint {
   /** UTC calendar day (`YYYY-MM-DD`). Days without activity are omitted. */
   date: ApiDate
   users: number
+  /** Unique HWIDs whose helper version string contains VIP. */
+  vip_users: number
   launches: number
   launches_per_user: number
 }
@@ -115,6 +117,8 @@ export interface HourlyTimelinePoint {
   date: ApiDate
   hour: number
   users: number
+  /** Unique HWIDs whose helper version string contains VIP. */
+  vip_users: number
   launches: number
   launches_per_user: number
 }
@@ -149,7 +153,7 @@ export interface UsagePublicStats {
     timeline: {
       /** All-time, regardless of the selected period. */
       daily: DailyPoint[]
-      /** Fixed 24-hour window. */
+      /** All-time hour buckets (`date` + `hour`). Hours without activity are omitted. */
       hourly: HourlyTimelinePoint[]
     }
     activity: {

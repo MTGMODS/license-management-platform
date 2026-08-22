@@ -89,6 +89,19 @@ export async function findLicenses(
   return unwrap(response)
 }
 
+export async function getAdminLicense(
+  licenseId: number,
+  signal?: AbortSignal,
+): Promise<AdminLicense> {
+  const response = await request<Envelope<AdminLicense>>({
+    service: 'license',
+    path: `/${licenseId}`,
+    auth: true,
+    signal,
+  })
+  return unwrap(response)
+}
+
 export async function updateAdminLicense(
   licenseId: number,
   payload: UpdateLicensePayload,

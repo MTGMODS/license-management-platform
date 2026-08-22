@@ -3,7 +3,7 @@ import { useEffect, useRef, type ReactNode } from 'react'
 import { onSessionExpired } from '@/shared/api'
 
 import { handleSessionExpired, useAuthStore } from './authStore'
-import { initTelegramChrome } from './telegram'
+import { initTelegramChrome, loadTelegramWebAppScript } from './telegram'
 
 /**
  * Resolves the stored session once at startup. Telegram Mini App chrome is
@@ -19,7 +19,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (started.current) return
     started.current = true
 
-    initTelegramChrome()
+    void loadTelegramWebAppScript().then(() => {
+      initTelegramChrome()
+    })
     void useAuthStore.getState().bootstrap()
   }, [])
 

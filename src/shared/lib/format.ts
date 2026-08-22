@@ -27,6 +27,12 @@ export function useFormatters() {
       maximumFractionDigits: 2,
     })
     const dayMonth = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' })
+    const dayHour = new Intl.DateTimeFormat(locale, {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
     const fullDate = new Intl.DateTimeFormat(locale, {
       day: 'numeric',
       month: 'long',
@@ -60,6 +66,8 @@ export function useFormatters() {
       money: (value: number) => money.format(value),
       /** Usage daily buckets: `YYYY-MM-DD` interpreted as a UTC calendar day. */
       dayMonth: (isoDate: string) => dayMonth.format(parseApiCalendarDate(isoDate)),
+      /** Hourly all-time ticks: day + hour, so a multi-year series stays readable. */
+      dayHour: (iso: string) => dayHour.format(parseApiDateTime(iso)),
       fullDate: (isoDate: string) => fullDate.format(parseApiCalendarDate(isoDate)),
       /** API datetimes: `YYYY-MM-DDTHH:mm:ssZ`, shown in the visitor's locale. */
       dateTime: (iso: string) => dateTime.format(parseApiDateTime(iso)),

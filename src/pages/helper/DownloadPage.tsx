@@ -14,7 +14,6 @@ import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 
-import { isInstallerAvailable } from '@/features/download/installer'
 import { useRelease } from '@/features/release/useRelease'
 import {
   FREE_LUA_FALLBACK_URL,
@@ -156,25 +155,10 @@ function useLuaDownload() {
 function PcInstall() {
   const { t } = useTranslation('download')
   const downloadLua = useLuaDownload()
-  const [checkingInstaller, setCheckingInstaller] = useState(false)
 
-  const handleInstaller = async () => {
-    setCheckingInstaller(true)
-    try {
-      const available = await isInstallerAvailable(PC_INSTALLER_URL)
-
-      if (!available) {
-        toast.error(t('toast.installerMissing'), {
-          description: t('toast.installerMissingHint'),
-        })
-        return
-      }
-
-      triggerFileDownload(PC_INSTALLER_URL)
-      toast.success(t('toast.started'))
-    } finally {
-      setCheckingInstaller(false)
-    }
+  const handleInstaller = () => {
+    triggerFileDownload(PC_INSTALLER_URL)
+    toast.success(t('toast.started'))
   }
 
   return (
@@ -185,7 +169,7 @@ function PcInstall() {
         body={t('pc.auto.body')}
         badge={t('pc.auto.badge')}
         actions={
-          <Button fullWidth loading={checkingInstaller} onClick={() => void handleInstaller()}>
+          <Button fullWidth onClick={handleInstaller}>
             <Download aria-hidden className="size-4" />
             {t('pc.auto.action')}
           </Button>
