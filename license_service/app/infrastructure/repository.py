@@ -68,10 +68,15 @@ class LicenseRepository:
         )
         return result.scalars().first()
 
-    async def get_active_by_user(self, user_id: int) -> LicenseModel | None:
-        result = await self.db.execute(
-            select(LicenseModel).options(selectinload(LicenseModel.devices), selectinload(LicenseModel.transaction)).filter(LicenseModel.user_id == user_id, LicenseModel.status == LicenseStatus.ACTIVE)
+    async def get_active_by_user(self, user_id: int, exclude_id: int | None = None) -> LicenseModel | None:
+        stmt = (
+            select(LicenseModel)
+            .options(selectinload(LicenseModel.devices), selectinload(LicenseModel.transaction))
+            .filter(LicenseModel.user_id == user_id, LicenseModel.status == LicenseStatus.ACTIVE)
         )
+        if exclude_id is not None:
+            stmt = stmt.filter(LicenseModel.id != exclude_id)
+        result = await self.db.execute(stmt)
         return result.scalars().first()
 
     async def get_history_by_user(self, user_id: int) -> list[LicenseModel]:
