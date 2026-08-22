@@ -29,3 +29,6 @@ class UpdateLicenseDTO(BaseModel):
     status: Optional[LicenseStatus] = None
     reset_limit: Optional[int] = Field(None, ge=0)
     max_devices: Optional[int] = Field(None, ge=1)
+    user_id: Optional[int] = Field(None, ge=1)
+    duration_days: Optional[int] = Field(None, gt=0)
+    amount: Optional[float] = Field(None, ge=0.0)
