@@ -43,7 +43,7 @@ async def admin_get_license(license_id: int, admin_id: int = Depends(get_admin_u
     result = await service.admin_get_license(license_id)
     return {"status": "success", "data": result}
 
-@router.patch("/{license_id}", description="Update license status, reset limits, or max devices")
+@router.patch("/{license_id}", description="Update license status, owner, duration, amount, reset limits, or max devices")
 async def admin_update_license(license_id: int, payload: UpdateLicenseDTO, admin_id: int = Depends(get_admin_user_id), db: AsyncSession = Depends(get_db)):
     service = LicenseService(db)
     result = await service.admin_update_license(license_id, payload)
