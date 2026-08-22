@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import BackgroundTasks
 
 from app.shared.database import AsyncSessionLocal
-from app.shared.datetime_utils import format_utc
+from app.shared.datetime_utils import format_utc, to_utc
 from app.domain.models import LicenseStatus, License
 from app.domain.schemas import GeneratePurchaseDTO, ActivateKeyDTO, UpdateLicenseDTO
 from app.infrastructure.repository import LicenseRepository, TransactionRepository, LicenseModel, TransactionModel
@@ -222,51 +222,68 @@ class LicenseService:
             raise DomainException(message="You don't have an active license.", status_code=403, error_code="NO_ACTIVE_LICENSE")
         return db_sub
 
+    @staticmethod
+    def _serialize_admin_license(lic: LicenseModel) -> dict:
+        return {
+            "id": lic.id,
+            "user_id": lic.user_id,
+            "key": lic.key,
+            "status": lic.status.value if isinstance(lic.status, LicenseStatus) else lic.status,
+            "duration_days": lic.duration_days,
+            "max_devices": lic.max_devices,
+            "reset_limit": lic.reset_limit,
+            "created_at": format_utc(lic.created_at),
+            "activated_at": format_utc(lic.activated_at),
+            "expires_at": format_utc(lic.expires_at),
+            "devices": [
+                {
+                    "id": d.id,
+                    "device": d.device,
+                    "ip_address": d.ip_address,
+                    "user_agent": d.user_agent,
+                    "first_used_at": format_utc(d.first_used_at),
+                    "last_used_at": format_utc(d.last_used_at),
+                }
+                for d in lic.devices
+            ],
+            "transaction": {
+                "id": lic.transaction.id,
+                "amount": lic.transaction.amount,
+                "method": lic.transaction.payment_method,
+                "status": lic.transaction.status,
+                "purchased_at": format_utc(lic.transaction.purchased_at),
+            } if lic.transaction else None,
+        }
+
+    @staticmethod
+    def _purchase_anchor(lic: LicenseModel) -> datetime:
+        tx = lic.transaction
+        if tx is not None and tx.purchased_at is not None:
+            return to_utc(tx.purchased_at)
+        if lic.activated_at is not None:
+            return to_utc(lic.activated_at)
+        if lic.created_at is not None:
+            return to_utc(lic.created_at)
+        return datetime.now(timezone.utc)
+
+    def _recalc_expiry(self, lic: LicenseModel) -> None:
+        if lic.duration_days is None:
+            lic.expires_at = None
+            return
+        lic.expires_at = self._purchase_anchor(lic) + timedelta(days=lic.duration_days)
+
     async def admin_get_license(self, license_id: int) -> dict:
         license_obj = await self.license_repo.get_by_id(license_id)
         if not license_obj:
             raise DomainException(message="License not found", status_code=404, error_code="NOT_FOUND")
-        return license_obj
+        return self._serialize_admin_license(license_obj)
 
     async def admin_find_licenses(self, user_id: int = None, key: str = None) -> list:
         if not user_id and not key:
             return []
-        
+
         licenses = await self.license_repo.search_licenses(user_id=user_id, key=key)
-        
-        return [
-            {
-                "id": lic.id,
-                "user_id": lic.user_id,
-                "key": lic.key,
-                "status": lic.status.value,
-                "duration_days": lic.duration_days,
-                "max_devices": lic.max_devices,
-                "reset_limit": lic.reset_limit,
-                "created_at": format_utc(lic.created_at),
-                "activated_at": format_utc(lic.activated_at),
-                "expires_at": format_utc(lic.expires_at),
-                "devices": [
-                    {
-                        "id": d.id,
-                        "device": d.device,
-                        "ip_address": d.ip_address,
-                        "user_agent": d.user_agent,
-                        "first_used_at": format_utc(d.first_used_at),
-                        "last_used_at": format_utc(d.last_used_at),
-                    }
-                    for d in lic.devices
-                ],
-                "transaction": {
-                    "id": lic.transaction.id,
-                    "amount": lic.transaction.amount,
-                    "method": lic.transaction.payment_method,
-                    "status": lic.transaction.status,
-                    "purchased_at": format_utc(lic.transaction.purchased_at)
-                } if lic.transaction else None
-            }
-            for lic in licenses
-        ]
+        return [self._serialize_admin_license(lic) for lic in licenses]
 
     async def admin_update_license(self, license_id: int, payload: UpdateLicenseDTO) -> dict:
         license_obj = await self.license_repo.get_by_id(license_id)
@@ -274,16 +291,65 @@ class LicenseService:
             raise DomainException(message="License not found", status_code=404, error_code="NOT_FOUND")
 
         update_data = payload.model_dump(exclude_unset=True)
-        if "status" in update_data:
-            license_obj.status = update_data["status"]
+        previous_status = license_obj.status
+        previous_duration = license_obj.duration_days
+
         if "reset_limit" in update_data:
             license_obj.reset_limit = update_data["reset_limit"]
         if "max_devices" in update_data:
             license_obj.max_devices = update_data["max_devices"]
-            
+        if "duration_days" in update_data:
+            license_obj.duration_days = update_data["duration_days"]
+        if "user_id" in update_data:
+            license_obj.user_id = update_data["user_id"]
+            if license_obj.transaction is not None:
+                license_obj.transaction.user_id = update_data["user_id"]
+        if "amount" in update_data:
+            if license_obj.transaction is None:
+                raise DomainException(
+                    message="License has no transaction to update amount",
+                    status_code=400,
+                    error_code="NO_TRANSACTION",
+                )
+            license_obj.transaction.amount = update_data["amount"]
+        if "status" in update_data:
+            license_obj.status = update_data["status"]
+
+        became_invalid = (
+            previous_status == LicenseStatus.ACTIVE
+            and license_obj.status in (LicenseStatus.EXPIRED, LicenseStatus.BANNED)
+        )
+        became_active = (
+            previous_status != LicenseStatus.ACTIVE
+            and license_obj.status == LicenseStatus.ACTIVE
+        )
+        duration_changed = (
+            "duration_days" in update_data
+            and update_data["duration_days"] != previous_duration
+        )
+
+        if became_invalid:
+            license_obj.expires_at = datetime.now(timezone.utc)
+        elif license_obj.status == LicenseStatus.ACTIVE and (became_active or duration_changed):
+            if became_active and license_obj.activated_at is None:
+                license_obj.activated_at = datetime.now(timezone.utc)
+            self._recalc_expiry(license_obj)
+
+        if license_obj.status == LicenseStatus.ACTIVE and license_obj.user_id is not None:
+            while True:
+                other = await self.license_repo.get_active_by_user(
+                    license_obj.user_id, exclude_id=license_obj.id
+                )
+                if other is None:
+                    break
+                other.status = LicenseStatus.EXPIRED
+                other.expires_at = datetime.now(timezone.utc)
+
         await self.db.commit()
-        await self.db.refresh(license_obj)
-        return license_obj
+        updated = await self.license_repo.get_by_id(license_id)
+        if not updated:
+            raise DomainException(message="License not found", status_code=404, error_code="NOT_FOUND")
+        return self._serialize_admin_license(updated)
 
     async def admin_delete_license(self, license_id: int):
         deleted = await self.license_repo.delete_license(license_id)
