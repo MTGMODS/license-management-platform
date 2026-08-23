@@ -133,7 +133,7 @@ export function MediaGallery({ compact = false }: { compact?: boolean }) {
           className={cn(
             'shrink-0 overflow-hidden rounded-lg border transition-colors duration-200',
             compact
-              ? 'h-[clamp(2.25rem,5vh,3.25rem)] w-[clamp(4rem,8.5vh,5.75rem)]'
+              ? 'h-[clamp(2rem,4.4vh,2.9rem)] w-[clamp(3.5rem,7.6vh,5.15rem)]'
               : 'h-16 w-28',
             index === activeIndex
               ? 'border-accent-500/60'
@@ -165,7 +165,7 @@ export function MediaGallery({ compact = false }: { compact?: boolean }) {
             className="mx-auto aspect-video overflow-hidden rounded-card border border-white/5 bg-ink-850"
             style={{
               width:
-                'min(100cqw, calc((100cqh - 0.75rem - clamp(2.25rem, 5vh, 3.25rem)) * 16 / 9))',
+                'min(100cqw, calc((100cqh - 0.6rem - clamp(2rem, 4.4vh, 2.9rem)) * 16 / 9 * 0.94))',
             }}
           >
             <Viewer item={active} />

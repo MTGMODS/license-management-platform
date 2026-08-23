@@ -32,18 +32,21 @@ function Hero() {
 
   return (
     <section className="flex min-h-0 flex-1 basis-0 flex-col text-center">
-       <h1 className="text-gradient shrink-0 whitespace-nowrap text-[clamp(1.6rem,min(4.2vh,5.5vw),3.25rem)] font-semibold tracking-tight">
+       <h1 className="text-gradient shrink-0 whitespace-nowrap text-[clamp(1.5rem,min(3.8vh,5.2vw),3rem)] font-semibold tracking-tight">
         {t('hero.title')}
       </h1>
-      <p className="mx-auto mt-[clamp(0.35rem,1vh,0.75rem)] max-w-2xl shrink-0 text-[clamp(0.875rem,1.6vh,1.125rem)] leading-relaxed text-fg-muted">
+      <p className="mx-auto mt-[clamp(0.3rem,0.85vh,0.65rem)] max-w-2xl shrink-0 text-[clamp(0.8125rem,1.4vh,1.0625rem)] leading-snug text-fg-muted">
         {t('hero.subtitle')}
       </p>
+      <p className="mx-auto mt-[clamp(0.2rem,0.55vh,0.4rem)] max-w-2xl shrink-0 text-[clamp(0.6875rem,1.1vh,0.8125rem)] leading-snug text-fg-subtle">
+        {t('hero.lead')}
+      </p>
 
-      <div className="mx-auto mt-[clamp(0.5rem,1.4vh,1rem)] flex min-h-0 w-full min-w-0 flex-1 basis-0 flex-col">
+      <div className="mx-auto mt-[clamp(0.4rem,1.15vh,0.85rem)] flex min-h-0 w-full min-w-0 flex-1 basis-0 flex-col">
         <MediaGallery compact />
       </div>
 
-      <div className="mt-[clamp(0.5rem,1.4vh,1rem)] flex shrink-0 flex-wrap justify-center gap-3">
+      <div className="mt-[clamp(0.4rem,1.15vh,0.85rem)] flex shrink-0 flex-wrap justify-center gap-3">
         <Link to="/helper/download" className={buttonStyles({ size: 'lg' })}>
           <Download aria-hidden className="size-4" />
           {downloadLabel}
