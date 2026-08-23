@@ -2,7 +2,6 @@
   "title": "Загрузка Arizona&Rodina Helper",
   "titleVersion": "Загрузка Arizona&Rodina Helper {{version}}",
   "device": {
-    "prompt": "Выберите устройство для скачивания",
     "pc": "Компьютер",
     "mobile": "Телефон"
   },
@@ -36,38 +35,32 @@
   "mobile": {
     "auto": {
       "title": "Автоматическая установка",
-      "subtitle": "Нужен лаунчер MonetLoader — выберите архитектуру под телефон.",
+      "badge": "Проще всего",
+      "steps": {
+        "download": "Скачайте модифицированный лаунчер с MonetLoader (x32 или x64)",
+        "install": "Используйте команду /mtg (x32) или магазин модов (x64)",
+        "select": "Выберите хелпер и нажмите «Скачать»"
+      },
       "x32": {
-        "title": "MonetLoader x32",
-        "badge": "Рекомендуется",
-        "lua": "Стабильный Lua",
-        "game": "Нестабильная игра · меньше FPS",
-        "phones": "На новых телефонах не работает",
-        "how": "Зайдите в игру и пропишите /mtg — хелпер установится сам.",
         "action": "Скачать x32",
         "guide": "Видеогайд x32"
       },
       "x64": {
-        "title": "MonetLoader x64",
-        "badge": "Новые телефоны",
-        "lua": "Нестабильный Lua",
-        "game": "Стабильная игра · больше FPS",
-        "phones": "Работает на новых телефонах",
-        "how": "Откройте вкладку модов ArzMod и нажмите на хелпер.",
         "action": "Скачать x64",
         "guide": "Видеогайд x64"
       }
     },
     "manual": {
-      "title": "Ручная установка Lua",
-      "body": "Сначала лаунчер MonetLoader (x32 или x64), затем файл хелпера в папку MonetLoader.",
+      "title": "Ручная установка",
+      "badge": "Для опытных пользователей",
       "action": "Скачать Lua-файл",
       "guide": "Видеогайд",
       "steps": {
-        "launcher": "Установите MonetLoader x32 или x64",
-        "download": "Скачайте файл Arizona Helper.lua",
-        "moveFile": "Положите его в /Android/media/*игра*/monetloader/",
-        "restart": "Запустите игру"
+        "launcher": "Установите лаунчер с MonetLoader",
+        "download": "Нажмите «Скачать Lua-файл»",
+        "open": "Откройте папку Android/media/*game*/monetloader/",
+        "place": "Положите туда скачанный Lua-файл",
+        "done": "Готово, можете заходить в игру"
       }
     }
   },

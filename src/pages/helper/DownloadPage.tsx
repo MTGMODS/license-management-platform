@@ -1,5 +1,4 @@
 import {
-  Check,
   Download,
   ExternalLink,
   FileCode2,
@@ -7,7 +6,6 @@ import {
   PlayCircle,
   Smartphone,
   Wand2,
-  X,
 } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
@@ -92,7 +90,7 @@ function GuideLink({ href, children }: { href: string; children: ReactNode }) {
       href={href}
       target="_blank"
       rel="noreferrer"
-      className={buttonStyles({ variant: 'secondary', fullWidth: true })}
+      className={buttonStyles({ variant: 'secondary', size: 'lg', fullWidth: true })}
     >
       <PlayCircle aria-hidden className="size-4" />
       {children}
@@ -231,153 +229,64 @@ function PcInstall() {
   )
 }
 
-function TraitRow({ ok, label }: { ok: boolean; label: string }) {
-  return (
-    <div className="flex items-center gap-2.5 text-sm leading-snug">
-      <span
-        className={cn(
-          'grid size-5 shrink-0 place-items-center rounded-full',
-          ok ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300',
-        )}
-      >
-        {ok ? <Check aria-hidden className="size-3" /> : <X aria-hidden className="size-3" />}
-      </span>
-      <span className={ok ? 'font-medium text-fg' : 'text-fg-muted'}>{label}</span>
-    </div>
-  )
-}
-
-function ArchPanel({
-  title,
-  badge,
-  luaOk,
-  gameOk,
-  lua,
-  game,
-  phones,
-  how,
-  actions,
-}: {
-  title: string
-  badge: string
-  luaOk: boolean
-  gameOk: boolean
-  lua: string
-  game: string
-  phones: string
-  how: string
-  actions: ReactNode
-}) {
-  return (
-    <div className="flex h-full flex-col rounded-2xl border border-white/8 bg-ink-900/40 p-4 sm:p-5">
-      <div className="flex h-8 items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent-500/10 text-accent-300">
-            <Smartphone aria-hidden className="size-4" />
-          </span>
-          <h3 className="truncate font-semibold tracking-tight text-fg">{title}</h3>
-        </div>
-        <Badge tone="accent" className="shrink-0 px-2 py-0.5 text-[0.65rem]">
-          {badge}
-        </Badge>
-      </div>
-
-      <div className="mt-4 grid gap-2.5">
-        <TraitRow ok={luaOk} label={lua} />
-        <TraitRow ok={gameOk} label={game} />
-        <p className="pl-[1.875rem] text-xs leading-snug text-fg-subtle">{phones}</p>
-      </div>
-
-      <div className="mt-4 flex min-h-[3.25rem] items-center rounded-xl bg-ink-950/50 px-3 py-2.5 text-sm leading-snug text-fg-subtle ring-1 ring-white/5">
-        {how}
-      </div>
-
-      <div className="mt-auto flex flex-col gap-2.5 pt-5">{actions}</div>
-    </div>
-  )
-}
-
 function MobileInstall() {
   const { t } = useTranslation('download')
   const downloadLua = useLuaDownload()
 
   return (
     <div className="space-y-6">
-      <Card className="p-5 sm:p-6">
-        <div className="flex items-center gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent-500/10 text-accent-300">
-            <Smartphone aria-hidden className="size-5" />
-          </span>
-          <div className="min-w-0">
-            <h2 className="text-lg font-semibold tracking-tight sm:text-xl">
-              {t('mobile.auto.title')}
-            </h2>
-            <p className="mt-0.5 text-sm text-fg-muted">{t('mobile.auto.subtitle')}</p>
+      <InstallCard
+        icon={<Smartphone aria-hidden className="size-5" />}
+        title={t('mobile.auto.title')}
+        badge={t('mobile.auto.badge')}
+        actions={
+          <div className="grid min-w-0 gap-4 sm:grid-cols-2 sm:gap-5">
+            <div className="flex min-w-0 flex-col gap-2.5">
+              <a
+                href={MONETLOADER_X32_URL}
+                target="_blank"
+                rel="noreferrer"
+                className={buttonStyles({ size: 'lg', fullWidth: true })}
+              >
+                <Download aria-hidden className="size-4" />
+                {t('mobile.auto.x32.action')}
+                <ExternalLink aria-hidden className="size-3.5 opacity-70" />
+              </a>
+              <GuideLink href={MOBILE_X32_GUIDE_URL}>{t('mobile.auto.x32.guide')}</GuideLink>
+            </div>
+
+            <div className="flex min-w-0 flex-col gap-2.5 border-t border-white/8 pt-4 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-5">
+              <a
+                href={MONETLOADER_X64_URL}
+                target="_blank"
+                rel="noreferrer"
+                className={buttonStyles({ size: 'lg', fullWidth: true })}
+              >
+                <Download aria-hidden className="size-4" />
+                {t('mobile.auto.x64.action')}
+                <ExternalLink aria-hidden className="size-3.5 opacity-70" />
+              </a>
+              <GuideLink href={MOBILE_X64_GUIDE_URL}>{t('mobile.auto.x64.guide')}</GuideLink>
+            </div>
           </div>
-        </div>
-
-        <div className="mt-5 grid min-w-0 grid-cols-1 items-stretch gap-3 lg:grid-cols-2 lg:gap-4">
-          <ArchPanel
-            title={t('mobile.auto.x32.title')}
-            badge={t('mobile.auto.x32.badge')}
-            luaOk
-            gameOk={false}
-            lua={t('mobile.auto.x32.lua')}
-            game={t('mobile.auto.x32.game')}
-            phones={t('mobile.auto.x32.phones')}
-            how={t('mobile.auto.x32.how')}
-            actions={
-              <>
-                <a
-                  href={MONETLOADER_X32_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={buttonStyles({ fullWidth: true })}
-                >
-                  <Download aria-hidden className="size-4" />
-                  {t('mobile.auto.x32.action')}
-                  <ExternalLink aria-hidden className="size-3.5 opacity-70" />
-                </a>
-                <GuideLink href={MOBILE_X32_GUIDE_URL}>{t('mobile.auto.x32.guide')}</GuideLink>
-              </>
-            }
-          />
-
-          <ArchPanel
-            title={t('mobile.auto.x64.title')}
-            badge={t('mobile.auto.x64.badge')}
-            luaOk={false}
-            gameOk
-            lua={t('mobile.auto.x64.lua')}
-            game={t('mobile.auto.x64.game')}
-            phones={t('mobile.auto.x64.phones')}
-            how={t('mobile.auto.x64.how')}
-            actions={
-              <>
-                <a
-                  href={MONETLOADER_X64_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={buttonStyles({ fullWidth: true })}
-                >
-                  <Download aria-hidden className="size-4" />
-                  {t('mobile.auto.x64.action')}
-                  <ExternalLink aria-hidden className="size-3.5 opacity-70" />
-                </a>
-                <GuideLink href={MOBILE_X64_GUIDE_URL}>{t('mobile.auto.x64.guide')}</GuideLink>
-              </>
-            }
-          />
-        </div>
-      </Card>
+        }
+      >
+        <Steps
+          items={[
+            t('mobile.auto.steps.download'),
+            t('mobile.auto.steps.install'),
+            t('mobile.auto.steps.select'),
+          ]}
+        />
+      </InstallCard>
 
       <InstallCard
         icon={<FileCode2 aria-hidden className="size-5" />}
         title={t('mobile.manual.title')}
-        body={t('mobile.manual.body')}
+        badge={t('mobile.manual.badge')}
         actions={
           <div className="flex flex-col gap-2.5 sm:flex-row">
-            <Button className="sm:flex-1" onClick={downloadLua}>
+            <Button size="lg" fullWidth className="sm:flex-1" onClick={downloadLua}>
               <Download aria-hidden className="size-4" />
               {t('mobile.manual.action')}
             </Button>
@@ -385,7 +294,12 @@ function MobileInstall() {
               href={MOBILE_MANUAL_GUIDE_URL}
               target="_blank"
               rel="noreferrer"
-              className={cn(buttonStyles({ variant: 'secondary' }), 'sm:flex-1')}
+              className={buttonStyles({
+                variant: 'secondary',
+                size: 'lg',
+                fullWidth: true,
+                className: 'sm:flex-1',
+              })}
             >
               <PlayCircle aria-hidden className="size-4" />
               {t('mobile.manual.guide')}
@@ -398,8 +312,9 @@ function MobileInstall() {
           items={[
             t('mobile.manual.steps.launcher'),
             t('mobile.manual.steps.download'),
-            t('mobile.manual.steps.moveFile'),
-            t('mobile.manual.steps.restart'),
+            t('mobile.manual.steps.open'),
+            t('mobile.manual.steps.place'),
+            t('mobile.manual.steps.done'),
           ]}
         />
       </InstallCard>
@@ -482,11 +397,10 @@ export function DownloadPage() {
       </header>
 
       <div className="mt-8 sm:mt-10">
-        <p className="mb-3 text-sm text-fg-muted">{t('device.prompt')}</p>
         <DeviceToggle device={device} onChange={setDevice} />
       </div>
 
-      <div className="mt-8 min-w-0 border-t border-white/8 pt-8 sm:mt-10 sm:pt-10">
+      <div className="mt-6 min-w-0 sm:mt-8">
         {device === 'pc' ? <PcInstall /> : <MobileInstall />}
       </div>
     </div>
