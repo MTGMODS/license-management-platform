@@ -8,6 +8,7 @@ import { HomePage } from '@/pages/home/HomePage'
 import { AuthCallbackPage } from '@/pages/login/AuthCallbackPage'
 import { LoginPage } from '@/pages/login/LoginPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
+import { PromoPage } from '@/pages/promo/PromoPage'
 import { TermsPage } from '@/pages/terms/TermsPage'
 import { VipPage } from '@/pages/vip/VipPage'
 
@@ -23,6 +24,7 @@ export function AppRoutes() {
         <Route path="helper" element={<HelperPage />} />
         <Route path="helper/download" element={<DownloadPage />} />
         <Route path="vip" element={<VipPage />} />
+        <Route path="promo" element={<PromoPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="auth/callback" element={<AuthCallbackPage />} />
         <Route path="terms" element={<TermsPage />} />

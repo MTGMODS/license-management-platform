@@ -5,6 +5,7 @@ import { useLocation } from 'react-router'
 function tabKey(pathname: string) {
   if (pathname.startsWith('/helper')) return 'tab.helper'
   if (pathname.startsWith('/vip')) return 'tab.vip'
+  if (pathname.startsWith('/promo')) return 'tab.promo'
   if (pathname.startsWith('/login') || pathname.startsWith('/auth')) return 'tab.login'
   if (pathname.startsWith('/admin')) return 'tab.admin'
   if (pathname.startsWith('/dashboard')) return 'tab.dashboard'

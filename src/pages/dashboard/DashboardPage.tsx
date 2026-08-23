@@ -568,7 +568,6 @@ function SocialStatus({
 function CommunityInvite({
   title,
   text,
-  hint,
   href,
   action,
   enabled,
@@ -577,7 +576,6 @@ function CommunityInvite({
 }: {
   title: string
   text: string
-  hint?: string
   href: string
   action: string
   enabled: boolean
@@ -596,7 +594,6 @@ function CommunityInvite({
         <div className="min-w-0">
           <p className={cn('text-sm font-medium', !enabled && 'text-fg-subtle')}>{title}</p>
           <p className={cn('mt-0.5 text-xs', enabled ? 'text-fg-muted' : 'text-fg-subtle')}>{text}</p>
-          {hint ? <p className="mt-1 text-xs text-fg-subtle">{hint}</p> : null}
         </div>
       </div>
       {enabled ? (
@@ -688,7 +685,6 @@ function AccountPanel({ user }: { user: User }) {
             <CommunityInvite
               title={t('account.telegramChatTitle')}
               text={t('account.telegramChatText')}
-              hint={telegramLinked ? undefined : t('account.telegramChatLocked')}
               href={TELEGRAM_VIP_CHAT_URL}
               action={t('account.telegramChatAction')}
               enabled={telegramLinked}
@@ -714,7 +710,7 @@ function AccountPanel({ user }: { user: User }) {
               text={t('account.discordServerText')}
               href={DISCORD_SERVER_URL}
               action={t('account.discordServerAction')}
-              enabled
+              enabled={discordLinked}
               icon={DiscordIcon}
               color="text-[#5865F2]"
             />

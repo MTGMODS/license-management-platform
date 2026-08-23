@@ -73,6 +73,7 @@ export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
   }, [rows, period, metric])
 
   const hovered = hover ? byCode.get(hover.code) : null
+  const hasData = max > 0
 
   return (
     <Card className="p-4 text-left sm:p-6">
@@ -81,100 +82,107 @@ export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
         <p className="mt-1 text-sm text-fg-muted">{t('analytics.map.subtitle')}</p>
       </div>
 
-      <div className="mt-4 flex items-center gap-2 text-xs text-fg-subtle">
-        <span>{t('analytics.map.less')}</span>
-        <span
-          aria-hidden
-          className="h-2 w-24 rounded-full"
-          style={{ background: `linear-gradient(to right, ${fillFor(0.08, accent)}, ${fillFor(1, accent)})` }}
-        />
-        <span>{t('analytics.map.more')}</span>
-      </div>
-
-      <div className="relative mt-6">
-        <svg
-          viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
-          className="w-full"
-          role="img"
-          aria-label={t('analytics.map.title')}
-          onMouseLeave={() => setHover(null)}
-        >
-          {COUNTRY_SHAPES.map((shape) => {
-            const row = byNumericId.get(shape.numericId)
-            const value = row?.[metric][period] ?? 0
-            const isHovered = row != null && hover?.code === row.code
-
-            return (
-              <path
-                key={shape.numericId}
-                d={shape.path}
-                fill={fillFor(intensityOf(value, max), accent)}
-                stroke={isHovered ? HOVER_OUTLINE.stroke : STROKE}
-                strokeWidth={isHovered ? HOVER_OUTLINE.strokeWidth : 0.5}
-                className={row ? 'cursor-pointer' : undefined}
-                onMouseMove={(event) => {
-                  if (!row) return
-                  const box = event.currentTarget.ownerSVGElement?.getBoundingClientRect()
-                  if (!box) return
-                  setHover({
-                    code: row.code,
-                    x: event.clientX - box.left,
-                    y: event.clientY - box.top,
-                  })
-                }}
-              />
-            )
-          })}
-
-          {(() => {
-            const ukraine = byNumericId.get(UKRAINE_NUMERIC_ID)
-            if (!ukraine) return null
-
-            const value = ukraine[metric][period]
-            const isHovered = hover?.code === ukraine.code
-
-            return CRIMEA_OVERLAY_PATHS.map((path, index) => (
-              <path
-                key={`crimea-${index}`}
-                d={path}
-                fill={fillFor(intensityOf(value, max), accent)}
-                stroke={isHovered ? HOVER_OUTLINE.stroke : STROKE}
-                strokeWidth={isHovered ? HOVER_OUTLINE.strokeWidth : 0.5}
-                className="cursor-pointer"
-                onMouseMove={(event) => {
-                  const box = event.currentTarget.ownerSVGElement?.getBoundingClientRect()
-                  if (!box) return
-                  setHover({
-                    code: ukraine.code,
-                    x: event.clientX - box.left,
-                    y: event.clientY - box.top,
-                  })
-                }}
-              />
-            ))
-          })()}
-        </svg>
-
-        {hover && hovered ? (
-          <div
-            className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-[calc(100%+12px)]"
-            style={{ left: hover.x, top: hover.y }}
-          >
-            <ChartTooltip
-              title={displayNames.of(hovered.code) ?? hovered.code}
-              rows={statsTooltipRows(t, format, {
-                users: hovered.users[period],
-                launches: hovered.launches[period],
-                vip_users: hovered.vip_users[period],
-                user_share: hovered.user_share[period],
-                launches_per_user: hovered.launches_per_user[period],
-                vip_percent: hovered.vip_percent[period],
-              })}
+      {!hasData ? (
+        <p className="mt-8 text-sm text-fg-subtle">{t('analytics.empty')}</p>
+      ) : (
+        <>
+          <div className="mt-4 flex items-center gap-2 text-xs text-fg-subtle">
+            <span>{t('analytics.map.less')}</span>
+            <span
+              aria-hidden
+              className="h-2 w-24 rounded-full"
+              style={{
+                background: `linear-gradient(to right, ${fillFor(0.08, accent)}, ${fillFor(1, accent)})`,
+              }}
             />
+            <span>{t('analytics.map.more')}</span>
           </div>
-        ) : null}
-      </div>
 
+          <div className="relative mt-6">
+            <svg
+              viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
+              className="w-full"
+              role="img"
+              aria-label={t('analytics.map.title')}
+              onMouseLeave={() => setHover(null)}
+            >
+              {COUNTRY_SHAPES.map((shape) => {
+                const row = byNumericId.get(shape.numericId)
+                const value = row?.[metric][period] ?? 0
+                const isHovered = row != null && hover?.code === row.code
+
+                return (
+                  <path
+                    key={shape.numericId}
+                    d={shape.path}
+                    fill={fillFor(intensityOf(value, max), accent)}
+                    stroke={isHovered ? HOVER_OUTLINE.stroke : STROKE}
+                    strokeWidth={isHovered ? HOVER_OUTLINE.strokeWidth : 0.5}
+                    className={row ? 'cursor-pointer' : undefined}
+                    onMouseMove={(event) => {
+                      if (!row) return
+                      const box = event.currentTarget.ownerSVGElement?.getBoundingClientRect()
+                      if (!box) return
+                      setHover({
+                        code: row.code,
+                        x: event.clientX - box.left,
+                        y: event.clientY - box.top,
+                      })
+                    }}
+                  />
+                )
+              })}
+
+              {(() => {
+                const ukraine = byNumericId.get(UKRAINE_NUMERIC_ID)
+                if (!ukraine) return null
+
+                const value = ukraine[metric][period]
+                const isHovered = hover?.code === ukraine.code
+
+                return CRIMEA_OVERLAY_PATHS.map((path, index) => (
+                  <path
+                    key={`crimea-${index}`}
+                    d={path}
+                    fill={fillFor(intensityOf(value, max), accent)}
+                    stroke={isHovered ? HOVER_OUTLINE.stroke : STROKE}
+                    strokeWidth={isHovered ? HOVER_OUTLINE.strokeWidth : 0.5}
+                    className="cursor-pointer"
+                    onMouseMove={(event) => {
+                      const box = event.currentTarget.ownerSVGElement?.getBoundingClientRect()
+                      if (!box) return
+                      setHover({
+                        code: ukraine.code,
+                        x: event.clientX - box.left,
+                        y: event.clientY - box.top,
+                      })
+                    }}
+                  />
+                ))
+              })()}
+            </svg>
+
+            {hover && hovered ? (
+              <div
+                className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-[calc(100%+12px)]"
+                style={{ left: hover.x, top: hover.y }}
+              >
+                <ChartTooltip
+                  title={displayNames.of(hovered.code) ?? hovered.code}
+                  rows={statsTooltipRows(t, format, {
+                    users: hovered.users[period],
+                    launches: hovered.launches[period],
+                    vip_users: hovered.vip_users[period],
+                    user_share: hovered.user_share[period],
+                    launches_per_user: hovered.launches_per_user[period],
+                    vip_percent: hovered.vip_percent[period],
+                  })}
+                />
+              </div>
+            ) : null}
+          </div>
+        </>
+      )}
     </Card>
   )
 }

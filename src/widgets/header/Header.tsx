@@ -11,6 +11,7 @@ import { AccountControl } from './AccountControl'
 const NAV_ITEMS = [
   { to: '/helper', labelKey: 'nav.helper' },
   { to: '/vip', labelKey: 'nav.vip' },
+  { to: '/promo', labelKey: 'nav.promo' },
 ] as const
 
 const ACTIVE_UNDERLINE =
@@ -58,13 +59,6 @@ export function Header() {
               {t(item.labelKey)}
             </NavLink>
           ))}
-          {/* Third slot is reserved by the brief but has no destination yet. */}
-          <span
-            aria-disabled
-            className="cursor-not-allowed rounded-lg px-3 py-2 text-sm font-medium text-fg-subtle/60"
-          >
-            {t('nav.more')}
-          </span>
         </nav>
 
         <div className="flex items-center justify-end gap-2">

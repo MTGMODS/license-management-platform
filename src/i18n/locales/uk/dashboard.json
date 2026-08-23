@@ -78,9 +78,8 @@
     "telegramChatTitle": "Наш Telegram-чат",
     "telegramChatText": "Чат VIP-підписників",
     "telegramChatAction": "Увійти",
-    "telegramChatLocked": "Прив’яжіть Telegram, щоб увійти",
     "discordServerTitle": "Наш Discord-сервер",
-    "discordServerText": "VIP роль (команда /role)",
+    "discordServerText": "VIP роль (команда /role) і VIP-чат підписників",
     "discordServerAction": "Увійти"
   }
 }
