@@ -119,25 +119,25 @@ function InstallCard({
   className?: string
 }) {
   return (
-    <Card className={cn('flex h-full flex-col p-5 sm:p-6', className)}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent-500/10 text-accent-300">
-            {icon}
-          </span>
-          <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+    <Card className={cn('flex h-full min-w-0 flex-col p-5 sm:p-6', className)}>
+      <div className="flex min-w-0 items-start gap-3">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent-500/10 text-accent-300">
+          {icon}
+        </span>
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1.5">
+          <h2 className="min-w-0 text-lg font-semibold tracking-tight">{title}</h2>
+          {badge ? (
+            <Badge tone="accent" className="max-w-full px-2 py-0.5 text-[0.65rem] leading-tight whitespace-normal">
+              {badge}
+            </Badge>
+          ) : null}
         </div>
-        {badge ? (
-          <Badge tone="accent" className="shrink-0 px-2 py-0.5 text-[0.65rem]">
-            {badge}
-          </Badge>
-        ) : null}
       </div>
 
       {body ? <p className="mt-4 text-sm leading-relaxed text-fg-muted">{body}</p> : null}
       {children ? <div className="mt-4 flex-1">{children}</div> : <div className="flex-1" />}
 
-      <div className="mt-5 flex flex-col gap-2.5">{actions}</div>
+      <div className="mt-auto flex flex-col gap-2.5 pt-5">{actions}</div>
     </Card>
   )
 }
@@ -161,44 +161,69 @@ function PcInstall() {
     toast.success(t('toast.started'))
   }
 
+  const actionRow = 'flex flex-col gap-2.5 sm:flex-row'
+
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid min-w-0 grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
       <InstallCard
         icon={<Wand2 aria-hidden className="size-5" />}
         title={t('pc.auto.title')}
-        body={t('pc.auto.body')}
         badge={t('pc.auto.badge')}
         actions={
-          <Button fullWidth onClick={handleInstaller}>
-            <Download aria-hidden className="size-4" />
-            {t('pc.auto.action')}
-          </Button>
+          <div className={actionRow}>
+            <Button size="lg" fullWidth className="sm:flex-1" onClick={handleInstaller}>
+              <Download aria-hidden className="size-4" />
+              {t('pc.auto.action')}
+            </Button>
+          </div>
         }
-      />
+      >
+        <Steps
+          items={[
+            t('pc.auto.steps.download'),
+            t('pc.auto.steps.open'),
+            t('pc.auto.steps.find'),
+            t('pc.auto.steps.install'),
+            t('pc.auto.steps.done'),
+          ]}
+        />
+      </InstallCard>
 
       <InstallCard
         icon={<FileCode2 aria-hidden className="size-5" />}
         title={t('pc.manual.title')}
-        body={t('pc.manual.body')}
+        badge={t('pc.manual.badge')}
         actions={
-          <>
-            <Button variant="secondary" fullWidth onClick={downloadLua}>
+          <div className={actionRow}>
+            <Button size="lg" variant="secondary" fullWidth className="sm:flex-1" onClick={downloadLua}>
               <Download aria-hidden className="size-4" />
               {t('pc.manual.action')}
             </Button>
-            <GuideLink href={PC_MANUAL_GUIDE_URL}>{t('pc.manual.guide')}</GuideLink>
-          </>
+            <a
+              href={PC_MANUAL_GUIDE_URL}
+              target="_blank"
+              rel="noreferrer"
+              className={buttonStyles({
+                variant: 'secondary',
+                size: 'lg',
+                fullWidth: true,
+                className: 'sm:flex-1',
+              })}
+            >
+              <PlayCircle aria-hidden className="size-4" />
+              {t('pc.manual.guide')}
+              <ExternalLink aria-hidden className="size-3.5 opacity-60" />
+            </a>
+          </div>
         }
       >
         <Steps
           items={[
             t('pc.manual.steps.moonloader'),
             t('pc.manual.steps.download'),
-            <span key="move">
-              {t('pc.manual.steps.moveFile')}
-              <span className="mt-1 block text-fg-subtle">{t('pc.manual.steps.rootHint')}</span>
-            </span>,
-            t('pc.manual.steps.restart'),
+            t('pc.manual.steps.open'),
+            t('pc.manual.steps.place'),
+            t('pc.manual.steps.done'),
           ]}
         />
       </InstallCard>
@@ -291,7 +316,7 @@ function MobileInstall() {
           </div>
         </div>
 
-        <div className="mt-5 grid items-stretch gap-3 lg:grid-cols-2 lg:gap-4">
+        <div className="mt-5 grid min-w-0 grid-cols-1 items-stretch gap-3 lg:grid-cols-2 lg:gap-4">
           <ArchPanel
             title={t('mobile.auto.x32.title')}
             badge={t('mobile.auto.x32.badge')}
@@ -433,7 +458,7 @@ export function DownloadPage() {
   }, [])
 
   return (
-    <div className="shell py-10 sm:py-14">
+    <div className="shell min-w-0 py-10 sm:py-14">
       <header className="w-full min-w-0 overflow-x-clip">
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
           {version ? t('titleVersion', { version }) : t('title')}
@@ -457,10 +482,13 @@ export function DownloadPage() {
       </header>
 
       <div className="mt-8 sm:mt-10">
+        <p className="mb-3 text-sm text-fg-muted">{t('device.prompt')}</p>
         <DeviceToggle device={device} onChange={setDevice} />
       </div>
 
-      <div className="mt-6 sm:mt-8">{device === 'pc' ? <PcInstall /> : <MobileInstall />}</div>
+      <div className="mt-8 min-w-0 border-t border-white/8 pt-8 sm:mt-10 sm:pt-10">
+        {device === 'pc' ? <PcInstall /> : <MobileInstall />}
+      </div>
     </div>
   )
 }

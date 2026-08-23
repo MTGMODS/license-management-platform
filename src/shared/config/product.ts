@@ -19,8 +19,9 @@ export const RELEASE_MANIFEST_URL =
 export const FREE_LUA_FALLBACK_URL =
   'https://github.com/MTGMODS/arizona-helper/raw/refs/heads/main/Arizona%20Helper.lua'
 
-/** Same-origin path for the PC installer. Missing file is a 404 until uploaded. */
-export const PC_INSTALLER_URL = '/helper/download/installer.exe'
+/** GitHub release of the PC installer. */
+export const PC_INSTALLER_URL =
+  'https://github.com/MTGMODS/arizona-helper-installer/releases/download/v1.0.0/Arizona.Rodina.Helper.exe'
 
 /** MonetLoader launchers for mobile auto / manual install. */
 export const MONETLOADER_X32_URL =
