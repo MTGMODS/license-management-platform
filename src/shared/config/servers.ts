@@ -47,6 +47,7 @@ const ARIZONA: Record<number, string> = {
   30: 'Love',
   31: 'Drake',
   32: 'Space',
+  33: 'Home',
 }
 
 const ARIZONA_MOBILE: Record<number, string> = {
