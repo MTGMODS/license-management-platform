@@ -609,7 +609,11 @@ export function PaymentSection() {
                 badgeLabels,
               )
               const fullRow =
-                id === 'crypto' || id === 'bank' || (id === 'paypal' && !routes.includes('bank'))
+                id === 'crypto' ||
+                id === 'bank' ||
+                id === 'funpay' ||
+                id === 'fragment' ||
+                (id === 'paypal' && !routes.includes('bank'))
               return (
                 <button
                   key={id}

@@ -1,4 +1,4 @@
-import { Inbox, TriangleAlert } from 'lucide-react'
+import { TriangleAlert } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -27,18 +27,6 @@ function StateMessage({ title, description, icon, action, className }: StateMess
       {description ? <p className="max-w-sm text-sm text-fg-muted">{description}</p> : null}
       {action ? <div className="mt-2">{action}</div> : null}
     </div>
-  )
-}
-
-export function EmptyState({ title, description }: { title?: string; description?: string }) {
-  const { t } = useTranslation('common')
-
-  return (
-    <StateMessage
-      icon={<Inbox aria-hidden className="size-7" />}
-      title={title ?? t('state.empty')}
-      description={description ?? t('state.emptyHint')}
-    />
   )
 }
 

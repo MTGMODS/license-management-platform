@@ -7,8 +7,6 @@
   "account": {
     "cabinet": "Кабінет",
     "admin": "Адмінка",
-    "id": "ID {{id}}",
-    "vip": "VIP",
     "logout": "Вийти"
   },
   "menu": {
