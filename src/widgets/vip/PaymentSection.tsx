@@ -594,7 +594,7 @@ export function PaymentSection() {
             </span>
             <div>
               <h3 className="text-base font-semibold tracking-tight sm:text-lg">{t('payment.step2.title')}</h3>
-              <p className="text-sm text-fg-subtle">{t(`payment.step2.hint.${wallet}`)}</p>
+              <p className="text-sm text-fg-subtle">{t('payment.step2.hint')}</p>
             </div>
           </div>
 
