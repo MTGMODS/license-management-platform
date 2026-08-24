@@ -89,18 +89,20 @@ function VipBenefits() {
   const { t } = useTranslation('vip')
 
   return (
-    <Card className="w-full shrink-0 p-4 text-left sm:p-5 lg:p-[clamp(0.65rem,1.2vh,1rem)]">
-      <ul className="grid grid-cols-1 gap-3 sm:gap-3.5 lg:gap-[clamp(0.35rem,1vh,0.65rem)]">
+    <Card className="w-full shrink-0 p-4 text-left sm:p-5 lg:p-[clamp(0.45rem,1vh,0.85rem)]">
+      <ul className="grid grid-cols-1 gap-3 sm:gap-3.5 lg:gap-[clamp(0.25rem,0.75vh,0.55rem)]">
         {BENEFITS.map((item) => {
           const Icon = item.icon
           return (
-            <li key={item.titleKey} className="flex gap-2.5 sm:gap-3">
-              <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg bg-accent-500/10 text-accent-300 sm:size-8">
-                <Icon aria-hidden className="size-3.5 sm:size-4" />
+            <li key={item.titleKey} className="flex gap-2.5 sm:gap-3 lg:gap-2.5">
+              <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg bg-accent-500/10 text-accent-300 sm:size-8 lg:size-[clamp(1.6rem,2.8vh,2rem)]">
+                <Icon aria-hidden className="size-3.5 sm:size-4 lg:size-[clamp(0.8rem,1.4vh,1rem)]" />
               </span>
               <div className="min-w-0">
-                <p className="text-sm font-medium text-fg sm:text-[0.95rem]">{t(item.titleKey)}</p>
-                <p className="mt-0.5 text-xs leading-snug text-fg-muted sm:text-sm">
+                <p className="text-sm font-medium text-fg sm:text-[0.95rem] lg:text-[clamp(0.8rem,1.45vh,0.95rem)]">
+                  {t(item.titleKey)}
+                </p>
+                <p className="mt-0.5 text-xs leading-snug text-fg-muted sm:text-sm lg:text-[clamp(0.7rem,1.25vh,0.85rem)] lg:leading-snug">
                   {'withGuide' in item && item.withGuide ? (
                     <Trans
                       i18nKey={item.textKey}
@@ -153,7 +155,7 @@ export function VipPage() {
           'flex flex-col py-6 sm:py-8',
           tariffsError || !tariffsReady
             ? 'flex-1'
-            : 'lg:h-[calc(100dvh-4rem)] lg:overflow-hidden lg:py-[clamp(0.55rem,1.4vh,1.1rem)]',
+            : 'lg:h-[calc(100dvh-4rem)] lg:overflow-hidden lg:py-[clamp(0.4rem,1.1vh,0.9rem)]',
         )}
       >
         <header className="w-full min-w-0 shrink-0 space-y-1.5 overflow-x-clip text-center lg:space-y-1">
@@ -185,10 +187,10 @@ export function VipPage() {
           </Card>
         ) : (
           <>
-            {/* Desktop only: breathe between subtitle and tariffs. */}
+            {/* Desktop: spare height between subtitle and tariffs; can collapse to 0. */}
             <div className="hidden min-h-0 flex-1 lg:block" aria-hidden />
 
-            <div className="mt-6 flex flex-col gap-5 lg:mt-0 lg:gap-[clamp(0.4rem,1.1vh,0.75rem)]">
+            <div className="mt-6 flex shrink-0 flex-col gap-5 lg:mt-0 lg:gap-[clamp(0.35rem,1vh,0.7rem)] lg:pt-[clamp(0.35rem,1.2vh,0.85rem)]">
               <div className="lg:hidden">
                 <PricingGrid />
               </div>
@@ -209,7 +211,7 @@ export function VipPage() {
               ) : null}
 
               {foldOk ? (
-                <div className="hidden shrink-0 border-t border-white/5 pt-[clamp(0.4rem,1.1vh,0.75rem)] lg:block">
+                <div className="hidden shrink-0 border-t border-white/5 pt-[clamp(0.35rem,1vh,0.7rem)] lg:block">
                   <SalesOverview compact />
                 </div>
               ) : null}
@@ -225,14 +227,20 @@ export function VipPage() {
           </div>
         ) : null}
 
-        {tariffsReady ? <PaymentSection /> : null}
+        {tariffsReady ? (
+          <div className="border-t border-white/8 pt-8 sm:pt-10">
+            <PaymentSection />
+          </div>
+        ) : null}
 
         {statsError ? null : (
-          <DeferredMount fallback={<Skeleton className="h-96" />}>
-            <Suspense fallback={<Skeleton className="h-96" />}>
-              <SalesStats />
-            </Suspense>
-          </DeferredMount>
+          <div className="border-t border-white/8 pt-8 sm:pt-10">
+            <DeferredMount fallback={<Skeleton className="h-96" />}>
+              <Suspense fallback={<Skeleton className="h-96" />}>
+                <SalesStats />
+              </Suspense>
+            </DeferredMount>
+          </div>
         )}
       </div>
     </div>

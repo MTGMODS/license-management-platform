@@ -396,6 +396,33 @@ function CryptoBody() {
   )
 }
 
+function ContactDmButtons() {
+  const { t } = useTranslation('vip')
+
+  return (
+    <div className="flex flex-col gap-2.5 sm:flex-row">
+      <a
+        href={CONTACT_URL}
+        target="_blank"
+        rel="noreferrer"
+        className={buttonStyles({ fullWidth: true })}
+      >
+        <TelegramIcon className="size-4" />
+        {t('payment.routes.bank.telegram')}
+      </a>
+      <a
+        href={CONTACT_DISCORD_URL}
+        target="_blank"
+        rel="noreferrer"
+        className={buttonStyles({ fullWidth: true })}
+      >
+        <DiscordIcon className="size-4" />
+        {t('payment.routes.bank.discord')}
+      </a>
+    </div>
+  )
+}
+
 function PaypalBody() {
   const { t } = useTranslation('vip')
 
@@ -403,13 +430,7 @@ function PaypalBody() {
     <div className="space-y-5">
       <p className="text-sm leading-relaxed text-fg-muted">{t('payment.routes.paypal.what')}</p>
       <CopyRow label="PayPal" value={PAYPAL_EMAIL} />
-      <p className="text-sm text-fg-muted">
-        <Trans
-          i18nKey="payment.afterContact"
-          ns="vip"
-          components={{ contact: <ExternalLink href={CONTACT_URL} /> }}
-        />
-      </p>
+      <ContactDmButtons />
     </div>
   )
 }
@@ -419,37 +440,11 @@ function BankBody() {
 
   return (
     <div className="space-y-5">
-      <p className="text-sm leading-relaxed text-fg-muted">{t('payment.routes.bank.what')}</p>
-      <p className="text-sm leading-relaxed text-fg-muted">{t('payment.routes.bank.dm')}</p>
-
-      <div className="flex flex-col gap-2.5 sm:flex-row">
-        <a
-          href={CONTACT_URL}
-          target="_blank"
-          rel="noreferrer"
-          className={buttonStyles({ fullWidth: true })}
-        >
-          <TelegramIcon className="size-4" />
-          {t('payment.routes.bank.telegram')}
-        </a>
-        <a
-          href={CONTACT_DISCORD_URL}
-          target="_blank"
-          rel="noreferrer"
-          className={buttonStyles({ variant: 'secondary', fullWidth: true })}
-        >
-          <DiscordIcon className="size-4" />
-          {t('payment.routes.bank.discord')}
-        </a>
+      <div className="space-y-3 text-sm leading-relaxed text-fg-muted">
+        <p>{t('payment.routes.bank.dm')}</p>
+        <p>{t('payment.routes.bank.dmAfter')}</p>
       </div>
-
-      <p className="rounded-xl bg-amber-500/10 px-3.5 py-2.5 text-sm text-amber-100/90 ring-1 ring-amber-400/20">
-        <Trans
-          i18nKey="payment.routes.bank.rubNote"
-          ns="vip"
-          components={{ funpay: <ExternalLink href={VIP_BOT_START.funpay} /> }}
-        />
-      </p>
+      <ContactDmButtons />
     </div>
   )
 }
@@ -500,10 +495,7 @@ function routeBadges(route: CheckoutRouteId, feeLabel: string, labels: {
         { tone: 'neutral' as const, label: labels.manual },
       ]
     case 'bank':
-      return [
-        { tone: 'accent' as const, label: labels.cheapest },
-        { tone: 'neutral' as const, label: labels.manual },
-      ]
+      return []
     case 'paypal':
       return [
         { tone: 'accent' as const, label: labels.cheapest },
@@ -540,7 +532,7 @@ export function PaymentSection() {
     <section id="vip-payment" className="scroll-mt-24 space-y-6 sm:space-y-8">
       <div>
         <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">{t('payment.title')}</h2>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-fg-muted sm:text-base">
+        <p className="mt-2 max-w-3xl text-sm leading-snug text-fg-muted line-clamp-2 sm:line-clamp-none sm:whitespace-nowrap sm:text-base">
           {t('payment.subtitle')}
         </p>
       </div>
@@ -556,7 +548,7 @@ export function PaymentSection() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
           {WALLETS.map((id) => {
             const active = wallet === id
             return (
@@ -617,7 +609,7 @@ export function PaymentSection() {
                 badgeLabels,
               )
               const fullRow =
-                id === 'crypto' || (id === 'paypal' && !routes.includes('bank'))
+                id === 'crypto' || id === 'bank' || (id === 'paypal' && !routes.includes('bank'))
               return (
                 <button
                   key={id}
@@ -672,7 +664,7 @@ export function PaymentSection() {
             {t('payment.detailsLabel')}
           </p>
           <h3 className="mt-1 text-xl font-semibold tracking-tight">
-            {t(`payment.routes.${activeRoute}.title`)}
+            {t([`payment.routes.${activeRoute}.detailsTitle`, `payment.routes.${activeRoute}.title`])}
           </h3>
         </div>
         <RouteBody route={activeRoute} wallet={wallet} />

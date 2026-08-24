@@ -92,8 +92,8 @@ export type CheckoutRouteId = 'funpay' | 'stars' | 'fragment' | 'crypto' | 'payp
 
 export const WALLETS: readonly WalletId[] = ['card', 'crypto', 'stars', 'paypal']
 
-/** Buy-stars (Fragment) before FunPay; direct Stars only via the Stars wallet. */
-const CARD_ROUTES_BASE = ['fragment', 'funpay', 'paypal'] as const satisfies readonly CheckoutRouteId[]
+/** Buy-stars (Fragment) before FunPay; PayPal is its own wallet, not under card. */
+const CARD_ROUTES_BASE = ['fragment', 'funpay'] as const satisfies readonly CheckoutRouteId[]
 
 /** Routes shown for each starting wallet (bank injected when allowed). */
 export const WALLET_ROUTES: Readonly<Record<WalletId, readonly CheckoutRouteId[]>> = {
