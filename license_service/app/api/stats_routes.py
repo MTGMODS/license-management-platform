@@ -6,7 +6,7 @@ from app.application.service import LicenseStatsService
 
 router = APIRouter(prefix="/api/v1/license", tags=["Stats"])
 
-@router.get("/stats/public", description="Get public VIP sales stats (Old vs New)")
+@router.get("/stats/public", description="Public subscription sales analytics + forever legacy block")
 async def get_public_stats(background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     service = LicenseStatsService(db)
     stats = await service.get_website_stats(background_tasks)
