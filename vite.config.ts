@@ -1,3 +1,4 @@
+import type { ServerResponse } from 'node:http'
 import { fileURLToPath, URL } from 'node:url'
 
 import tailwindcss from '@tailwindcss/vite'
@@ -38,6 +39,20 @@ export default defineConfig(({ mode }) => {
         // A service reached directly still mounts its router under /api/v1;
         // only the gateway strips that segment.
         ...(direct ? { rewrite: (path: string) => `/api${path}` } : {}),
+        /**
+         * When a local target is down (ECONNREFUSED), http-proxy can leave the
+         * browser request open. Hung same-origin slots then starve tariffs /
+         * license and the VIP page looks dead. Always close with 502.
+         */
+        configure: (proxyServer) => {
+          proxyServer.on('error', (_err, _req, res) => {
+            const response = res as ServerResponse | undefined
+            if (!response || typeof response.writeHead !== 'function') return
+            if (response.headersSent || response.writableEnded) return
+            response.writeHead(502, { 'Content-Type': 'application/json' })
+            response.end(JSON.stringify({ message: 'Bad gateway' }))
+          })
+        },
       }
       return acc
     },

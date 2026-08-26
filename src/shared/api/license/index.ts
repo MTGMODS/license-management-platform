@@ -3,7 +3,9 @@ import { request } from '../http'
 import type {
   ActivateKeyResult,
   DownloadRequestResult,
+  LicenseDurationStat,
   LicenseInfo,
+  LicensePaymentStat,
   LicenseSalesStats,
   TariffsCatalog,
 } from './types'
@@ -23,6 +25,87 @@ export function getLicenseHistory(signal?: AbortSignal): Promise<LicenseInfo[]> 
 }
 
 /**
+ * Current `/stats/public` wire shape. Older clients still expect `new_subs` /
+ * `old_forever`; we normalize once here so charts stay unchanged.
+ */
+interface SalesStatsWire {
+  updated_at: string
+  new_subs?: LicenseSalesStats['new_subs']
+  old_forever?: LicenseSalesStats['old_forever']
+  subscriptions?: {
+    overview?: {
+      total_sold?: number
+      total_money?: number
+      active?: number
+      free_issued?: number
+      free_active?: number
+    }
+    by_duration?: Array<{
+      duration_days?: number
+      count?: number
+      sum?: number
+      active?: number
+    }>
+    by_method?: Array<{
+      method?: string
+      count?: number
+      sum?: number
+    }>
+  }
+  forever?: {
+    overview?: {
+      total_sold?: number
+      total_money?: number
+    }
+  }
+}
+
+function asFinite(value: unknown, fallback = 0): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback
+}
+
+function normalizeSalesStats(raw: SalesStatsWire): LicenseSalesStats {
+  if (raw.new_subs && raw.old_forever) {
+    return {
+      updated_at: raw.updated_at,
+      new_subs: raw.new_subs,
+      old_forever: raw.old_forever,
+    }
+  }
+
+  const overview = raw.subscriptions?.overview ?? {}
+  const durations: LicenseDurationStat[] = (raw.subscriptions?.by_duration ?? []).map((item) => ({
+    days: asFinite(item.duration_days),
+    count: asFinite(item.count),
+    sum: asFinite(item.sum),
+    active: asFinite(item.active),
+  }))
+  const payments: LicensePaymentStat[] = (raw.subscriptions?.by_method ?? []).map((item) => ({
+    method: typeof item.method === 'string' ? item.method : 'Unknown',
+    count: asFinite(item.count),
+    sum: asFinite(item.sum),
+  }))
+  const forever = raw.forever?.overview ?? {}
+
+  return {
+    updated_at: raw.updated_at,
+    new_subs: {
+      total_vips: asFinite(overview.total_sold),
+      active_total: asFinite(overview.active),
+      total_money: asFinite(overview.total_money),
+      free_issued: asFinite(overview.free_issued),
+      free_active: asFinite(overview.free_active),
+      top_durations: durations,
+      top_payments: payments,
+    },
+    old_forever: {
+      total_sold: asFinite(forever.total_sold),
+      total_money: asFinite(forever.total_money),
+    },
+  }
+}
+
+/**
  * Public sales figures behind the VIP page.
  *
  * This is the one endpoint that wraps its payload in `{ status, data }`;
@@ -30,13 +113,13 @@ export function getLicenseHistory(signal?: AbortSignal): Promise<LicenseInfo[]> 
  * envelope is unwrapped here rather than in the shared HTTP layer.
  */
 export async function getLicenseSalesStats(signal?: AbortSignal): Promise<LicenseSalesStats> {
-  const response = await request<{ status: string; data: LicenseSalesStats }>({
+  const response = await request<{ status: string; data: SalesStatsWire }>({
     service: 'license',
     path: '/stats/public',
     signal,
   })
 
-  return response.data
+  return normalizeSalesStats(response.data)
 }
 
 export async function getTariffs(signal?: AbortSignal): Promise<TariffsCatalog> {

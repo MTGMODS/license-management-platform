@@ -1,4 +1,5 @@
 import { request } from '../http'
+import { ApiError } from '../errors'
 
 import type {
   CountryStats,
@@ -182,34 +183,48 @@ function normalizeWeekdayActivity(raw: Record<string, unknown>): WeekdayActivity
 }
 
 function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
-  const serversRaw = (payload.distribution.servers ?? []) as unknown as Record<string, unknown>[]
-  const versionsRaw = (payload.distribution.versions ?? []) as unknown as Record<string, unknown>[]
-  const countriesRaw = (payload.distribution.countries ?? []) as unknown as Record<string, unknown>[]
-  const productsRaw = (payload.distribution.products ?? []) as unknown as Record<string, unknown>[]
-  const devicesRaw = payload.overview.devices as unknown as Record<string, unknown>
-  const dailyRaw = (payload.analytics.timeline.daily ?? []) as unknown as Record<string, unknown>[]
-  const hourlyTimelineRaw = (payload.analytics.timeline.hourly ?? []) as unknown as Record<
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('Usage stats payload missing')
+  }
+
+  const distribution = payload.distribution ?? {
+    factions: [],
+    servers: [],
+    versions: [],
+    countries: [],
+    products: [],
+  }
+  const overview = payload.overview
+  const analytics = payload.analytics
+
+  const serversRaw = (distribution.servers ?? []) as unknown as Record<string, unknown>[]
+  const versionsRaw = (distribution.versions ?? []) as unknown as Record<string, unknown>[]
+  const countriesRaw = (distribution.countries ?? []) as unknown as Record<string, unknown>[]
+  const productsRaw = (distribution.products ?? []) as unknown as Record<string, unknown>[]
+  const devicesRaw = (overview?.devices ?? {}) as unknown as Record<string, unknown>
+  const dailyRaw = (analytics?.timeline?.daily ?? []) as unknown as Record<string, unknown>[]
+  const hourlyTimelineRaw = (analytics?.timeline?.hourly ?? []) as unknown as Record<
     string,
     unknown
   >[]
-  const hourlyActivityRaw = (payload.analytics.activity.hourly ?? []) as unknown as Record<
+  const hourlyActivityRaw = (analytics?.activity?.hourly ?? []) as unknown as Record<
     string,
     unknown
   >[]
-  const weekdayRaw = (payload.analytics.activity.weekday ?? []) as unknown as Record<string, unknown>[]
+  const weekdayRaw = (analytics?.activity?.weekday ?? []) as unknown as Record<string, unknown>[]
 
   return {
     ...payload,
     overview: {
-      ...payload.overview,
+      ...overview,
       devices: {
         pc: normalizeDeviceFamily(devicesRaw?.pc),
         mobile: normalizeDeviceFamily(devicesRaw?.mobile),
       },
     },
     distribution: {
-      ...payload.distribution,
-      factions: normalizeFactions(payload.distribution.factions),
+      ...distribution,
+      factions: normalizeFactions(distribution.factions),
       servers: serversRaw.map(normalizeServer),
       versions: versionsRaw.map(normalizeVersion),
       countries: countriesRaw.map(normalizeCountry),
@@ -239,7 +254,16 @@ export async function getUsagePublicStats(signal?: AbortSignal): Promise<UsagePu
     path: '/stats/public',
     signal,
   })
-  return normalizePublicStats(payload)
+  try {
+    return normalizePublicStats(payload)
+  } catch {
+    throw new ApiError({
+      status: 502,
+      code: 'BAD_USAGE_PAYLOAD',
+      message: 'Invalid usage stats payload',
+      payload,
+    })
+  }
 }
 
 export * from './types'
