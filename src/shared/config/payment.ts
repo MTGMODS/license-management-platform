@@ -17,11 +17,8 @@ export const VIP_BOT_START = {
   pay: `${VIP_BOT_URL}?start=pay`,
 } as const
 
-/** Stars withdrawal rate quoted in the bot (~USD per ⭐). */
-export const STAR_WITHDRAW_RATE_USD = 0.013
-
-export const FUNPAY_FEE_PERCENT = 20
-export const FRAGMENT_FEE_PERCENT = 15
+export const FUNPAY_URL = 'https://funpay.com/'
+export const FUNPAY_ORDERS_URL = 'https://funpay.com/orders/'
 /** Flat Crypto Bot (@send) invoice fee in USD. */
 export const CRYPTO_BOT_INVOICE_FEE_USD = 0.5
 
@@ -85,19 +82,29 @@ export type WalletId = 'card' | 'crypto' | 'stars' | 'paypal'
 
 /**
  * Concrete checkout paths.
- * `fragment` = buy Telegram Stars (card in TG or crypto→TON on Fragment), then pay VIP.
+ * `tgStars` = buy ⭐ in Telegram with a bank card, then pay VIP in the bot.
+ * `fragment` = buy ⭐ via Fragment (crypto / GRAM), then pay VIP in the bot.
+ * `stars` = already have ⭐ — pay VIP in the bot directly.
  * `bank` = direct Monobank / SWIFT (hidden for RU/BY by IP).
  */
-export type CheckoutRouteId = 'funpay' | 'stars' | 'fragment' | 'crypto' | 'paypal' | 'bank'
+export type CheckoutRouteId =
+  | 'funpay'
+  | 'stars'
+  | 'tgStars'
+  | 'fragment'
+  | 'crypto'
+  | 'paypal'
+  | 'bank'
 
 export const WALLETS: readonly WalletId[] = ['card', 'crypto', 'stars', 'paypal']
 
-/** Buy-stars (Fragment) before FunPay; PayPal is its own wallet, not under card. */
-const CARD_ROUTES_BASE = ['fragment', 'funpay'] as const satisfies readonly CheckoutRouteId[]
+/** FunPay + buy ⭐ in Telegram; bank full-width under when allowed. */
+const CARD_ROUTES_BASE = ['funpay', 'tgStars'] as const satisfies readonly CheckoutRouteId[]
 
 /** Routes shown for each starting wallet (bank injected when allowed). */
 export const WALLET_ROUTES: Readonly<Record<WalletId, readonly CheckoutRouteId[]>> = {
   card: CARD_ROUTES_BASE,
+  /** Fragment + FunPay side by side; direct crypto full-width under. */
   crypto: ['fragment', 'funpay', 'crypto'],
   stars: ['stars'],
   paypal: ['paypal'],

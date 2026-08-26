@@ -3,6 +3,7 @@ import bybitUrl from '@/assets/brands/bybit.svg'
 import cardUrl from '@/assets/brands/card.svg'
 import cryptobotUrl from '@/assets/brands/cryptobot.svg'
 import ethereumUrl from '@/assets/brands/ethereum.svg'
+import fragmentUrl from '@/assets/brands/fragment.svg'
 import funpayUrl from '@/assets/brands/funpay.svg'
 import paypalUrl from '@/assets/brands/paypal.svg'
 import telegramUrl from '@/assets/brands/telegram.svg'
@@ -16,6 +17,7 @@ export type BrandId =
   | 'card'
   | 'cryptobot'
   | 'ethereum'
+  | 'fragment'
   | 'funpay'
   | 'paypal'
   | 'telegram'
@@ -28,6 +30,7 @@ export const BRAND_ASSETS: Record<BrandId, string> = {
   card: cardUrl,
   cryptobot: cryptobotUrl,
   ethereum: ethereumUrl,
+  fragment: fragmentUrl,
   funpay: funpayUrl,
   paypal: paypalUrl,
   telegram: telegramUrl,
@@ -45,7 +48,8 @@ export const WALLET_BRANDS: Record<WalletId, BrandId> = {
 export const ROUTE_BRANDS: Record<CheckoutRouteId, BrandId> = {
   funpay: 'funpay',
   stars: 'telegram',
-  fragment: 'telegram',
+  tgStars: 'telegram',
+  fragment: 'fragment',
   crypto: 'tether',
   paypal: 'paypal',
   bank: 'card',

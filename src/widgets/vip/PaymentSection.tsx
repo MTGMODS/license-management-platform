@@ -4,7 +4,7 @@ import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 
-import { useBankCardAllowed } from '@/features/geo/useViewerCountry'
+import { useBankCardAllowed, useViewerCountry } from '@/features/geo/useViewerCountry'
 import { useTariffs } from '@/features/license/useTariffs'
 import {
   BRAND_ASSETS,
@@ -15,16 +15,14 @@ import {
 import {
   CONTACT_DISCORD_URL,
   CONTACT_URL,
-  CRYPTO_BOT_INVOICE_FEE_USD,
   CRYPTO_BOT_INVOICES,
   CRYPTO_EXCHANGES,
   CRYPTO_NETWORKS,
-  FRAGMENT_FEE_PERCENT,
   FRAGMENT_STARS_URL,
-  FUNPAY_FEE_PERCENT,
   FUNPAY_OFFERS,
+  FUNPAY_ORDERS_URL,
+  FUNPAY_URL,
   PAYPAL_EMAIL,
-  STAR_WITHDRAW_RATE_USD,
   VIP_BOT_START,
   WALLETS,
   routesForWallet,
@@ -166,58 +164,68 @@ function StarsPrices() {
 
 function FunpayBody({ wallet }: { wallet: WalletId }) {
   const { t } = useTranslation('vip')
+  const { data: country } = useViewerCountry()
+  const payMethods =
+    wallet === 'crypto'
+      ? t('payment.routes.funpay.payCrypto')
+      : country === 'RU'
+        ? t('payment.routes.funpay.payCardRu')
+        : t('payment.routes.funpay.payCard')
 
   return (
     <div className="space-y-5">
-      <p className="text-sm leading-relaxed text-fg-muted">{t('payment.routes.funpay.what')}</p>
+      <ol className="space-y-3">
+        <li className="flex gap-3 text-sm text-fg-muted">
+          <span className="grid size-6 shrink-0 place-items-center rounded-full bg-accent-500/15 text-xs font-semibold text-accent-200">
+            1
+          </span>
+          <span className="min-w-0 pt-0.5">
+            <Trans
+              i18nKey="payment.routes.funpay.step1"
+              ns="vip"
+              components={{ site: <ExternalLink href={FUNPAY_URL} /> }}
+            />
+          </span>
+        </li>
 
-      <div>
-        <p className="mb-2 text-sm font-medium text-fg">{t('payment.routes.funpay.acceptsTitle')}</p>
-        <ul className="space-y-2 text-sm text-fg-muted">
-          <li className="flex gap-2">
-            <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-accent-400" />
-            {wallet === 'crypto' ? t('payment.routes.funpay.accepts.usdt') : t('payment.routes.funpay.accepts.card')}
-          </li>
-          {wallet === 'card' ? (
-            <>
-              <li className="flex gap-2">
-                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-accent-400" />
-                {t('payment.routes.funpay.accepts.wallets')}
-              </li>
-              <li className="flex gap-2">
-                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-accent-400" />
-                {t('payment.routes.funpay.accepts.usdt')}
-              </li>
-            </>
-          ) : null}
-        </ul>
-      </div>
+        <li className="space-y-3">
+          <div className="flex gap-3 text-sm text-fg-muted">
+            <span className="grid size-6 shrink-0 place-items-center rounded-full bg-accent-500/15 text-xs font-semibold text-accent-200">
+              2
+            </span>
+            <span className="min-w-0 pt-0.5">{t('payment.routes.funpay.step2')}</span>
+          </div>
+          <div className="ml-9 rounded-2xl bg-ink-900/50 p-3.5 ring-1 ring-white/6 sm:p-4">
+            <OfferButtons offers={FUNPAY_OFFERS} />
+          </div>
+        </li>
 
-      <p className="rounded-xl bg-amber-500/10 px-3.5 py-2.5 text-sm text-amber-100/90 ring-1 ring-amber-400/20">
-        {t('payment.routes.funpay.fee', { fee: FUNPAY_FEE_PERCENT })}
-      </p>
+        <li className="flex gap-3 text-sm text-fg-muted">
+          <span className="grid size-6 shrink-0 place-items-center rounded-full bg-accent-500/15 text-xs font-semibold text-accent-200">
+            3
+          </span>
+          <span className="min-w-0 pt-0.5">
+            {t('payment.routes.funpay.step3')}, {payMethods}
+          </span>
+        </li>
 
-      <div>
-        <p className="mb-2 text-sm font-medium text-fg">{t('payment.pickPlan')}</p>
-        <OfferButtons offers={FUNPAY_OFFERS} />
-      </div>
+        <li className="flex gap-3 text-sm text-fg-muted">
+          <span className="grid size-6 shrink-0 place-items-center rounded-full bg-accent-500/15 text-xs font-semibold text-accent-200">
+            4
+          </span>
+          <span className="min-w-0 pt-0.5">
+            <Trans
+              i18nKey="payment.routes.funpay.step4"
+              ns="vip"
+              components={{ orders: <ExternalLink href={FUNPAY_ORDERS_URL} /> }}
+            />
+          </span>
+        </li>
+      </ol>
 
-      <p className="text-sm text-fg-muted">{t('payment.routes.funpay.after')}</p>
-      <p className="text-sm text-fg-muted">
-        <Trans
-          i18nKey="payment.routes.funpay.activate"
-          ns="vip"
-          components={{
-            cabinet: (
-              <Link
-                to="/dashboard"
-                className="font-medium text-accent-300 underline decoration-accent-500/40 underline-offset-2 hover:text-accent-200"
-              />
-            ),
-            bot: <ExternalLink href={VIP_BOT_START.activate} />,
-          }}
-        />
-      </p>
+      <Link to="/dashboard" className={buttonStyles({ fullWidth: true })}>
+        {t('payment.routes.funpay.cabinetCta')}
+      </Link>
     </div>
   )
 }
@@ -231,15 +239,6 @@ function StarsBody({ wallet }: { wallet: WalletId }) {
 
       <StarsPrices />
 
-      <p className="text-sm text-fg-muted">
-        <Trans
-          i18nKey="payment.routes.stars.rate"
-          ns="vip"
-          values={{ rate: STAR_WITHDRAW_RATE_USD }}
-          components={{ b: <span className="font-semibold text-fg" /> }}
-        />
-      </p>
-
       {wallet === 'stars' ? null : (
         <p className="text-sm text-fg-muted">{t('payment.routes.stars.buyHint')}</p>
       )}
@@ -248,7 +247,7 @@ function StarsBody({ wallet }: { wallet: WalletId }) {
         href={VIP_BOT_START.pay}
         target="_blank"
         rel="noreferrer"
-        className={buttonStyles({ size: 'lg' })}
+        className={buttonStyles({ fullWidth: true })}
       >
         {t('payment.routes.stars.cta')}
         <ExternalLinkIcon aria-hidden className="size-4" />
@@ -257,88 +256,70 @@ function StarsBody({ wallet }: { wallet: WalletId }) {
   )
 }
 
-function FragmentBody({ wallet }: { wallet: WalletId }) {
+function TgStarsBody() {
   const { t } = useTranslation('vip')
-  const { data } = useTariffs()
-  const plan = data?.plans.find((item) => item.duration_days === 30) ?? data?.plans[0]
-  const stars = plan?.telegram_stars_price
-  const example =
-    plan && typeof stars === 'number'
-      ? {
-          days: plan.duration_days,
-          vip: plan.price,
-          stars,
-          cost: Number((plan.price * (1 + FRAGMENT_FEE_PERCENT / 100)).toFixed(2)),
-          fee: FRAGMENT_FEE_PERCENT,
-        }
-      : null
 
   return (
     <div className="space-y-5">
-      <p className="text-sm leading-relaxed text-fg-muted">
-        {wallet === 'card' ? t('payment.routes.fragment.whatCard') : t('payment.routes.fragment.whatCrypto')}
-      </p>
-
-      <StarsPrices />
-
       <ol className="space-y-3">
-        {(wallet === 'card'
-          ? (['stepCard1', 'stepCard2', 'stepCard3'] as const)
-          : (['stepCrypto1', 'stepCrypto2', 'stepCrypto3'] as const)
-        ).map((key, index) => (
+        {(['step1', 'step2'] as const).map((key, index) => (
           <li key={key} className="flex gap-3 text-sm text-fg-muted">
             <span className="grid size-6 shrink-0 place-items-center rounded-full bg-accent-500/15 text-xs font-semibold text-accent-200">
               {index + 1}
             </span>
-            <span className="min-w-0 pt-0.5">
-              {key === 'stepCrypto1' ? (
-                <Trans
-                  i18nKey={`payment.routes.fragment.${key}`}
-                  ns="vip"
-                  components={{ fragment: <ExternalLink href={FRAGMENT_STARS_URL} /> }}
-                />
-              ) : key === 'stepCard3' || key === 'stepCrypto3' ? (
-                <Trans
-                  i18nKey={`payment.routes.fragment.${key}`}
-                  ns="vip"
-                  components={{ bot: <ExternalLink href={VIP_BOT_START.pay} /> }}
-                />
-              ) : (
-                t(`payment.routes.fragment.${key}`)
-              )}
-            </span>
+            <span className="min-w-0 pt-0.5">{t(`payment.routes.tgStars.${key}`)}</span>
           </li>
         ))}
       </ol>
 
-      {example ? (
-        <p className="rounded-xl bg-ink-900/50 px-3.5 py-2.5 text-sm text-fg-muted ring-1 ring-white/6">
-          <Trans
-            i18nKey="payment.routes.fragment.example"
-            ns="vip"
-            values={example}
-            components={{ b: <span className="font-semibold text-fg" /> }}
-          />
-        </p>
-      ) : null}
+      <StarsPrices />
 
-      <div className="flex flex-wrap gap-2">
-        {wallet === 'crypto' ? (
-          <a
-            href={FRAGMENT_STARS_URL}
-            target="_blank"
-            rel="noreferrer"
-            className={buttonStyles()}
-          >
-            {t('payment.routes.fragment.openFragment')}
-            <ExternalLinkIcon aria-hidden className="size-4" />
-          </a>
-        ) : null}
+      <a
+        href={VIP_BOT_START.pay}
+        target="_blank"
+        rel="noreferrer"
+        className={buttonStyles({ fullWidth: true })}
+      >
+        {t('payment.routes.tgStars.openBot')}
+        <ExternalLinkIcon aria-hidden className="size-4" />
+      </a>
+    </div>
+  )
+}
+
+function FragmentBody() {
+  const { t } = useTranslation('vip')
+
+  return (
+    <div className="space-y-5">
+      <ol className="space-y-3">
+        {(['step1', 'step2', 'step3', 'step4'] as const).map((key, index) => (
+          <li key={key} className="flex gap-3 text-sm text-fg-muted">
+            <span className="grid size-6 shrink-0 place-items-center rounded-full bg-accent-500/15 text-xs font-semibold text-accent-200">
+              {index + 1}
+            </span>
+            <span className="min-w-0 pt-0.5">{t(`payment.routes.fragment.${key}`)}</span>
+          </li>
+        ))}
+      </ol>
+
+      <StarsPrices />
+
+      <div className="flex flex-col gap-2.5 sm:flex-row">
+        <a
+          href={FRAGMENT_STARS_URL}
+          target="_blank"
+          rel="noreferrer"
+          className={buttonStyles({ fullWidth: true })}
+        >
+          {t('payment.routes.fragment.openFragment')}
+          <ExternalLinkIcon aria-hidden className="size-4" />
+        </a>
         <a
           href={VIP_BOT_START.pay}
           target="_blank"
           rel="noreferrer"
-          className={buttonStyles({ variant: wallet === 'crypto' ? 'secondary' : 'primary' })}
+          className={buttonStyles({ fullWidth: true })}
         >
           {t('payment.routes.fragment.openBot')}
           <ExternalLinkIcon aria-hidden className="size-4" />
@@ -363,6 +344,17 @@ function CryptoBody() {
       </div>
 
       <div className="space-y-2">
+        <p className="text-sm font-medium text-fg">{t('payment.routes.crypto.cryptoBot')}</p>
+        <div className="space-y-3 rounded-2xl bg-ink-900/50 p-3.5 ring-1 ring-white/6 sm:p-4">
+          <p className="flex items-center gap-2 text-sm text-fg-muted">
+            <BrandMark brand="cryptobot" className="size-5 shrink-0" />
+            {t('payment.routes.crypto.cryptoBotFee')}
+          </p>
+          <OfferButtons offers={CRYPTO_BOT_INVOICES} />
+        </div>
+      </div>
+
+      <div className="space-y-2">
         <p className="text-sm font-medium text-fg">{t('payment.routes.crypto.networks')}</p>
         {CRYPTO_NETWORKS.map((network) => (
           <CopyRow
@@ -374,24 +366,7 @@ function CryptoBody() {
         ))}
       </div>
 
-      <div className="space-y-2">
-        <p className="flex items-center gap-2 text-sm font-medium text-fg">
-          <BrandMark brand="cryptobot" className="size-5" />
-          {t('payment.routes.crypto.cryptoBot')}
-        </p>
-        <p className="text-sm text-fg-muted">
-          {t('payment.routes.crypto.cryptoBotFee', { fee: CRYPTO_BOT_INVOICE_FEE_USD })}
-        </p>
-        <OfferButtons offers={CRYPTO_BOT_INVOICES} />
-      </div>
-
-      <p className="text-sm text-fg-muted">
-        <Trans
-          i18nKey="payment.afterContact"
-          ns="vip"
-          components={{ contact: <ExternalLink href={CONTACT_URL} /> }}
-        />
-      </p>
+      <ContactDmButtons />
     </div>
   )
 }
@@ -455,8 +430,10 @@ function RouteBody({ route, wallet }: { route: CheckoutRouteId; wallet: WalletId
       return <FunpayBody wallet={wallet} />
     case 'stars':
       return <StarsBody wallet={wallet} />
+    case 'tgStars':
+      return <TgStarsBody />
     case 'fragment':
-      return <FragmentBody wallet={wallet} />
+      return <FragmentBody />
     case 'crypto':
       return <CryptoBody />
     case 'paypal':
@@ -466,7 +443,7 @@ function RouteBody({ route, wallet }: { route: CheckoutRouteId; wallet: WalletId
   }
 }
 
-function routeBadges(route: CheckoutRouteId, feeLabel: string, labels: {
+function routeBadges(route: CheckoutRouteId, labels: {
   instant: string
   auto: string
   cheapest: string
@@ -475,25 +452,17 @@ function routeBadges(route: CheckoutRouteId, feeLabel: string, labels: {
 }) {
   switch (route) {
     case 'funpay':
-      return [
-        { tone: 'accent' as const, label: labels.instant },
-        { tone: 'neutral' as const, label: feeLabel },
-      ]
+      return [{ tone: 'accent' as const, label: labels.auto }]
     case 'stars':
       return [
         { tone: 'accent' as const, label: labels.instant },
         { tone: 'neutral' as const, label: labels.inTelegram },
       ]
+    case 'tgStars':
     case 'fragment':
-      return [
-        { tone: 'accent' as const, label: labels.auto },
-        { tone: 'neutral' as const, label: feeLabel },
-      ]
+      return [{ tone: 'accent' as const, label: labels.auto }]
     case 'crypto':
-      return [
-        { tone: 'accent' as const, label: labels.cheapest },
-        { tone: 'neutral' as const, label: labels.manual },
-      ]
+      return []
     case 'bank':
       return []
     case 'paypal':
@@ -601,19 +570,8 @@ export function PaymentSection() {
           <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
             {routes.map((id) => {
               const active = activeRoute === id
-              const badges = routeBadges(
-                id,
-                t('payment.badges.fee', {
-                  fee: id === 'funpay' ? FUNPAY_FEE_PERCENT : FRAGMENT_FEE_PERCENT,
-                }),
-                badgeLabels,
-              )
-              const fullRow =
-                id === 'crypto' ||
-                id === 'bank' ||
-                id === 'funpay' ||
-                id === 'fragment' ||
-                (id === 'paypal' && !routes.includes('bank'))
+              const badges = routeBadges(id, badgeLabels)
+              const fullRow = id === 'crypto' || id === 'bank'
               return (
                 <button
                   key={id}
@@ -628,33 +586,37 @@ export function PaymentSection() {
                       : 'border border-white/8 bg-ink-850/70 hover:border-white/14 hover:bg-ink-800/90',
                   )}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <span
-                      className={cn(
-                        'grid size-9 place-items-center rounded-xl',
-                        active ? 'bg-accent-500/20' : 'bg-ink-800',
-                      )}
-                    >
-                      <BrandMark brand={ROUTE_BRANDS[id]} />
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex min-w-0 items-center gap-2.5">
+                      <span
+                        className={cn(
+                          'grid size-9 shrink-0 place-items-center rounded-xl',
+                          active ? 'bg-accent-500/20' : 'bg-ink-800',
+                        )}
+                      >
+                        <BrandMark brand={ROUTE_BRANDS[id]} />
+                      </span>
+                      <span className="font-semibold leading-snug text-fg">
+                        {t(`payment.routes.${id}.title`)}
+                      </span>
                     </span>
-                    <div className="flex flex-wrap justify-end gap-1">
-                      {badges.map((badge) => (
-                        <Badge
-                          key={badge.label}
-                          tone={badge.tone === 'accent' ? 'accent' : 'neutral'}
-                          className="px-2 py-0.5 text-[0.65rem]"
-                        >
-                          {badge.label}
-                        </Badge>
-                      ))}
-                    </div>
+                    {badges.length > 0 ? (
+                      <div className="flex shrink-0 flex-wrap justify-end gap-1">
+                        {badges.map((badge) => (
+                          <Badge
+                            key={badge.label}
+                            tone={badge.tone === 'accent' ? 'accent' : 'neutral'}
+                            className="px-2 py-0.5 text-[0.65rem]"
+                          >
+                            {badge.label}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
-                  <div>
-                    <p className="font-semibold text-fg">{t(`payment.routes.${id}.title`)}</p>
-                    <p className="mt-1 text-xs leading-snug text-fg-muted sm:text-sm">
-                      {t(`payment.routes.${id}.blurb`)}
-                    </p>
-                  </div>
+                  <p className="text-xs leading-snug text-fg-muted sm:text-sm">
+                    {t(`payment.routes.${id}.blurb`)}
+                  </p>
                 </button>
               )
             })}
@@ -664,9 +626,24 @@ export function PaymentSection() {
 
       <Card className="space-y-4 border-accent-500/20 p-4 sm:p-6">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-fg-subtle">
-            {t('payment.detailsLabel')}
-          </p>
+          <div className="flex items-start justify-between gap-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-fg-subtle">
+              {t('payment.detailsLabel')}
+            </p>
+            {activeRoute === 'fragment' || activeRoute === 'tgStars' ? (
+              <Badge tone="neutral" className="shrink-0 px-2 py-0.5 text-[0.7rem] font-medium normal-case tracking-normal">
+                {t(`payment.routes.${activeRoute}.feeBadge`)}
+              </Badge>
+            ) : activeRoute === 'funpay' ? (
+              <Badge tone="neutral" className="shrink-0 px-2 py-0.5 text-[0.7rem] font-medium normal-case tracking-normal">
+                {t('payment.routes.funpay.feeBadge')}
+              </Badge>
+            ) : activeRoute === 'stars' ? (
+              <Badge tone="accent" className="shrink-0 px-2 py-0.5 text-[0.7rem] font-medium normal-case tracking-normal">
+                {t('payment.badges.auto')}
+              </Badge>
+            ) : null}
+          </div>
           <h3 className="mt-1 text-xl font-semibold tracking-tight">
             {t([`payment.routes.${activeRoute}.detailsTitle`, `payment.routes.${activeRoute}.title`])}
           </h3>

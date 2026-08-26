@@ -91,11 +91,31 @@ export function currencySymbol(currency: string): string {
   }
 }
 
-/** Whole units with the symbol on the right: `123₴`. Amount is already quantized. */
-export function formatLocalMoney(amount: number, currency: string): string {
+/**
+ * Near-parity FX (EUR/GBP/CHF/CAD/…): live rate + 2 decimals.
+ * High FX (UAH/RUB/PLN/…): ceil $/unit so plans share a whole multiplier.
+ */
+const NEAR_USD_RATE_MAX = 2
+
+export function localApproxFromRate(rate: number): {
+  unitRate: number
+  fractionDigits: number
+} {
+  if (rate <= NEAR_USD_RATE_MAX) {
+    return { unitRate: rate, fractionDigits: 2 }
+  }
+  return { unitRate: Math.ceil(rate), fractionDigits: 0 }
+}
+
+/** Symbol on the right: `123₴` / `13,80€`. */
+export function formatLocalMoney(
+  amount: number,
+  currency: string,
+  fractionDigits = 0,
+): string {
   const number = new Intl.NumberFormat(undefined, {
-    maximumFractionDigits: 0,
-    minimumFractionDigits: 0,
+    maximumFractionDigits: fractionDigits,
+    minimumFractionDigits: fractionDigits,
   }).format(amount)
   return `${number}${currencySymbol(currency)}`
 }
