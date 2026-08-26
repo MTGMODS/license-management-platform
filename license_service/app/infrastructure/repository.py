@@ -153,80 +153,169 @@ class LicenseRepository:
         await self.db.commit()
         return True
 
+    @staticmethod
+    def _money_share(part: float, total: float) -> float:
+        return round((part / total) * 100, 1) if total > 0 else 0.0
+
     async def get_heavy_public_stats(self):
         timed = LicenseModel.duration_days.isnot(None)
+        forever = LicenseModel.duration_days.is_(None)
         paid = TransactionModel.amount > 0
         free = TransactionModel.amount == 0
         completed = TransactionModel.status == "COMPLETED"
         owned = LicenseModel.user_id.isnot(None)
         active = LicenseModel.status == LicenseStatus.ACTIVE
+        paid_subs = and_(timed, paid, completed, owned)
 
-        new_totals_stmt = select(
-            func.count(distinct(case((and_(paid, owned), LicenseModel.id)))).label("total_vips"),
-            func.count(distinct(case((and_(paid, active), LicenseModel.id)))).label("active_total"),
+        overview_stmt = select(
+            func.count(distinct(case((and_(paid, owned), LicenseModel.id)))).label("total_sold"),
+            func.count(distinct(case((and_(paid, active), LicenseModel.id)))).label("active"),
             func.sum(case((and_(paid, owned), TransactionModel.amount), else_=0)).label("total_money"),
-            func.count(distinct(case((free, LicenseModel.id)))).label("total_free"),
-            func.count(distinct(case((and_(free, active), LicenseModel.id)))).label("active_free")
+            func.count(distinct(case((free, LicenseModel.id)))).label("free_issued"),
+            func.count(distinct(case((and_(free, active), LicenseModel.id)))).label("free_active"),
         ).select_from(LicenseModel).outerjoin(
             TransactionModel, LicenseModel.id == TransactionModel.license_id
         ).where(timed)
-        
-        n_res = (await self.db.execute(new_totals_stmt)).first()
+        overview = (await self.db.execute(overview_stmt)).first()
+        total_sold = overview.total_sold or 0
+        total_money = round(overview.total_money or 0, 2)
 
         dur_stmt = select(
             LicenseModel.duration_days,
             func.count(distinct(LicenseModel.id)).label("count"),
             func.sum(TransactionModel.amount).label("sum"),
-            func.count(distinct(case((active, LicenseModel.id)))).label("active_count")
+            func.count(distinct(case((active, LicenseModel.id)))).label("active_count"),
         ).select_from(LicenseModel).outerjoin(
             TransactionModel, LicenseModel.id == TransactionModel.license_id
-        ).where(
-            and_(timed, paid, completed, owned)
-        ).group_by(LicenseModel.duration_days).order_by(desc("sum"))
-        
-        durations = [{"days": r.duration_days, "count": r.count, "sum": r.sum or 0, "active": r.active_count} 
-                     for r in (await self.db.execute(dur_stmt)).all()]
+        ).where(paid_subs).group_by(LicenseModel.duration_days).order_by(desc("sum"))
+
+        by_duration = [
+            {
+                "duration_days": r.duration_days,
+                "count": r.count,
+                "sum": round(r.sum or 0, 2),
+                "active": r.active_count,
+                "share": self._money_share(r.count, total_sold),
+            }
+            for r in (await self.db.execute(dur_stmt)).all()
+        ]
 
         pay_stmt = select(
             TransactionModel.payment_method,
             func.count(TransactionModel.id).label("count"),
-            func.sum(TransactionModel.amount).label("sum")
+            func.sum(TransactionModel.amount).label("sum"),
         ).select_from(TransactionModel).join(
             LicenseModel, TransactionModel.license_id == LicenseModel.id
-        ).where(
-            and_(timed, paid, completed, owned)
-        ).group_by(TransactionModel.payment_method).order_by(desc("sum"), desc("count"))
+        ).where(paid_subs).group_by(TransactionModel.payment_method).order_by(desc("sum"), desc("count"))
 
-        payments = [{"method": r.payment_method, "count": r.count, "sum": r.sum or 0} 
-                    for r in (await self.db.execute(pay_stmt)).all()]
+        by_method = [
+            {
+                "method": r.payment_method,
+                "count": r.count,
+                "sum": round(r.sum or 0, 2),
+                "share": self._money_share(r.sum or 0, total_money),
+            }
+            for r in (await self.db.execute(pay_stmt)).all()
+        ]
 
-        old_totals_stmt = select(
-            func.count(distinct(LicenseModel.id)).label("total_forever"),
-            func.sum(TransactionModel.amount).label("sum_forever")
-        ).select_from(LicenseModel).outerjoin(
-            TransactionModel, LicenseModel.id == TransactionModel.license_id
-        ).where(
-            LicenseModel.duration_days.is_(None),
-            completed
+        daily_stmt = select(
+            func.date(TransactionModel.purchased_at).label("dt"),
+            func.count(TransactionModel.id).label("count"),
+            func.sum(TransactionModel.amount).label("sum"),
+        ).select_from(TransactionModel).join(
+            LicenseModel, TransactionModel.license_id == LicenseModel.id
+        ).where(paid_subs).group_by(func.date(TransactionModel.purchased_at)).order_by(
+            func.date(TransactionModel.purchased_at)
         )
 
-        o_res = (await self.db.execute(old_totals_stmt)).first()
+        timeline_daily = [
+            {
+                "date": str(r.dt) if r.dt else "Unknown",
+                "count": r.count,
+                "sum": round(r.sum or 0, 2),
+            }
+            for r in (await self.db.execute(daily_stmt)).all()
+        ]
+
+        sales_stmt = select(
+            TransactionModel.purchased_at,
+            TransactionModel.amount,
+            TransactionModel.payment_method,
+            LicenseModel.duration_days,
+            LicenseModel.status,
+            LicenseModel.activated_at,
+            LicenseModel.expires_at,
+        ).select_from(TransactionModel).join(
+            LicenseModel, TransactionModel.license_id == LicenseModel.id
+        ).where(paid_subs).order_by(TransactionModel.purchased_at.desc())
+
+        sales = [
+            {
+                "purchased_at": format_utc(r.purchased_at),
+                "amount": round(r.amount or 0, 2),
+                "method": r.payment_method,
+                "duration_days": r.duration_days,
+                "status": r.status.value if hasattr(r.status, "value") else r.status,
+                "activated_at": format_utc(r.activated_at),
+                "expires_at": format_utc(r.expires_at),
+            }
+            for r in (await self.db.execute(sales_stmt)).all()
+        ]
+
+        forever_overview_stmt = select(
+            func.count(distinct(LicenseModel.id)).label("total_sold"),
+            func.sum(TransactionModel.amount).label("total_money"),
+        ).select_from(LicenseModel).outerjoin(
+            TransactionModel, LicenseModel.id == TransactionModel.license_id
+        ).where(forever, completed)
+        forever_overview = (await self.db.execute(forever_overview_stmt)).first()
+        forever_sold = forever_overview.total_sold or 0
+        forever_money = round(forever_overview.total_money or 0, 2)
+
+        forever_pay_stmt = select(
+            TransactionModel.payment_method,
+            func.count(TransactionModel.id).label("count"),
+            func.sum(TransactionModel.amount).label("sum"),
+        ).select_from(TransactionModel).join(
+            LicenseModel, TransactionModel.license_id == LicenseModel.id
+        ).where(forever, completed).group_by(TransactionModel.payment_method).order_by(
+            desc("sum"), desc("count")
+        )
+
+        forever_by_method = [
+            {
+                "method": r.payment_method,
+                "count": r.count,
+                "sum": round(r.sum or 0, 2),
+                "share": self._money_share(r.sum or 0, forever_money),
+            }
+            for r in (await self.db.execute(forever_pay_stmt)).all()
+        ]
 
         return {
             "updated_at": format_utc(datetime.now(timezone.utc)),
-            "new_subs": {
-                "total_vips": n_res.total_vips or 0,
-                "active_total": n_res.active_total or 0,
-                "total_money": round(n_res.total_money or 0, 2),
-                "free_issued": n_res.total_free or 0,
-                "free_active": n_res.active_free or 0,
-                "top_durations": durations,
-                "top_payments": payments
+            "subscriptions": {
+                "overview": {
+                    "total_sold": total_sold,
+                    "total_money": total_money,
+                    "active": overview.active or 0,
+                    "free_issued": overview.free_issued or 0,
+                    "free_active": overview.free_active or 0,
+                },
+                "by_duration": by_duration,
+                "by_method": by_method,
+                "timeline": {
+                    "daily": timeline_daily,
+                },
+                "sales": sales,
             },
-            "old_forever": {
-                "total_sold": o_res.total_forever or 0,
-                "total_money": round(o_res.sum_forever or 0, 2)
-            }
+            "forever": {
+                "overview": {
+                    "total_sold": forever_sold,
+                    "total_money": forever_money,
+                },
+                "by_method": forever_by_method,
+            },
         }
 
 class TransactionRepository:
