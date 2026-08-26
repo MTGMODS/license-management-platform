@@ -9,6 +9,8 @@ import { Badge, Card, Skeleton } from '@/shared/ui'
 
 const BEST_VALUE_DAYS = 365
 
+const SHORT_DESKTOP = '[@media(min-width:1024px)_and_(max-height:48rem)]'
+
 function planBadge(days: number): 'pricing.cheapest' | 'pricing.featured' | '2+1' | null {
   if (days === 7) return 'pricing.cheapest'
   if (days === BEST_VALUE_DAYS) return 'pricing.featured'
@@ -27,7 +29,9 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
   const { formatApprox } = useLocalUsdPrice()
   const gridClass = cn(
     'grid w-full grid-cols-2 items-stretch lg:grid-cols-4',
-    compact ? 'gap-[clamp(0.4rem,1vh,0.75rem)]' : 'gap-3 lg:gap-4',
+    compact
+      ? cn('gap-[clamp(0.4rem,1vh,0.75rem)]', `${SHORT_DESKTOP}:gap-2`)
+      : 'gap-3 lg:gap-4',
   )
 
   if (isPending) {
@@ -67,14 +71,21 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
             key={plan.duration_days}
             className={cn(
               'flex flex-col border border-accent-500/40 text-left',
-              compact ? 'p-[clamp(0.55rem,1.1vh,0.85rem)]' : 'p-3.5 sm:p-4',
+              compact
+                ? cn('p-[clamp(0.55rem,1.1vh,0.85rem)]', `${SHORT_DESKTOP}:p-2.5`)
+                : 'p-3.5 sm:p-4',
             )}
           >
             <div className="flex items-start justify-between gap-2">
               <p
                 className={cn(
                   'text-fg-muted',
-                  compact ? 'text-[clamp(0.7rem,1.2vh,0.85rem)]' : 'text-xs sm:text-sm',
+                  compact
+                    ? cn(
+                        'text-[clamp(0.7rem,1.2vh,0.85rem)]',
+                        `${SHORT_DESKTOP}:text-[0.7rem]`,
+                      )
+                    : 'text-xs sm:text-sm',
                 )}
               >
                 {t('pricing.days', { count: plan.duration_days })}
@@ -93,14 +104,19 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
             <div
               className={cn(
                 'flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5',
-                compact ? 'mt-[clamp(0.25rem,0.7vh,0.5rem)]' : 'mt-1.5 gap-x-2',
+                compact
+                  ? cn('mt-[clamp(0.25rem,0.7vh,0.5rem)]', `${SHORT_DESKTOP}:mt-1`)
+                  : 'mt-1.5 gap-x-2',
               )}
             >
               <p
                 className={cn(
                   'tabular font-semibold tracking-tight',
                   compact
-                    ? 'text-[clamp(1.25rem,2.8vh,1.875rem)]'
+                    ? cn(
+                        'text-[clamp(1.25rem,2.8vh,1.875rem)]',
+                        `${SHORT_DESKTOP}:text-xl`,
+                      )
                     : 'text-2xl sm:text-3xl',
                 )}
               >
@@ -112,7 +128,10 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
                     className={cn(
                       'font-semibold text-fg-subtle',
                       compact
-                        ? 'text-[clamp(1.25rem,2.8vh,1.875rem)]'
+                        ? cn(
+                            'text-[clamp(1.25rem,2.8vh,1.875rem)]',
+                            `${SHORT_DESKTOP}:text-xl`,
+                          )
                         : 'text-2xl sm:text-3xl',
                     )}
                     aria-hidden
@@ -123,7 +142,10 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
                     className={cn(
                       'tabular font-semibold tracking-tight',
                       compact
-                        ? 'text-[clamp(1.25rem,2.8vh,1.875rem)]'
+                        ? cn(
+                            'text-[clamp(1.25rem,2.8vh,1.875rem)]',
+                            `${SHORT_DESKTOP}:text-xl`,
+                          )
                         : 'text-2xl sm:text-3xl',
                     )}
                   >
@@ -135,7 +157,12 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
             <p
               className={cn(
                 'tabular text-fg-subtle',
-                compact ? 'mt-0.5 text-[clamp(0.65rem,1.1vh,0.75rem)]' : 'mt-0.5 text-xs',
+                compact
+                  ? cn(
+                      'mt-0.5 text-[clamp(0.65rem,1.1vh,0.75rem)]',
+                      `${SHORT_DESKTOP}:text-[0.65rem]`,
+                    )
+                  : 'mt-0.5 text-xs',
               )}
             >
               {t('pricing.perDay', { price: format.money(plan.price / plan.duration_days) })}
@@ -145,7 +172,10 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
               className={cn(
                 'flex items-center gap-1.5 border-t border-white/8 text-fg-muted',
                 compact
-                  ? 'mt-[clamp(0.4rem,1vh,0.7rem)] pt-[clamp(0.35rem,0.9vh,0.6rem)] text-[clamp(0.65rem,1.15vh,0.8rem)]'
+                  ? cn(
+                      'mt-[clamp(0.4rem,1vh,0.7rem)] pt-[clamp(0.35rem,0.9vh,0.6rem)] text-[clamp(0.65rem,1.15vh,0.8rem)]',
+                      `${SHORT_DESKTOP}:mt-2 ${SHORT_DESKTOP}:pt-1.5 ${SHORT_DESKTOP}:text-[0.65rem]`,
+                    )
                   : 'mt-3 pt-2.5 text-xs sm:text-sm',
               )}
             >

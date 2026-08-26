@@ -15,14 +15,21 @@ interface StatItem {
   icon: ComponentType<{ className?: string }>
 }
 
-/** Tall fold (FHD+): 2×2. Short CSS viewport (HD / scaled UHD): one row of four. */
-const COMPACT_GRID =
-  'grid grid-cols-4 gap-[clamp(0.35rem,0.9vh,0.65rem)] [@media(min-height:56rem)]:grid-cols-2 [@media(min-height:56rem)]:gap-[clamp(0.45rem,1.1vh,0.75rem)]'
+/** Tall fold (FHD+): 2×2. Short desktop (HD): one row of four. */
+const COMPACT_GRID = cn(
+  'grid grid-cols-4 gap-[clamp(0.35rem,0.9vh,0.65rem)]',
+  '[@media(min-width:1024px)_and_(max-height:48rem)]:gap-1.5',
+  '[@media(min-height:56rem)]:grid-cols-2',
+  '[@media(min-height:56rem)]:gap-[clamp(0.45rem,1.1vh,0.75rem)]',
+)
+
+const SHORT_DESKTOP = '[@media(min-width:1024px)_and_(max-height:48rem)]'
 
 export function SalesOverview({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const { data, isPending, isError } = useSalesStats()
+  /** Soft: VIP fold must not depend on usage being up. */
   const { data: usage } = usePublicStats()
 
   if (isError) return null
@@ -35,12 +42,24 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
         <h2
           className={cn(
             'font-semibold tracking-tight',
-            compact ? 'text-[clamp(0.95rem,1.7vh,1.2rem)]' : 'text-lg sm:text-xl',
+            compact
+              ? cn('text-[clamp(0.95rem,1.7vh,1.2rem)]', `${SHORT_DESKTOP}:text-sm`)
+              : 'text-lg sm:text-xl',
           )}
         >
           {t('stats.title')}
         </h2>
-        <p className={cn('text-fg-muted', compact ? 'mt-0.5 text-[clamp(0.65rem,1.1vh,0.75rem)]' : 'mt-1 text-sm')}>
+        <p
+          className={cn(
+            'text-fg-muted',
+            compact
+              ? cn(
+                  'mt-0.5 text-[clamp(0.65rem,1.1vh,0.75rem)]',
+                  `${SHORT_DESKTOP}:text-[0.65rem]`,
+                )
+              : 'mt-1 text-sm',
+          )}
+        >
           {t('stats.subtitle')}
         </p>
         <div className={cn(compact ? cn('mt-[clamp(0.35rem,0.9vh,0.65rem)]', COMPACT_GRID) : 'mt-4 grid grid-cols-2 gap-3')}>
@@ -49,7 +68,11 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
               key={index}
               className={
                 compact
-                  ? 'h-[clamp(3.5rem,7vh,4.25rem)] [@media(min-height:56rem)]:h-[clamp(4.5rem,9vh,5.75rem)]'
+                  ? cn(
+                      'h-[clamp(3.5rem,7vh,4.25rem)]',
+                      `${SHORT_DESKTOP}:h-11`,
+                      '[@media(min-height:56rem)]:h-[clamp(4.5rem,9vh,5.75rem)]',
+                    )
                   : 'h-20'
               }
               label={index === 0 ? t('stats.loading') : undefined}
@@ -61,7 +84,7 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
   }
 
   const { new_subs: subs } = data
-  const conversion = usage?.overview.metrics.vip_conversion
+  const conversion = usage?.overview?.metrics?.vip_conversion
 
   const items: StatItem[] = [
     {
@@ -95,12 +118,24 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
       <h2
         className={cn(
           'font-semibold tracking-tight',
-          compact ? 'text-[clamp(0.95rem,1.7vh,1.2rem)]' : 'text-lg sm:text-xl',
+          compact
+            ? cn('text-[clamp(0.95rem,1.7vh,1.2rem)]', `${SHORT_DESKTOP}:text-sm`)
+            : 'text-lg sm:text-xl',
         )}
       >
         {t('stats.title')}
       </h2>
-      <p className={cn('text-fg-muted', compact ? 'mt-0.5 text-[clamp(0.65rem,1.1vh,0.75rem)]' : 'mt-1 text-sm')}>
+      <p
+        className={cn(
+          'text-fg-muted',
+          compact
+            ? cn(
+                'mt-0.5 text-[clamp(0.65rem,1.1vh,0.75rem)]',
+                `${SHORT_DESKTOP}:text-[0.65rem]`,
+              )
+            : 'mt-1 text-sm',
+        )}
+      >
         {t('stats.subtitle')}
       </p>
 
@@ -113,7 +148,12 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
               className={cn(
                 'text-center',
                 compact
-                  ? 'flex min-h-[clamp(3.5rem,7vh,4.25rem)] flex-col justify-center p-[clamp(0.45rem,1vh,0.7rem)] [@media(min-height:56rem)]:min-h-[clamp(4.5rem,9vh,5.75rem)] [@media(min-height:56rem)]:p-[clamp(0.7rem,1.4vh,1rem)]'
+                  ? cn(
+                      'flex min-h-[clamp(3.5rem,7vh,4.25rem)] flex-col justify-center p-[clamp(0.45rem,1vh,0.7rem)]',
+                      `${SHORT_DESKTOP}:min-h-11 ${SHORT_DESKTOP}:p-2`,
+                      '[@media(min-height:56rem)]:min-h-[clamp(4.5rem,9vh,5.75rem)]',
+                      '[@media(min-height:56rem)]:p-[clamp(0.7rem,1.4vh,1rem)]',
+                    )
                   : 'p-3 sm:p-4',
               )}
             >
@@ -137,7 +177,12 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
                 className={cn(
                   'tabular font-semibold tracking-tight',
                   compact
-                    ? 'mt-1 text-[clamp(1rem,1.9vh,1.35rem)] [@media(min-height:56rem)]:mt-1.5 [@media(min-height:56rem)]:text-[clamp(1.2rem,2.2vh,1.65rem)]'
+                    ? cn(
+                        'mt-1 text-[clamp(1rem,1.9vh,1.35rem)]',
+                        `${SHORT_DESKTOP}:mt-0.5 ${SHORT_DESKTOP}:text-base`,
+                        '[@media(min-height:56rem)]:mt-1.5',
+                        '[@media(min-height:56rem)]:text-[clamp(1.2rem,2.2vh,1.65rem)]',
+                      )
                     : 'mt-2 text-xl sm:text-2xl',
                 )}
               >
@@ -151,7 +196,12 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
       <div
         className={cn(
           'flex flex-wrap items-center justify-between gap-2 text-fg-subtle',
-          compact ? 'mt-1.5 text-[0.65rem] sm:text-[0.7rem]' : 'mt-3 text-xs sm:text-sm',
+          compact
+            ? cn(
+                'mt-1.5 text-[0.65rem] sm:text-[0.7rem]',
+                `${SHORT_DESKTOP}:mt-1 ${SHORT_DESKTOP}:text-[0.625rem]`,
+              )
+            : 'mt-3 text-xs sm:text-sm',
         )}
       >
         <span>{t('stats.updated', { time: format.dateTime(data.updated_at) })}</span>

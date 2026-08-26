@@ -84,25 +84,79 @@ function GalleryLink({ children }: { children?: ReactNode }) {
   )
 }
 
-/** Four stacked rows — content-sized, never stretched. */
+/** Short desktop (e.g. 1280×720): tighter 2×2. Tall desktop: four rows. Phones unchanged. */
+const SHORT_DESKTOP = '[@media(min-width:1024px)_and_(max-height:48rem)]'
+
+/** Desktop fold: fixed viewport height, stats row always fully visible at the bottom. */
+const DESKTOP_FOLD = cn(
+  'lg:grid lg:h-[calc(100dvh-4rem)] lg:grid-rows-[auto_minmax(0,1fr)_auto]',
+  'lg:overflow-hidden lg:py-[clamp(0.4rem,1.1vh,0.9rem)]',
+)
+
 function VipBenefits() {
   const { t } = useTranslation('vip')
 
   return (
-    <Card className="w-full shrink-0 p-4 text-left sm:p-5 lg:p-[clamp(0.45rem,1vh,0.85rem)]">
-      <ul className="grid grid-cols-1 gap-3 sm:gap-3.5 lg:gap-[clamp(0.25rem,0.75vh,0.55rem)]">
+    <Card
+      className={cn(
+        'w-full shrink-0 p-4 text-left sm:p-5',
+        'lg:p-[clamp(0.85rem,1.6vh,1.25rem)]',
+        `${SHORT_DESKTOP}:p-3`,
+      )}
+    >
+      <ul
+        className={cn(
+          'grid grid-cols-1 gap-3.5 sm:gap-4',
+          'lg:gap-[clamp(0.65rem,1.35vh,1rem)]',
+          `${SHORT_DESKTOP}:grid-cols-2`,
+          `${SHORT_DESKTOP}:gap-x-4`,
+          `${SHORT_DESKTOP}:gap-y-2`,
+        )}
+      >
         {BENEFITS.map((item) => {
           const Icon = item.icon
           return (
-            <li key={item.titleKey} className="flex gap-2.5 sm:gap-3 lg:gap-2.5">
-              <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg bg-accent-500/10 text-accent-300 sm:size-8 lg:size-[clamp(1.6rem,2.8vh,2rem)]">
-                <Icon aria-hidden className="size-3.5 sm:size-4 lg:size-[clamp(0.8rem,1.4vh,1rem)]" />
+            <li
+              key={item.titleKey}
+              className={cn(
+                'flex gap-3 sm:gap-3.5',
+                'lg:gap-[clamp(0.75rem,1.4vh,1rem)]',
+                `${SHORT_DESKTOP}:gap-2.5`,
+              )}
+            >
+              <span
+                className={cn(
+                  'mt-0.5 grid size-9 shrink-0 place-items-center rounded-xl bg-accent-500/10 text-accent-300 sm:size-10',
+                  'lg:size-[clamp(2.25rem,3.6vh,2.75rem)]',
+                  `${SHORT_DESKTOP}:size-7`,
+                )}
+              >
+                <Icon
+                  aria-hidden
+                  className={cn(
+                    'size-4 sm:size-[1.15rem]',
+                    'lg:size-[clamp(1.1rem,1.8vh,1.35rem)]',
+                    `${SHORT_DESKTOP}:size-3.5`,
+                  )}
+                />
               </span>
               <div className="min-w-0">
-                <p className="text-sm font-medium text-fg sm:text-[0.95rem] lg:text-[clamp(0.8rem,1.45vh,0.95rem)]">
+                <p
+                  className={cn(
+                    'text-base font-medium leading-snug text-fg sm:text-[1.05rem]',
+                    'lg:text-[clamp(1rem,1.75vh,1.15rem)]',
+                    `${SHORT_DESKTOP}:text-sm`,
+                  )}
+                >
                   {t(item.titleKey)}
                 </p>
-                <p className="mt-0.5 text-xs leading-snug text-fg-muted sm:text-sm lg:text-[clamp(0.7rem,1.25vh,0.85rem)] lg:leading-snug">
+                <p
+                  className={cn(
+                    'mt-1 text-sm leading-snug text-fg-muted sm:text-[0.95rem]',
+                    'lg:mt-[clamp(0.2rem,0.5vh,0.35rem)] lg:text-[clamp(0.85rem,1.45vh,0.95rem)] lg:leading-snug',
+                    `${SHORT_DESKTOP}:mt-0.5 ${SHORT_DESKTOP}:text-xs ${SHORT_DESKTOP}:leading-snug`,
+                  )}
+                >
                   {'withGuide' in item && item.withGuide ? (
                     <Trans
                       i18nKey={item.textKey}
@@ -149,13 +203,11 @@ export function VipPage() {
 
   return (
     <div className="shell flex min-h-0 flex-1 flex-col">
-      {/* Desktop fold: spare height between subtitle and tariffs. Mobile: normal scroll. */}
+      {/* Desktop fold: pack hero→CTA from the top; sales overview pins to the fold bottom. */}
       <div
         className={cn(
           'flex flex-col py-6 sm:py-8',
-          tariffsError || !tariffsReady
-            ? 'flex-1'
-            : 'lg:h-[calc(100dvh-4rem)] lg:overflow-hidden lg:py-[clamp(0.4rem,1.1vh,0.9rem)]',
+          tariffsError || !tariffsReady ? 'flex-1' : DESKTOP_FOLD,
         )}
       >
         <header className="w-full min-w-0 shrink-0 space-y-1.5 overflow-x-clip text-center lg:space-y-1">
@@ -187,35 +239,61 @@ export function VipPage() {
           </Card>
         ) : (
           <>
-            {/* Desktop: spare height between subtitle and tariffs; can collapse to 0. */}
-            <div className="hidden min-h-0 flex-1 lg:block" aria-hidden />
+            {/* Row 2: fixed hero→tariff gap, flex void, content + CTA pinned above stats. */}
+            <div className="mt-6 flex min-h-0 flex-col lg:mt-0 lg:h-full lg:overflow-hidden">
+              <div
+                className="hidden shrink-0 lg:block lg:h-[clamp(0.75rem,2vh,1.25rem)]"
+                aria-hidden
+              />
+              <div className="hidden min-h-0 flex-1 lg:block" aria-hidden />
 
-            <div className="mt-6 flex shrink-0 flex-col gap-5 lg:mt-0 lg:gap-[clamp(0.35rem,1vh,0.7rem)] lg:pt-[clamp(0.35rem,1.2vh,0.85rem)]">
-              <div className="lg:hidden">
-                <PricingGrid />
-              </div>
-              <div className="hidden lg:block">
-                <PricingGrid compact />
-              </div>
-
-              {tariffsReady ? (
-                <>
-                  <VipBenefits />
-                  <div className="flex justify-center">
-                    <Button size="lg" onClick={scrollToPayment}>
-                      <CreditCard aria-hidden className="size-4" />
-                      {t('hero.pay')}
-                    </Button>
-                  </div>
-                </>
-              ) : null}
-
-              {foldOk ? (
-                <div className="hidden shrink-0 border-t border-white/5 pt-[clamp(0.35rem,1vh,0.7rem)] lg:block">
-                  <SalesOverview compact />
+              <div
+                className={cn(
+                  'flex shrink-0 flex-col gap-5',
+                  'lg:gap-[clamp(0.45rem,1.15vh,0.85rem)]',
+                  `${SHORT_DESKTOP}:gap-2`,
+                )}
+              >
+                <div className="lg:hidden">
+                  <PricingGrid />
                 </div>
-              ) : null}
+                <div className="hidden lg:block">
+                  <PricingGrid compact />
+                </div>
+
+                {tariffsReady ? (
+                  <>
+                    <VipBenefits />
+                    <div className="flex justify-center">
+                      <Button
+                        size="lg"
+                        className={cn(
+                          `${SHORT_DESKTOP}:h-10`,
+                          `${SHORT_DESKTOP}:px-4`,
+                          `${SHORT_DESKTOP}:text-sm`,
+                        )}
+                        onClick={scrollToPayment}
+                      >
+                        <CreditCard aria-hidden className="size-4" />
+                        {t('hero.pay')}
+                      </Button>
+                    </div>
+                  </>
+                ) : null}
+              </div>
             </div>
+
+            {foldOk ? (
+              <div
+                className={cn(
+                  'mt-6 hidden shrink-0 border-t border-white/5 pt-6 lg:block',
+                  'lg:mt-[clamp(0.75rem,1.5vh,1.25rem)]',
+                  'lg:pt-[clamp(0.5rem,1vh,0.85rem)]',
+                )}
+              >
+                <SalesOverview compact />
+              </div>
+            ) : null}
           </>
         )}
       </div>
@@ -228,7 +306,12 @@ export function VipPage() {
         ) : null}
 
         {tariffsReady ? (
-          <div className="border-t border-white/8 pt-8 sm:pt-10">
+          <div
+            className={cn(
+              'border-t border-white/8 pt-8 sm:pt-10',
+              `${SHORT_DESKTOP}:pt-6`,
+            )}
+          >
             <PaymentSection />
           </div>
         ) : null}
