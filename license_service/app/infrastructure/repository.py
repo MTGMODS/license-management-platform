@@ -237,6 +237,39 @@ class LicenseRepository:
             for r in (await self.db.execute(daily_stmt)).all()
         ]
 
+        monthly_stmt = select(
+            func.extract("year", TransactionModel.purchased_at).label("y"),
+            func.extract("month", TransactionModel.purchased_at).label("m"),
+            func.count(TransactionModel.id).label("count"),
+            func.sum(TransactionModel.amount).label("sum"),
+        ).select_from(TransactionModel).join(
+            LicenseModel, TransactionModel.license_id == LicenseModel.id
+        ).where(paid_subs).group_by(
+            func.extract("year", TransactionModel.purchased_at),
+            func.extract("month", TransactionModel.purchased_at),
+        ).order_by(
+            func.extract("year", TransactionModel.purchased_at),
+            func.extract("month", TransactionModel.purchased_at),
+        )
+
+        timeline_monthly = [
+            {
+                "month": f"{int(r.y):04d}-{int(r.m):02d}",
+                "count": r.count,
+                "sum": round(r.sum or 0, 2),
+            }
+            for r in (await self.db.execute(monthly_stmt)).all()
+            if r.y is not None and r.m is not None
+        ]
+
+        range_stmt = select(
+            func.min(TransactionModel.purchased_at).label("first_sale_at"),
+            func.max(TransactionModel.purchased_at).label("last_sale_at"),
+        ).select_from(TransactionModel).join(
+            LicenseModel, TransactionModel.license_id == LicenseModel.id
+        ).where(paid_subs)
+        sale_range = (await self.db.execute(range_stmt)).first()
+
         sales_stmt = select(
             TransactionModel.purchased_at,
             TransactionModel.amount,
@@ -262,15 +295,97 @@ class LicenseRepository:
             for r in (await self.db.execute(sales_stmt)).all()
         ]
 
+        free_sales_stmt = select(
+            TransactionModel.purchased_at,
+            TransactionModel.amount,
+            TransactionModel.payment_method,
+            LicenseModel.duration_days,
+            LicenseModel.status,
+            LicenseModel.activated_at,
+            LicenseModel.expires_at,
+        ).select_from(TransactionModel).join(
+            LicenseModel, TransactionModel.license_id == LicenseModel.id
+        ).where(timed, free).order_by(TransactionModel.purchased_at.desc())
+
+        free_sales = [
+            {
+                "purchased_at": format_utc(r.purchased_at),
+                "amount": round(r.amount or 0, 2),
+                "method": r.payment_method,
+                "duration_days": r.duration_days,
+                "status": r.status.value if hasattr(r.status, "value") else r.status,
+                "activated_at": format_utc(r.activated_at),
+                "expires_at": format_utc(r.expires_at),
+            }
+            for r in (await self.db.execute(free_sales_stmt)).all()
+        ]
+
+        buyer_stats = (
+            select(
+                LicenseModel.user_id.label("user_id"),
+                func.count(LicenseModel.id).label("purchases"),
+                func.sum(TransactionModel.amount).label("money"),
+            )
+            .select_from(LicenseModel)
+            .join(TransactionModel, TransactionModel.license_id == LicenseModel.id)
+            .where(paid_subs)
+            .group_by(LicenseModel.user_id)
+        ).subquery()
+
+        retention_stmt = select(
+            buyer_stats.c.purchases,
+            func.count().label("users"),
+            func.sum(buyer_stats.c.money).label("sum"),
+        ).group_by(buyer_stats.c.purchases).order_by(buyer_stats.c.purchases)
+
+        by_purchases = []
+        buyers = 0
+        repeat_buyers = 0
+        for r in (await self.db.execute(retention_stmt)).all():
+            purchases = int(r.purchases)
+            users = int(r.users)
+            buyers += users
+            if purchases >= 2:
+                repeat_buyers += users
+            by_purchases.append({
+                "purchases": purchases,
+                "renewals": purchases - 1,
+                "users": users,
+                "sum": round(r.sum or 0, 2),
+            })
+
+        for row in by_purchases:
+            row["share"] = self._money_share(row["users"], buyers)
+
+        retention = {
+            "buyers": buyers,
+            "repeat_buyers": repeat_buyers,
+            "repeat_rate": self._money_share(repeat_buyers, buyers),
+            "avg_subscriptions_per_buyer": round(total_sold / buyers, 2) if buyers else 0,
+            "avg_check": round(total_money / total_sold, 2) if total_sold else 0,
+            "avg_revenue_per_buyer": round(total_money / buyers, 2) if buyers else 0,
+            "by_purchases": by_purchases,
+        }
+
+        forever_completed = and_(forever, completed)
+        paid_forever = and_(forever, paid, completed, owned)
+
         forever_overview_stmt = select(
-            func.count(distinct(LicenseModel.id)).label("total_sold"),
-            func.sum(TransactionModel.amount).label("total_money"),
+            func.count(distinct(case((completed, LicenseModel.id)))).label("total_sold"),
+            func.count(distinct(case((and_(completed, active), LicenseModel.id)))).label("active"),
+            func.sum(case((completed, TransactionModel.amount), else_=0)).label("total_money"),
+            func.count(distinct(case((and_(paid, completed), LicenseModel.id)))).label("paid_sold"),
+            func.sum(case((and_(paid, completed), TransactionModel.amount), else_=0)).label("paid_money"),
+            func.count(distinct(case((free, LicenseModel.id)))).label("free_issued"),
+            func.count(distinct(case((and_(free, active), LicenseModel.id)))).label("free_active"),
         ).select_from(LicenseModel).outerjoin(
             TransactionModel, LicenseModel.id == TransactionModel.license_id
-        ).where(forever, completed)
+        ).where(forever)
         forever_overview = (await self.db.execute(forever_overview_stmt)).first()
         forever_sold = forever_overview.total_sold or 0
         forever_money = round(forever_overview.total_money or 0, 2)
+        forever_paid_sold = forever_overview.paid_sold or 0
+        forever_paid_money = round(forever_overview.paid_money or 0, 2)
 
         forever_pay_stmt = select(
             TransactionModel.payment_method,
@@ -278,7 +393,7 @@ class LicenseRepository:
             func.sum(TransactionModel.amount).label("sum"),
         ).select_from(TransactionModel).join(
             LicenseModel, TransactionModel.license_id == LicenseModel.id
-        ).where(forever, completed).group_by(TransactionModel.payment_method).order_by(
+        ).where(forever_completed).group_by(TransactionModel.payment_method).order_by(
             desc("sum"), desc("count")
         )
 
@@ -292,6 +407,53 @@ class LicenseRepository:
             for r in (await self.db.execute(forever_pay_stmt)).all()
         ]
 
+        forever_buyer_stats = (
+            select(
+                LicenseModel.user_id.label("user_id"),
+                func.count(LicenseModel.id).label("purchases"),
+                func.sum(TransactionModel.amount).label("money"),
+            )
+            .select_from(LicenseModel)
+            .join(TransactionModel, TransactionModel.license_id == LicenseModel.id)
+            .where(paid_forever)
+            .group_by(LicenseModel.user_id)
+        ).subquery()
+
+        forever_retention_stmt = select(
+            forever_buyer_stats.c.purchases,
+            func.count().label("users"),
+            func.sum(forever_buyer_stats.c.money).label("sum"),
+        ).group_by(forever_buyer_stats.c.purchases).order_by(forever_buyer_stats.c.purchases)
+
+        forever_by_purchases = []
+        forever_buyers = 0
+        forever_repeat_buyers = 0
+        for r in (await self.db.execute(forever_retention_stmt)).all():
+            purchases = int(r.purchases)
+            users = int(r.users)
+            forever_buyers += users
+            if purchases >= 2:
+                forever_repeat_buyers += users
+            forever_by_purchases.append({
+                "purchases": purchases,
+                "renewals": purchases - 1,
+                "users": users,
+                "sum": round(r.sum or 0, 2),
+            })
+
+        for row in forever_by_purchases:
+            row["share"] = self._money_share(row["users"], forever_buyers)
+
+        forever_retention = {
+            "buyers": forever_buyers,
+            "repeat_buyers": forever_repeat_buyers,
+            "repeat_rate": self._money_share(forever_repeat_buyers, forever_buyers),
+            "avg_licenses_per_buyer": round(forever_paid_sold / forever_buyers, 2) if forever_buyers else 0,
+            "avg_check": round(forever_paid_money / forever_paid_sold, 2) if forever_paid_sold else 0,
+            "avg_revenue_per_buyer": round(forever_paid_money / forever_buyers, 2) if forever_buyers else 0,
+            "by_purchases": forever_by_purchases,
+        }
+
         return {
             "updated_at": format_utc(datetime.now(timezone.utc)),
             "subscriptions": {
@@ -301,20 +463,35 @@ class LicenseRepository:
                     "active": overview.active or 0,
                     "free_issued": overview.free_issued or 0,
                     "free_active": overview.free_active or 0,
+                    "first_sale_at": format_utc(sale_range.first_sale_at),
+                    "last_sale_at": format_utc(sale_range.last_sale_at),
+                    "avg_check": retention["avg_check"],
+                    "avg_subscriptions_per_buyer": retention["avg_subscriptions_per_buyer"],
+                    "avg_revenue_per_buyer": retention["avg_revenue_per_buyer"],
                 },
                 "by_duration": by_duration,
                 "by_method": by_method,
+                "retention": retention,
                 "timeline": {
                     "daily": timeline_daily,
+                    "monthly": timeline_monthly,
                 },
                 "sales": sales,
+                "free_sales": free_sales,
             },
             "forever": {
                 "overview": {
                     "total_sold": forever_sold,
                     "total_money": forever_money,
+                    "active": forever_overview.active or 0,
+                    "free_issued": forever_overview.free_issued or 0,
+                    "free_active": forever_overview.free_active or 0,
+                    "avg_check": forever_retention["avg_check"],
+                    "avg_licenses_per_buyer": forever_retention["avg_licenses_per_buyer"],
+                    "avg_revenue_per_buyer": forever_retention["avg_revenue_per_buyer"],
                 },
                 "by_method": forever_by_method,
+                "retention": forever_retention,
             },
         }
 
