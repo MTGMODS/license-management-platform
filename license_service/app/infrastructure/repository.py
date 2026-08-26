@@ -166,13 +166,14 @@ class LicenseRepository:
         owned = LicenseModel.user_id.isnot(None)
         active = LicenseModel.status == LicenseStatus.ACTIVE
         paid_subs = and_(timed, paid, completed, owned)
+        free_subs = and_(timed, free, completed)
 
         overview_stmt = select(
-            func.count(distinct(case((and_(paid, owned), LicenseModel.id)))).label("total_sold"),
-            func.count(distinct(case((and_(paid, active), LicenseModel.id)))).label("active"),
-            func.sum(case((and_(paid, owned), TransactionModel.amount), else_=0)).label("total_money"),
-            func.count(distinct(case((free, LicenseModel.id)))).label("free_issued"),
-            func.count(distinct(case((and_(free, active), LicenseModel.id)))).label("free_active"),
+            func.count(distinct(case((and_(paid, completed, owned), LicenseModel.id)))).label("total_sold"),
+            func.count(distinct(case((and_(paid, completed, owned, active), LicenseModel.id)))).label("active"),
+            func.sum(case((and_(paid, completed, owned), TransactionModel.amount), else_=0)).label("total_money"),
+            func.count(distinct(case((and_(free, completed), LicenseModel.id)))).label("free_issued"),
+            func.count(distinct(case((and_(free, completed, active), LicenseModel.id)))).label("free_active"),
         ).select_from(LicenseModel).outerjoin(
             TransactionModel, LicenseModel.id == TransactionModel.license_id
         ).where(timed)
@@ -195,7 +196,8 @@ class LicenseRepository:
                 "count": r.count,
                 "sum": round(r.sum or 0, 2),
                 "active": r.active_count,
-                "share": self._money_share(r.count, total_sold),
+                "count_share": self._money_share(r.count, total_sold),
+                "money_share": self._money_share(r.sum or 0, total_money),
             }
             for r in (await self.db.execute(dur_stmt)).all()
         ]
@@ -213,7 +215,8 @@ class LicenseRepository:
                 "method": r.payment_method,
                 "count": r.count,
                 "sum": round(r.sum or 0, 2),
-                "share": self._money_share(r.sum or 0, total_money),
+                "count_share": self._money_share(r.count, total_sold),
+                "money_share": self._money_share(r.sum or 0, total_money),
             }
             for r in (await self.db.execute(pay_stmt)).all()
         ]
@@ -305,7 +308,7 @@ class LicenseRepository:
             LicenseModel.expires_at,
         ).select_from(TransactionModel).join(
             LicenseModel, TransactionModel.license_id == LicenseModel.id
-        ).where(timed, free).order_by(TransactionModel.purchased_at.desc())
+        ).where(free_subs).order_by(TransactionModel.purchased_at.desc())
 
         free_sales = [
             {
@@ -368,24 +371,21 @@ class LicenseRepository:
         }
 
         forever_completed = and_(forever, completed)
-        paid_forever = and_(forever, paid, completed, owned)
+        paid_forever = and_(forever, paid, completed)
+        free_forever = and_(forever, free, completed)
 
         forever_overview_stmt = select(
-            func.count(distinct(case((completed, LicenseModel.id)))).label("total_sold"),
-            func.count(distinct(case((and_(completed, active), LicenseModel.id)))).label("active"),
-            func.sum(case((completed, TransactionModel.amount), else_=0)).label("total_money"),
-            func.count(distinct(case((and_(paid, completed), LicenseModel.id)))).label("paid_sold"),
-            func.sum(case((and_(paid, completed), TransactionModel.amount), else_=0)).label("paid_money"),
-            func.count(distinct(case((free, LicenseModel.id)))).label("free_issued"),
-            func.count(distinct(case((and_(free, active), LicenseModel.id)))).label("free_active"),
+            func.count(distinct(case((paid_forever, LicenseModel.id)))).label("paid_sold"),
+            func.count(distinct(case((and_(paid_forever, active), LicenseModel.id)))).label("active"),
+            func.sum(case((paid_forever, TransactionModel.amount), else_=0)).label("total_money"),
+            func.count(distinct(case((free_forever, LicenseModel.id)))).label("free_issued"),
+            func.count(distinct(case((and_(free_forever, active), LicenseModel.id)))).label("free_active"),
         ).select_from(LicenseModel).outerjoin(
             TransactionModel, LicenseModel.id == TransactionModel.license_id
         ).where(forever)
         forever_overview = (await self.db.execute(forever_overview_stmt)).first()
-        forever_sold = forever_overview.total_sold or 0
-        forever_money = round(forever_overview.total_money or 0, 2)
         forever_paid_sold = forever_overview.paid_sold or 0
-        forever_paid_money = round(forever_overview.paid_money or 0, 2)
+        forever_money = round(forever_overview.total_money or 0, 2)
 
         forever_pay_stmt = select(
             TransactionModel.payment_method,
@@ -393,7 +393,7 @@ class LicenseRepository:
             func.sum(TransactionModel.amount).label("sum"),
         ).select_from(TransactionModel).join(
             LicenseModel, TransactionModel.license_id == LicenseModel.id
-        ).where(forever_completed).group_by(TransactionModel.payment_method).order_by(
+        ).where(paid_forever).group_by(TransactionModel.payment_method).order_by(
             desc("sum"), desc("count")
         )
 
@@ -402,57 +402,10 @@ class LicenseRepository:
                 "method": r.payment_method,
                 "count": r.count,
                 "sum": round(r.sum or 0, 2),
-                "share": self._money_share(r.sum or 0, forever_money),
+                "money_share": self._money_share(r.sum or 0, forever_money),
             }
             for r in (await self.db.execute(forever_pay_stmt)).all()
         ]
-
-        forever_buyer_stats = (
-            select(
-                LicenseModel.user_id.label("user_id"),
-                func.count(LicenseModel.id).label("purchases"),
-                func.sum(TransactionModel.amount).label("money"),
-            )
-            .select_from(LicenseModel)
-            .join(TransactionModel, TransactionModel.license_id == LicenseModel.id)
-            .where(paid_forever)
-            .group_by(LicenseModel.user_id)
-        ).subquery()
-
-        forever_retention_stmt = select(
-            forever_buyer_stats.c.purchases,
-            func.count().label("users"),
-            func.sum(forever_buyer_stats.c.money).label("sum"),
-        ).group_by(forever_buyer_stats.c.purchases).order_by(forever_buyer_stats.c.purchases)
-
-        forever_by_purchases = []
-        forever_buyers = 0
-        forever_repeat_buyers = 0
-        for r in (await self.db.execute(forever_retention_stmt)).all():
-            purchases = int(r.purchases)
-            users = int(r.users)
-            forever_buyers += users
-            if purchases >= 2:
-                forever_repeat_buyers += users
-            forever_by_purchases.append({
-                "purchases": purchases,
-                "renewals": purchases - 1,
-                "users": users,
-                "sum": round(r.sum or 0, 2),
-            })
-
-        for row in forever_by_purchases:
-            row["share"] = self._money_share(row["users"], forever_buyers)
-
-        forever_retention = {
-            "buyers": forever_buyers,
-            "repeat_buyers": forever_repeat_buyers,
-            "repeat_rate": self._money_share(forever_repeat_buyers, forever_buyers),
-            "avg_licenses_per_buyer": round(forever_paid_sold / forever_buyers, 2) if forever_buyers else 0,
-            "avg_check": round(forever_paid_money / forever_paid_sold, 2) if forever_paid_sold else 0,
-            "avg_revenue_per_buyer": round(forever_paid_money / forever_buyers, 2) if forever_buyers else 0,
-            "by_purchases": forever_by_purchases,
-        }
 
         return {
             "updated_at": format_utc(datetime.now(timezone.utc)),
@@ -481,17 +434,14 @@ class LicenseRepository:
             },
             "forever": {
                 "overview": {
-                    "total_sold": forever_sold,
+                    "paid_sold": forever_paid_sold,
                     "total_money": forever_money,
                     "active": forever_overview.active or 0,
                     "free_issued": forever_overview.free_issued or 0,
                     "free_active": forever_overview.free_active or 0,
-                    "avg_check": forever_retention["avg_check"],
-                    "avg_licenses_per_buyer": forever_retention["avg_licenses_per_buyer"],
-                    "avg_revenue_per_buyer": forever_retention["avg_revenue_per_buyer"],
+                    "avg_check": round(forever_money / forever_paid_sold, 2) if forever_paid_sold else 0,
                 },
                 "by_method": forever_by_method,
-                "retention": forever_retention,
             },
         }
 
