@@ -24,6 +24,7 @@ import type {
   LicenseTimelineDay,
   LicenseTimelineMonth,
 } from '@/shared/api/license'
+import { parseApiDateTime } from '@/shared/lib/datetime'
 import { useFormatters } from '@/shared/lib/format'
 import { Card, ErrorState, SegmentedControl, Skeleton } from '@/shared/ui'
 import { AXIS_PROPS, CHART, Y_AXIS_NUMERIC } from '@/widgets/analytics/chartTheme'
@@ -413,7 +414,16 @@ type SalesRangeMode = 'all' | 'day' | 'range'
 
 function saleDayKey(row: LicenseSaleRow): string | null {
   const when = saleDate(row)
-  return when ? when.slice(0, 10) : null
+  if (!when) return null
+  const date = parseApiDateTime(when)
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+function localTodayKey(): string {
+  const now = new Date()
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
 }
 
 function isSaleActive(status: string): boolean {
@@ -423,8 +433,8 @@ function isSaleActive(status: string): boolean {
 function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
-  const [mode, setMode] = useState<SalesRangeMode>('all')
-  const [day, setDay] = useState('')
+  const [mode, setMode] = useState<SalesRangeMode>('day')
+  const [day, setDay] = useState(() => localTodayKey())
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
 
