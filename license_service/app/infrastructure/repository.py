@@ -161,19 +161,15 @@ class LicenseRepository:
         timed = LicenseModel.duration_days.isnot(None)
         forever = LicenseModel.duration_days.is_(None)
         paid = TransactionModel.amount > 0
-        free = TransactionModel.amount == 0
         completed = TransactionModel.status == "COMPLETED"
         owned = LicenseModel.user_id.isnot(None)
         active = LicenseModel.status == LicenseStatus.ACTIVE
         paid_subs = and_(timed, paid, completed, owned)
-        free_subs = and_(timed, free, completed)
 
         overview_stmt = select(
             func.count(distinct(case((and_(paid, completed, owned), LicenseModel.id)))).label("total_sold"),
             func.count(distinct(case((and_(paid, completed, owned, active), LicenseModel.id)))).label("active"),
             func.sum(case((and_(paid, completed, owned), TransactionModel.amount), else_=0)).label("total_money"),
-            func.count(distinct(case((and_(free, completed), LicenseModel.id)))).label("free_issued"),
-            func.count(distinct(case((and_(free, completed, active), LicenseModel.id)))).label("free_active"),
         ).select_from(LicenseModel).outerjoin(
             TransactionModel, LicenseModel.id == TransactionModel.license_id
         ).where(timed)
@@ -296,29 +292,6 @@ class LicenseRepository:
             for r in (await self.db.execute(sales_stmt)).all()
         ]
 
-        free_sales_stmt = select(
-            TransactionModel.amount,
-            TransactionModel.payment_method,
-            LicenseModel.duration_days,
-            LicenseModel.status,
-            LicenseModel.activated_at,
-            LicenseModel.expires_at,
-        ).select_from(TransactionModel).join(
-            LicenseModel, TransactionModel.license_id == LicenseModel.id
-        ).where(free_subs).order_by(LicenseModel.activated_at.desc())
-
-        free_sales = [
-            {
-                "amount": round(r.amount or 0, 2),
-                "method": r.payment_method,
-                "duration_days": r.duration_days,
-                "status": r.status.value if hasattr(r.status, "value") else r.status,
-                "activated_at": format_utc(r.activated_at),
-                "expires_at": format_utc(r.expires_at),
-            }
-            for r in (await self.db.execute(free_sales_stmt)).all()
-        ]
-
         buyer_stats = (
             select(
                 LicenseModel.user_id.label("user_id"),
@@ -366,16 +339,12 @@ class LicenseRepository:
             "by_purchases": by_purchases,
         }
 
-        forever_completed = and_(forever, completed)
         paid_forever = and_(forever, paid, completed)
-        free_forever = and_(forever, free, completed)
 
         forever_overview_stmt = select(
             func.count(distinct(case((paid_forever, LicenseModel.id)))).label("paid_sold"),
             func.count(distinct(case((and_(paid_forever, active), LicenseModel.id)))).label("active"),
             func.sum(case((paid_forever, TransactionModel.amount), else_=0)).label("total_money"),
-            func.count(distinct(case((free_forever, LicenseModel.id)))).label("free_issued"),
-            func.count(distinct(case((and_(free_forever, active), LicenseModel.id)))).label("free_active"),
         ).select_from(LicenseModel).outerjoin(
             TransactionModel, LicenseModel.id == TransactionModel.license_id
         ).where(forever)
@@ -410,8 +379,6 @@ class LicenseRepository:
                     "total_sold": total_sold,
                     "total_money": total_money,
                     "active": overview.active or 0,
-                    "free_issued": overview.free_issued or 0,
-                    "free_active": overview.free_active or 0,
                     "first_activated_at": format_utc(sale_range.first_activated_at),
                     "last_activated_at": format_utc(sale_range.last_activated_at),
                     "avg_check": retention["avg_check"],
@@ -426,15 +393,12 @@ class LicenseRepository:
                     "monthly": timeline_monthly,
                 },
                 "sales": sales,
-                "free_sales": free_sales,
             },
             "forever": {
                 "overview": {
                     "paid_sold": forever_paid_sold,
                     "total_money": forever_money,
                     "active": forever_overview.active or 0,
-                    "free_issued": forever_overview.free_issued or 0,
-                    "free_active": forever_overview.free_active or 0,
                     "avg_check": round(forever_money / forever_paid_sold, 2) if forever_paid_sold else 0,
                 },
                 "by_method": forever_by_method,
