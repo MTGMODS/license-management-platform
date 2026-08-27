@@ -3,8 +3,6 @@ import { useTranslation } from 'react-i18next'
 import {
   Area,
   AreaChart,
-  Bar,
-  BarChart,
   CartesianGrid,
   Cell,
   Pie,
@@ -28,7 +26,7 @@ import type {
 } from '@/shared/api/license'
 import { useFormatters } from '@/shared/lib/format'
 import { Card, ErrorState, SegmentedControl, Skeleton } from '@/shared/ui'
-import { AXIS_PROPS, barActiveProps, CHART, Y_AXIS_NUMERIC } from '@/widgets/analytics/chartTheme'
+import { AXIS_PROPS, CHART, Y_AXIS_NUMERIC } from '@/widgets/analytics/chartTheme'
 import { ChartTooltip } from '@/widgets/analytics/ChartTooltip'
 
 const PAYMENT_FALLBACK = ['#0fb0fa', '#34d399', '#f59e0b', '#fb7185', '#38bdf8', '#a78bfa']
@@ -40,16 +38,17 @@ const PAYMENT_COLOR: Record<string, string> = {
   Crypto: '#fb7185',
   PayPal: '#38bdf8',
   Promo: '#a78bfa',
-  Steam: '#67e8f9',
+  Steam: '#66c0f4',
   Gift: '#f472b6',
 }
-
-const RECENT_SALES_LIMIT = 25
 
 type TimelineGrain = 'daily' | 'monthly'
 
 function paymentColor(method: string, index: number): string {
-  return PAYMENT_COLOR[method] ?? PAYMENT_FALLBACK[index % PAYMENT_FALLBACK.length] ?? '#0fb0fa'
+  const known = Object.entries(PAYMENT_COLOR).find(
+    ([key]) => key.toLowerCase() === method.toLowerCase(),
+  )
+  return known?.[1] ?? PAYMENT_FALLBACK[index % PAYMENT_FALLBACK.length] ?? '#0fb0fa'
 }
 
 function usd(format: ReturnType<typeof useFormatters>, value: number): string {
@@ -98,17 +97,29 @@ function RevenueTimeline({
     if (grain === 'daily') {
       return daily.map((point) => ({
         key: point.date,
+        axis: format.dayMonth(point.date),
         label: format.dayMonth(point.date),
         count: point.count,
         sum: point.sum,
       }))
     }
-    return monthly.map((point) => ({
-      key: point.month,
-      label: point.month,
-      count: point.count,
-      sum: point.sum,
-    }))
+
+    let prevYear = ''
+    return monthly.map((point) => {
+      const year = point.month.slice(0, 4)
+      const monthLabel = format.monthShort(point.month)
+      /** Year only when it changes — keeps narrow mobile axes readable. */
+      const axis =
+        year !== prevYear ? `${monthLabel} '${year.slice(2)}` : monthLabel
+      prevYear = year
+      return {
+        key: point.month,
+        axis,
+        label: format.monthYear(point.month),
+        count: point.count,
+        sum: point.sum,
+      }
+    })
   }, [daily, format, grain, monthly])
 
   return (
@@ -145,10 +156,10 @@ function RevenueTimeline({
               </defs>
               <CartesianGrid stroke={CHART.grid} vertical={false} />
               <XAxis
-                dataKey="label"
+                dataKey="axis"
                 {...AXIS_PROPS}
-                interval={grain === 'daily' ? 'preserveStartEnd' : 0}
-                minTickGap={grain === 'daily' ? 28 : 12}
+                interval="preserveStartEnd"
+                minTickGap={grain === 'daily' ? 28 : 36}
               />
               <YAxis {...Y_AXIS_NUMERIC} tickFormatter={(value: number) => format.compact(value)} />
               <Tooltip
@@ -194,200 +205,16 @@ function RevenueTimeline({
 function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
-
-  const rows = [...durations]
-    .sort((a, b) => a.days - b.days)
-    .map((item) => ({ ...item, label: t('pricing.days', { count: item.days }) }))
+  const rows = [...durations].sort((a, b) => a.days - b.days)
 
   return (
-    <Card className="p-6">
+    <Card className="flex h-full flex-col p-6">
       <h3 className="text-lg font-semibold tracking-tight">{t('stats.durations.title')}</h3>
 
       {rows.length === 0 ? (
         <p className="mt-8 text-sm text-fg-subtle">{t('stats.empty')}</p>
       ) : (
-        <div className="mt-6 h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart accessibilityLayer={false} data={rows} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-              <CartesianGrid stroke={CHART.grid} vertical={false} />
-              <XAxis dataKey="label" {...AXIS_PROPS} />
-              <YAxis {...Y_AXIS_NUMERIC} allowDecimals={false} />
-              <Tooltip
-                cursor={false}
-                content={({ active, payload }) => {
-                  const point = payload?.[0]?.payload as (typeof rows)[number] | undefined
-                  if (!active || !point) return null
-
-                  return (
-                    <ChartTooltip
-                      title={point.label}
-                      rows={[
-                        {
-                          label: t('stats.durations.count'),
-                          value: format.number(point.count),
-                          color: CHART.users,
-                        },
-                        {
-                          label: t('stats.durations.active'),
-                          value: format.number(point.active),
-                        },
-                        {
-                          label: t('stats.durations.sum'),
-                          value: usdWhole(format, point.sum),
-                        },
-                        {
-                          label: t('stats.durations.countShare'),
-                          value: format.percent(point.count_share),
-                        },
-                        {
-                          label: t('stats.durations.moneyShare'),
-                          value: format.percent(point.money_share),
-                        },
-                      ]}
-                    />
-                  )
-                }}
-              />
-              <Bar
-                dataKey="count"
-                fill={CHART.users}
-                radius={[6, 6, 0, 0]}
-                isAnimationActive={false}
-                activeBar={barActiveProps(CHART.users)}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-    </Card>
-  )
-}
-
-function PaymentsChart({
-  payments,
-  title,
-  subtitle,
-}: {
-  payments: LicensePaymentStat[]
-  title: string
-  subtitle?: string
-}) {
-  const { t } = useTranslation('vip')
-  const format = useFormatters()
-  const totalMoney = payments.reduce((sum, item) => sum + item.sum, 0)
-  const totalCount = payments.reduce((sum, item) => sum + item.count, 0)
-
-  return (
-    <Card className="p-6">
-      <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
-      {subtitle ? <p className="mt-1 text-sm text-fg-muted">{subtitle}</p> : null}
-
-      {payments.length === 0 ? (
-        <p className="mt-8 text-sm text-fg-subtle">{t('stats.empty')}</p>
-      ) : (
-        <div className="mt-4 grid items-center gap-6 lg:grid-cols-2">
-          <div className="relative mx-auto h-56 w-full max-w-xs">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={payments}
-                  dataKey="sum"
-                  nameKey="method"
-                  innerRadius="62%"
-                  outerRadius="88%"
-                  paddingAngle={2}
-                  stroke="none"
-                  isAnimationActive={false}
-                >
-                  {payments.map((item, index) => (
-                    <Cell key={item.method} fill={paymentColor(item.method, index)} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  content={({ active, payload }) => {
-                    const point = payload?.[0]?.payload as LicensePaymentStat | undefined
-                    if (!active || !point) return null
-                    const countShare =
-                      point.count_share ||
-                      (totalCount > 0 ? (point.count / totalCount) * 100 : 0)
-                    const moneyShare =
-                      point.money_share ||
-                      (totalMoney > 0 ? (point.sum / totalMoney) * 100 : 0)
-
-                    return (
-                      <ChartTooltip
-                        title={point.method}
-                        rows={[
-                          {
-                            label: t('stats.payments.count'),
-                            value: format.number(point.count),
-                          },
-                          {
-                            label: t('stats.payments.sum'),
-                            value: usdWhole(format, point.sum),
-                          },
-                          {
-                            label: t('stats.payments.countShare'),
-                            value: format.percent(countShare),
-                          },
-                          {
-                            label: t('stats.payments.moneyShare'),
-                            value: format.percent(moneyShare),
-                          },
-                        ]}
-                      />
-                    )
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <p className="tabular text-2xl font-semibold tracking-tight">
-                {usdWhole(format, totalMoney)}
-              </p>
-              <p className="mt-0.5 text-xs text-fg-subtle">{t('stats.payments.total')}</p>
-            </div>
-          </div>
-
-          <ul className="space-y-3">
-            {payments.map((item, index) => {
-              const moneyShare =
-                item.money_share || (totalMoney > 0 ? (item.sum / totalMoney) * 100 : 0)
-              return (
-                <li key={item.method} className="flex items-center gap-3 text-sm">
-                  <span
-                    aria-hidden
-                    className="size-2.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: paymentColor(item.method, index) }}
-                  />
-                  <span className="min-w-0 flex-1 truncate text-fg-muted">{item.method}</span>
-                  <span className="tabular font-medium">{usdWhole(format, item.sum)}</span>
-                  <span className="tabular w-14 text-right text-fg-subtle">
-                    {format.percent(moneyShare)}
-                  </span>
-                </li>
-              )
-            })}
-          </ul>
-        </div>
-      )}
-    </Card>
-  )
-}
-
-function TopDurations({ durations }: { durations: LicenseDurationStat[] }) {
-  const { t } = useTranslation('vip')
-  const format = useFormatters()
-  const rows = [...durations].sort((a, b) => b.count - a.count)
-
-  return (
-    <Card className="p-6">
-      <h3 className="text-lg font-semibold tracking-tight">{t('stats.top.title')}</h3>
-
-      {rows.length === 0 ? (
-        <p className="mt-8 text-sm text-fg-subtle">{t('stats.empty')}</p>
-      ) : (
-        <ul className="mt-6 space-y-5">
+        <ul className="mt-6 flex flex-1 flex-col justify-between gap-5">
           {rows.map((item) => {
             const share = item.count_share
             return (
@@ -418,6 +245,94 @@ function TopDurations({ durations }: { durations: LicenseDurationStat[] }) {
             )
           })}
         </ul>
+      )}
+    </Card>
+  )
+}
+
+function PaymentsChart({
+  payments,
+  title,
+  subtitle,
+}: {
+  payments: LicensePaymentStat[]
+  title: string
+  subtitle?: string
+}) {
+  const { t } = useTranslation('vip')
+  const format = useFormatters()
+  const totalMoney = payments.reduce((sum, item) => sum + item.sum, 0)
+
+  return (
+    <Card className="flex h-full flex-col p-6">
+      <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
+      {subtitle ? <p className="mt-1 text-sm text-fg-muted">{subtitle}</p> : null}
+
+      {payments.length === 0 ? (
+        <p className="mt-8 text-sm text-fg-subtle">{t('stats.empty')}</p>
+      ) : (
+        <div className="mt-5 flex min-h-0 flex-1 flex-col gap-6 sm:flex-row sm:items-stretch">
+          <div className="flex min-h-[12rem] shrink-0 items-center justify-center sm:min-h-0 sm:basis-[44%] lg:basis-[46%]">
+            <div className="relative aspect-square h-52 w-52 sm:h-full sm:w-auto sm:max-h-full sm:max-w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={payments}
+                    dataKey="sum"
+                    nameKey="method"
+                    innerRadius="62%"
+                    outerRadius="88%"
+                    paddingAngle={2}
+                    stroke="none"
+                    isAnimationActive={false}
+                  >
+                    {payments.map((item, index) => (
+                      <Cell key={item.method} fill={paymentColor(item.method, index)} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                <p className="tabular text-xl font-semibold tracking-tight sm:text-2xl">
+                  {usdWhole(format, totalMoney)}
+                </p>
+                <p className="mt-0.5 text-[0.65rem] text-fg-subtle sm:text-xs">
+                  {t('stats.payments.total')}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <ul className="flex min-w-0 flex-1 flex-col justify-center gap-3.5">
+            {payments.map((item, index) => {
+              const moneyShare =
+                item.money_share || (totalMoney > 0 ? (item.sum / totalMoney) * 100 : 0)
+              return (
+                <li key={item.method} className="flex items-center gap-3">
+                  <div className="flex min-w-0 flex-1 items-start gap-2.5">
+                    <span
+                      aria-hidden
+                      className="mt-1 size-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: paymentColor(item.method, index) }}
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-fg-muted">{item.method}</p>
+                      <p className="tabular text-xs text-fg-subtle">
+                        {format.number(item.count)}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 tabular text-sm font-medium">
+                    {usdWhole(format, item.sum)}
+                  </span>
+                  <span className="w-12 shrink-0 tabular text-right text-sm text-fg-subtle">
+                    {format.percent(moneyShare)}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
       )}
     </Card>
   )
@@ -490,70 +405,184 @@ function RetentionBlock({ retention }: { retention: LicenseRetentionStats }) {
   )
 }
 
+const DATE_INPUT =
+  'rounded-lg border border-white/8 bg-ink-800 px-2.5 py-1.5 text-sm text-fg outline-none ' +
+  'focus:border-accent-500/40 [color-scheme:dark]'
+
+type SalesRangeMode = 'all' | 'day' | 'range'
+
+function saleDayKey(row: LicenseSaleRow): string | null {
+  const when = saleDate(row)
+  return when ? when.slice(0, 10) : null
+}
+
+function isSaleActive(status: string): boolean {
+  return status.toUpperCase() === 'ACTIVE'
+}
+
 function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
+  const [mode, setMode] = useState<SalesRangeMode>('all')
+  const [day, setDay] = useState('')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
 
-  const rows = useMemo(
+  const sorted = useMemo(
     () =>
-      [...sales]
-        .sort((a, b) => {
-          const left = saleDate(a) ?? ''
-          const right = saleDate(b) ?? ''
-          return right.localeCompare(left)
-        })
-        .slice(0, RECENT_SALES_LIMIT),
+      [...sales].sort((a, b) => {
+        const left = saleDate(a) ?? ''
+        const right = saleDate(b) ?? ''
+        return right.localeCompare(left)
+      }),
     [sales],
+  )
+
+  const rows = useMemo(() => {
+    if (mode === 'all') return sorted
+
+    if (mode === 'day') {
+      if (!day) return sorted
+      return sorted.filter((row) => saleDayKey(row) === day)
+    }
+
+    if (!from && !to) return sorted
+    return sorted.filter((row) => {
+      const key = saleDayKey(row)
+      if (!key) return false
+      if (from && key < from) return false
+      if (to && key > to) return false
+      return true
+    })
+  }, [day, from, mode, sorted, to])
+
+  const filteredSum = useMemo(
+    () => rows.reduce((sum, row) => sum + row.amount, 0),
+    [rows],
   )
 
   return (
     <Card className="p-6">
-      <h3 className="text-lg font-semibold tracking-tight">{t('stats.salesList.title')}</h3>
-      <p className="mt-1 text-sm text-fg-muted">{t('stats.salesList.subtitle')}</p>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <h3 className="text-lg font-semibold tracking-tight">{t('stats.salesList.title')}</h3>
+          <p className="mt-1 text-sm text-fg-muted">{t('stats.salesList.subtitle')}</p>
+        </div>
+
+        <div className="flex flex-col items-stretch gap-2 sm:items-end">
+          <SegmentedControl
+            size="sm"
+            label={t('stats.salesList.range')}
+            value={mode}
+            onChange={setMode}
+            options={[
+              { id: 'all', label: t('stats.salesList.allTime') },
+              { id: 'day', label: t('stats.salesList.oneDay') },
+              { id: 'range', label: t('stats.salesList.period') },
+            ]}
+          />
+
+          {mode === 'day' ? (
+            <label className="flex items-center gap-2 text-xs text-fg-subtle">
+              <span className="sr-only">{t('stats.salesList.oneDay')}</span>
+              <input
+                type="date"
+                value={day}
+                onChange={(event) => setDay(event.target.value)}
+                className={DATE_INPUT}
+              />
+            </label>
+          ) : null}
+
+          {mode === 'range' ? (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-fg-subtle">
+              <label className="flex items-center gap-1.5">
+                <span>{t('stats.salesList.from')}</span>
+                <input
+                  type="date"
+                  value={from}
+                  max={to || undefined}
+                  onChange={(event) => setFrom(event.target.value)}
+                  className={DATE_INPUT}
+                />
+              </label>
+              <label className="flex items-center gap-1.5">
+                <span>{t('stats.salesList.to')}</span>
+                <input
+                  type="date"
+                  value={to}
+                  min={from || undefined}
+                  onChange={(event) => setTo(event.target.value)}
+                  className={DATE_INPUT}
+                />
+              </label>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <p className="mt-4 text-xs text-fg-subtle">
+        {t('stats.salesList.summary', {
+          count: format.number(rows.length),
+          total: format.number(sales.length),
+          sum: usdWhole(format, filteredSum),
+        })}
+      </p>
 
       {rows.length === 0 ? (
-        <p className="mt-8 text-sm text-fg-subtle">{t('stats.empty')}</p>
+        <p className="mt-8 text-sm text-fg-subtle">{t('stats.salesList.emptyFilter')}</p>
       ) : (
-        <div className="mt-5 overflow-x-auto">
-          <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
-            <thead>
+        <div className="mt-3 max-h-[36rem] overflow-auto rounded-xl border border-white/5">
+          <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
+            <thead className="sticky top-0 z-10 bg-ink-850/95 backdrop-blur-sm">
               <tr className="border-b border-white/8 text-fg-subtle">
-                <th className="py-2 pr-3 font-medium">{t('stats.salesList.date')}</th>
-                <th className="py-2 pr-3 font-medium">{t('stats.salesList.plan')}</th>
-                <th className="py-2 pr-3 font-medium">{t('stats.salesList.method')}</th>
-                <th className="py-2 pr-3 font-medium">{t('stats.salesList.amount')}</th>
-                <th className="py-2 font-medium">{t('stats.salesList.status')}</th>
+                <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.date')}</th>
+                <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.method')}</th>
+                <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.amount')}</th>
+                <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.plan')}</th>
+                <th className="px-3 py-2.5 text-center font-medium sm:px-4">
+                  {t('stats.salesList.status')}
+                </th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row, index) => {
                 const when = saleDate(row)
+                const active = isSaleActive(row.status)
                 return (
-                  <tr key={`${when ?? 'x'}-${row.method}-${index}`} className="border-b border-white/5">
-                    <td className="py-2.5 pr-3 tabular text-fg-muted">
+                  <tr
+                    key={`${when ?? 'x'}-${row.method}-${row.amount}-${index}`}
+                    className="border-b border-white/5 last:border-0"
+                  >
+                    <td className="px-3 py-2.5 tabular text-fg-muted sm:px-4">
                       {when ? format.dateTime(when) : '—'}
                     </td>
-                    <td className="py-2.5 pr-3">
+                    <td className="px-3 py-2.5 text-fg-muted sm:px-4">{row.method}</td>
+                    <td className="px-3 py-2.5 tabular font-medium sm:px-4">
+                      {usdWhole(format, row.amount)}
+                    </td>
+                    <td className="px-3 py-2.5 sm:px-4">
                       {row.duration_days == null
                         ? '—'
                         : t('pricing.days', { count: row.duration_days })}
                     </td>
-                    <td className="py-2.5 pr-3 text-fg-muted">{row.method}</td>
-                    <td className="py-2.5 pr-3 tabular font-medium">{usdWhole(format, row.amount)}</td>
-                    <td className="py-2.5 text-fg-subtle">{row.status}</td>
+                    <td className="px-3 py-2.5 text-center sm:px-4">
+                      <span className="inline-flex items-center justify-center" title={row.status}>
+                        <span
+                          aria-label={row.status}
+                          className={
+                            active
+                              ? 'size-2.5 rounded-full bg-positive'
+                              : 'size-2.5 rounded-full bg-negative'
+                          }
+                        />
+                      </span>
+                    </td>
                   </tr>
                 )
               })}
             </tbody>
           </table>
-          {sales.length > RECENT_SALES_LIMIT ? (
-            <p className="mt-3 text-xs text-fg-subtle">
-              {t('stats.salesList.showing', {
-                shown: RECENT_SALES_LIMIT,
-                total: sales.length,
-              })}
-            </p>
-          ) : null}
         </div>
       )}
     </Card>
@@ -633,15 +662,12 @@ export function SalesStats() {
       <div className="mt-8 space-y-4">
         <RevenueTimeline daily={subs.timeline.daily} monthly={subs.timeline.monthly} />
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
           <DurationsChart durations={subs.by_duration} />
           <PaymentsChart payments={subs.by_method} title={t('stats.payments.title')} />
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          <TopDurations durations={subs.by_duration} />
-          <RetentionBlock retention={subs.retention} />
-        </div>
+        <RetentionBlock retention={subs.retention} />
 
         <SalesTable sales={subs.sales} />
 
