@@ -44,40 +44,110 @@ export interface LicenseInfo {
   transaction: LicenseTransaction | null
 }
 
+/** Paid time-limited subscription duration bucket. */
 export interface LicenseDurationStat {
   days: number
   count: number
-  /** Money actually taken, which is not price times count: real sales include
-   *  discounts and Stars conversion rounding. */
+  /** Money actually taken (discounts / Stars rounding). */
   sum: number
-  /** How many of these are still active now. */
   active: number
+  /** Share of subscription count, 0–100. */
+  count_share: number
+  /** Share of subscription revenue, 0–100. */
+  money_share: number
 }
 
+/** Payment-method bucket (subscriptions or forever). */
 export interface LicensePaymentStat {
   method: string
   count: number
   sum: number
+  count_share: number
+  money_share: number
+}
+
+export interface LicensePurchaseBucket {
+  purchases: number
+  renewals: number
+  users: number
+  sum: number
+  /** Share of buyers, 0–100. */
+  share: number
+}
+
+export interface LicenseRetentionStats {
+  buyers: number
+  repeat_buyers: number
+  /** Percent of buyers with 2+ purchases. */
+  repeat_rate: number
+  avg_subscriptions_per_buyer: number
+  avg_check: number
+  avg_revenue_per_buyer: number
+  by_purchases: LicensePurchaseBucket[]
+}
+
+export interface LicenseTimelineDay {
+  date: string
+  count: number
+  sum: number
+}
+
+export interface LicenseTimelineMonth {
+  month: string
+  count: number
+  sum: number
+}
+
+/**
+ * Public sale row — no key / id / user_id.
+ * Prefer `activated_at` as the purchase date when displaying (see normalize).
+ */
+export interface LicenseSaleRow {
+  purchased_at: ApiDateTime | null
+  amount: number
+  method: string
+  duration_days: number | null
+  status: string
+  activated_at: ApiDateTime | null
+  expires_at: ApiDateTime | null
+}
+
+export interface LicenseSubscriptionsStats {
+  overview: {
+    total_sold: number
+    total_money: number
+    active: number
+    first_sale_at: ApiDateTime | null
+    last_sale_at: ApiDateTime | null
+    avg_check: number
+    avg_subscriptions_per_buyer: number
+    avg_revenue_per_buyer: number
+  }
+  by_duration: LicenseDurationStat[]
+  by_method: LicensePaymentStat[]
+  retention: LicenseRetentionStats
+  timeline: {
+    daily: LicenseTimelineDay[]
+    monthly: LicenseTimelineMonth[]
+  }
+  sales: LicenseSaleRow[]
+}
+
+/** Legacy forever keys — no reliable purchase dates after migration. */
+export interface LicenseForeverStats {
+  overview: {
+    paid_sold: number
+    total_money: number
+    active: number
+    avg_check: number
+  }
+  by_method: LicensePaymentStat[]
 }
 
 export interface LicenseSalesStats {
   updated_at: ApiDateTime
-  /** Time-limited subscriptions, the only kind sold now. */
-  new_subs: {
-    total_vips: number
-    active_total: number
-    /** USD. Both breakdowns below sum to exactly this figure. */
-    total_money: number
-    free_issued: number
-    free_active: number
-    top_durations: LicenseDurationStat[]
-    top_payments: LicensePaymentStat[]
-  }
-  /** Legacy lifetime keys, no longer offered. */
-  old_forever: {
-    total_sold: number
-    total_money: number
-  }
+  subscriptions: LicenseSubscriptionsStats
+  forever: LicenseForeverStats
 }
 
 export interface ActivateKeyResult {

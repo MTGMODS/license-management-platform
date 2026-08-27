@@ -1,9 +1,8 @@
-import { ArrowDown, CircleDollarSign, Crown, ShoppingCart, TrendingUp } from 'lucide-react'
+import { ArrowDown, BadgeDollarSign, CircleDollarSign, Crown, ShoppingCart, UserRound, Users } from 'lucide-react'
 import type { ComponentType } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useSalesStats } from '@/features/license/useSalesStats'
-import { usePublicStats } from '@/features/usage/usePublicStats'
 import { cn } from '@/shared/lib/cn'
 import { useFormatters } from '@/shared/lib/format'
 import { Card, Skeleton } from '@/shared/ui'
@@ -15,11 +14,12 @@ interface StatItem {
   icon: ComponentType<{ className?: string }>
 }
 
-/** Tall fold (FHD+): 2×2. Short desktop (HD): one row of four. */
+/** Tall fold (FHD+): 2×3. Short desktop (HD): one row of six / wrap of three. */
 const COMPACT_GRID = cn(
-  'grid grid-cols-4 gap-[clamp(0.35rem,0.9vh,0.65rem)]',
-  '[@media(min-width:1024px)_and_(max-height:48rem)]:gap-1.5',
-  '[@media(min-height:56rem)]:grid-cols-2',
+  'grid grid-cols-3 gap-[clamp(0.35rem,0.9vh,0.65rem)] sm:grid-cols-6',
+  '[@media(min-width:1024px)_and_(max-height:48rem)]:grid-cols-3',
+  '[@media(min-width:1024px)_and_(max-height:48rem)]:sm:grid-cols-3',
+  '[@media(min-height:56rem)]:grid-cols-3',
   '[@media(min-height:56rem)]:gap-[clamp(0.45rem,1.1vh,0.75rem)]',
 )
 
@@ -29,8 +29,6 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const { data, isPending, isError } = useSalesStats()
-  /** Soft: VIP fold must not depend on usage being up. */
-  const { data: usage } = usePublicStats()
 
   if (isError) return null
 
@@ -62,8 +60,8 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
         >
           {t('stats.subtitle')}
         </p>
-        <div className={cn(compact ? cn('mt-[clamp(0.35rem,0.9vh,0.65rem)]', COMPACT_GRID) : 'mt-4 grid grid-cols-2 gap-3')}>
-          {Array.from({ length: 4 }, (_, index) => (
+        <div className={cn(compact ? cn('mt-[clamp(0.35rem,0.9vh,0.65rem)]', COMPACT_GRID) : 'mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3')}>
+          {Array.from({ length: 6 }, (_, index) => (
             <Skeleton
               key={index}
               className={
@@ -83,33 +81,45 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
     )
   }
 
-  const { new_subs: subs } = data
-  const conversion = usage?.overview?.metrics?.vip_conversion
+  const { subscriptions: subs } = data
+  const { overview: o } = subs
 
   const items: StatItem[] = [
     {
       id: 'sales',
       label: t('stats.sales'),
-      value: format.number(subs.total_vips),
+      value: format.number(o.total_sold),
       icon: ShoppingCart,
     },
     {
       id: 'revenue',
       label: t('stats.revenue'),
-      value: `$${format.number(subs.total_money)}`,
+      value: `$${format.number(o.total_money)}`,
       icon: CircleDollarSign,
     },
     {
       id: 'active',
       label: t('stats.active'),
-      value: format.number(subs.active_total),
+      value: format.number(o.active),
       icon: Crown,
     },
     {
-      id: 'conversion',
-      label: t('stats.conversion'),
-      value: conversion == null ? '—' : format.percent(conversion),
-      icon: TrendingUp,
+      id: 'avgCheck',
+      label: t('stats.overview.avgCheck'),
+      value: `$${format.money(o.avg_check)}`,
+      icon: BadgeDollarSign,
+    },
+    {
+      id: 'avgRevenue',
+      label: t('stats.overview.avgRevenuePerBuyer'),
+      value: `$${format.money(o.avg_revenue_per_buyer)}`,
+      icon: UserRound,
+    },
+    {
+      id: 'buyers',
+      label: t('stats.buyers'),
+      value: format.number(subs.retention.buyers),
+      icon: Users,
     },
   ]
 
@@ -139,7 +149,7 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
         {t('stats.subtitle')}
       </p>
 
-      <div className={cn(compact ? cn('mt-[clamp(0.35rem,0.9vh,0.65rem)]', COMPACT_GRID) : 'mt-4 grid grid-cols-2 gap-3')}>
+      <div className={cn(compact ? cn('mt-[clamp(0.35rem,0.9vh,0.65rem)]', COMPACT_GRID) : 'mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3')}>
         {items.map((item) => {
           const Icon = item.icon
           return (
