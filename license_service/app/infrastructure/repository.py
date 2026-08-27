@@ -222,14 +222,14 @@ class LicenseRepository:
         ]
 
         daily_stmt = select(
-            func.date(TransactionModel.purchased_at).label("dt"),
+            func.date(LicenseModel.activated_at).label("dt"),
             func.count(TransactionModel.id).label("count"),
             func.sum(TransactionModel.amount).label("sum"),
         ).select_from(TransactionModel).join(
             LicenseModel, TransactionModel.license_id == LicenseModel.id
-        ).where(paid_subs).group_by(func.date(TransactionModel.purchased_at)).order_by(
-            func.date(TransactionModel.purchased_at)
-        )
+        ).where(paid_subs, LicenseModel.activated_at.isnot(None)).group_by(
+            func.date(LicenseModel.activated_at)
+        ).order_by(func.date(LicenseModel.activated_at))
 
         timeline_daily = [
             {
@@ -241,18 +241,18 @@ class LicenseRepository:
         ]
 
         monthly_stmt = select(
-            func.extract("year", TransactionModel.purchased_at).label("y"),
-            func.extract("month", TransactionModel.purchased_at).label("m"),
+            func.extract("year", LicenseModel.activated_at).label("y"),
+            func.extract("month", LicenseModel.activated_at).label("m"),
             func.count(TransactionModel.id).label("count"),
             func.sum(TransactionModel.amount).label("sum"),
         ).select_from(TransactionModel).join(
             LicenseModel, TransactionModel.license_id == LicenseModel.id
-        ).where(paid_subs).group_by(
-            func.extract("year", TransactionModel.purchased_at),
-            func.extract("month", TransactionModel.purchased_at),
+        ).where(paid_subs, LicenseModel.activated_at.isnot(None)).group_by(
+            func.extract("year", LicenseModel.activated_at),
+            func.extract("month", LicenseModel.activated_at),
         ).order_by(
-            func.extract("year", TransactionModel.purchased_at),
-            func.extract("month", TransactionModel.purchased_at),
+            func.extract("year", LicenseModel.activated_at),
+            func.extract("month", LicenseModel.activated_at),
         )
 
         timeline_monthly = [
@@ -266,15 +266,14 @@ class LicenseRepository:
         ]
 
         range_stmt = select(
-            func.min(TransactionModel.purchased_at).label("first_sale_at"),
-            func.max(TransactionModel.purchased_at).label("last_sale_at"),
+            func.min(LicenseModel.activated_at).label("first_activated_at"),
+            func.max(LicenseModel.activated_at).label("last_activated_at"),
         ).select_from(TransactionModel).join(
             LicenseModel, TransactionModel.license_id == LicenseModel.id
-        ).where(paid_subs)
+        ).where(paid_subs, LicenseModel.activated_at.isnot(None))
         sale_range = (await self.db.execute(range_stmt)).first()
 
         sales_stmt = select(
-            TransactionModel.purchased_at,
             TransactionModel.amount,
             TransactionModel.payment_method,
             LicenseModel.duration_days,
@@ -283,11 +282,10 @@ class LicenseRepository:
             LicenseModel.expires_at,
         ).select_from(TransactionModel).join(
             LicenseModel, TransactionModel.license_id == LicenseModel.id
-        ).where(paid_subs).order_by(TransactionModel.purchased_at.desc())
+        ).where(paid_subs).order_by(LicenseModel.activated_at.desc())
 
         sales = [
             {
-                "purchased_at": format_utc(r.purchased_at),
                 "amount": round(r.amount or 0, 2),
                 "method": r.payment_method,
                 "duration_days": r.duration_days,
@@ -299,7 +297,6 @@ class LicenseRepository:
         ]
 
         free_sales_stmt = select(
-            TransactionModel.purchased_at,
             TransactionModel.amount,
             TransactionModel.payment_method,
             LicenseModel.duration_days,
@@ -308,11 +305,10 @@ class LicenseRepository:
             LicenseModel.expires_at,
         ).select_from(TransactionModel).join(
             LicenseModel, TransactionModel.license_id == LicenseModel.id
-        ).where(free_subs).order_by(TransactionModel.purchased_at.desc())
+        ).where(free_subs).order_by(LicenseModel.activated_at.desc())
 
         free_sales = [
             {
-                "purchased_at": format_utc(r.purchased_at),
                 "amount": round(r.amount or 0, 2),
                 "method": r.payment_method,
                 "duration_days": r.duration_days,
@@ -416,8 +412,8 @@ class LicenseRepository:
                     "active": overview.active or 0,
                     "free_issued": overview.free_issued or 0,
                     "free_active": overview.free_active or 0,
-                    "first_sale_at": format_utc(sale_range.first_sale_at),
-                    "last_sale_at": format_utc(sale_range.last_sale_at),
+                    "first_activated_at": format_utc(sale_range.first_activated_at),
+                    "last_activated_at": format_utc(sale_range.last_activated_at),
                     "avg_check": retention["avg_check"],
                     "avg_subscriptions_per_buyer": retention["avg_subscriptions_per_buyer"],
                     "avg_revenue_per_buyer": retention["avg_revenue_per_buyer"],
