@@ -86,22 +86,28 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
 
   const items: StatItem[] = [
     {
+      id: 'buyers',
+      label: t('stats.buyers'),
+      value: format.number(subs.retention.buyers),
+      icon: Users,
+    },
+    {
       id: 'sales',
       label: t('stats.sales'),
       value: format.number(o.total_sold),
       icon: ShoppingCart,
     },
     {
-      id: 'revenue',
-      label: t('stats.revenue'),
-      value: `$${format.number(o.total_money)}`,
-      icon: CircleDollarSign,
-    },
-    {
       id: 'active',
       label: t('stats.active'),
       value: format.number(o.active),
       icon: Crown,
+    },
+    {
+      id: 'revenue',
+      label: t('stats.revenue'),
+      value: `$${format.number(o.total_money)}`,
+      icon: CircleDollarSign,
     },
     {
       id: 'avgCheck',
@@ -114,12 +120,6 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
       label: t('stats.overview.avgRevenuePerBuyer'),
       value: `$${format.money(o.avg_revenue_per_buyer)}`,
       icon: UserRound,
-    },
-    {
-      id: 'buyers',
-      label: t('stats.buyers'),
-      value: format.number(subs.retention.buyers),
-      icon: Users,
     },
   ]
 
