@@ -34,6 +34,15 @@ import { ChartTooltip } from '@/widgets/analytics/ChartTooltip'
 
 const PAYMENT_FALLBACK = ['#0fb0fa', '#34d399', '#f59e0b', '#fb7185', '#38bdf8', '#a78bfa']
 
+const DURATION_COLOR: Record<number, string> = {
+  7: '#22c55e',
+  30: '#0fb0fa',
+  90: '#a855f7',
+  365: '#ffb800',
+}
+
+const DURATION_FALLBACK = ['#34d399', '#f472b6', '#f59e0b', '#fb7185', '#a78bfa']
+
 const PAYMENT_COLOR: Record<string, string> = {
   FunPay: '#0fb0fa',
   Stars: '#ffb800',
@@ -52,6 +61,10 @@ function paymentColor(method: string, index: number): string {
     ([key]) => key.toLowerCase() === method.toLowerCase(),
   )
   return known?.[1] ?? PAYMENT_FALLBACK[index % PAYMENT_FALLBACK.length] ?? '#0fb0fa'
+}
+
+function durationColor(days: number, index: number): string {
+  return DURATION_COLOR[days] ?? DURATION_FALLBACK[index % DURATION_FALLBACK.length] ?? '#0fb0fa'
 }
 
 function usd(format: ReturnType<typeof useFormatters>, value: number): string {
@@ -209,6 +222,7 @@ function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const rows = [...durations].sort((a, b) => a.days - b.days)
+  const totalMoney = rows.reduce((sum, item) => sum + item.sum, 0)
 
   return (
     <Card className="flex h-full flex-col p-6">
@@ -217,37 +231,72 @@ function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
       {rows.length === 0 ? (
         <p className="mt-8 text-sm text-fg-subtle">{t('stats.empty')}</p>
       ) : (
-        <ul className="mt-6 flex flex-1 flex-col justify-between gap-5">
-          {rows.map((item) => {
-            const share = item.count_share
-            return (
-              <li key={item.days}>
-                <div className="flex items-baseline justify-between gap-3 text-sm">
-                  <span className="font-medium">
-                    {t('stats.top.product', { plan: t('pricing.days', { count: item.days }) })}
+        <div className="mt-5 flex min-h-0 flex-1 flex-col gap-6 sm:flex-row sm:items-stretch">
+          <div className="flex min-h-[12rem] shrink-0 items-center justify-center sm:min-h-0 sm:basis-[44%] lg:basis-[46%]">
+            <div className="relative aspect-square h-52 w-52 sm:h-full sm:w-auto sm:max-h-full sm:max-w-full sm:scale-[0.9025]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={rows}
+                    dataKey="sum"
+                    nameKey="days"
+                    innerRadius="62%"
+                    outerRadius="88%"
+                    paddingAngle={2}
+                    stroke="none"
+                    isAnimationActive={false}
+                  >
+                    {rows.map((item, index) => (
+                      <Cell key={item.days} fill={durationColor(item.days, index)} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                <p className="tabular text-xl font-semibold tracking-tight sm:text-2xl">
+                  {usdWhole(format, totalMoney)}
+                </p>
+                <p className="mt-0.5 text-[0.65rem] text-fg-subtle sm:text-xs">
+                  {t('stats.payments.total')}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <ul className="flex min-w-0 flex-1 flex-col justify-center gap-3.5 sm:-ml-2">
+            {rows.map((item, index) => {
+              const moneyShare =
+                item.money_share || (totalMoney > 0 ? (item.sum / totalMoney) * 100 : 0)
+              const planLabel = t('stats.top.product', {
+                plan: t('pricing.days', { count: item.days }),
+              })
+              return (
+                <li key={item.days} className="flex items-center gap-3">
+                  <div className="flex min-w-0 flex-1 items-start gap-2.5">
+                    <span
+                      aria-hidden
+                      className="mt-1 size-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: durationColor(item.days, index) }}
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-fg-muted">{planLabel}</p>
+                      <p className="tabular text-xs text-fg-subtle">
+                        {format.number(item.count)} · {t('stats.durations.active')}:{' '}
+                        {format.number(item.active)}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 tabular text-sm font-medium">
+                    {usdWhole(format, item.sum)}
                   </span>
-                  <span className="tabular text-fg-subtle">
-                    {format.number(item.count)} · {format.percent(share)} · {usdWhole(format, item.sum)}
+                  <span className="w-12 shrink-0 tabular text-right text-sm text-fg-subtle">
+                    {format.percent(moneyShare)}
                   </span>
-                </div>
-                <div className="mt-1 flex justify-between text-xs text-fg-subtle">
-                  <span>
-                    {t('stats.durations.active')}: {format.number(item.active)}
-                  </span>
-                  <span>
-                    {t('stats.durations.moneyShare')}: {format.percent(item.money_share)}
-                  </span>
-                </div>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink-800">
-                  <div
-                    className="h-full rounded-full bg-accent-500"
-                    style={{ width: `${Math.max(share, share > 0 ? 1.5 : 0)}%` }}
-                  />
-                </div>
-              </li>
-            )
-          })}
-        </ul>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
       )}
     </Card>
   )
@@ -293,7 +342,7 @@ function PaymentsChart({
                 'relative aspect-square',
                 compact
                   ? 'h-40 w-40 sm:h-[12rem] sm:w-[12rem]'
-                  : 'h-52 w-52 sm:h-full sm:w-auto sm:max-h-full sm:max-w-full',
+                  : 'h-52 w-52 sm:h-full sm:w-auto sm:max-h-full sm:max-w-full sm:scale-[0.9025]',
               )}
             >
               <ResponsiveContainer width="100%" height="100%">
@@ -409,20 +458,15 @@ function RetentionBlock({ retention }: { retention: LicenseRetentionStats }) {
             <li key={bucket.purchases}>
               <div className="flex items-baseline justify-between gap-3 text-sm">
                 <span className="font-medium">
-                  {bucket.purchases === 1
-                    ? t('stats.retention.once')
-                    : t('stats.retention.times', { count: bucket.purchases })}
+                  {t('stats.retention.purchases', { count: bucket.purchases })}
                 </span>
-                <span className="tabular text-fg-subtle">
-                  {format.number(bucket.users)} · {format.percent(bucket.share)} ·{' '}
-                  {usdWhole(format, bucket.sum)}
+                <span className="tabular text-sm">
+                  <span className="font-medium text-fg">{format.number(bucket.users)}</span>
+                  <span className="text-fg-subtle"> · </span>
+                  <span className="font-medium text-fg">{usdWhole(format, bucket.sum)}</span>
+                  <span className="text-fg-subtle"> · {format.percent(bucket.share)}</span>
                 </span>
               </div>
-              {bucket.renewals > 0 ? (
-                <p className="mt-0.5 text-xs text-fg-subtle">
-                  {t('stats.retention.renewals', { count: bucket.renewals })}
-                </p>
-              ) : null}
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink-800">
                 <div
                   className="h-full rounded-full bg-aqua-400"
@@ -517,9 +561,9 @@ function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
             value={mode}
             onChange={setMode}
             options={[
-              { id: 'all', label: t('stats.salesList.allTime') },
               { id: 'day', label: t('stats.salesList.oneDay') },
               { id: 'range', label: t('stats.salesList.period') },
+              { id: 'all', label: t('stats.salesList.allTime') },
             ]}
           />
 
@@ -652,8 +696,11 @@ function ForeverPricesChart({ prices }: { prices: LicensePriceStat[] }) {
                   <span className="font-medium">
                     {t('stats.legacy.byPrice.price', { price: usdWhole(format, item.price) })}
                   </span>
-                  <span className="tabular text-fg-subtle">
-                    {format.number(item.count)} · {format.percent(share)} · {usdWhole(format, item.sum)}
+                  <span className="tabular text-sm">
+                    <span className="font-medium text-fg">{format.number(item.count)}</span>
+                    <span className="text-fg-subtle"> · </span>
+                    <span className="font-medium text-fg">{usdWhole(format, item.sum)}</span>
+                    <span className="text-fg-subtle"> · {format.percent(share)}</span>
                   </span>
                 </div>
                 <div className="mt-1 text-xs text-fg-subtle">
@@ -764,8 +811,8 @@ export function SalesStats() {
         <RevenueTimeline daily={subs.timeline.daily} monthly={subs.timeline.monthly} />
 
         <div className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
-          <DurationsChart durations={subs.by_duration} />
           <PaymentsChart payments={subs.by_method} title={t('stats.payments.title')} />
+          <DurationsChart durations={subs.by_duration} />
         </div>
 
         <RetentionBlock retention={subs.retention} />

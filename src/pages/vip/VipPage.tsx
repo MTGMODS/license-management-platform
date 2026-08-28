@@ -1,4 +1,4 @@
-import { CreditCard, Infinity, MessageSquareText, Sparkles, Users } from 'lucide-react'
+import { BanknoteX, CreditCard, Infinity, MessageSquareText, Sparkles, Users } from 'lucide-react'
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -8,7 +8,7 @@ import { useLocalUsdPrice } from '@/features/geo/useLocalUsdPrice'
 import { useSalesStats } from '@/features/license/useSalesStats'
 import { useTariffs } from '@/features/license/useTariffs'
 import { cn } from '@/shared/lib/cn'
-import { Button, Card, DeferredMount, Skeleton } from '@/shared/ui'
+import { Button, Card, DeferredMount, Skeleton, buttonStyles } from '@/shared/ui'
 import { PaymentSection } from '@/widgets/vip/PaymentSection'
 import { PricingGrid } from '@/widgets/vip/PricingGrid'
 import { SalesOverview } from '@/widgets/vip/SalesOverview'
@@ -264,7 +264,7 @@ export function VipPage() {
                 {tariffsReady ? (
                   <>
                     <VipBenefits />
-                    <div className="flex justify-center">
+                    <div className="flex flex-wrap items-center justify-center gap-3">
                       <Button
                         size="lg"
                         className={cn(
@@ -277,6 +277,21 @@ export function VipPage() {
                         <CreditCard aria-hidden className="size-4" />
                         {t('hero.pay')}
                       </Button>
+                      <Link
+                        to="/helper"
+                        className={buttonStyles({
+                          size: 'lg',
+                          variant: 'secondary',
+                          className: cn(
+                            `${SHORT_DESKTOP}:h-10`,
+                            `${SHORT_DESKTOP}:px-4`,
+                            `${SHORT_DESKTOP}:text-sm`,
+                          ),
+                        })}
+                      >
+                        <BanknoteX aria-hidden className="size-4" />
+                        {t('hero.backToFree')}
+                      </Link>
                     </div>
                   </>
                 ) : null}
