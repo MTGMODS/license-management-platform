@@ -49,6 +49,9 @@ export function ActivateSuccessOverlay({
     }
   }, [])
 
+  const titleKey =
+    mode === 'renewal' ? 'activate.successSlide.renewalTitle' : 'activate.successSlide.firstTitle'
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/75 p-4 backdrop-blur-sm"
@@ -70,45 +73,25 @@ export function ActivateSuccessOverlay({
         </button>
 
         <div className="inline-flex max-w-full flex-col items-center pt-8 text-center">
-          {mode === 'renewal' ? (
-            <>
-              <p className="text-4xl leading-none sm:text-5xl" aria-hidden>
-                🎉
-              </p>
-              <h2
-                id="activate-success-title"
-                className="mt-4 whitespace-nowrap text-xl font-semibold tracking-tight sm:text-2xl"
-              >
-                {t('activate.successSlide.renewalTitle')}
-              </h2>
-            </>
-          ) : (
-            <>
-              <span className="grid size-14 place-items-center rounded-2xl bg-positive/15 text-positive sm:size-16">
-                <CheckCircle2 aria-hidden className="size-7 sm:size-8" strokeWidth={2} />
-              </span>
-              <h2
-                id="activate-success-title"
-                className="mt-5 whitespace-nowrap text-xl font-semibold tracking-tight sm:text-2xl"
-              >
-                {t('activate.successSlide.firstTitle')}
-              </h2>
-            </>
-          )}
+          <span className="grid size-14 place-items-center rounded-2xl bg-positive/15 text-positive sm:size-16">
+            <CheckCircle2 aria-hidden className="size-7 sm:size-8" strokeWidth={2} />
+          </span>
+          <h2
+            id="activate-success-title"
+            className="mt-5 whitespace-nowrap text-xl font-semibold tracking-tight sm:text-2xl"
+          >
+            {t(titleKey)}
+          </h2>
 
           <div className="w-0 min-w-full">
-            {mode === 'first' ? (
-              <p className="mt-3 text-sm leading-relaxed text-fg-muted sm:text-base">
-                {t('activate.successSlide.firstSubtitle')}
-              </p>
-            ) : null}
+            <p className="mt-3 text-sm leading-relaxed text-fg-muted sm:text-base">
+              {t('activate.successSlide.subtitle')}
+            </p>
 
             <ActivationWarning />
 
             <Button type="button" size="lg" fullWidth className="mt-6" onClick={onClose}>
-              {mode === 'first'
-                ? t('activate.successSlide.ctaFirst')
-                : t('activate.successSlide.ctaRenewal')}
+              {t('activate.successSlide.cta')}
             </Button>
           </div>
         </div>
