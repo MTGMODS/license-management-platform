@@ -55,10 +55,6 @@ export function getTokens(): AuthTokens | null {
   return memoryTokens
 }
 
-export function getAccessToken(): string | null {
-  return getTokens()?.accessToken ?? null
-}
-
 export function setTokens(tokens: AuthTokens): void {
   memoryTokens = tokens
   writeKey(ACCESS_KEY, tokens.accessToken)

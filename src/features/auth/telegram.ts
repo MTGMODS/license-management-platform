@@ -104,14 +104,6 @@ function persistInitData(value: string): string {
 }
 
 /**
- * True only when Telegram actually handed us signed launch data. The SDK
- * may be absent in a normal browser, so the global alone is not enough.
- */
-export function isTelegramMiniApp(): boolean {
-  return getTelegramInitData() !== null
-}
-
-/**
  * Telegram in-app browser or Mini App shell — even when initData is missing
  * (e.g. opened as a plain link inside Telegram).
  */

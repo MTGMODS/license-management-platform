@@ -13,7 +13,7 @@ export const MAP_HEIGHT = 420
  * codes in the current payload — Singapore, Hong Kong, Seychelles, Malta,
  * Monaco, Mayotte, Andorra — have no shape and simply do not appear. Together
  * they are 0.28% of users; the 50m atlas would cover them at several times
- * the download size. See scripts/verify-usage-labels.mjs.
+ * the download size.
  */
 
 /** ISO 3166-1 numeric for Antarctica — dropped so the fit can zoom inhabited land. */

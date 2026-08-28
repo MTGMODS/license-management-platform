@@ -10,17 +10,11 @@ export const FRAGMENT_STARS_URL = 'https://fragment.com/stars/buy'
 export const PAYPAL_EMAIL = 'bogdan.mtg@gmail.com'
 
 export const VIP_BOT_START = {
-  ton: `${VIP_BOT_URL}?start=ton`,
-  funpay: `${VIP_BOT_URL}?start=funpay`,
-  crypto: `${VIP_BOT_URL}?start=crypto`,
-  activate: `${VIP_BOT_URL}?start=activate`,
   pay: `${VIP_BOT_URL}?start=pay`,
 } as const
 
 export const FUNPAY_URL = 'https://funpay.com/'
 export const FUNPAY_ORDERS_URL = 'https://funpay.com/orders/'
-/** Flat Crypto Bot (@send) invoice fee in USD. */
-export const CRYPTO_BOT_INVOICE_FEE_USD = 0.5
 
 export interface DurationOffer {
   days: number

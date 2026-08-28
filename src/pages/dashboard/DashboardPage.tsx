@@ -478,7 +478,7 @@ function LicenseHistory() {
 
 function VipColumn() {
   const { t } = useTranslation(['dashboard', 'common'])
-  const { data, isPending, isError, error, refetch, isFetching } = useLicenseInfo(true)
+  const { data, isPending, isError, refetch, isFetching } = useLicenseInfo(true)
 
   if (isPending) {
     return (

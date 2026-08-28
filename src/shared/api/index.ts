@@ -1,16 +1,12 @@
-export { serviceOrigin, serviceUrl, type ServiceName } from './config'
+export { serviceOrigin } from './config'
 export {
   ApiError,
-  NetworkError,
-  TimeoutError,
   apiErrorTranslationKey,
   isNoActiveLicense,
-  isServiceUnavailable,
 } from './errors'
 export { request } from './http'
 export {
   clearTokens,
-  getAccessToken,
   getTokens,
   onSessionExpired,
   setTokens,
