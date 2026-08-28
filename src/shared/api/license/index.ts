@@ -7,6 +7,7 @@ import type {
   LicenseForeverStats,
   LicenseInfo,
   LicensePaymentStat,
+  LicensePriceStat,
   LicensePurchaseBucket,
   LicenseRetentionStats,
   LicenseSaleRow,
@@ -73,6 +74,17 @@ function normalizePayment(raw: unknown): LicensePaymentStat {
   const item = asRecord(raw)
   return {
     method: asString(item.method, 'Unknown'),
+    count: asFinite(item.count),
+    sum: asFinite(item.sum),
+    count_share: asFinite(item.count_share),
+    money_share: asFinite(item.money_share),
+  }
+}
+
+function normalizePrice(raw: unknown): LicensePriceStat {
+  const item = asRecord(raw)
+  return {
+    price: asFinite(item.price),
     count: asFinite(item.count),
     sum: asFinite(item.sum),
     count_share: asFinite(item.count_share),
@@ -178,6 +190,7 @@ function emptyForever(): LicenseForeverStats {
       active: 0,
       avg_check: 0,
     },
+    by_price: [],
     by_method: [],
   }
 }
@@ -222,6 +235,7 @@ function normalizeForever(raw: unknown): LicenseForeverStats {
       active: asFinite(overview.active),
       avg_check: asFinite(overview.avg_check),
     },
+    by_price: asArray(root.by_price).map(normalizePrice),
     by_method: asArray(root.by_method).map(normalizePayment),
   }
 }
@@ -308,6 +322,7 @@ export type {
   LicenseForeverStats,
   LicenseInfo,
   LicensePaymentStat,
+  LicensePriceStat,
   LicensePurchaseBucket,
   LicenseRetentionStats,
   LicenseSaleRow,

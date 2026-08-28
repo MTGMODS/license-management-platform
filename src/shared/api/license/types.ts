@@ -133,6 +133,15 @@ export interface LicenseSubscriptionsStats {
   sales: LicenseSaleRow[]
 }
 
+/** Paid forever keys bucketed by actual purchase price. */
+export interface LicensePriceStat {
+  price: number
+  count: number
+  sum: number
+  count_share: number
+  money_share: number
+}
+
 /** Legacy forever keys — no reliable purchase dates after migration. */
 export interface LicenseForeverStats {
   overview: {
@@ -141,6 +150,7 @@ export interface LicenseForeverStats {
     active: number
     avg_check: number
   }
+  by_price: LicensePriceStat[]
   by_method: LicensePaymentStat[]
 }
 

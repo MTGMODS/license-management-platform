@@ -18,6 +18,7 @@ import type {
   LicenseDurationStat,
   LicenseForeverStats,
   LicensePaymentStat,
+  LicensePriceStat,
   LicensePurchaseBucket,
   LicenseRetentionStats,
   LicenseSaleRow,
@@ -25,6 +26,7 @@ import type {
   LicenseTimelineMonth,
 } from '@/shared/api/license'
 import { parseApiDateTime } from '@/shared/lib/datetime'
+import { cn } from '@/shared/lib/cn'
 import { useFormatters } from '@/shared/lib/format'
 import { Card, ErrorState, SegmentedControl, Skeleton } from '@/shared/ui'
 import { AXIS_PROPS, CHART, Y_AXIS_NUMERIC } from '@/widgets/analytics/chartTheme'
@@ -34,12 +36,12 @@ const PAYMENT_FALLBACK = ['#0fb0fa', '#34d399', '#f59e0b', '#fb7185', '#38bdf8',
 
 const PAYMENT_COLOR: Record<string, string> = {
   FunPay: '#0fb0fa',
-  Stars: '#34d399',
-  Card: '#f59e0b',
-  Crypto: '#fb7185',
-  PayPal: '#38bdf8',
+  Stars: '#ffb800',
+  Card: '#ef4444',
+  Crypto: '#22c55e',
+  PayPal: '#1e40af',
   Promo: '#a78bfa',
-  Steam: '#66c0f4',
+  Steam: '#a855f7',
   Gift: '#f472b6',
 }
 
@@ -255,10 +257,12 @@ function PaymentsChart({
   payments,
   title,
   subtitle,
+  compact = false,
 }: {
   payments: LicensePaymentStat[]
   title: string
   subtitle?: string
+  compact?: boolean
 }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
@@ -272,9 +276,26 @@ function PaymentsChart({
       {payments.length === 0 ? (
         <p className="mt-8 text-sm text-fg-subtle">{t('stats.empty')}</p>
       ) : (
-        <div className="mt-5 flex min-h-0 flex-1 flex-col gap-6 sm:flex-row sm:items-stretch">
-          <div className="flex min-h-[12rem] shrink-0 items-center justify-center sm:min-h-0 sm:basis-[44%] lg:basis-[46%]">
-            <div className="relative aspect-square h-52 w-52 sm:h-full sm:w-auto sm:max-h-full sm:max-w-full">
+        <div
+          className={cn(
+            'mt-5 flex min-h-0 flex-1 flex-col gap-6',
+            compact ? 'items-center gap-5' : 'sm:flex-row sm:items-stretch',
+          )}
+        >
+          <div
+            className={cn(
+              'flex shrink-0 items-center justify-center',
+              compact ? 'w-full' : 'min-h-[12rem] sm:min-h-0 sm:basis-[44%] lg:basis-[46%]',
+            )}
+          >
+            <div
+              className={cn(
+                'relative aspect-square',
+                compact
+                  ? 'h-40 w-40 sm:h-[12rem] sm:w-[12rem]'
+                  : 'h-52 w-52 sm:h-full sm:w-auto sm:max-h-full sm:max-w-full',
+              )}
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -294,7 +315,12 @@ function PaymentsChart({
                 </PieChart>
               </ResponsiveContainer>
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <p className="tabular text-xl font-semibold tracking-tight sm:text-2xl">
+                <p
+                  className={cn(
+                    'tabular font-semibold tracking-tight',
+                    compact ? 'text-base sm:text-lg' : 'text-xl sm:text-2xl',
+                  )}
+                >
                   {usdWhole(format, totalMoney)}
                 </p>
                 <p className="mt-0.5 text-[0.65rem] text-fg-subtle sm:text-xs">
@@ -304,7 +330,12 @@ function PaymentsChart({
             </div>
           </div>
 
-          <ul className="flex min-w-0 flex-1 flex-col justify-center gap-3.5">
+          <ul
+            className={cn(
+              'flex min-w-0 flex-col',
+              compact ? 'w-full gap-3' : 'flex-1 justify-center gap-3.5',
+            )}
+          >
             {payments.map((item, index) => {
               const moneyShare =
                 item.money_share || (totalMoney > 0 ? (item.sum / totalMoney) * 100 : 0)
@@ -599,14 +630,61 @@ function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
   )
 }
 
+function ForeverPricesChart({ prices }: { prices: LicensePriceStat[] }) {
+  const { t } = useTranslation('vip')
+  const format = useFormatters()
+  const rows = [...prices].sort((a, b) => a.price - b.price)
+
+  return (
+    <Card className="flex h-full flex-col p-6">
+      <h3 className="text-lg font-semibold tracking-tight">{t('stats.legacy.byPrice.title')}</h3>
+      <p className="mt-1 text-sm text-fg-muted">{t('stats.legacy.byPrice.subtitle')}</p>
+
+      {rows.length === 0 ? (
+        <p className="mt-8 text-sm text-fg-subtle">{t('stats.empty')}</p>
+      ) : (
+        <ul className="mt-6 space-y-4">
+          {rows.map((item) => {
+            const share = item.count_share
+            return (
+              <li key={item.price}>
+                <div className="flex items-baseline justify-between gap-3 text-sm">
+                  <span className="font-medium">
+                    {t('stats.legacy.byPrice.price', { price: usdWhole(format, item.price) })}
+                  </span>
+                  <span className="tabular text-fg-subtle">
+                    {format.number(item.count)} · {format.percent(share)} · {usdWhole(format, item.sum)}
+                  </span>
+                </div>
+                <div className="mt-1 text-xs text-fg-subtle">
+                  {t('stats.durations.moneyShare')}: {format.percent(item.money_share)}
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink-800">
+                  <div
+                    className="h-full rounded-full bg-accent-500"
+                    style={{ width: `${Math.max(share, share > 0 ? 1.5 : 0)}%` }}
+                  />
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </Card>
+  )
+}
+
 function ForeverSection({ forever }: { forever: LicenseForeverStats }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const { overview: o } = forever
 
-  if (o.paid_sold <= 0 && forever.by_method.length === 0) {
+  if (o.paid_sold <= 0 && forever.by_method.length === 0 && forever.by_price.length === 0) {
     return null
   }
+
+  const hasPrice = forever.by_price.length > 0
+  const hasMethods = forever.by_method.length > 0
 
   return (
     <div className="space-y-4">
@@ -622,11 +700,24 @@ function ForeverSection({ forever }: { forever: LicenseForeverStats }) {
         <MetricCard label={t('stats.overview.avgCheck')} value={usd(format, o.avg_check)} />
       </div>
 
-      <PaymentsChart
-        payments={forever.by_method}
-        title={t('stats.legacy.payments')}
-        subtitle={t('stats.legacy.paymentsHint')}
-      />
+      {(hasPrice || hasMethods) && (
+        <div
+          className={cn(
+            'grid gap-4',
+            hasPrice && hasMethods && 'lg:grid-cols-2 lg:items-stretch',
+          )}
+        >
+          {hasPrice ? <ForeverPricesChart prices={forever.by_price} /> : null}
+          {hasMethods ? (
+            <PaymentsChart
+              payments={forever.by_method}
+              title={t('stats.legacy.payments')}
+              subtitle={t('stats.legacy.paymentsHint')}
+              compact
+            />
+          ) : null}
+        </div>
+      )}
     </div>
   )
 }
@@ -681,7 +772,9 @@ export function SalesStats() {
 
         <SalesTable sales={subs.sales} />
 
-        {forever.overview.paid_sold > 0 || forever.by_method.length > 0 ? (
+        {forever.overview.paid_sold > 0 ||
+        forever.by_method.length > 0 ||
+        forever.by_price.length > 0 ? (
           <div className="border-t border-white/8 pt-8">
             <ForeverSection forever={forever} />
           </div>
