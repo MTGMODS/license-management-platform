@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { useAuthStore } from '@/features/auth/authStore'
+import { isNoActiveLicense } from '@/shared/api'
 import {
   activateKey,
   getLicenseHistory,
@@ -15,7 +16,9 @@ import {
 export const LICENSE_INFO_KEY = ['license', 'info'] as const
 export const LICENSE_HISTORY_KEY = ['license', 'history'] as const
 
-function licenseOwnerKey(user: { id: number | null; discord_id: string | null; telegram_id: string | null } | null) {
+export function licenseOwnerKey(
+  user: { id: number | null; discord_id: string | null; telegram_id: string | null } | null,
+) {
   if (!user) return 'anonymous'
   if (user.id !== null) return `id:${user.id}`
   if (user.discord_id) return `discord:${user.discord_id}`
@@ -27,9 +30,16 @@ export function useLicenseInfo(enabled: boolean) {
   const user = useAuthStore((state) => state.user)
   const owner = licenseOwnerKey(user)
 
-  return useQuery<LicenseInfo>({
+  return useQuery<LicenseInfo | null>({
     queryKey: [...LICENSE_INFO_KEY, owner],
-    queryFn: ({ signal }) => getLicenseInfo(signal),
+    queryFn: async ({ signal }) => {
+      try {
+        return await getLicenseInfo(signal)
+      } catch (error) {
+        if (isNoActiveLicense(error)) return null
+        throw error
+      }
+    },
     enabled: enabled && owner !== 'anonymous',
     staleTime: 60_000,
   })

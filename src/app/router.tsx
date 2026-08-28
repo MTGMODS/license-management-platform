@@ -1,10 +1,10 @@
-import { Route, Routes } from 'react-router'
+import { Navigate, Route, Routes } from 'react-router'
 
 import { AdminPage } from '@/pages/admin/AdminPage'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { DownloadPage } from '@/pages/helper/DownloadPage'
 import { HelperPage } from '@/pages/helper/HelperPage'
-import { HomePage } from '@/pages/home/HomePage'
+// import { HomePage } from '@/pages/home/HomePage'
 import { AuthCallbackPage } from '@/pages/login/AuthCallbackPage'
 import { LoginPage } from '@/pages/login/LoginPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
@@ -20,7 +20,8 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route element={<AppLayout />}>
-        <Route index element={<HomePage />} />
+        {/* TODO: restore landing — <Route index element={<HomePage />} /> */}
+        <Route index element={<Navigate to="/helper" replace />} />
         <Route path="helper" element={<HelperPage />} />
         <Route path="helper/download" element={<DownloadPage />} />
         <Route path="vip" element={<VipPage />} />

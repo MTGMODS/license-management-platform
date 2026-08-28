@@ -3,13 +3,23 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
+import { useQueryClient } from '@tanstack/react-query'
 
 import { AuthPopupBlockedDialog } from '@/features/auth/AuthPopupBlockedDialog'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useOAuthSignIn } from '@/features/auth/useOAuthSignIn'
-import { useActivateKey, useLicenseHistory, useLicenseInfo, usePremiumDownload, useResetDevice } from '@/features/license/useLicense'
+import {
+  LICENSE_HISTORY_KEY,
+  LICENSE_INFO_KEY,
+  licenseOwnerKey,
+  useActivateKey,
+  useLicenseHistory,
+  useLicenseInfo,
+  usePremiumDownload,
+  useResetDevice,
+} from '@/features/license/useLicense'
 import { useRelease } from '@/features/release/useRelease'
-import { ApiError, apiErrorTranslationKey, isNoActiveLicense, isServiceUnavailable } from '@/shared/api'
+import { ApiError, apiErrorTranslationKey } from '@/shared/api'
 import {
   LICENSE_KEY_LENGTH,
   LICENSE_KEY_PATTERN,
@@ -33,6 +43,10 @@ import {
   Skeleton,
   TelegramIcon,
 } from '@/shared/ui'
+import {
+  ActivateSuccessOverlay,
+  type ActivateSuccessMode,
+} from '@/widgets/dashboard/ActivateSuccessOverlay'
 
 type DashboardTab = 'vip' | 'account'
 
@@ -56,16 +70,32 @@ function headlineKey(
 function ActivateForm() {
   const { t } = useTranslation('dashboard')
   const { t: te } = useTranslation(['errors'])
+  const queryClient = useQueryClient()
+  const user = useAuthStore((state) => state.user)
   const activate = useActivateKey()
   const [value, setValue] = useState('')
   const [pendingForce, setPendingForce] = useState<string | null>(null)
+  const [successMode, setSuccessMode] = useState<ActivateSuccessMode | null>(null)
 
   const valid = LICENSE_KEY_PATTERN.test(value)
 
+  const closeSuccessSlide = () => {
+    setSuccessMode(null)
+    if (window.scrollY > 0) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
   const submit = async (key: string, force: boolean) => {
+    const owner = licenseOwnerKey(user)
+    const info = queryClient.getQueryData<LicenseInfo | null>([...LICENSE_INFO_KEY, owner])
+    const history =
+      queryClient.getQueryData<LicenseInfo[]>([...LICENSE_HISTORY_KEY, owner]) ?? []
+    const isRenewal = info != null || history.length > 0
+
     try {
       await activate.mutateAsync({ key, force })
-      toast.success(t('activate.success'))
+      setSuccessMode(isRenewal ? 'renewal' : 'first')
       setValue('')
       setPendingForce(null)
     } catch (error) {
@@ -85,51 +115,57 @@ function ActivateForm() {
   }
 
   return (
-    <Card className="p-6 sm:p-8">
-      <div className="flex items-center gap-3">
-        <span className="grid size-10 place-items-center rounded-xl bg-accent-500/10 text-accent-300">
-          <KeyRound aria-hidden className="size-5" />
-        </span>
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight">{t('activate.title')}</h2>
-          <p className="mt-0.5 text-sm text-fg-muted">{t('activate.subtitle')}</p>
-        </div>
-      </div>
+    <>
+      {successMode ? (
+        <ActivateSuccessOverlay mode={successMode} onClose={closeSuccessSlide} />
+      ) : null}
 
-      <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <input
-          value={value}
-          onChange={(event) => setValue(formatLicenseKey(event.target.value))}
-          placeholder={t('activate.placeholder')}
-          maxLength={LICENSE_KEY_LENGTH}
-          spellCheck={false}
-          autoComplete="off"
-          className="tabular flex-1 rounded-xl border border-white/8 bg-ink-800 px-4 py-3 text-sm tracking-wider text-fg outline-none placeholder:text-fg-subtle focus:border-accent-500/40"
-        />
-        <Button type="submit" disabled={!valid} loading={activate.isPending && !pendingForce}>
-          {t('activate.action')}
-        </Button>
-      </form>
-
-      {pendingForce ? (
-        <div className="mt-5 rounded-xl border border-caution/25 bg-caution/10 p-4">
-          <p className="font-medium text-caution">{t('activate.forceTitle')}</p>
-          <p className="mt-1 text-sm text-fg-muted">{t('activate.forceBody')}</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button loading={activate.isPending} onClick={() => void submit(pendingForce, true)}>
-              {t('activate.forceConfirm')}
-            </Button>
-            <Button
-              variant="secondary"
-              disabled={activate.isPending}
-              onClick={() => setPendingForce(null)}
-            >
-              {t('activate.forceCancel')}
-            </Button>
+      <Card className="p-6 sm:p-8">
+        <div className="flex items-center gap-3">
+          <span className="grid size-10 place-items-center rounded-xl bg-accent-500/10 text-accent-300">
+            <KeyRound aria-hidden className="size-5" />
+          </span>
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight">{t('activate.title')}</h2>
+            <p className="mt-0.5 text-sm text-fg-muted">{t('activate.subtitle')}</p>
           </div>
         </div>
-      ) : null}
-    </Card>
+
+        <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <input
+            value={value}
+            onChange={(event) => setValue(formatLicenseKey(event.target.value))}
+            placeholder={t('activate.placeholder')}
+            maxLength={LICENSE_KEY_LENGTH}
+            spellCheck={false}
+            autoComplete="off"
+            className="tabular flex-1 rounded-xl border border-white/8 bg-ink-800 px-4 py-3 text-sm tracking-wider text-fg outline-none placeholder:text-fg-subtle focus:border-accent-500/40"
+          />
+          <Button type="submit" disabled={!valid} loading={activate.isPending && !pendingForce}>
+            {t('activate.action')}
+          </Button>
+        </form>
+
+        {pendingForce ? (
+          <div className="mt-5 rounded-xl border border-caution/25 bg-caution/10 p-4">
+            <p className="font-medium text-caution">{t('activate.forceTitle')}</p>
+            <p className="mt-1 text-sm text-fg-muted">{t('activate.forceBody')}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button loading={activate.isPending} onClick={() => void submit(pendingForce, true)}>
+                {t('activate.forceConfirm')}
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={activate.isPending}
+                onClick={() => setPendingForce(null)}
+              >
+                {t('activate.forceCancel')}
+              </Button>
+            </div>
+          </div>
+        ) : null}
+      </Card>
+    </>
   )
 }
 
@@ -454,7 +490,7 @@ function VipColumn() {
     )
   }
 
-  if (isError && (isServiceUnavailable(error) || (!isNoActiveLicense(error) && !(error instanceof ApiError && error.status === 404)))) {
+  if (isError) {
     return (
       <div className="space-y-4">
         <Card className="px-6 py-10 text-center sm:px-10">
@@ -469,7 +505,7 @@ function VipColumn() {
     )
   }
 
-  if (isError || !data) {
+  if (!data) {
     return (
       <div className="space-y-4">
         <Card className="px-6 py-12 text-center sm:px-10">

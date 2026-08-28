@@ -197,3 +197,26 @@
   }
 }
 
+/* Legal document lists — Tailwind preflight strips markers unless reinforced. */
+@layer components {
+  .terms-prose ul {
+    list-style-type: disc;
+    list-style-position: outside;
+    padding-left: 1.25rem;
+  }
+
+  .terms-prose ul > li {
+    display: list-item;
+  }
+
+  .terms-prose ol {
+    list-style-type: decimal;
+    list-style-position: outside;
+    padding-left: 1.25rem;
+  }
+
+  .terms-prose ol > li {
+    display: list-item;
+  }
+}
+
