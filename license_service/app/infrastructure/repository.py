@@ -372,6 +372,25 @@ class LicenseRepository:
             for r in (await self.db.execute(forever_pay_stmt)).all()
         ]
 
+        forever_price_stmt = select(
+            TransactionModel.amount.label("price"),
+            func.count(TransactionModel.id).label("count"),
+            func.sum(TransactionModel.amount).label("sum"),
+        ).select_from(TransactionModel).join(
+            LicenseModel, TransactionModel.license_id == LicenseModel.id
+        ).where(paid_forever).group_by(TransactionModel.amount).order_by(TransactionModel.amount)
+
+        forever_by_price = [
+            {
+                "price": round(r.price or 0, 2),
+                "count": r.count,
+                "sum": round(r.sum or 0, 2),
+                "count_share": self._money_share(r.count, forever_paid_sold),
+                "money_share": self._money_share(r.sum or 0, forever_money),
+            }
+            for r in (await self.db.execute(forever_price_stmt)).all()
+        ]
+
         return {
             "updated_at": format_utc(datetime.now(timezone.utc)),
             "subscriptions": {
@@ -402,6 +421,7 @@ class LicenseRepository:
                     "avg_check": round(forever_money / forever_paid_sold, 2) if forever_paid_sold else 0,
                 },
                 "by_method": forever_by_method,
+                "by_price": forever_by_price,
             },
         }
 
