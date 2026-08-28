@@ -657,7 +657,9 @@ export function PaymentSection() {
             ) : null}
           </div>
           <h3 className="mt-1 text-xl font-semibold tracking-tight">
-            {t([`payment.routes.${activeRoute}.detailsTitle`, `payment.routes.${activeRoute}.title`])}
+            {t(`payment.routes.${activeRoute}.detailsTitle`, {
+              defaultValue: t(`payment.routes.${activeRoute}.title`),
+            })}
           </h3>
         </div>
         <RouteBody route={activeRoute} wallet={wallet} />

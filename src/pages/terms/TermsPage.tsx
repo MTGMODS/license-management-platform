@@ -48,13 +48,15 @@ function groupBlocks(blocks: TermsBlock[]): BlockGroup[] {
 
   for (let index = 0; index < blocks.length; index += 1) {
     const block = blocks[index]
+    if (!block) continue
 
     if (block.type === 'h3') {
       flushBuffer()
       const panelBlocks: TermsBlock[] = []
       let cursor = index + 1
-      while (cursor < blocks.length && blocks[cursor].type !== 'h3') {
-        panelBlocks.push(blocks[cursor])
+      while (cursor < blocks.length && blocks[cursor]?.type !== 'h3') {
+        const panelBlock = blocks[cursor]
+        if (panelBlock) panelBlocks.push(panelBlock)
         cursor += 1
       }
       groups.push({ kind: 'panel', title: block.text, blocks: panelBlocks })
@@ -93,7 +95,17 @@ function TermsRich({ i18nKey, compact = false }: { i18nKey: string; compact?: bo
 
   return (
     <p className={compact ? 'leading-relaxed' : 'text-sm leading-relaxed text-fg-muted'}>
-      <Trans i18nKey={i18nKey} ns="terms" components={components} />
+      <Trans
+        i18nKey={
+          i18nKey as
+            | 'rich.freeLicenseLink'
+            | 'rich.liabilitySite'
+            | 'rich.contactEmail'
+            | 'rich.contactTelegram'
+        }
+        ns="terms"
+        components={components}
+      />
     </p>
   )
 }
