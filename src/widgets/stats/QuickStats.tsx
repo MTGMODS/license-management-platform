@@ -101,7 +101,7 @@ export function QuickStats() {
                   {item.label}
                 </p>
               </div>
-              <p className="tabular mt-[clamp(0.35rem,1vh,0.75rem)] whitespace-nowrap text-[clamp(1.15rem,2.6vh,1.5rem)] font-semibold tracking-tight">
+              <p className="tabular mt-[clamp(0.35rem,1vh,0.75rem)] min-w-0 text-[clamp(1rem,2.2vh,1.5rem)] font-semibold leading-tight tracking-tight sm:whitespace-nowrap">
                 {item.value}
               </p>
             </Card>

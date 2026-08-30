@@ -10,7 +10,7 @@ export function PromoPage() {
         <Megaphone aria-hidden className="size-6" />
       </span>
       <h1 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl">{t('title')}</h1>
-      <p className="mt-3 text-sm whitespace-nowrap text-fg-muted sm:text-base">{t('body')}</p>
+      <p className="mt-3 text-sm text-fg-muted sm:text-base">{t('body')}</p>
     </div>
   )
 }

@@ -37,8 +37,8 @@ export function Header() {
   }, [location.pathname])
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/5 glass">
-      <div className="shell grid h-16 grid-cols-[auto_1fr_auto] items-center gap-3">
+    <header className="sticky top-0 z-50 overflow-x-clip border-b border-white/5 glass">
+      <div className="shell grid h-16 min-w-0 grid-cols-[auto_1fr_auto] items-center gap-3">
         <NavLink
           to="/"
           end

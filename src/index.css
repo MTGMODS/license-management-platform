@@ -88,6 +88,8 @@
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    overflow-x: clip;
+    overscroll-behavior-x: none;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -107,9 +109,16 @@
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    overflow-x: clip;
+    overscroll-behavior-x: none;
     /* Safe areas keep the layout intact inside the Telegram Mini App. */
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+  }
+
+  #root {
+    overflow-x: clip;
+    max-width: 100%;
   }
 
   ::selection {
@@ -190,6 +199,7 @@
   margin-inline: auto;
   width: 100%;
   max-width: 80rem;
+  min-width: 0;
   padding-inline: 1rem;
 
   @media (width >= 40rem) {

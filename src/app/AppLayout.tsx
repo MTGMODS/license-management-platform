@@ -13,9 +13,9 @@ import { usePageMeta } from './usePageMeta'
  */
 function BackgroundAmbience() {
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      <div className="absolute -top-40 -left-32 size-[36rem] rounded-full bg-accent-600/14 blur-[120px] animate-pulse-glow" />
-      <div className="absolute -right-40 top-1/3 size-[32rem] rounded-full bg-aqua-500/10 blur-[130px] animate-pulse-glow [animation-delay:1.5s]" />
+    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-clip">
+      <div className="absolute -top-40 left-0 size-[36rem] rounded-full bg-accent-600/14 blur-[120px] animate-pulse-glow" />
+      <div className="absolute top-1/3 right-0 size-[32rem] translate-x-1/4 rounded-full bg-aqua-500/10 blur-[130px] animate-pulse-glow [animation-delay:1.5s]" />
       <div
         className="absolute inset-0 opacity-[0.04]"
         style={{
@@ -59,7 +59,7 @@ export function AppLayout() {
   usePageMeta()
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex min-h-dvh flex-col overflow-x-clip">
       <BackgroundAmbience />
 
       <a
@@ -71,7 +71,7 @@ export function AppLayout() {
 
       <Header />
 
-      <main id="content" className="flex flex-1 flex-col">
+      <main id="content" className="flex min-w-0 flex-1 flex-col overflow-x-clip">
         <Outlet />
       </main>
 
