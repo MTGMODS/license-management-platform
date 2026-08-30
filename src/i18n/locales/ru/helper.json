@@ -131,8 +131,7 @@
   },
   "gallery": {
     "title": "Как это выглядит",
-    "subtitle": "Видео и скриншоты из игры.",
-    "videoSoon": "Видео скоро появится",
+    "subtitle": "Скриншоты из игры.",
     "screenshotSoon": "Скрин {{index}}",
     "screenshotAlt": "Скриншот хелпера {{index}}"
   }

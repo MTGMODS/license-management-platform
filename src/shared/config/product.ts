@@ -1,7 +1,6 @@
 /**
- * Values the backend does not serve. The helper video id comes from Vite env
- * so the YouTube link can change without a code edit; screenshots are bundled
- * from `src/assets/screenshots`. VIP prices come from `GET /license/tariffs`.
+ * Values the backend does not serve. Screenshots are bundled from
+ * `src/assets/screenshots`. VIP prices come from `GET /license/tariffs`.
  */
 
 /**
@@ -38,11 +37,6 @@ export const MOBILE_MANUAL_GUIDE_URL = 'https://www.youtube.com/shorts/cuD9swqlJ
 export const TELEGRAM_VIP_CHAT_URL = 'https://t.me/+bi-SlBWfG7o3NDgy'
 export const DISCORD_SERVER_URL = 'https://discord.gg/qBPEYjfNhv'
 
-function readEnv(name: keyof ImportMetaEnv): string {
-  const value = import.meta.env[name]
-  return typeof value === 'string' ? value.trim() : ''
-}
-
 /** Accepts a bare 11-char id or a youtu.be / watch / embed URL. */
 export function parseYoutubeId(raw: string): string | null {
   const value = raw.trim()
@@ -64,8 +58,13 @@ export function parseYoutubeId(raw: string): string | null {
   }
 }
 
-/** YouTube id for the gallery and the beginner guide (`VITE_HELPER_VIDEO_URL`). */
-export const HELPER_VIDEO_ID: string | null = parseYoutubeId(readEnv('VITE_HELPER_VIDEO_URL'))
+/**
+ * Helper overview on `/helper`. Empty until the video exists — the gallery
+ * then shows screenshots only. Watch / youtu.be / embed / shorts / bare id.
+ */
+export const HELPER_VIDEO_URL = ''
+
+export const HELPER_VIDEO_ID: string | null = parseYoutubeId(HELPER_VIDEO_URL)
 
 /** YouTube poster used in gallery thumbnails. */
 export function youtubeThumbnailUrl(videoId: string): string {

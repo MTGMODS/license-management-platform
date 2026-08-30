@@ -15,9 +15,6 @@ interface ImportMetaEnv {
   readonly VITE_DEV_LICENSE_TARGET?: string
   readonly VITE_DEV_USAGE_TARGET?: string
   readonly VITE_DEV_DISTRIBUTION_TARGET?: string
-
-  /** YouTube watch/embed URL or bare 11-char id for helper media. */
-  readonly VITE_HELPER_VIDEO_URL?: string
 }
 
 interface ImportMeta {

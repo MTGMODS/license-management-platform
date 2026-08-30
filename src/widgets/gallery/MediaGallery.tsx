@@ -7,12 +7,8 @@ import { HELPER_VIDEO_ID, youtubeThumbnailUrl } from '@/shared/config/product'
 import { cn } from '@/shared/lib/cn'
 import { detectDevice } from '@/shared/lib/device'
 
-/**
- * Gallery is always video + nine local screenshots (PC or mobile set).
- * Missing files keep the slots as placeholders so layout does not jump.
- */
 type GalleryItem =
-  | { kind: 'video'; videoId: string | null }
+  | { kind: 'video'; videoId: string }
   | { kind: 'image'; src: string; alt: string }
   | { kind: 'image-placeholder'; index: number }
 
@@ -28,15 +24,6 @@ function Viewer({ item }: { item: GalleryItem }) {
       <Placeholder
         icon={<ImageIcon aria-hidden className="size-10" />}
         label={t('gallery.screenshotSoon', { index: item.index })}
-      />
-    )
-  }
-
-  if (!item.videoId) {
-    return (
-      <Placeholder
-        icon={<PlayCircle aria-hidden className="size-10" />}
-        label={t('gallery.videoSoon')}
       />
     )
   }
@@ -62,15 +49,7 @@ function Placeholder({ icon, label }: { icon: React.ReactNode; label: string }) 
   )
 }
 
-function VideoThumb({ videoId }: { videoId: string | null }) {
-  if (!videoId) {
-    return (
-      <span className="grid size-full place-items-center bg-ink-800 text-fg-subtle">
-        <PlayCircle aria-hidden className="size-5" />
-      </span>
-    )
-  }
-
+function VideoThumb({ videoId }: { videoId: string }) {
   return (
     <span className="relative block size-full">
       <img
@@ -86,26 +65,31 @@ function VideoThumb({ videoId }: { videoId: string | null }) {
   )
 }
 
+function buildGalleryItems(screenshotAlt: (index: number) => string): GalleryItem[] {
+  const byIndex = new Map(
+    helperScreenshots(detectDevice()).map((shot) => [shot.index, shot.src]),
+  )
+  const screens: GalleryItem[] = Array.from({ length: 9 }, (_, offset) => {
+    const index = offset + 1
+    const src = byIndex.get(index)
+    return src
+      ? {
+          kind: 'image' as const,
+          src,
+          alt: screenshotAlt(index),
+        }
+      : { kind: 'image-placeholder' as const, index }
+  })
+
+  return HELPER_VIDEO_ID ? [{ kind: 'video', videoId: HELPER_VIDEO_ID }, ...screens] : screens
+}
+
 export function MediaGallery({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation('helper')
-  const items = useMemo<GalleryItem[]>(() => {
-    const byIndex = new Map(
-      helperScreenshots(detectDevice()).map((shot) => [shot.index, shot.src]),
-    )
-    const screens: GalleryItem[] = Array.from({ length: 9 }, (_, offset) => {
-      const index = offset + 1
-      const src = byIndex.get(index)
-      return src
-        ? {
-            kind: 'image' as const,
-            src,
-            alt: t('gallery.screenshotAlt', { index }),
-          }
-        : { kind: 'image-placeholder' as const, index }
-    })
-
-    return [{ kind: 'video', videoId: HELPER_VIDEO_ID }, ...screens]
-  }, [t])
+  const items = useMemo(
+    () => buildGalleryItems((index) => t('gallery.screenshotAlt', { index })),
+    [t],
+  )
 
   const [activeIndex, setActiveIndex] = useState(0)
   const active = items[activeIndex] ?? items[0]
