@@ -1,4 +1,4 @@
-import { BanknoteX, CreditCard, Infinity, MessageSquareText, Sparkles, Users } from 'lucide-react'
+import { BanknoteX, CreditCard, Infinity as InfinityIcon, MessageSquareText, Sparkles, Users } from 'lucide-react'
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -17,7 +17,7 @@ const PAYMENT_SECTION_ID = 'vip-payment'
 
 const BENEFITS = [
   { icon: Sparkles, titleKey: 'benefits.goldTitle', textKey: 'benefits.gold', withGuide: true },
-  { icon: Infinity, titleKey: 'benefits.limitsTitle', textKey: 'benefits.limits' },
+  { icon: InfinityIcon, titleKey: 'benefits.limitsTitle', textKey: 'benefits.limits' },
   { icon: MessageSquareText, titleKey: 'benefits.chatTitle', textKey: 'benefits.chat' },
   { icon: Users, titleKey: 'benefits.communityTitle', textKey: 'benefits.community' },
 ] as const
