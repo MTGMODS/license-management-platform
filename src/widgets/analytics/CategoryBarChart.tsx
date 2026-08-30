@@ -40,16 +40,26 @@ export function CategoryBarChart<T>({
 }: CategoryBarChartProps<T>) {
   const format = useFormatters()
   const [tooltipX, setTooltipX] = useState<number | undefined>()
-  const tooltip = useExclusiveAnalyticsTooltip()
+  const {
+    surfaceRef,
+    surfaceProps,
+    trigger,
+    tooltipActive,
+    claim,
+    dismiss,
+    pin,
+    coarse,
+    suppressed,
+  } = useExclusiveAnalyticsTooltip()
   const containerRef = useRef<HTMLDivElement>(null)
   const containerWidth = useChartContainerWidth(containerRef)
   const axis = categoryBarAxisLayout(containerWidth)
   const assignContainerRef = useCallback(
     (node: HTMLDivElement | null) => {
       containerRef.current = node
-      tooltip.surfaceRef(node)
+      surfaceRef(node)
     },
-    [tooltip.surfaceRef],
+    [surfaceRef],
   )
 
   return (
@@ -57,7 +67,7 @@ export function CategoryBarChart<T>({
       ref={assignContainerRef}
       className={cn('mt-6', className)}
       style={{ height: categoryChartHeight(data.length) }}
-      {...tooltip.surfaceProps}
+      {...surfaceProps}
     >
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
@@ -84,8 +94,8 @@ export function CategoryBarChart<T>({
           <Tooltip
             cursor={false}
             offset={8}
-            trigger={tooltip.trigger}
-            active={tooltip.tooltipActive}
+            trigger={trigger}
+            active={tooltipActive}
             position={tooltipX != null ? { x: tooltipX } : undefined}
             wrapperStyle={CHART_TOOLTIP_WRAPPER_STYLE}
             content={(props) => (
@@ -95,10 +105,10 @@ export function CategoryBarChart<T>({
                 coordinate={props.coordinate}
                 viewBox={readTooltipViewBox(props)}
                 chartContainerWidth={containerWidth}
-                onClaim={tooltip.claim}
-                onPin={tooltip.coarse ? tooltip.pin : undefined}
-                onRelease={tooltip.coarse ? tooltip.dismiss : undefined}
-                suppressed={tooltip.suppressed}
+                onClaim={claim}
+                onPin={coarse ? pin : undefined}
+                onRelease={coarse ? dismiss : undefined}
+                suppressed={suppressed}
                 resolveTranslateX={(_coordinateX, width) =>
                   resolveCategoryBarTooltipTranslateX(
                     width,
