@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { useFocusTrap } from '@/shared/lib/useFocusTrap'
 import { Button } from '@/shared/ui'
 
 export function AuthPopupBlockedDialog({
@@ -12,15 +13,7 @@ export function AuthPopupBlockedDialog({
 }) {
   const { t } = useTranslation('login')
   const panelRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    panelRef.current?.querySelector<HTMLButtonElement>('button')?.focus()
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onDismiss()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onDismiss])
+  useFocusTrap(panelRef, { onEscape: onDismiss })
 
   return (
     <div
@@ -33,6 +26,7 @@ export function AuthPopupBlockedDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="popup-blocked-title"
+        tabIndex={-1}
         className="w-full max-w-md rounded-2xl border border-ink-700 bg-ink-900 p-6 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.8)] sm:p-8"
         onClick={(event) => event.stopPropagation()}
       >

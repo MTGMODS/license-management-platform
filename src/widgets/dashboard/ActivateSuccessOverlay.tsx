@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
+import { useFocusTrap } from '@/shared/lib/useFocusTrap'
 import { Button } from '@/shared/ui'
 
 export type ActivateSuccessMode = 'first' | 'renewal'
@@ -40,23 +41,16 @@ export function ActivateSuccessOverlay({
   onClose: () => void
 }) {
   const { t } = useTranslation('dashboard')
-  const closeRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(panelRef, { onEscape: onClose })
 
   useEffect(() => {
     const previous = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    closeRef.current?.focus()
-
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-
     return () => {
       document.body.style.overflow = previous
-      window.removeEventListener('keydown', onKey)
     }
-  }, [onClose])
+  }, [])
 
   const titleKey =
     mode === 'renewal' ? 'activate.successSlide.renewalTitle' : 'activate.successSlide.firstTitle'
@@ -67,13 +61,14 @@ export function ActivateSuccessOverlay({
       role="presentation"
     >
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="activate-success-title"
+        tabIndex={-1}
         className="relative inline-flex max-h-[min(90dvh,44rem)] max-w-[calc(100vw-2rem)] flex-col overflow-y-auto rounded-2xl border border-ink-700 bg-ink-900 px-5 py-7 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.8)] sm:px-7 sm:py-9"
       >
         <button
-          ref={closeRef}
           type="button"
           onClick={onClose}
           aria-label={t('activate.successSlide.close')}
