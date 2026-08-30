@@ -8,6 +8,9 @@ interface ImportMetaEnv {
    */
   readonly VITE_API_URL?: string
 
+  /** Public site origin for canonical and Open Graph URLs (e.g. https://mtgmods.com). */
+  readonly VITE_SITE_URL?: string
+
   /** Direct local service for the Vite proxy (and OAuth cookie host). */
   readonly VITE_DEV_USER_TARGET?: string
   readonly VITE_DEV_LICENSE_TARGET?: string
