@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.shared.database import get_db
 from app.application.auth_service import AuthService
 from app.application.user_service import UserService
+from app.infrastructure.repository import OAuthHandoffRepository
 from app.domain.schemas import TokenResponse, RefreshRequest, TelegramAuthPayload
 from app.application.jwt_utils import (
     create_access_token,
@@ -78,7 +79,7 @@ async def _complete_oauth(request: Request, db: AsyncSession, *, telegram_id: in
         refresh_token=create_refresh_token(user_id=user.id),
         user=user,
     )
-    response = _oauth_success(token)
+    response = await _oauth_success(db, token)
     response.delete_cookie("oauth_state")
     response.delete_cookie("oauth_link_user_id")
     return response
@@ -93,11 +94,19 @@ def _json_for_script(value) -> str:
         .replace("\u2029", "\\u2029")
     )
 
-def _oauth_popup_html(*, payload: dict | None = None, error_code: str | None = None, message: str | None = None,) -> HTMLResponse:
+async def _oauth_popup_html(db: AsyncSession, *, payload: dict | None = None, error_code: str | None = None, message: str | None = None) -> HTMLResponse:
+    data = (
+        {"type": "mtg_auth_success", "payload": payload}
+        if payload is not None
+        else {"type": "mtg_auth_error", "error_code": error_code, "message": message}
+    )
+    ticket = await OAuthHandoffRepository(db).issue(data)
+
     target = _json_for_script(_frontend_origin())
     payload_js = _json_for_script(payload) if payload is not None else "null"
     error_code_js = _json_for_script(error_code)
     message_js = _json_for_script(message)
+    ticket_js = _json_for_script(ticket)
 
     body = f"""<!DOCTYPE html>
 <html lang="en">
@@ -125,6 +134,7 @@ def _oauth_popup_html(*, payload: dict | None = None, error_code: str | None = N
     var payload = {payload_js};
     var errorCode = {error_code_js};
     var message = {message_js};
+    var ticket = {ticket_js};
     var statusEl = document.getElementById("status");
 
     var data = payload
@@ -133,9 +143,7 @@ def _oauth_popup_html(*, payload: dict | None = None, error_code: str | None = N
 
     function fallbackRedirect() {{
       statusEl.textContent = "Redirecting…";
-      window.location.replace(
-        target + "/auth/callback#" + encodeURIComponent(JSON.stringify(data))
-      );
+      window.location.replace(target + "/auth/callback?ticket=" + encodeURIComponent(ticket));
     }}
 
     if (window.opener) {{
@@ -163,24 +171,24 @@ def _oauth_popup_html(*, payload: dict | None = None, error_code: str | None = N
 """
     return HTMLResponse(content=body, headers={"Cache-Control": "no-store"})
 
-def _oauth_success(token: TokenResponse) -> HTMLResponse:
-    return _oauth_popup_html(payload=jsonable_encoder(token))
+async def _oauth_success(db: AsyncSession, token: TokenResponse) -> HTMLResponse:
+    return await _oauth_popup_html(db, payload=jsonable_encoder(token))
 
-def _oauth_error(error_code: str | None = None, message: str | None = None,) -> HTMLResponse:
-    return _oauth_popup_html(error_code=error_code, message=message)
+async def _oauth_error(db: AsyncSession, error_code: str | None = None, message: str | None = None,) -> HTMLResponse:
+    return await _oauth_popup_html(db, error_code=error_code, message=message)
 
-def _oauth_exception_to_html(exc: Exception) -> HTMLResponse:
+async def _oauth_exception_to_html(db: AsyncSession, exc: Exception) -> HTMLResponse:
     if isinstance(exc, DomainException):
-        return _oauth_error(error_code=exc.error_code, message=exc.message)
+        return await _oauth_error(db, error_code=exc.error_code, message=exc.message)
     if isinstance(exc, HTTPException):
         detail = exc.detail
         message = detail if isinstance(detail, str) else "Authentication failed"
-        return _oauth_error(error_code=None, message=message)
-    return _oauth_error(error_code=None, message="Authentication failed")
+        return await _oauth_error(db, error_code=None, message=message)
+    return await _oauth_error(db, error_code=None, message="Authentication failed")
 
 
 @router.get("/telegram/login")
-async def telegram_login_init(ticket: str | None = None):
+async def telegram_login_init(ticket: str | None = None, db: AsyncSession = Depends(get_db)):
     try:
         state = secrets.token_urlsafe(16)
         url = (
@@ -194,7 +202,7 @@ async def telegram_login_init(ticket: str | None = None):
         response = RedirectResponse(url)
         return _apply_oauth_cookies(response, state=state, ticket=ticket, expected_provider="telegram")
     except HTTPException as exc:
-        return _oauth_exception_to_html(exc)
+        return await _oauth_exception_to_html(db, exc)
 
 @router.get("/telegram/callback", response_class=HTMLResponse)
 async def telegram_auth_callback(request: Request, code: str, state: str = None, db: AsyncSession = Depends(get_db)):
@@ -236,7 +244,7 @@ async def telegram_auth_callback(request: Request, code: str, state: str = None,
             avatar_url=avatar_url,
         )
     except (HTTPException, DomainException) as exc:
-        return _oauth_exception_to_html(exc)
+        return await _oauth_exception_to_html(db, exc)
 
 
 @router.post("/telegram/webapp", response_model=TokenResponse)
@@ -277,7 +285,7 @@ async def telegram_webapp_auth(payload: TelegramAuthPayload, db: AsyncSession = 
 
 
 @router.get("/discord/login", summary="Initiate Discord OAuth2 Flow")
-async def discord_oauth_login(ticket: str | None = None):
+async def discord_oauth_login(ticket: str | None = None, db: AsyncSession = Depends(get_db)):
     try:
         state = secrets.token_urlsafe(16)
         url = (
@@ -291,7 +299,7 @@ async def discord_oauth_login(ticket: str | None = None):
         response = RedirectResponse(url)
         return _apply_oauth_cookies(response, state=state, ticket=ticket, expected_provider="discord")
     except HTTPException as exc:
-        return _oauth_exception_to_html(exc)
+        return await _oauth_exception_to_html(db, exc)
 
 @router.get("/discord/callback", response_class=HTMLResponse, summary="Discord OAuth2 Callback Receiver")
 async def discord_oauth_callback(request: Request, code: str, state: str = None, db: AsyncSession = Depends(get_db)):
@@ -355,7 +363,24 @@ async def discord_oauth_callback(request: Request, code: str, state: str = None,
             avatar_url=avatar_url,
         )
     except (HTTPException, DomainException) as exc:
-        return _oauth_exception_to_html(exc)
+        return await _oauth_exception_to_html(db, exc)
+
+
+@router.get("/handoff/{ticket}")
+async def consume_oauth_handoff(ticket: str, db: AsyncSession = Depends(get_db)):
+    if not ticket or len(ticket) > 64:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Auth handoff ticket is invalid or expired",
+        )
+
+    message = await OAuthHandoffRepository(db).consume(ticket)
+    if message is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Auth handoff ticket is invalid or expired",
+        )
+    return message
 
 
 @router.post("/refresh", response_model=TokenResponse)
