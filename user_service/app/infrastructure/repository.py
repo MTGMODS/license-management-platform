@@ -1,7 +1,12 @@
-from sqlalchemy import Column, Integer, String, cast, BigInteger, DateTime, select, Enum as SQLEnum
+import json, secrets
+from datetime import datetime, timedelta, timezone
+
+from sqlalchemy import Column, Integer, String, Text, cast, BigInteger, DateTime, select, Enum as SQLEnum
 from sqlalchemy.sql import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.shared.database import Base
+from app.shared.config import settings
+from app.shared.datetime_utils import to_utc
 from app.domain.models import UserStatus
 
 class UserModel(Base):
@@ -16,6 +21,47 @@ class UserModel(Base):
     status = Column(SQLEnum(UserStatus), default=UserStatus.ACTIVE, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_login_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
+
+
+class OAuthHandoffModel(Base):
+    __tablename__ = "oauth_handoffs"
+
+    ticket = Column(String(64), primary_key=True)
+    payload = Column(Text, nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+
+
+class OAuthHandoffRepository:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def issue(self, message: dict) -> str:
+        ticket = secrets.token_urlsafe(32)
+        row = OAuthHandoffModel(
+            ticket=ticket,
+            payload=json.dumps(message, ensure_ascii=False),
+            expires_at=datetime.now(timezone.utc) + timedelta(seconds=settings.OAUTH_HANDOFF_TTL_SECONDS),
+        )
+        self.db.add(row)
+        await self.db.commit()
+        return ticket
+
+    async def consume(self, ticket: str) -> dict | None:
+        result = await self.db.execute(
+            select(OAuthHandoffModel).where(OAuthHandoffModel.ticket == ticket)
+        )
+        row = result.scalars().first()
+        if not row:
+            return None
+
+        expired = to_utc(row.expires_at) <= datetime.now(timezone.utc)
+        payload_text = row.payload
+        await self.db.delete(row)
+        await self.db.commit()
+        if expired:
+            return None
+        return json.loads(payload_text)
+
 
 class UserRepository:
     def __init__(self, db: AsyncSession):
