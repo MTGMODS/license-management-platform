@@ -4,7 +4,7 @@ import { Link, Outlet } from 'react-router'
 import { GITHUB_ORG_URL } from '@/shared/config/profile'
 import { Header } from '@/widgets/header/Header'
 
-import { useDocumentTitle } from './useDocumentTitle'
+import { usePageMeta } from './usePageMeta'
 
 /**
  * Fixed ambient wash behind the page. Two off-screen radial pools keep large
@@ -56,7 +56,7 @@ function Footer() {
 
 export function AppLayout() {
   const { t } = useTranslation('header')
-  useDocumentTitle()
+  usePageMeta()
 
   return (
     <div className="flex min-h-dvh flex-col">
