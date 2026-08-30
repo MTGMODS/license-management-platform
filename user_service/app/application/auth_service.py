@@ -34,13 +34,13 @@ class AuthService:
                 detail="Invalid refresh token",
             )
 
-        await self.refresh_sessions.revoke_by_hash(hash_refresh_token(refresh_token))
+        await self.refresh_sessions.delete_by_hash(hash_refresh_token(refresh_token))
         db_user = await self.get_valid_user_for_refresh(user_id)
         return await self.issue_token_pair(User.model_validate(db_user))
 
     async def logout(self, refresh_token: str) -> None:
         verify_refresh_token(refresh_token)
-        await self.refresh_sessions.revoke_by_hash(hash_refresh_token(refresh_token))
+        await self.refresh_sessions.delete_by_hash(hash_refresh_token(refresh_token))
 
     async def login_with_telegram(self, telegram_id: int, nickname: str = None, avatar_url: str = None) -> User:
         db_user = await self.repo.get_by_telegram_id(telegram_id)

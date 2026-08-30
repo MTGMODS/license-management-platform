@@ -9,7 +9,7 @@ AUTH_CLEANUP_INTERVAL_SECONDS = 15 * 60
 async def cleanup_auth_artifacts_once() -> tuple[int, int]:
     async with AsyncSessionLocal() as db:
         handoffs = await OAuthHandoffRepository(db).purge_expired()
-        sessions = await RefreshSessionRepository(db).purge_stale()
+        sessions = await RefreshSessionRepository(db).purge_expired()
         return handoffs, sessions
 
 

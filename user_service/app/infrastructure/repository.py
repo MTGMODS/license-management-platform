@@ -1,7 +1,7 @@
 import json, secrets
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import Column, Integer, String, Text, cast, BigInteger, DateTime, delete, or_, select, update, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Text, cast, BigInteger, DateTime, delete, select, Enum as SQLEnum
 from sqlalchemy.sql import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.shared.database import Base
@@ -38,28 +38,22 @@ class RefreshSessionModel(Base):
     user_id = Column(Integer, nullable=False, index=True)
     token_hash = Column(String(64), unique=True, nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=False)
-    revoked_at = Column(DateTime(timezone=True), nullable=True)
 
 
 class RefreshSessionRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def purge_stale(self) -> int:
+    async def purge_expired(self) -> int:
         now = datetime.now(timezone.utc)
         result = await self.db.execute(
-            delete(RefreshSessionModel).where(
-                or_(
-                    RefreshSessionModel.revoked_at.isnot(None),
-                    RefreshSessionModel.expires_at <= now,
-                )
-            )
+            delete(RefreshSessionModel).where(RefreshSessionModel.expires_at <= now)
         )
         await self.db.commit()
         return result.rowcount or 0
 
     async def create(self, user_id: int, token_hash: str, expires_at: datetime) -> None:
-        await self.purge_stale()
+        await self.purge_expired()
         self.db.add(
             RefreshSessionModel(
                 user_id=user_id,
@@ -71,10 +65,7 @@ class RefreshSessionRepository:
 
     async def get_active_by_hash(self, token_hash: str) -> RefreshSessionModel | None:
         result = await self.db.execute(
-            select(RefreshSessionModel).where(
-                RefreshSessionModel.token_hash == token_hash,
-                RefreshSessionModel.revoked_at.is_(None),
-            )
+            select(RefreshSessionModel).where(RefreshSessionModel.token_hash == token_hash)
         )
         row = result.scalars().first()
         if not row:
@@ -83,17 +74,11 @@ class RefreshSessionRepository:
             return None
         return row
 
-    async def revoke_by_hash(self, token_hash: str) -> None:
+    async def delete_by_hash(self, token_hash: str) -> None:
         await self.db.execute(
-            update(RefreshSessionModel)
-            .where(
-                RefreshSessionModel.token_hash == token_hash,
-                RefreshSessionModel.revoked_at.is_(None),
-            )
-            .values(revoked_at=datetime.now(timezone.utc))
+            delete(RefreshSessionModel).where(RefreshSessionModel.token_hash == token_hash)
         )
         await self.db.commit()
-        await self.purge_stale()
 
 
 class OAuthHandoffRepository:
