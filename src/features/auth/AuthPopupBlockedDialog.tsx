@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shared/ui'
@@ -11,8 +11,10 @@ export function AuthPopupBlockedDialog({
   onDismiss: () => void
 }) {
   const { t } = useTranslation('login')
+  const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    panelRef.current?.querySelector<HTMLButtonElement>('button')?.focus()
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onDismiss()
     }
@@ -27,6 +29,7 @@ export function AuthPopupBlockedDialog({
       onClick={onDismiss}
     >
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="popup-blocked-title"

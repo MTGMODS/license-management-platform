@@ -94,6 +94,10 @@
     html {
       scroll-behavior: auto;
     }
+
+    .animate-pulse-glow {
+      animation: none;
+    }
   }
 
   body {

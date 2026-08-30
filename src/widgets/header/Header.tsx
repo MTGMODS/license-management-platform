@@ -49,11 +49,11 @@ export function Header() {
             )
           }
         >
-          <img src={logo} alt="" width={24} height={24} className="size-6 rounded-sm" />
+          <img src={logo} alt="" width={24} height={24} className="size-6 rounded-sm" aria-hidden />
           MTG MODS
         </NavLink>
 
-        <nav className="hidden justify-center gap-1 md:flex" aria-label={t('nav.helper')}>
+        <nav className="hidden justify-center gap-1 md:flex" aria-label={t('nav.label')}>
           {NAV_ITEMS.map((item) => (
             <NavLink key={item.to} to={item.to} className={navLinkClasses}>
               {t(item.labelKey)}
@@ -78,7 +78,7 @@ export function Header() {
 
       {menuOpen ? (
         <div id="header-mobile-nav" className="border-t border-white/5 md:hidden">
-          <nav className="shell flex flex-col gap-1 py-3">
+          <nav className="shell flex flex-col gap-1 py-3" aria-label={t('nav.label')}>
             {NAV_ITEMS.map((item) => (
               <NavLink
                 key={item.to}

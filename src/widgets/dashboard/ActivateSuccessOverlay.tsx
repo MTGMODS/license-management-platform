@@ -1,5 +1,5 @@
 import { CheckCircle2, X } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
@@ -40,14 +40,23 @@ export function ActivateSuccessOverlay({
   onClose: () => void
 }) {
   const { t } = useTranslation('dashboard')
+  const closeRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     const previous = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+    closeRef.current?.focus()
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+
     return () => {
       document.body.style.overflow = previous
+      window.removeEventListener('keydown', onKey)
     }
-  }, [])
+  }, [onClose])
 
   const titleKey =
     mode === 'renewal' ? 'activate.successSlide.renewalTitle' : 'activate.successSlide.firstTitle'
@@ -64,6 +73,7 @@ export function ActivateSuccessOverlay({
         className="relative inline-flex max-h-[min(90dvh,44rem)] max-w-[calc(100vw-2rem)] flex-col overflow-y-auto rounded-2xl border border-ink-700 bg-ink-900 px-5 py-7 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.8)] sm:px-7 sm:py-9"
       >
         <button
+          ref={closeRef}
           type="button"
           onClick={onClose}
           aria-label={t('activate.successSlide.close')}
