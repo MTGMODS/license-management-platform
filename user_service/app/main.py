@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
@@ -7,6 +8,7 @@ from app.shared.database import engine, Base
 from app.shared import datetime_utils as _datetime_utils
 from app.shared.exceptions import DomainException, global_exception_handler, validation_exception_handler
 from app.shared.config import settings
+from app.application.worker import cleanup_auth_artifacts_once, cleanup_auth_artifacts_task
 from app.api.auth_routes import router as auth_router
 from app.api.user_routes import router as user_router
 from app.api.admin_routes import router as admin_router
@@ -16,7 +18,11 @@ from app.api.s2s_routes import router as s2s_router
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    await cleanup_auth_artifacts_once()
+    cleanup_task = asyncio.create_task(cleanup_auth_artifacts_task())
     yield
+    cleanup_task.cancel()
+    await asyncio.gather(cleanup_task, return_exceptions=True)
     await engine.dispose()
 
 app = FastAPI(

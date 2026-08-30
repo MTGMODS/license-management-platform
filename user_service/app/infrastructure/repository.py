@@ -1,7 +1,7 @@
 import json, secrets
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import Column, Integer, String, Text, cast, BigInteger, DateTime, select, update, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Text, cast, BigInteger, DateTime, delete, or_, select, update, Enum as SQLEnum
 from sqlalchemy.sql import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.shared.database import Base
@@ -45,7 +45,21 @@ class RefreshSessionRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    async def purge_stale(self) -> int:
+        now = datetime.now(timezone.utc)
+        result = await self.db.execute(
+            delete(RefreshSessionModel).where(
+                or_(
+                    RefreshSessionModel.revoked_at.isnot(None),
+                    RefreshSessionModel.expires_at <= now,
+                )
+            )
+        )
+        await self.db.commit()
+        return result.rowcount or 0
+
     async def create(self, user_id: int, token_hash: str, expires_at: datetime) -> None:
+        await self.purge_stale()
         self.db.add(
             RefreshSessionModel(
                 user_id=user_id,
@@ -79,13 +93,23 @@ class RefreshSessionRepository:
             .values(revoked_at=datetime.now(timezone.utc))
         )
         await self.db.commit()
+        await self.purge_stale()
 
 
 class OAuthHandoffRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    async def purge_expired(self) -> int:
+        now = datetime.now(timezone.utc)
+        result = await self.db.execute(
+            delete(OAuthHandoffModel).where(OAuthHandoffModel.expires_at <= now)
+        )
+        await self.db.commit()
+        return result.rowcount or 0
+
     async def issue(self, message: dict) -> str:
+        await self.purge_expired()
         ticket = secrets.token_urlsafe(32)
         row = OAuthHandoffModel(
             ticket=ticket,
