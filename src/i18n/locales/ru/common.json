@@ -3,14 +3,30 @@
   "tab": {
     "home": "MTG MODS",
     "helper": "Arizona&Rodina Helper",
+    "helperDownload": "Скачать Arizona&Rodina Helper",
     "vip": "Подписка MTG VIP для хелпера",
     "promo": "Акции",
     "login": "Вход в личный кабинет",
     "dashboard": "Личный кабинет",
-    "admin": "Админка"
+    "admin": "Админка",
+    "terms": "Условия и конфиденциальность"
   },
   "footer": {
     "terms": "Условия и конфиденциальность"
+  },
+  "meta": {
+    "description": {
+      "home": "MTG MODS — Arizona & Rodina Helper для SA-MP: открытая статистика, бесплатная версия и VIP-подписка.",
+      "helper": "Arizona & Rodina Helper — бесплатный помощник для любых фракций на Arizona и Rodina. Статистика, скачивание, VIP.",
+      "helperDownload": "Скачайте Arizona & Rodina Helper для PC и телефона: установщик и пошаговые инструкции.",
+      "vip": "Подписка MTG VIP: безлимит, золотые функции ассистента и VIP-сообщество. Оплата и активация на mtgmods.com.",
+      "promo": "Акции и спецпредложения MTG MODS на подписку VIP.",
+      "terms": "Пользовательское соглашение и политика конфиденциальности MTG MODS.",
+      "login": "Вход в личный кабинет MTG MODS через Discord или Telegram.",
+      "dashboard": "Личный кабинет MTG MODS: лицензии, устройства и загрузка VIP-файла.",
+      "admin": "Админ-панель MTG MODS.",
+      "notFound": "Запрошенная страница не найдена на mtgmods.com."
+    }
   },
   "actions": {
     "retry": "Повторить",
