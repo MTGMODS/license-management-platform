@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /login
+Disallow: /auth/
+
+Sitemap: https://mtgmods.com/sitemap.xml
