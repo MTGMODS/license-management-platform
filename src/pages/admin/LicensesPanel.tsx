@@ -196,7 +196,8 @@ export function GenerateCard() {
   const { data: tariffs } = useTariffs()
   const generateOne = useGenerateLicense()
   const generateBulk = useGenerateLicensesBulk()
-  const plans = tariffs?.plans ?? []
+  const tariffPlans = tariffs?.plans
+  const plans = tariffPlans ?? []
   const [duration, setDuration] = useState('30')
   const [amount, setAmount] = useState('3')
   const [method, setMethod] = useState<PaymentMethod>('FunPay')
@@ -207,12 +208,12 @@ export function GenerateCard() {
   const [defaultsApplied, setDefaultsApplied] = useState(false)
 
   useEffect(() => {
-    if (defaultsApplied || plans.length === 0) return
-    const preferred = plans.find((plan) => plan.duration_days === 30) ?? plans[0]
+    if (defaultsApplied || !tariffPlans?.length) return
+    const preferred = tariffPlans.find((plan) => plan.duration_days === 30) ?? tariffPlans[0]
     if (!preferred) return
     applyTariffDefaults(preferred, { setDuration, setAmount, setMaxDevices, setResetLimit })
     setDefaultsApplied(true)
-  }, [defaultsApplied, plans])
+  }, [defaultsApplied, tariffPlans])
 
   const busy = generateOne.isPending || generateBulk.isPending
   const days = Number(duration)
