@@ -6,7 +6,8 @@ import { Card } from '@/shared/ui'
 
 import { CategoryBarChart } from './CategoryBarChart'
 import { type ChartMetric, chartColor } from './chartTheme'
-import { ChartTooltip, statsTooltipRows } from './ChartTooltip'
+import { ChartTooltip } from './ChartTooltip'
+import { statsTooltipRows } from './statsTooltip'
 
 /**
  * Faction codes the payload can return. Anything outside this list falls back

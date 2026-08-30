@@ -15,7 +15,8 @@ import { useFormatters } from '@/shared/lib/format'
 import { Card, SegmentedControl } from '@/shared/ui'
 
 import { AXIS_PROPS, CHART, type ChartMetric, chartColor, Y_AXIS_NUMERIC } from './chartTheme'
-import { ChartTooltip, statsTooltipRows } from './ChartTooltip'
+import { ChartTooltip } from './ChartTooltip'
+import { statsTooltipRows } from './statsTooltip'
 
 type TimelineGrain = 'daily' | 'hourly'
 

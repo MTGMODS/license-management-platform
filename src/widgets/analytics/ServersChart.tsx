@@ -8,7 +8,8 @@ import { Card, SegmentedControl } from '@/shared/ui'
 
 import { CategoryBarChart } from './CategoryBarChart'
 import { type ChartMetric, chartColor } from './chartTheme'
-import { ChartTooltip, statsTooltipRows } from './ChartTooltip'
+import { ChartTooltip } from './ChartTooltip'
+import { statsTooltipRows } from './statsTooltip'
 
 type TopLimit = 5 | 10 | 20 | 0
 

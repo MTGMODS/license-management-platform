@@ -7,7 +7,8 @@ import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
 import { type ChartMetric, chartColor, HOVER_OUTLINE } from './chartTheme'
-import { ChartTooltip, statsTooltipRows } from './ChartTooltip'
+import { ChartTooltip } from './ChartTooltip'
+import { statsTooltipRows } from './statsTooltip'
 import { CRIMEA_OVERLAY_PATHS, UKRAINE_NUMERIC_ID } from './crimeaOverlay'
 import { COUNTRY_SHAPES, MAP_HEIGHT, MAP_WIDTH } from './worldGeometry'
 

@@ -8,7 +8,8 @@ import { shiftHourlyToLocal } from '@/shared/lib/timezone'
 import { Card } from '@/shared/ui'
 
 import { AXIS_PROPS, barActiveProps, CHART, type ChartMetric, chartColor, Y_AXIS_NUMERIC } from './chartTheme'
-import { ChartTooltip, statsTooltipRows } from './ChartTooltip'
+import { ChartTooltip } from './ChartTooltip'
+import { statsTooltipRows } from './statsTooltip'
 
 interface ActivityChartsProps {
   hourly: HourActivityPoint[]
