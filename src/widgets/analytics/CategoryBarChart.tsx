@@ -9,10 +9,10 @@ import {
   AXIS_PROPS,
   barActiveProps,
   CATEGORY_BAR_SIZE,
-  CATEGORY_CHART_MARGIN,
-  CATEGORY_Y_WIDTH,
+  categoryBarAxisLayout,
   categoryChartHeight,
   CHART,
+  formatCategoryAxisLabel,
 } from './chartTheme'
 import {
   CHART_TOOLTIP_WRAPPER_STYLE,
@@ -41,7 +41,7 @@ export function CategoryBarChart<T>({
   const [tooltipX, setTooltipX] = useState<number | undefined>()
   const containerRef = useRef<HTMLDivElement>(null)
   const containerWidth = useChartContainerWidth(containerRef)
-  const plotLeft = CATEGORY_Y_WIDTH + CATEGORY_CHART_MARGIN.left
+  const axis = categoryBarAxisLayout(containerWidth)
 
   return (
     <div
@@ -54,7 +54,7 @@ export function CategoryBarChart<T>({
           accessibilityLayer={false}
           data={data}
           layout="vertical"
-          margin={CATEGORY_CHART_MARGIN}
+          margin={axis.margin}
           barSize={CATEGORY_BAR_SIZE}
           barCategoryGap={12}
         >
@@ -64,8 +64,12 @@ export function CategoryBarChart<T>({
             type="category"
             dataKey="label"
             interval={0}
-            {...AXIS_PROPS}
-            width={CATEGORY_Y_WIDTH}
+            stroke={AXIS_PROPS.stroke}
+            tickLine={AXIS_PROPS.tickLine}
+            axisLine={AXIS_PROPS.axisLine}
+            width={axis.yWidth}
+            tick={{ fill: CHART.axis, fontSize: axis.fontSize }}
+            tickFormatter={(label) => formatCategoryAxisLabel(String(label), axis.compact)}
           />
           <Tooltip
             cursor={false}
@@ -82,8 +86,8 @@ export function CategoryBarChart<T>({
                 resolveTranslateX={(_coordinateX, width) =>
                   resolveCategoryBarTooltipTranslateX(
                     width,
-                    plotLeft,
-                    CATEGORY_CHART_MARGIN.right,
+                    axis.plotLeft,
+                    axis.margin.right,
                   )
                 }
                 renderTooltip={renderTooltip}

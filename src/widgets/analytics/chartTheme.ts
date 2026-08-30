@@ -43,10 +43,49 @@ export const Y_AXIS_NUMERIC = {
  * share one label gutter and one row pitch so the coloured bars line up.
  */
 export const CATEGORY_Y_WIDTH = 160
+/** Narrower label gutter on phones so bars get more horizontal room. */
+export const CATEGORY_Y_WIDTH_MOBILE = 70
 export const CATEGORY_BAR_SIZE = 24
 export const CATEGORY_ROW_HEIGHT = 48
 export const CATEGORY_X_AXIS_HEIGHT = 36
 export const CATEGORY_CHART_MARGIN = { top: 4, right: 12, bottom: 0, left: 8 } as const
+
+/** Matches chartTooltipPosition — container below this uses compact category bars. */
+export const NARROW_CHART_WIDTH = 520
+
+export function categoryBarAxisLayout(containerWidth: number) {
+  const compact = containerWidth > 0 && containerWidth < NARROW_CHART_WIDTH
+  const yWidth = compact ? CATEGORY_Y_WIDTH_MOBILE : CATEGORY_Y_WIDTH
+  const marginLeft = compact ? 4 : CATEGORY_CHART_MARGIN.left
+
+  return {
+    compact,
+    yWidth,
+    margin: { ...CATEGORY_CHART_MARGIN, left: marginLeft },
+    plotLeft: yWidth + marginLeft,
+    fontSize: compact ? 10 : AXIS_PROPS.fontSize,
+  }
+}
+
+/** Shorten long Y labels on compact charts; full text stays in the tooltip. */
+export function formatCategoryAxisLabel(label: string, compact: boolean): string {
+  if (!compact) return label
+
+  const max = 11
+  if (label.length <= max) return label
+
+  const server = /^\[(\d+)\]\s(.+)$/.exec(label)
+  if (server?.[2]) {
+    const prefix = `[${server[1]}] `
+    const rest = server[2]
+    const restMax = max - prefix.length
+    if (restMax <= 1) return `${prefix}…`
+    if (rest.length <= restMax) return label
+    return `${prefix}${rest.slice(0, restMax - 1)}…`
+  }
+
+  return `${label.slice(0, max - 1)}…`
+}
 
 export function categoryChartHeight(rowCount: number) {
   return Math.max(rowCount, 1) * CATEGORY_ROW_HEIGHT + CATEGORY_X_AXIS_HEIGHT
