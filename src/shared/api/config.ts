@@ -21,42 +21,46 @@ function normalizeBase(value: string | undefined): string {
   return value.replace(/\/+$/, '')
 }
 
-const SERVICE_BASE: Record<ServiceName, string> = {
-  user: normalizeBase(import.meta.env.VITE_USER_API_URL),
-  license: normalizeBase(import.meta.env.VITE_LICENSE_API_URL),
-  usage: normalizeBase(import.meta.env.VITE_USAGE_API_URL),
-  distribution: normalizeBase(import.meta.env.VITE_DISTRIBUTION_API_URL),
+/** Public API host (`https://api.mtgmods.com`). Empty string if unset. */
+export function gatewayBase(): string {
+  return normalizeBase(import.meta.env.VITE_API_URL)
+}
+
+/**
+ * Browser fetch base. Vite dev always stays same-origin so the proxy can mix
+ * local `VITE_DEV_*_TARGET` ports with the public gateway per prefix.
+ * Production talks to `VITE_API_URL` directly.
+ */
+function requestBase(): string {
+  if (import.meta.env.DEV) return ''
+  return gatewayBase()
 }
 
 /** Builds an absolute-or-same-origin URL for a path relative to a service. */
 export function serviceUrl(service: ServiceName, path: string): string {
   const suffix = path.startsWith('/') ? path : `/${path}`
-  return `${SERVICE_BASE[service]}${SERVICE_PREFIX[service]}${suffix}`
+  return `${requestBase()}${SERVICE_PREFIX[service]}${suffix}`
+}
+
+function originOf(url: string): string | null {
+  try {
+    return new URL(url, window.location.origin).origin
+  } catch {
+    return null
+  }
 }
 
 /** Origin of a service, used to validate OAuth popup `postMessage` senders. */
 export function serviceOrigin(service: ServiceName): string {
-  const base = SERVICE_BASE[service]
-  if (base) {
-    try {
-      return new URL(base, window.location.origin).origin
-    } catch {
-      return window.location.origin
+  if (service === 'user' && import.meta.env.DEV) {
+    const direct = import.meta.env.VITE_DEV_USER_TARGET
+    if (typeof direct === 'string' && direct.trim()) {
+      return originOf(direct.trim()) ?? window.location.origin
     }
   }
 
-  // Dev with empty VITE_*_API_URL: fetches are same-origin via the Vite proxy,
-  // but the OAuth callback HTML is still served from the direct user service.
-  if (service === 'user') {
-    const direct = import.meta.env.VITE_DEV_USER_TARGET
-    if (typeof direct === 'string' && direct) {
-      try {
-        return new URL(direct).origin
-      } catch {
-        // fall through
-      }
-    }
-  }
+  const gateway = gatewayBase()
+  if (gateway) return originOf(gateway) ?? window.location.origin
 
   return window.location.origin
 }

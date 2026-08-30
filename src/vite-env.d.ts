@@ -2,15 +2,13 @@
 
 interface ImportMetaEnv {
   /**
-   * Absolute base URLs per backend service. Empty in development, where the
-   * Vite proxy keeps every request same-origin.
+   * Public API gateway, e.g. https://api.mtgmods.com.
+   * Baked into production builds. In `vite` dev the browser stays same-origin
+   * and this value is only the proxy fallback for prefixes without a DEV target.
    */
-  readonly VITE_USER_API_URL?: string
-  readonly VITE_LICENSE_API_URL?: string
-  readonly VITE_USAGE_API_URL?: string
-  readonly VITE_DISTRIBUTION_API_URL?: string
+  readonly VITE_API_URL?: string
 
-  /** Direct service targets for the Vite proxy (and OAuth cookie host). */
+  /** Direct local service for the Vite proxy (and OAuth cookie host). */
   readonly VITE_DEV_USER_TARGET?: string
   readonly VITE_DEV_LICENSE_TARGET?: string
   readonly VITE_DEV_USAGE_TARGET?: string

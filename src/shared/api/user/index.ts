@@ -1,4 +1,4 @@
-import { serviceUrl } from '../config'
+import { gatewayBase, serviceUrl } from '../config'
 import { request } from '../http'
 
 import type { TokenResponse, User } from './types'
@@ -6,24 +6,22 @@ import type { TokenResponse, User } from './types'
 export type OAuthProvider = 'discord' | 'telegram'
 
 /**
- * OAuth must hit the user service host directly in local dev.
- * Going through the Vite proxy would set `oauth_state` on `localhost`, while
- * Discord/Telegram redirect back to `127.0.0.1:8001` — cookies would not
- * match and the callback would return an auth error HTML (HTTP 200).
+ * OAuth must hit the user-service host (or the public gateway), not the Vite
+ * proxy. Going through :5173 would set `oauth_state` on localhost, while
+ * Discord/Telegram redirect back to :8001 or api.mtgmods.com — cookies would
+ * not match and the callback would return an auth error HTML (HTTP 200).
  */
 function oauthServiceRoot(): string | null {
-  const absolute = import.meta.env.VITE_USER_API_URL
-  if (typeof absolute === 'string' && absolute) {
-    return absolute.replace(/\/+$/, '')
+  if (import.meta.env.DEV) {
+    const direct = import.meta.env.VITE_DEV_USER_TARGET
+    if (typeof direct === 'string' && direct.trim()) {
+      // Direct service mounts under /api/v1/... (gateway strips /api).
+      return `${direct.trim().replace(/\/+$/, '')}/api`
+    }
   }
 
-  const direct = import.meta.env.VITE_DEV_USER_TARGET
-  if (typeof direct === 'string' && direct) {
-    // Direct service mounts under /api/v1/... (gateway strips /api).
-    return `${direct.replace(/\/+$/, '')}/api`
-  }
-
-  return null
+  const gateway = gatewayBase()
+  return gateway || null
 }
 
 /**

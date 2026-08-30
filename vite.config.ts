@@ -18,23 +18,26 @@ const SERVICE_PREFIXES: Record<string, string> = {
   '/v1/files': 'VITE_DEV_DISTRIBUTION_TARGET',
 }
 
-/**
- * With no per-service target configured, development runs against the public
- * gateway, which is the only place the full stack is actually live.
- */
 const GATEWAY_FALLBACK = 'https://api.mtgmods.com'
+
+function nonempty(value: string | undefined): string | undefined {
+  const trimmed = value?.trim()
+  return trimmed ? trimmed : undefined
+}
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
-  const gateway = env.VITE_DEV_GATEWAY_TARGET || GATEWAY_FALLBACK
+  // Missing VITE_DEV_*_TARGET → public gateway. Lets two services run locally
+  // while the other two already live on api.mtgmods.com.
+  const gateway = nonempty(env.VITE_API_URL) ?? GATEWAY_FALLBACK
 
   const proxy = Object.entries(SERVICE_PREFIXES).reduce<Record<string, ProxyOptions>>(
     (acc, [prefix, envKey]) => {
-      const direct = env[envKey]
+      const direct = nonempty(env[envKey])
 
       acc[prefix] = {
-        target: direct || gateway,
+        target: direct ?? gateway,
         changeOrigin: true,
         // A service reached directly still mounts its router under /api/v1;
         // only the gateway strips that segment.
