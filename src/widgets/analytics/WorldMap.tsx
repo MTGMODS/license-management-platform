@@ -1,5 +1,5 @@
 import countries from 'i18n-iso-countries'
-import { useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { CountryStats, PeriodKey } from '@/shared/api/usage'
@@ -7,6 +7,7 @@ import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
 import { type ChartMetric, chartColor, HOVER_OUTLINE } from './chartTheme'
+import { clampTooltipAnchorX } from './chartTooltipPosition'
 import { ChartTooltip } from './ChartTooltip'
 import { statsTooltipRows } from './statsTooltip'
 import { CRIMEA_OVERLAY_PATHS, UKRAINE_NUMERIC_ID } from './crimeaOverlay'
@@ -14,6 +15,8 @@ import { COUNTRY_SHAPES, MAP_HEIGHT, MAP_WIDTH } from './worldGeometry'
 
 const BASE_FILL = '#2a313c'
 const STROKE = 'rgba(245, 246, 249, 0.08)'
+/** Ignore synthetic mouse events that follow a touch on the same tap. */
+const TOUCH_MOUSE_GUARD_MS = 700
 
 interface WorldMapProps {
   countries: CountryStats[]
@@ -42,11 +45,56 @@ function fillFor(intensity: number, accent: string): string {
   return `color-mix(in oklab, ${accent} ${12 + intensity * 88}%, ${BASE_FILL})`
 }
 
+function pointerPosition(event: PointerEvent<SVGPathElement>, box: DOMRect) {
+  return { x: event.clientX - box.left, y: event.clientY - box.top }
+}
+
 export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
   const { t, i18n } = useTranslation('helper')
   const format = useFormatters()
   const [hover, setHover] = useState<HoverState | null>(null)
+  const mapFrameRef = useRef<HTMLDivElement>(null)
+  const ignoreMouseUntilRef = useRef(0)
+  const [mapWidth, setMapWidth] = useState(0)
   const accent = chartColor(metric)
+
+  useLayoutEffect(() => {
+    const node = mapFrameRef.current
+    if (!node) return
+
+    const update = () => setMapWidth(node.clientWidth)
+    update()
+
+    const observer = new ResizeObserver(update)
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const dismissOnOutsideTouch = (event: globalThis.PointerEvent) => {
+      if (event.pointerType !== 'touch') return
+      if (mapFrameRef.current?.contains(event.target as Node)) return
+      setHover(null)
+    }
+
+    document.addEventListener('pointerdown', dismissOnOutsideTouch)
+    return () => document.removeEventListener('pointerdown', dismissOnOutsideTouch)
+  }, [])
+
+  const showHover = (event: PointerEvent<SVGPathElement>, row: CountryStats) => {
+    if (event.pointerType === 'mouse' && Date.now() < ignoreMouseUntilRef.current) return
+
+    const box = event.currentTarget.ownerSVGElement?.getBoundingClientRect()
+    if (!box) return
+    setHover({ code: row.code, ...pointerPosition(event, box) })
+  }
+
+  const pinCountry = (event: PointerEvent<SVGPathElement>, row: CountryStats) => {
+    if (event.pointerType !== 'touch') return
+    event.preventDefault()
+    ignoreMouseUntilRef.current = Date.now() + TOUCH_MOUSE_GUARD_MS
+    showHover(event, row)
+  }
 
   const displayNames = useMemo(
     () => new Intl.DisplayNames([i18n.language], { type: 'region' }),
@@ -99,13 +147,19 @@ export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
             <span>{t('analytics.map.more')}</span>
           </div>
 
-          <div className="relative mt-6">
+          <div ref={mapFrameRef} className="relative mt-6">
             <svg
               viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
-              className="w-full"
+              className="w-full touch-none"
               role="img"
               aria-label={t('analytics.map.title')}
-              onMouseLeave={() => setHover(null)}
+              onPointerLeave={(event) => {
+                if (event.pointerType === 'mouse') setHover(null)
+              }}
+              onPointerDown={(event) => {
+                if (event.pointerType !== 'touch') return
+                if (event.target === event.currentTarget) setHover(null)
+              }}
             >
               {COUNTRY_SHAPES.map((shape) => {
                 const row = byNumericId.get(shape.numericId)
@@ -120,15 +174,13 @@ export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
                     stroke={isHovered ? HOVER_OUTLINE.stroke : STROKE}
                     strokeWidth={isHovered ? HOVER_OUTLINE.strokeWidth : 0.5}
                     className={row ? 'cursor-pointer' : undefined}
-                    onMouseMove={(event) => {
+                    onPointerMove={(event) => {
+                      if (!row || event.pointerType !== 'mouse') return
+                      showHover(event, row)
+                    }}
+                    onPointerDown={(event) => {
                       if (!row) return
-                      const box = event.currentTarget.ownerSVGElement?.getBoundingClientRect()
-                      if (!box) return
-                      setHover({
-                        code: row.code,
-                        x: event.clientX - box.left,
-                        y: event.clientY - box.top,
-                      })
+                      pinCountry(event, row)
                     }}
                   />
                 )
@@ -149,15 +201,11 @@ export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
                     stroke={isHovered ? HOVER_OUTLINE.stroke : STROKE}
                     strokeWidth={isHovered ? HOVER_OUTLINE.strokeWidth : 0.5}
                     className="cursor-pointer"
-                    onMouseMove={(event) => {
-                      const box = event.currentTarget.ownerSVGElement?.getBoundingClientRect()
-                      if (!box) return
-                      setHover({
-                        code: ukraine.code,
-                        x: event.clientX - box.left,
-                        y: event.clientY - box.top,
-                      })
+                    onPointerMove={(event) => {
+                      if (event.pointerType !== 'mouse') return
+                      showHover(event, ukraine)
                     }}
+                    onPointerDown={(event) => pinCountry(event, ukraine)}
                   />
                 ))
               })()}
@@ -165,8 +213,11 @@ export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
 
             {hover && hovered ? (
               <div
-                className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-[calc(100%+12px)]"
-                style={{ left: hover.x, top: hover.y }}
+                className="pointer-events-none absolute z-10 max-w-[calc(100%-1rem)] -translate-x-1/2 -translate-y-[calc(100%+12px)]"
+                style={{
+                  left: clampTooltipAnchorX(hover.x, mapWidth || mapFrameRef.current?.clientWidth || 0),
+                  top: hover.y,
+                }}
               >
                 <ChartTooltip
                   title={displayNames.of(hovered.code) ?? hovered.code}
