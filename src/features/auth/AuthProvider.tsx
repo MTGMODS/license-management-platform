@@ -1,6 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 
-import { onSessionExpired } from '@/shared/api'
+import { AUTH_STORAGE_KEYS, onSessionExpired } from '@/shared/api'
 
 import { handleSessionExpired, useAuthStore } from './authStore'
 import { initTelegramChrome, loadTelegramWebAppScript } from './telegram'
@@ -14,6 +14,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const started = useRef(false)
 
   useEffect(() => onSessionExpired(handleSessionExpired), [])
+
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (!event.key || !(AUTH_STORAGE_KEYS as readonly string[]).includes(event.key)) return
+      if (!event.newValue) {
+        handleSessionExpired()
+        return
+      }
+      void useAuthStore.getState().bootstrap()
+    }
+
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
 
   useEffect(() => {
     if (started.current) return
