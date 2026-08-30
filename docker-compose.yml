@@ -1,0 +1,13 @@
+# git clone && docker compose up --build
+# Browser talks to https://api.mtgmods.com (override with VITE_API_URL).
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-https://api.mtgmods.com}
+    ports:
+      - "${PORT:-8080}:8080"
+    restart: unless-stopped
