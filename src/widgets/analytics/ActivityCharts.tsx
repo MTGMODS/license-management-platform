@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
@@ -8,7 +8,9 @@ import { shiftHourlyToLocal } from '@/shared/lib/timezone'
 import { Card } from '@/shared/ui'
 
 import { AXIS_PROPS, barActiveProps, CHART, type ChartMetric, chartColor, Y_AXIS_NUMERIC } from './chartTheme'
+import { CHART_TOOLTIP_WRAPPER_STYLE, readTooltipViewBox } from './chartTooltipPosition'
 import { ChartTooltip } from './ChartTooltip'
+import { RechartsTooltipContent } from './RechartsTooltipContent'
 import { statsTooltipRows } from './statsTooltip'
 
 interface ActivityChartsProps {
@@ -38,6 +40,8 @@ export function ActivityCharts({ hourly, weekday, metric }: ActivityChartsProps)
   )
 
   const color = chartColor(metric)
+  const [hourlyTooltipX, setHourlyTooltipX] = useState<number | undefined>()
+  const [weekdayTooltipX, setWeekdayTooltipX] = useState<number | undefined>()
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -60,17 +64,24 @@ export function ActivityCharts({ hourly, weekday, metric }: ActivityChartsProps)
               <YAxis {...Y_AXIS_NUMERIC} tickFormatter={format.compact} />
               <Tooltip
                 cursor={false}
-                content={({ active, payload }) => {
-                  const point = payload?.[0]?.payload as HourActivityPoint | undefined
-                  if (!active || !point) return null
-
-                  return (
-                    <ChartTooltip
-                      title={format.hour(point.hour)}
-                      rows={statsTooltipRows(t, format, point)}
-                    />
-                  )
-                }}
+                offset={8}
+                position={hourlyTooltipX != null ? { x: hourlyTooltipX } : undefined}
+                wrapperStyle={CHART_TOOLTIP_WRAPPER_STYLE}
+                content={(props) => (
+                  <RechartsTooltipContent
+                    active={props.active}
+                    payload={props.payload as ReadonlyArray<{ payload?: HourActivityPoint }> | undefined}
+                    coordinate={props.coordinate}
+                    viewBox={readTooltipViewBox(props)}
+                    onTranslateX={setHourlyTooltipX}
+                    renderTooltip={(point) => (
+                      <ChartTooltip
+                        title={format.hour(point.hour)}
+                        rows={statsTooltipRows(t, format, point)}
+                      />
+                    )}
+                  />
+                )}
               />
               <Bar
                 dataKey={metric}
@@ -105,17 +116,24 @@ export function ActivityCharts({ hourly, weekday, metric }: ActivityChartsProps)
               <YAxis {...Y_AXIS_NUMERIC} tickFormatter={format.compact} />
               <Tooltip
                 cursor={false}
-                content={({ active, payload }) => {
-                  const point = payload?.[0]?.payload as WeekdayActivityPoint | undefined
-                  if (!active || !point) return null
-
-                  return (
-                    <ChartTooltip
-                      title={format.weekday(point.weekday)}
-                      rows={statsTooltipRows(t, format, point)}
-                    />
-                  )
-                }}
+                offset={8}
+                position={weekdayTooltipX != null ? { x: weekdayTooltipX } : undefined}
+                wrapperStyle={CHART_TOOLTIP_WRAPPER_STYLE}
+                content={(props) => (
+                  <RechartsTooltipContent
+                    active={props.active}
+                    payload={props.payload as ReadonlyArray<{ payload?: WeekdayActivityPoint }> | undefined}
+                    coordinate={props.coordinate}
+                    viewBox={readTooltipViewBox(props)}
+                    onTranslateX={setWeekdayTooltipX}
+                    renderTooltip={(point) => (
+                      <ChartTooltip
+                        title={format.weekday(point.weekday)}
+                        rows={statsTooltipRows(t, format, point)}
+                      />
+                    )}
+                  />
+                )}
               />
               <Bar
                 dataKey={metric}

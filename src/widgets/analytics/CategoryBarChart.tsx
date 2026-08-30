@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useRef, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import { cn } from '@/shared/lib/cn'
@@ -13,6 +14,13 @@ import {
   categoryChartHeight,
   CHART,
 } from './chartTheme'
+import {
+  CHART_TOOLTIP_WRAPPER_STYLE,
+  readTooltipViewBox,
+  resolveCategoryBarTooltipTranslateX,
+} from './chartTooltipPosition'
+import { RechartsTooltipContent } from './RechartsTooltipContent'
+import { useChartContainerWidth } from './useChartContainerWidth'
 
 interface CategoryBarChartProps<T> {
   data: readonly T[]
@@ -30,9 +38,17 @@ export function CategoryBarChart<T>({
   renderTooltip,
 }: CategoryBarChartProps<T>) {
   const format = useFormatters()
+  const [tooltipX, setTooltipX] = useState<number | undefined>()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const containerWidth = useChartContainerWidth(containerRef)
+  const plotLeft = CATEGORY_Y_WIDTH + CATEGORY_CHART_MARGIN.left
 
   return (
-    <div className={cn('mt-6', className)} style={{ height: categoryChartHeight(data.length) }}>
+    <div
+      ref={containerRef}
+      className={cn('mt-6', className)}
+      style={{ height: categoryChartHeight(data.length) }}
+    >
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           accessibilityLayer={false}
@@ -53,11 +69,27 @@ export function CategoryBarChart<T>({
           />
           <Tooltip
             cursor={false}
-            content={({ active, payload }) => {
-              const point = payload?.[0]?.payload as T | undefined
-              if (!active || !point) return null
-              return renderTooltip(point)
-            }}
+            offset={8}
+            position={tooltipX != null ? { x: tooltipX } : undefined}
+            wrapperStyle={CHART_TOOLTIP_WRAPPER_STYLE}
+            content={(props) => (
+              <RechartsTooltipContent
+                active={props.active}
+                payload={props.payload as ReadonlyArray<{ payload?: T }> | undefined}
+                coordinate={props.coordinate}
+                viewBox={readTooltipViewBox(props)}
+                chartContainerWidth={containerWidth}
+                resolveTranslateX={(_coordinateX, width) =>
+                  resolveCategoryBarTooltipTranslateX(
+                    width,
+                    plotLeft,
+                    CATEGORY_CHART_MARGIN.right,
+                  )
+                }
+                renderTooltip={renderTooltip}
+                onTranslateX={setTooltipX}
+              />
+            )}
           />
           <Bar
             dataKey={dataKey}

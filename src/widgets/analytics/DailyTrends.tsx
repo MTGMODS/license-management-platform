@@ -15,7 +15,9 @@ import { useFormatters } from '@/shared/lib/format'
 import { Card, SegmentedControl } from '@/shared/ui'
 
 import { AXIS_PROPS, CHART, type ChartMetric, chartColor, Y_AXIS_NUMERIC } from './chartTheme'
+import { CHART_TOOLTIP_WRAPPER_STYLE, readTooltipViewBox } from './chartTooltipPosition'
 import { ChartTooltip } from './ChartTooltip'
+import { RechartsTooltipContent } from './RechartsTooltipContent'
 import { statsTooltipRows } from './statsTooltip'
 
 type TimelineGrain = 'daily' | 'hourly'
@@ -81,6 +83,7 @@ export function DailyTrends({
 
   const color = chartColor(metric)
   const gradientId = `timeline-${grain}-${metric}`
+  const [tooltipX, setTooltipX] = useState<number | undefined>()
 
   return (
     <Card className="p-4 text-left sm:p-6">
@@ -129,19 +132,26 @@ export function DailyTrends({
               <YAxis {...Y_AXIS_NUMERIC} tickFormatter={format.compact} />
               <Tooltip
                 cursor={{ stroke: CHART.axis, strokeDasharray: '4 4' }}
-                content={({ active, payload }) => {
-                  const point = payload?.[0]?.payload as TrendPoint | undefined
-                  if (!active || !point) return null
-
-                  return (
-                    <ChartTooltip
-                      title={
-                        grain === 'daily' ? format.fullDate(point.key) : format.dateTime(point.key)
-                      }
-                      rows={statsTooltipRows(t, format, point)}
-                    />
-                  )
-                }}
+                offset={8}
+                position={tooltipX != null ? { x: tooltipX } : undefined}
+                wrapperStyle={CHART_TOOLTIP_WRAPPER_STYLE}
+                content={(props) => (
+                  <RechartsTooltipContent
+                    active={props.active}
+                    payload={props.payload as ReadonlyArray<{ payload?: TrendPoint }> | undefined}
+                    coordinate={props.coordinate}
+                    viewBox={readTooltipViewBox(props)}
+                    onTranslateX={setTooltipX}
+                    renderTooltip={(point) => (
+                      <ChartTooltip
+                        title={
+                          grain === 'daily' ? format.fullDate(point.key) : format.dateTime(point.key)
+                        }
+                        rows={statsTooltipRows(t, format, point)}
+                      />
+                    )}
+                  />
+                )}
               />
               <Area
                 type="monotone"
