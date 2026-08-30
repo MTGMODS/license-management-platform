@@ -206,6 +206,13 @@ function UserEditor({
   const [role, setRole] = useState(user.role)
   const [status, setStatus] = useState(user.status)
 
+  useEffect(() => {
+    setRole(user.role)
+    setStatus(user.status)
+  }, [user.id, user.role, user.status])
+
+  const dirty = role !== user.role || status !== user.status
+
   return (
     <Card className="p-6">
       <div className="flex items-center gap-4">
@@ -278,7 +285,7 @@ function UserEditor({
       </dl>
 
       <div className="mt-6 flex flex-wrap gap-2">
-        <Button loading={saving} onClick={() => onSave(user, { role, status })}>
+        <Button loading={saving} disabled={!dirty} onClick={() => onSave(user, { role, status })}>
           {t('users.save')}
         </Button>
         {user.id != null ? (
