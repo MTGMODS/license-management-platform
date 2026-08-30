@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-import { clearTokens, getTokens, setTokens, type AuthTokens } from '@/shared/api'
+import { clearLocalSession, clearTokens, getTokens, NetworkError, setTokens, TimeoutError, type AuthTokens } from '@/shared/api'
 import { clearUserQueries } from '@/shared/api/queryClient'
 import { getCurrentUser, type TokenResponse, type User } from '@/shared/api/user'
 
@@ -35,7 +35,13 @@ export const useAuthStore = create<AuthState>()((set) => ({
       try {
         const user = await getCurrentUser()
         set({ status: 'authenticated', user })
-      } catch {
+      } catch (error) {
+        if (error instanceof NetworkError || error instanceof TimeoutError) {
+          // Keep tokens; the UI can retry bootstrap without a forced sign-out.
+          set({ status: 'authenticated', user: null })
+          return
+        }
+
         // The HTTP layer already attempted a refresh. Reaching here means the
         // session is unusable, so drop it rather than leaving a half-signed-in
         // header on screen.
@@ -74,6 +80,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
 
 /** Drops local state when the HTTP layer reports the session as unrecoverable. */
 export function handleSessionExpired(): void {
+  clearLocalSession()
   clearUserQueries()
   useAuthStore.setState({ status: 'anonymous', user: null })
 }

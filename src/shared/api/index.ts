@@ -3,9 +3,13 @@ export {
   ApiError,
   apiErrorTranslationKey,
   isNoActiveLicense,
+  NetworkError,
+  TimeoutError,
 } from './errors'
 export { request } from './http'
 export {
+  AUTH_STORAGE_KEYS,
+  clearLocalSession,
   clearTokens,
   getTokens,
   onSessionExpired,

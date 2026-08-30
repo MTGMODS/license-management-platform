@@ -18,6 +18,8 @@ export interface RequestConfig {
   responseType?: 'json' | 'blob' | 'void'
 }
 
+type RefreshOutcome = 'success' | 'rejected' | 'unavailable'
+
 function buildUrl(service: ServiceName, path: string, query?: Record<string, QueryValue>): string {
   const url = serviceUrl(service, path)
   if (!query) return url
@@ -51,11 +53,11 @@ async function readPayload(response: Response): Promise<unknown> {
   return response.text().catch(() => null)
 }
 
-let refreshPromise: Promise<boolean> | null = null
+let refreshPromise: Promise<RefreshOutcome> | null = null
 
-async function performRefresh(): Promise<boolean> {
+async function performRefresh(): Promise<RefreshOutcome> {
   const tokens = getTokens()
-  if (!tokens) return false
+  if (!tokens) return 'rejected'
 
   try {
     const response = await fetch(serviceUrl('user', '/auth/refresh'), {
@@ -67,27 +69,27 @@ async function performRefresh(): Promise<boolean> {
 
     if (!response.ok) {
       clearTokens()
-      return false
+      return 'rejected'
     }
 
     const payload = (await response.json()) as { access_token?: string; refresh_token?: string }
 
     if (!payload.access_token || !payload.refresh_token) {
       clearTokens()
-      return false
+      return 'rejected'
     }
 
     setTokens({ accessToken: payload.access_token, refreshToken: payload.refresh_token })
-    return true
+    return 'success'
   } catch {
     // A network blip should not destroy the session; only an explicit
     // rejection from the server does.
-    return false
+    return 'unavailable'
   }
 }
 
 /** Refreshes at most once concurrently, so a burst of 401s makes one call. */
-function refreshSession(): Promise<boolean> {
+function refreshSession(): Promise<RefreshOutcome> {
   refreshPromise ??= performRefresh().finally(() => {
     refreshPromise = null
   })
@@ -133,11 +135,12 @@ export async function request<T>(config: RequestConfig): Promise<T> {
   // common case rather than an edge case.
   if (response.status === 401 && auth && getTokens()) {
     const refreshed = await refreshSession()
-    if (refreshed) {
+    if (refreshed === 'success') {
       response = await executeRequest(config, getTokens()?.accessToken ?? null)
-    } else {
-      clearTokens()
+    } else if (refreshed === 'unavailable') {
+      throw new NetworkError()
     }
+    // 'rejected' already cleared tokens; the original 401 is surfaced below.
   }
 
   if (!response.ok) {

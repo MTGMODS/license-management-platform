@@ -39,6 +39,10 @@ export function AccountControl() {
     return <Skeleton className="h-9 w-28" label={t('account.cabinet')} />
   }
 
+  if (status === 'authenticated' && !user) {
+    return <Skeleton className="h-9 w-28" label={t('account.cabinet')} />
+  }
+
   if (status === 'anonymous' || !user) {
     return (
       <Link to="/login" className={buttonStyles({ variant: 'secondary', size: 'sm' })}>

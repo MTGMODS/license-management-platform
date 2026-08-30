@@ -1,7 +1,8 @@
-import { Navigate, Outlet, useLocation } from 'react-router'
+import { Navigate, Outlet } from 'react-router'
+import { useTranslation } from 'react-i18next'
 
 import { useAuthStore } from '@/features/auth'
-import { Skeleton } from '@/shared/ui'
+import { ErrorState, Skeleton } from '@/shared/ui'
 
 /**
  * Gate for authenticated-only routes. While the stored session is still being
@@ -9,8 +10,10 @@ import { Skeleton } from '@/shared/ui'
  * a returning user would be bounced to /login on every hard refresh.
  */
 export function RequireAuth() {
+  const { t } = useTranslation('common')
   const status = useAuthStore((state) => state.status)
-  const location = useLocation()
+  const user = useAuthStore((state) => state.user)
+  const bootstrap = useAuthStore((state) => state.bootstrap)
 
   if (status === 'initialising') {
     return (
@@ -22,7 +25,19 @@ export function RequireAuth() {
   }
 
   if (status === 'anonymous') {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />
+    return <Navigate to="/login" replace />
+  }
+
+  if (!user) {
+    return (
+      <div className="shell py-16">
+        <ErrorState
+          title={t('state.error')}
+          description={t('state.errorHint')}
+          onRetry={() => void bootstrap()}
+        />
+      </div>
+    )
   }
 
   return <Outlet />

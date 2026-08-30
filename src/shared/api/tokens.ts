@@ -6,6 +6,8 @@ export interface AuthTokens {
 const ACCESS_KEY = 'mtg.auth.access'
 const REFRESH_KEY = 'mtg.auth.refresh'
 
+export const AUTH_STORAGE_KEYS = [ACCESS_KEY, REFRESH_KEY] as const
+
 /**
  * The backend hands tokens back in a JSON body rather than an httpOnly cookie,
  * so the client has to hold them itself. localStorage is used because the
@@ -61,10 +63,14 @@ export function setTokens(tokens: AuthTokens): void {
   writeKey(REFRESH_KEY, tokens.refreshToken)
 }
 
-export function clearTokens(): void {
+export function clearLocalSession(): void {
   memoryTokens = null
   removeKey(ACCESS_KEY)
   removeKey(REFRESH_KEY)
+}
+
+export function clearTokens(): void {
+  clearLocalSession()
   for (const listener of sessionExpiredListeners) listener()
 }
 
