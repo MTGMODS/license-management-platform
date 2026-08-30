@@ -1,5 +1,5 @@
 import countries from 'i18n-iso-countries'
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { CountryStats, PeriodKey } from '@/shared/api/usage'
@@ -51,7 +51,7 @@ function fillFor(intensity: number, accent: string): string {
   return `color-mix(in oklab, ${accent} ${12 + intensity * 88}%, ${BASE_FILL})`
 }
 
-function pointerPosition(event: PointerEvent<SVGPathElement>, box: DOMRect) {
+function pointerPosition(event: PointerEvent<SVGElement>, box: DOMRect) {
   return { x: event.clientX - box.left, y: event.clientY - box.top }
 }
 
@@ -88,21 +88,26 @@ export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
     })
   }, [mapTooltipId])
 
-  const showHover = (event: PointerEvent<SVGPathElement>, row: CountryStats) => {
-    if (event.pointerType === 'mouse' && Date.now() < ignoreMouseUntilRef.current) return
+  const clearHover = useCallback(() => {
+    releaseAnalyticsTooltip(mapTooltipId)
+    setHover(null)
+  }, [mapTooltipId])
 
-    const box = event.currentTarget.ownerSVGElement?.getBoundingClientRect()
-    if (!box) return
-    claimAnalyticsTooltip(mapTooltipId)
-    setHover({ code: row.code, ...pointerPosition(event, box) })
-  }
+  const showHover = useCallback(
+    (event: PointerEvent<SVGElement>, row: CountryStats) => {
+      if (event.pointerType === 'mouse' && Date.now() < ignoreMouseUntilRef.current) return
 
-  const pinCountry = (event: PointerEvent<SVGPathElement>, row: CountryStats) => {
-    if (event.pointerType !== 'touch') return
-    event.preventDefault()
-    ignoreMouseUntilRef.current = Date.now() + TOUCH_MOUSE_GUARD_MS
-    showHover(event, row)
-  }
+      const svg =
+        event.currentTarget instanceof SVGSVGElement
+          ? event.currentTarget
+          : event.currentTarget.ownerSVGElement
+      const box = svg?.getBoundingClientRect()
+      if (!box) return
+      claimAnalyticsTooltip(mapTooltipId)
+      setHover({ code: row.code, ...pointerPosition(event, box) })
+    },
+    [mapTooltipId],
+  )
 
   const displayNames = useMemo(
     () => new Intl.DisplayNames([i18n.language], { type: 'region' }),
@@ -128,6 +133,34 @@ export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
 
     return { byNumericId: numeric, byCode: code, max: peak }
   }, [rows, period, metric])
+
+  const handleMapPointerMove = useCallback(
+    (event: PointerEvent<SVGSVGElement>) => {
+      if (event.pointerType !== 'mouse') return
+
+      const target = event.target
+      if (!(target instanceof SVGPathElement)) {
+        clearHover()
+        return
+      }
+
+      const row = byNumericId.get(target.dataset.countryId ?? '')
+      if (!row) {
+        clearHover()
+        return
+      }
+
+      showHover(event, row)
+    },
+    [byNumericId, clearHover, showHover],
+  )
+
+  const pinCountry = (event: PointerEvent<SVGPathElement>, row: CountryStats) => {
+    if (event.pointerType !== 'touch') return
+    event.preventDefault()
+    ignoreMouseUntilRef.current = Date.now() + TOUCH_MOUSE_GUARD_MS
+    showHover(event, row)
+  }
 
   const hovered = hover ? byCode.get(hover.code) : null
   const hasData = max > 0
@@ -160,8 +193,7 @@ export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
             className="relative mt-6"
             onPointerLeave={(event) => {
               if (event.pointerType !== 'mouse') return
-              releaseAnalyticsTooltip(mapTooltipId)
-              setHover(null)
+              clearHover()
             }}
           >
             <svg
@@ -169,11 +201,11 @@ export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
               className="w-full touch-none"
               role="img"
               aria-label={t('analytics.map.title')}
+              onPointerMove={handleMapPointerMove}
               onPointerDown={(event) => {
                 if (event.pointerType !== 'touch') return
                 if (event.target === event.currentTarget) {
-                  releaseAnalyticsTooltip(mapTooltipId)
-                  setHover(null)
+                  clearHover()
                 }
               }}
             >
@@ -185,14 +217,19 @@ export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
                 return (
                   <path
                     key={shape.numericId}
+                    data-country-id={shape.numericId}
                     d={shape.path}
                     fill={fillFor(intensityOf(value, max), accent)}
                     stroke={isHovered ? HOVER_OUTLINE.stroke : STROKE}
                     strokeWidth={isHovered ? HOVER_OUTLINE.strokeWidth : 0.5}
                     className={row ? 'cursor-pointer' : undefined}
-                    onPointerMove={(event) => {
+                    onPointerEnter={(event) => {
                       if (!row || event.pointerType !== 'mouse') return
                       showHover(event, row)
+                    }}
+                    onPointerLeave={(event) => {
+                      if (event.pointerType !== 'mouse') return
+                      clearHover()
                     }}
                     onPointerDown={(event) => {
                       if (!row) return
@@ -212,14 +249,19 @@ export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
                 return CRIMEA_OVERLAY_PATHS.map((path, index) => (
                   <path
                     key={`crimea-${index}`}
+                    data-country-id={UKRAINE_NUMERIC_ID}
                     d={path}
                     fill={fillFor(intensityOf(value, max), accent)}
                     stroke={isHovered ? HOVER_OUTLINE.stroke : STROKE}
                     strokeWidth={isHovered ? HOVER_OUTLINE.strokeWidth : 0.5}
                     className="cursor-pointer"
-                    onPointerMove={(event) => {
+                    onPointerEnter={(event) => {
                       if (event.pointerType !== 'mouse') return
                       showHover(event, ukraine)
+                    }}
+                    onPointerLeave={(event) => {
+                      if (event.pointerType !== 'mouse') return
+                      clearHover()
                     }}
                     onPointerDown={(event) => pinCountry(event, ukraine)}
                   />
