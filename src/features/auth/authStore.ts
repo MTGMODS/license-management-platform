@@ -2,7 +2,7 @@ import { create } from 'zustand'
 
 import { clearLocalSession, clearTokens, getTokens, NetworkError, setTokens, TimeoutError, type AuthTokens } from '@/shared/api'
 import { clearUserQueries } from '@/shared/api/queryClient'
-import { getCurrentUser, type TokenResponse, type User } from '@/shared/api/user'
+import { getCurrentUser, logoutSession, type TokenResponse, type User } from '@/shared/api/user'
 
 export type AuthStatus = 'initialising' | 'authenticated' | 'anonymous'
 
@@ -13,7 +13,7 @@ interface AuthState {
   bootstrap: () => Promise<void>
   /** Persists a successful sign-in from any provider flow. */
   completeSignIn: (response: TokenResponse) => void
-  signOut: () => void
+  signOut: () => Promise<void>
   setUser: (user: User) => void
 }
 
@@ -67,7 +67,16 @@ export const useAuthStore = create<AuthState>()((set) => ({
     set({ status: 'authenticated', user: response.user })
   },
 
-  signOut: () => {
+  signOut: async () => {
+    const refreshToken = getTokens()?.refreshToken
+    if (refreshToken) {
+      try {
+        await logoutSession(refreshToken)
+      } catch {
+        // 401 / network: still drop the local session.
+      }
+    }
+
     clearTokens()
     clearUserQueries()
     set({ status: 'anonymous', user: null })

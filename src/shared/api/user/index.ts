@@ -105,6 +105,18 @@ export function authenticateWithTelegramInitData(initData: string): Promise<Toke
   })
 }
 
+/** Revokes the refresh session. No bearer; 401 still means drop local tokens. */
+export function logoutSession(refreshToken: string, signal?: AbortSignal): Promise<void> {
+  return request<void>({
+    service: 'user',
+    path: '/auth/logout',
+    method: 'POST',
+    body: { refresh_token: refreshToken },
+    responseType: 'void',
+    signal,
+  })
+}
+
 /** Consumes a one-time ticket from the OAuth callback HTML fallback. */
 export function consumeOAuthHandoff(ticket: string, signal?: AbortSignal): Promise<unknown> {
   return request<unknown>({

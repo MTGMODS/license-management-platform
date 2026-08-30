@@ -52,9 +52,10 @@ export function AccountControl() {
   }
 
   const onSignOut = () => {
-    signOut()
     setOpen(false)
-    void navigate('/helper', { replace: true })
+    void signOut().then(() => {
+      void navigate('/helper', { replace: true })
+    })
   }
 
   return (
