@@ -29,6 +29,7 @@ import {
   type CheckoutRouteId,
   type WalletId,
 } from '@/shared/config/payment'
+import { copyText } from '@/shared/lib/clipboard'
 import { cn } from '@/shared/lib/cn'
 import { Badge, Button, buttonStyles, Card } from '@/shared/ui'
 import { DiscordIcon, TelegramIcon } from '@/shared/ui/BrandIcons'
@@ -43,10 +44,6 @@ function BrandMark({ brand, className }: { brand: BrandId; className?: string })
       draggable={false}
     />
   )
-}
-
-async function copyText(value: string) {
-  await navigator.clipboard.writeText(value)
 }
 
 function ExternalLink({ href, children, className }: { href: string; children?: ReactNode; className?: string }) {
@@ -92,7 +89,11 @@ function CopyRow({
         variant="secondary"
         className="shrink-0 self-start sm:self-center"
         onClick={() => {
-          void copyText(value).then(() => {
+          void copyText(value).then((ok) => {
+            if (!ok) {
+              toast.error(t('actions.copyFailed'))
+              return
+            }
             setCopied(true)
             toast.success(t('actions.copied'))
             window.setTimeout(() => setCopied(false), 1500)

@@ -22,6 +22,7 @@ import {
   type PaymentMethod,
   type TariffPlan,
 } from '@/shared/api/license'
+import { copyText } from '@/shared/lib/clipboard'
 import { useFormatters } from '@/shared/lib/format'
 import { Badge, Button, Card, SegmentedControl, Skeleton } from '@/shared/ui'
 
@@ -44,10 +45,6 @@ function statusTone(status: LicenseStatus): 'positive' | 'caution' | 'negative' 
   return 'neutral'
 }
 
-async function copyText(value: string) {
-  await navigator.clipboard.writeText(value)
-}
-
 export function LicensesPanel({
   initialUserId,
   onConsumedInitialUserId,
@@ -57,7 +54,7 @@ export function LicensesPanel({
   onConsumedInitialUserId: () => void
   onOpenUser: (userId: number) => void
 }) {
-  const { t } = useTranslation('admin')
+  const { t } = useTranslation(['admin', 'common'])
   const { t: te } = useTranslation('errors')
   const [mode, setMode] = useState<'key' | 'user' | 'id'>('key')
   const [keyDraft, setKeyDraft] = useState('')
@@ -194,7 +191,7 @@ function applyTariffDefaults(
 }
 
 export function GenerateCard() {
-  const { t } = useTranslation(['admin', 'vip'])
+  const { t } = useTranslation(['admin', 'vip', 'common'])
   const { t: te } = useTranslation('errors')
   const { data: tariffs } = useTariffs()
   const generateOne = useGenerateLicense()
@@ -340,7 +337,10 @@ export function GenerateCard() {
               size="sm"
               variant="ghost"
               onClick={() => {
-                void copyText(created.join('\n')).then(() => toast.success(t('licenses.copied')))
+                void copyText(created.join('\n')).then((ok) => {
+                  if (ok) toast.success(t('licenses.copied'))
+                  else toast.error(t('actions.copyFailed', { ns: 'common' }))
+                })
               }}
             >
               <Copy aria-hidden className="size-3.5" />
@@ -482,7 +482,10 @@ function LicenseCard({
             size="sm"
             variant="ghost"
             onClick={() => {
-              void copyText(license.key).then(() => toast.success(t('licenses.copied')))
+              void copyText(license.key).then((ok) => {
+                if (ok) toast.success(t('licenses.copied'))
+                else toast.error(t('actions.copyFailed', { ns: 'common' }))
+              })
             }}
           >
             <Copy aria-hidden className="size-3.5" />
