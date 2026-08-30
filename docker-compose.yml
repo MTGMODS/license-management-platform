@@ -1,0 +1,167 @@
+name: mtgmods_backend
+
+services:
+  user-postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - ./user_service/.env
+    volumes:
+      - user_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  license-postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - ./license_service/.env
+    volumes:
+      - license_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  usage-postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - ./usage_service/.env
+    volumes:
+      - usage_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    restart: unless-stopped
+    env_file:
+      - ./license_service/.env
+    ports:
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  user-service:
+    build:
+      context: ./user_service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./user_service/.env
+    ports:
+      - "8001:8000"
+    depends_on:
+      user-postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  license-service:
+    build:
+      context: ./license_service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./license_service/.env
+    ports:
+      - "8002:8000"
+    depends_on:
+      license-postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+
+  usage-service:
+    build:
+      context: ./usage_service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./usage_service/.env
+    ports:
+      - "8003:8000"
+    volumes:
+      - ./usage_service/app/infrastructure/data/GeoLite2-Country.mmdb:/app/app/infrastructure/data/GeoLite2-Country.mmdb:ro
+    depends_on:
+      usage-postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  distribution-service:
+    build:
+      context: ./distribution_service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./distribution_service/.env
+    ports:
+      - "8005:8000"
+    volumes:
+      - ./distribution_service/app/builds:/app/app/builds
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+
+volumes:
+  user_pg_data:
+  license_pg_data:
+  usage_pg_data:

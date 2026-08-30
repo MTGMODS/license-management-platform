@@ -61,4 +61,47 @@ license-management-platform/
 
 ## 🚀 Getting Started
 
-In progress editing...
+### Docker Compose
+
+Each service owns its `.env` and `Dockerfile`. Three isolated Postgres instances, one shared RabbitMQ.
+
+```bash
+git clone <repo-url>
+cd license-management-platform
+
+cp user_service/.env.example user_service/.env
+cp license_service/.env.example license_service/.env
+cp usage_service/.env.example usage_service/.env
+cp distribution_service/.env.example distribution_service/.env
+
+# Align secrets: JWT_SECRET + INTERNAL_SECRET_TOKEN (user ↔ license),
+# RABBITMQ credentials (license ↔ distribution), change POSTGRES_PASSWORD values.
+
+# VIP template (not in git):
+#   distribution_service/app/builds/vip/Arizona Helper.lua
+
+docker compose up --build
+```
+
+| Service | URL |
+|---------|-----|
+| User | http://localhost:8001/health |
+| License | http://localhost:8002/health |
+| Usage | http://localhost:8003/health |
+| Distribution | http://localhost:8005/health |
+| RabbitMQ UI | http://localhost:15672 (credentials from `license_service/.env`) |
+
+Set `DEBUG_MODE=False` and Postgres URLs in each service `.env` for Compose. OAuth redirect URIs use **host** port `8001`.
+
+### Local Python (SQLite)
+
+```bash
+cd user_service   # or license_service / usage_service / distribution_service
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env    # DEBUG_MODE=True
+fastapi dev main.py --port 8001
+```
+
+Ports: users **8001**, license **8002**, usage **8003**, distribution **8005**.
