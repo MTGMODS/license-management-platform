@@ -1,4 +1,4 @@
-import jwt, hmac, hashlib, time
+import jwt, hmac, hashlib, secrets, time
 from jwt import PyJWKClient
 from urllib.parse import parse_qsl
 from datetime import datetime, timedelta, timezone
@@ -19,15 +19,19 @@ def create_access_token(user_id: int, role: str) -> str:
     }
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=ALGORITHM)
 
-def create_refresh_token(user_id: int) -> str:
+def create_refresh_token(user_id: int) -> tuple[str, datetime]:
     expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     
     payload = {
         "sub": str(user_id),
         "type": "refresh",
+        "jti": secrets.token_urlsafe(16),
         "exp": expire
     }
-    return jwt.encode(payload, settings.JWT_SECRET, algorithm=ALGORITHM)
+    return jwt.encode(payload, settings.JWT_SECRET, algorithm=ALGORITHM), expire
+
+def hash_refresh_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
 
 def verify_refresh_token(token: str) -> int:
     try:

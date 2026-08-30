@@ -1,12 +1,46 @@
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func
-from app.infrastructure.repository import UserRepository
+from app.infrastructure.repository import RefreshSessionRepository, UserRepository
 from app.domain.models import User, UserStatus
+from app.domain.schemas import TokenResponse
+from app.application.jwt_utils import create_access_token, create_refresh_token, hash_refresh_token, verify_refresh_token
 from app.shared.exceptions import DomainException
 
 class AuthService:
     def __init__(self, db: AsyncSession):
         self.repo = UserRepository(db)
+        self.refresh_sessions = RefreshSessionRepository(db)
+
+    async def issue_token_pair(self, user: User) -> TokenResponse:
+        refresh_token, expires_at = create_refresh_token(user.id)
+        await self.refresh_sessions.create(
+            user_id=user.id,
+            token_hash=hash_refresh_token(refresh_token),
+            expires_at=expires_at,
+        )
+        return TokenResponse(
+            access_token=create_access_token(user_id=user.id, role=user.role),
+            refresh_token=refresh_token,
+            user=user,
+        )
+
+    async def rotate_refresh_token(self, refresh_token: str) -> TokenResponse:
+        user_id = verify_refresh_token(refresh_token)
+        session = await self.refresh_sessions.get_active_by_hash(hash_refresh_token(refresh_token))
+        if not session:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid refresh token",
+            )
+
+        await self.refresh_sessions.revoke_by_hash(hash_refresh_token(refresh_token))
+        db_user = await self.get_valid_user_for_refresh(user_id)
+        return await self.issue_token_pair(User.model_validate(db_user))
+
+    async def logout(self, refresh_token: str) -> None:
+        verify_refresh_token(refresh_token)
+        await self.refresh_sessions.revoke_by_hash(hash_refresh_token(refresh_token))
 
     async def login_with_telegram(self, telegram_id: int, nickname: str = None, avatar_url: str = None) -> User:
         db_user = await self.repo.get_by_telegram_id(telegram_id)

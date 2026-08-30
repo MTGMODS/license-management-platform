@@ -1,7 +1,7 @@
 import json, secrets
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import Column, Integer, String, Text, cast, BigInteger, DateTime, select, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Text, cast, BigInteger, DateTime, select, update, Enum as SQLEnum
 from sqlalchemy.sql import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.shared.database import Base
@@ -29,6 +29,56 @@ class OAuthHandoffModel(Base):
     ticket = Column(String(64), primary_key=True)
     payload = Column(Text, nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=False)
+
+
+class RefreshSessionModel(Base):
+    __tablename__ = "refresh_sessions"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, nullable=False, index=True)
+    token_hash = Column(String(64), unique=True, nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    revoked_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class RefreshSessionRepository:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def create(self, user_id: int, token_hash: str, expires_at: datetime) -> None:
+        self.db.add(
+            RefreshSessionModel(
+                user_id=user_id,
+                token_hash=token_hash,
+                expires_at=expires_at,
+            )
+        )
+        await self.db.commit()
+
+    async def get_active_by_hash(self, token_hash: str) -> RefreshSessionModel | None:
+        result = await self.db.execute(
+            select(RefreshSessionModel).where(
+                RefreshSessionModel.token_hash == token_hash,
+                RefreshSessionModel.revoked_at.is_(None),
+            )
+        )
+        row = result.scalars().first()
+        if not row:
+            return None
+        if to_utc(row.expires_at) <= datetime.now(timezone.utc):
+            return None
+        return row
+
+    async def revoke_by_hash(self, token_hash: str) -> None:
+        await self.db.execute(
+            update(RefreshSessionModel)
+            .where(
+                RefreshSessionModel.token_hash == token_hash,
+                RefreshSessionModel.revoked_at.is_(None),
+            )
+            .values(revoked_at=datetime.now(timezone.utc))
+        )
+        await self.db.commit()
 
 
 class OAuthHandoffRepository:

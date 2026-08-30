@@ -1,7 +1,7 @@
 import httpx, json, secrets
 from urllib.parse import parse_qsl
 
-from fastapi import APIRouter, Depends, Request, HTTPException, status
+from fastapi import APIRouter, Depends, Request, HTTPException, Response, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,10 +12,7 @@ from app.application.user_service import UserService
 from app.infrastructure.repository import OAuthHandoffRepository
 from app.domain.schemas import TokenResponse, RefreshRequest, TelegramAuthPayload
 from app.application.jwt_utils import (
-    create_access_token,
-    create_refresh_token,
     verify_link_ticket,
-    verify_refresh_token,
     verify_telegram_oidc,
     verify_telegram_webapp_hash,
 )
@@ -74,11 +71,7 @@ async def _complete_oauth(request: Request, db: AsyncSession, *, telegram_id: in
                 avatar_url=avatar_url,
             )
 
-    token = TokenResponse(
-        access_token=create_access_token(user_id=user.id, role=user.role),
-        refresh_token=create_refresh_token(user_id=user.id),
-        user=user,
-    )
+    token = await AuthService(db).issue_token_pair(user)
     response = await _oauth_success(db, token)
     response.delete_cookie("oauth_state")
     response.delete_cookie("oauth_link_user_id")
@@ -277,11 +270,7 @@ async def telegram_webapp_auth(payload: TelegramAuthPayload, db: AsyncSession = 
         avatar_url=avatar_url,
     )
 
-    return TokenResponse(
-        access_token=create_access_token(user_id=user.id, role=user.role),
-        refresh_token=create_refresh_token(user_id=user.id),
-        user=user,
-    )
+    return await service.issue_token_pair(user)
 
 
 @router.get("/discord/login", summary="Initiate Discord OAuth2 Flow")
@@ -385,13 +374,10 @@ async def consume_oauth_handoff(ticket: str, db: AsyncSession = Depends(get_db))
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_access_token(request: RefreshRequest, db: AsyncSession = Depends(get_db)):
-    user_id = verify_refresh_token(request.refresh_token)
+    return await AuthService(db).rotate_refresh_token(request.refresh_token)
 
-    service = AuthService(db)
-    db_user = await service.get_valid_user_for_refresh(user_id)
 
-    return TokenResponse(
-        access_token=create_access_token(user_id=db_user.id, role=db_user.role),
-        refresh_token=create_refresh_token(user_id=db_user.id),
-        user=db_user
-    )
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(request: RefreshRequest, db: AsyncSession = Depends(get_db)):
+    await AuthService(db).logout(request.refresh_token)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
