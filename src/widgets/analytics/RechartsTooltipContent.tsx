@@ -1,4 +1,4 @@
-import { useLayoutEffect, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, type ReactNode } from 'react'
 
 import { resolveTooltipTranslateX } from './chartTooltipPosition'
 
@@ -11,6 +11,11 @@ export type RechartsTooltipContentProps<T> = {
   resolveTranslateX?: (coordinateX: number, width: number) => number | undefined
   renderTooltip: (point: T) => ReactNode
   onTranslateX: (x: number | undefined) => void
+  onClaim?: () => void
+  onRelease?: () => void
+  onPin?: () => void
+  /** Hidden by the shared coordinator; do not release ownership on this transition. */
+  suppressed?: boolean
 }
 
 /** Bridges Recharts tooltip props to centered/clamped horizontal placement on narrow charts. */
@@ -23,9 +28,25 @@ export function RechartsTooltipContent<T>({
   resolveTranslateX = resolveTooltipTranslateX,
   renderTooltip,
   onTranslateX,
+  onClaim,
+  onRelease,
+  onPin,
+  suppressed = false,
 }: RechartsTooltipContentProps<T>) {
+  const wasActive = useRef(false)
+  const visible = Boolean(active) && !suppressed
+
   useLayoutEffect(() => {
-    if (!active || !coordinate) {
+    if (visible && !wasActive.current) {
+      onPin?.()
+      onClaim?.()
+    }
+    if (!visible && wasActive.current && !suppressed) onRelease?.()
+    wasActive.current = visible
+  }, [visible, suppressed, onClaim, onPin, onRelease])
+
+  useLayoutEffect(() => {
+    if (!visible || !coordinate) {
       onTranslateX(undefined)
       return
     }
@@ -38,7 +59,7 @@ export function RechartsTooltipContent<T>({
 
     onTranslateX(resolveTranslateX(coordinate.x, width))
   }, [
-    active,
+    visible,
     chartContainerWidth,
     coordinate,
     onTranslateX,
@@ -47,6 +68,6 @@ export function RechartsTooltipContent<T>({
   ])
 
   const point = payload?.[0]?.payload
-  if (!active || point == null) return null
+  if (!visible || point == null) return null
   return renderTooltip(point)
 }

@@ -12,6 +12,7 @@ import { CHART_TOOLTIP_WRAPPER_STYLE, readTooltipViewBox } from './chartTooltipP
 import { ChartTooltip } from './ChartTooltip'
 import { RechartsTooltipContent } from './RechartsTooltipContent'
 import { statsTooltipRows } from './statsTooltip'
+import { useExclusiveAnalyticsTooltip } from './useExclusiveAnalyticsTooltip'
 
 interface ActivityChartsProps {
   hourly: HourActivityPoint[]
@@ -42,6 +43,8 @@ export function ActivityCharts({ hourly, weekday, metric }: ActivityChartsProps)
   const color = chartColor(metric)
   const [hourlyTooltipX, setHourlyTooltipX] = useState<number | undefined>()
   const [weekdayTooltipX, setWeekdayTooltipX] = useState<number | undefined>()
+  const hourlyTooltip = useExclusiveAnalyticsTooltip()
+  const weekdayTooltip = useExclusiveAnalyticsTooltip()
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -51,7 +54,7 @@ export function ActivityCharts({ hourly, weekday, metric }: ActivityChartsProps)
           <span className="text-xs text-fg-subtle">{t('analytics.activity.localTime')}</span>
         </div>
 
-        <div className="mt-6 h-56">
+        <div className="mt-6 h-56" ref={hourlyTooltip.surfaceRef} {...hourlyTooltip.surfaceProps}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart accessibilityLayer={false} data={localHourly} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
               <CartesianGrid stroke={CHART.grid} vertical={false} />
@@ -65,6 +68,8 @@ export function ActivityCharts({ hourly, weekday, metric }: ActivityChartsProps)
               <Tooltip
                 cursor={false}
                 offset={8}
+                trigger={hourlyTooltip.trigger}
+                active={hourlyTooltip.tooltipActive}
                 position={hourlyTooltipX != null ? { x: hourlyTooltipX } : undefined}
                 wrapperStyle={CHART_TOOLTIP_WRAPPER_STYLE}
                 content={(props) => (
@@ -73,6 +78,10 @@ export function ActivityCharts({ hourly, weekday, metric }: ActivityChartsProps)
                     payload={props.payload as ReadonlyArray<{ payload?: HourActivityPoint }> | undefined}
                     coordinate={props.coordinate}
                     viewBox={readTooltipViewBox(props)}
+                    onClaim={hourlyTooltip.claim}
+                    onPin={hourlyTooltip.coarse ? hourlyTooltip.pin : undefined}
+                    onRelease={hourlyTooltip.coarse ? hourlyTooltip.dismiss : undefined}
+                    suppressed={hourlyTooltip.suppressed}
                     onTranslateX={setHourlyTooltipX}
                     renderTooltip={(point) => (
                       <ChartTooltip
@@ -100,7 +109,7 @@ export function ActivityCharts({ hourly, weekday, metric }: ActivityChartsProps)
           {t('analytics.activity.weekdays')}
         </h3>
 
-        <div className="mt-6 h-56">
+        <div className="mt-6 h-56" ref={weekdayTooltip.surfaceRef} {...weekdayTooltip.surfaceProps}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               accessibilityLayer={false}
@@ -117,6 +126,8 @@ export function ActivityCharts({ hourly, weekday, metric }: ActivityChartsProps)
               <Tooltip
                 cursor={false}
                 offset={8}
+                trigger={weekdayTooltip.trigger}
+                active={weekdayTooltip.tooltipActive}
                 position={weekdayTooltipX != null ? { x: weekdayTooltipX } : undefined}
                 wrapperStyle={CHART_TOOLTIP_WRAPPER_STYLE}
                 content={(props) => (
@@ -125,6 +136,10 @@ export function ActivityCharts({ hourly, weekday, metric }: ActivityChartsProps)
                     payload={props.payload as ReadonlyArray<{ payload?: WeekdayActivityPoint }> | undefined}
                     coordinate={props.coordinate}
                     viewBox={readTooltipViewBox(props)}
+                    onClaim={weekdayTooltip.claim}
+                    onPin={weekdayTooltip.coarse ? weekdayTooltip.pin : undefined}
+                    onRelease={weekdayTooltip.coarse ? weekdayTooltip.dismiss : undefined}
+                    suppressed={weekdayTooltip.suppressed}
                     onTranslateX={setWeekdayTooltipX}
                     renderTooltip={(point) => (
                       <ChartTooltip

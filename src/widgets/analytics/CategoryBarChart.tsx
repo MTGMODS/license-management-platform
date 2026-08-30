@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import { cn } from '@/shared/lib/cn'
@@ -21,6 +21,7 @@ import {
 } from './chartTooltipPosition'
 import { RechartsTooltipContent } from './RechartsTooltipContent'
 import { useChartContainerWidth } from './useChartContainerWidth'
+import { useExclusiveAnalyticsTooltip } from './useExclusiveAnalyticsTooltip'
 
 interface CategoryBarChartProps<T> {
   data: readonly T[]
@@ -39,15 +40,24 @@ export function CategoryBarChart<T>({
 }: CategoryBarChartProps<T>) {
   const format = useFormatters()
   const [tooltipX, setTooltipX] = useState<number | undefined>()
+  const tooltip = useExclusiveAnalyticsTooltip()
   const containerRef = useRef<HTMLDivElement>(null)
   const containerWidth = useChartContainerWidth(containerRef)
   const axis = categoryBarAxisLayout(containerWidth)
+  const assignContainerRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      containerRef.current = node
+      tooltip.surfaceRef(node)
+    },
+    [tooltip.surfaceRef],
+  )
 
   return (
     <div
-      ref={containerRef}
+      ref={assignContainerRef}
       className={cn('mt-6', className)}
       style={{ height: categoryChartHeight(data.length) }}
+      {...tooltip.surfaceProps}
     >
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
@@ -74,6 +84,8 @@ export function CategoryBarChart<T>({
           <Tooltip
             cursor={false}
             offset={8}
+            trigger={tooltip.trigger}
+            active={tooltip.tooltipActive}
             position={tooltipX != null ? { x: tooltipX } : undefined}
             wrapperStyle={CHART_TOOLTIP_WRAPPER_STYLE}
             content={(props) => (
@@ -83,6 +95,10 @@ export function CategoryBarChart<T>({
                 coordinate={props.coordinate}
                 viewBox={readTooltipViewBox(props)}
                 chartContainerWidth={containerWidth}
+                onClaim={tooltip.claim}
+                onPin={tooltip.coarse ? tooltip.pin : undefined}
+                onRelease={tooltip.coarse ? tooltip.dismiss : undefined}
+                suppressed={tooltip.suppressed}
                 resolveTranslateX={(_coordinateX, width) =>
                   resolveCategoryBarTooltipTranslateX(
                     width,

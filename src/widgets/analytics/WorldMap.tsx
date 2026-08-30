@@ -1,5 +1,5 @@
 import countries from 'i18n-iso-countries'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { CountryStats, PeriodKey } from '@/shared/api/usage'
@@ -7,6 +7,12 @@ import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
 import { type ChartMetric, chartColor, HOVER_OUTLINE } from './chartTheme'
+import {
+  claimAnalyticsTooltip,
+  registerAnalyticsTooltipSurface,
+  releaseAnalyticsTooltip,
+  subscribeAnalyticsTooltip,
+} from './analyticsTooltipCoordinator'
 import { clampTooltipAnchorX } from './chartTooltipPosition'
 import { ChartTooltip } from './ChartTooltip'
 import { statsTooltipRows } from './statsTooltip'
@@ -55,6 +61,7 @@ export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
   const [hover, setHover] = useState<HoverState | null>(null)
   const mapFrameRef = useRef<HTMLDivElement>(null)
   const ignoreMouseUntilRef = useRef(0)
+  const mapTooltipId = useId()
   const [mapWidth, setMapWidth] = useState(0)
   const accent = chartColor(metric)
 
@@ -62,30 +69,31 @@ export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
     const node = mapFrameRef.current
     if (!node) return
 
+    registerAnalyticsTooltipSurface(mapTooltipId, node)
+
     const update = () => setMapWidth(node.clientWidth)
     update()
 
     const observer = new ResizeObserver(update)
     observer.observe(node)
-    return () => observer.disconnect()
-  }, [])
+    return () => {
+      observer.disconnect()
+      registerAnalyticsTooltipSurface(mapTooltipId, null)
+    }
+  }, [mapTooltipId])
 
   useEffect(() => {
-    const dismissOnOutsideTouch = (event: globalThis.PointerEvent) => {
-      if (event.pointerType !== 'touch') return
-      if (mapFrameRef.current?.contains(event.target as Node)) return
-      setHover(null)
-    }
-
-    document.addEventListener('pointerdown', dismissOnOutsideTouch)
-    return () => document.removeEventListener('pointerdown', dismissOnOutsideTouch)
-  }, [])
+    return subscribeAnalyticsTooltip((owner) => {
+      if (owner !== mapTooltipId) setHover(null)
+    })
+  }, [mapTooltipId])
 
   const showHover = (event: PointerEvent<SVGPathElement>, row: CountryStats) => {
     if (event.pointerType === 'mouse' && Date.now() < ignoreMouseUntilRef.current) return
 
     const box = event.currentTarget.ownerSVGElement?.getBoundingClientRect()
     if (!box) return
+    claimAnalyticsTooltip(mapTooltipId)
     setHover({ code: row.code, ...pointerPosition(event, box) })
   }
 
@@ -147,18 +155,26 @@ export function WorldMap({ countries: rows, period, metric }: WorldMapProps) {
             <span>{t('analytics.map.more')}</span>
           </div>
 
-          <div ref={mapFrameRef} className="relative mt-6">
+          <div
+            ref={mapFrameRef}
+            className="relative mt-6"
+            onPointerLeave={(event) => {
+              if (event.pointerType !== 'mouse') return
+              releaseAnalyticsTooltip(mapTooltipId)
+              setHover(null)
+            }}
+          >
             <svg
               viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
               className="w-full touch-none"
               role="img"
               aria-label={t('analytics.map.title')}
-              onPointerLeave={(event) => {
-                if (event.pointerType === 'mouse') setHover(null)
-              }}
               onPointerDown={(event) => {
                 if (event.pointerType !== 'touch') return
-                if (event.target === event.currentTarget) setHover(null)
+                if (event.target === event.currentTarget) {
+                  releaseAnalyticsTooltip(mapTooltipId)
+                  setHover(null)
+                }
               }}
             >
               {COUNTRY_SHAPES.map((shape) => {

@@ -19,6 +19,7 @@ import { CHART_TOOLTIP_WRAPPER_STYLE, readTooltipViewBox } from './chartTooltipP
 import { ChartTooltip } from './ChartTooltip'
 import { RechartsTooltipContent } from './RechartsTooltipContent'
 import { statsTooltipRows } from './statsTooltip'
+import { useExclusiveAnalyticsTooltip } from './useExclusiveAnalyticsTooltip'
 
 type TimelineGrain = 'daily' | 'hourly'
 
@@ -84,6 +85,7 @@ export function DailyTrends({
   const color = chartColor(metric)
   const gradientId = `timeline-${grain}-${metric}`
   const [tooltipX, setTooltipX] = useState<number | undefined>()
+  const tooltip = useExclusiveAnalyticsTooltip()
 
   return (
     <Card className="p-4 text-left sm:p-6">
@@ -112,7 +114,7 @@ export function DailyTrends({
       {points.length === 0 ? (
         <p className="mt-8 text-sm text-fg-subtle">{t('analytics.empty')}</p>
       ) : (
-        <div className="mt-6 h-72">
+        <div className="mt-6 h-72" ref={tooltip.surfaceRef} {...tooltip.surfaceProps}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart accessibilityLayer={false} data={points} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
               <defs>
@@ -133,6 +135,8 @@ export function DailyTrends({
               <Tooltip
                 cursor={{ stroke: CHART.axis, strokeDasharray: '4 4' }}
                 offset={8}
+                trigger={tooltip.trigger}
+                active={tooltip.tooltipActive}
                 position={tooltipX != null ? { x: tooltipX } : undefined}
                 wrapperStyle={CHART_TOOLTIP_WRAPPER_STYLE}
                 content={(props) => (
@@ -141,6 +145,10 @@ export function DailyTrends({
                     payload={props.payload as ReadonlyArray<{ payload?: TrendPoint }> | undefined}
                     coordinate={props.coordinate}
                     viewBox={readTooltipViewBox(props)}
+                    onClaim={tooltip.claim}
+                    onPin={tooltip.coarse ? tooltip.pin : undefined}
+                    onRelease={tooltip.coarse ? tooltip.dismiss : undefined}
+                    suppressed={tooltip.suppressed}
                     onTranslateX={setTooltipX}
                     renderTooltip={(point) => (
                       <ChartTooltip
