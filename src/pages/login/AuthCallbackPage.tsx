@@ -13,8 +13,6 @@ import { useAuthStore } from '@/features/auth/authStore'
 import { readTokenResponse } from '@/features/auth/popupAuth'
 import { consumeOAuthHandoff } from '@/shared/api/user'
 
-const HASH_STORAGE_KEY = 'mtg_oauth_callback_hash'
-
 /** Dedupes Strict Mode double-mount so a ticket is only consumed once. */
 const handoffInflight = new Map<string, Promise<AuthBroadcastMessage>>()
 
@@ -33,28 +31,9 @@ function takeHandoff(ticket: string): Promise<AuthBroadcastMessage> {
   return pending
 }
 
-function readHashMessage(): AuthBroadcastMessage | null {
-  const fromHash = window.location.hash.startsWith('#')
-    ? window.location.hash.slice(1)
-    : window.location.hash
-  const raw = fromHash || sessionStorage.getItem(HASH_STORAGE_KEY)
-  if (!raw) return null
-
-  if (fromHash) {
-    sessionStorage.setItem(HASH_STORAGE_KEY, raw)
-  }
-
-  try {
-    const parsed: unknown = JSON.parse(decodeURIComponent(raw))
-    return isAuthBroadcastMessage(parsed) ? parsed : null
-  } catch {
-    return null
-  }
-}
-
 /**
  * OAuth return for full-page mobile flow and popup COOP fallback.
- * Accepts `?ticket=` (handoff API) or `#` JSON payload from older backends.
+ * Expects `?ticket=` and exchanges it via the handoff API (one-shot, short TTL).
  */
 export function AuthCallbackPage() {
   const { t } = useTranslation(['login', 'errors'])
@@ -78,7 +57,6 @@ export function AuthCallbackPage() {
         const tokens = readTokenResponse(message.payload)
         if (tokens) {
           completeSignIn(tokens)
-          sessionStorage.removeItem(HASH_STORAGE_KEY)
           setStatus('done')
           void navigate('/dashboard', { replace: true })
           return
@@ -94,32 +72,26 @@ export function AuthCallbackPage() {
       setStatus('error')
     }
 
-    const params = new URLSearchParams(window.location.search)
-    const ticket = params.get('ticket')
-    const hashMessage = readHashMessage()
-
+    const ticket = new URLSearchParams(window.location.search).get('ticket')
     window.history.replaceState(null, '', window.location.pathname)
 
-    if (ticket) {
-      void (async () => {
-        try {
-          const message = await takeHandoff(ticket)
-          if (!cancelled) applyMessage(message)
-        } catch {
-          if (!cancelled) setStatus('empty')
-        }
-      })()
-      return () => {
-        cancelled = true
-      }
-    }
-
-    if (hashMessage) {
-      applyMessage(hashMessage)
+    if (!ticket) {
+      setStatus('empty')
       return
     }
 
-    setStatus('empty')
+    void (async () => {
+      try {
+        const message = await takeHandoff(ticket)
+        if (!cancelled) applyMessage(message)
+      } catch {
+        if (!cancelled) setStatus('empty')
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
   }, [completeSignIn, navigate, t])
 
   return (
