@@ -104,6 +104,12 @@ class UserService:
         if not user:
             return None
         return {"telegram_id": user.telegram_id, "discord_id": user.discord_id}
+
+    async def get_profile_for_s2s(self, user_id: int) -> dict | None:
+        user = await self.repo.get_by_id(user_id)
+        if not user:
+            return None
+        return {"user_id": user.id, "nickname": user.nickname}
     
     # ADMIN METHODS
     async def get_user_for_admin(self, target_user_id: int) -> User:

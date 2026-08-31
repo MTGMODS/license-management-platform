@@ -32,3 +32,12 @@ async def s2s_get_socials(user_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
         
     return socials
+
+
+@router.get("/{user_id}/profile", dependencies=[Depends(verify_s2s_access)])
+async def s2s_get_profile(user_id: int, db: AsyncSession = Depends(get_db)):
+    service = UserService(db)
+    profile = await service.get_profile_for_s2s(user_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="User not found")
+    return profile
