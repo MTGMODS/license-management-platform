@@ -44,3 +44,20 @@ class UserServiceClient:
             except httpx.RequestError as e:
                 print(f"[UserServiceClient] Connection failed: {e}")
                 raise HTTPException(status_code=503, detail="User service unavailable")
+
+    async def get_user_profile(self, user_id: int) -> dict | None:
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(
+                    f"{self.base_url}/api/v1/users/{user_id}/profile",
+                    headers=self.headers,
+                )
+                if response.status_code == 200:
+                    return response.json()
+                if response.status_code == 404:
+                    return None
+                print(f"[UserServiceClient] Unexpected status {response.status_code} for profile {user_id}")
+                raise HTTPException(status_code=503, detail="User service unavailable")
+            except httpx.RequestError as e:
+                print(f"[UserServiceClient] Connection failed: {e}")
+                raise HTTPException(status_code=503, detail="User service unavailable")
