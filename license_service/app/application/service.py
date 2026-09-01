@@ -6,7 +6,7 @@ from fastapi import BackgroundTasks
 
 from app.shared.database import AsyncSessionLocal
 from app.shared.datetime_utils import format_utc, to_utc
-from app.domain.models import LicenseStatus, License
+from app.domain.models import LicenseStatus
 from app.domain.schemas import GeneratePurchaseDTO, ActivateKeyDTO, UpdateLicenseDTO
 from app.infrastructure.repository import LicenseRepository, TransactionRepository, LicenseModel, TransactionModel
 from app.shared.exceptions import DomainException
@@ -17,30 +17,47 @@ class LicenseService:
         self.db = db
         self.license_repo = LicenseRepository(db)
         self.tx_repo = TransactionRepository(db)
+        self.user_client = UserServiceClient()
 
-    async def check_access(self, key: str, device: str, ip_address: str, user_agent: str) -> dict:
-        db_sub = await self.license_repo.get_by_key(key)
-        if not db_sub:
-            raise DomainException(message="Key is invalid or expired", status_code=403, error_code="ACCESS_DENIED")
-        
-        domain_sub = License(
-            id=db_sub.id, key=db_sub.key, duration_days=db_sub.duration_days,
-            status=db_sub.status, activated_at=db_sub.activated_at, expires_at=db_sub.expires_at
+    async def check_for_client(self, key: str, device: str, ip_address: str, user_agent: str) -> tuple[int, dict]:
+        license_row = await self.license_repo.get_by_key(key)
+        if not license_row:
+            return 404, {"detail": "Key not found"}
+
+        if license_row.status == LicenseStatus.NOT_ACTIVATED or license_row.user_id is None:
+            return 200, {"valid": False, "expires": False, "error": "NOT_ACTIVATED"}
+
+        now = datetime.now(timezone.utc)
+        expired = (
+            license_row.status in (LicenseStatus.EXPIRED, LicenseStatus.BANNED)
+            or (
+                license_row.expires_at is not None
+                and to_utc(license_row.expires_at) < now
+            )
         )
-        
-        if not domain_sub.is_valid():
-            raise DomainException(message="Key is invalid or expired", status_code=403, error_code="ACCESS_DENIED")
+        if expired or license_row.status != LicenseStatus.ACTIVE:
+            return 200, {"valid": False, "expires": True}
 
-        existing_devices = [d.device for d in db_sub.devices]
-        if device not in existing_devices:
-            if len(existing_devices) >= db_sub.max_devices: 
-                raise DomainException(
-                    message=f"Device limit reached (Max {db_sub.max_devices}). Reset HWID in profile.", 
-                    status_code=403, error_code="HWID_LIMIT_REACHED"
-                )
+        known_devices = [d.device for d in license_row.devices]
+        if device not in known_devices and len(known_devices) >= license_row.max_devices:
+            return 403, {
+                "error": "HWID_LIMIT_REACHED",
+                "message": f"Device limit reached (Max {license_row.max_devices}). Reset HWID in profile.",
+            }
 
-        await self.license_repo.log_device(db_sub.id, device, ip_address, user_agent)
-        return {"user_id": db_sub.user_id, "expires_at": format_utc(db_sub.expires_at)}
+        await self.license_repo.log_device(
+            license_row.id, device, ip_address, user_agent
+        )
+
+        profile = await self.user_client.get_user_profile(license_row.user_id)
+        if not profile:
+            return 400, {"valid": False, "error": "Internal server error"}
+
+        return 200, {
+            "valid": True,
+            "user": profile["nickname"],
+            "id": license_row.user_id,
+        }
 
     def _serialize_dashboard_license(self, db_sub: LicenseModel) -> dict:
         devices_list = []
