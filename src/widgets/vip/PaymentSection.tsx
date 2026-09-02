@@ -475,8 +475,8 @@ function routeBadges(route: CheckoutRouteId, labels: {
 }
 
 export function PaymentSection() {
-  const { t, i18n } = useTranslation('vip')
-  const { allowed: allowBankCard, country } = useBankCardAllowed()
+  const { t } = useTranslation('vip')
+  const { allowed: allowBankCard } = useBankCardAllowed()
   const [wallet, setWallet] = useState<WalletId>('card')
   const routes = routesForWallet(wallet, allowBankCard)
   const [route, setRoute] = useState<CheckoutRouteId>(routes[0] ?? 'funpay')
@@ -497,18 +497,6 @@ export function PaymentSection() {
   }
 
   const activeRoute = routes.includes(route) ? route : (routes[0] ?? 'stars')
-
-  /** MIR is for RU rails; UA visitors on Russian UI get the UK hint (no MIR). */
-  const walletHint = (id: WalletId) => {
-    if (
-      id === 'card' &&
-      country === 'UA' &&
-      i18n.language.toLowerCase().startsWith('ru')
-    ) {
-      return t('payment.wallets.card.hint', { lng: 'uk' })
-    }
-    return t(`payment.wallets.${id}.hint`)
-  }
 
   return (
     <section id="vip-payment" className="scroll-mt-24 space-y-6 sm:space-y-8">
@@ -559,7 +547,7 @@ export function PaymentSection() {
                     {t(`payment.wallets.${id}.title`)}
                   </span>
                   <span className="mt-0.5 block text-xs leading-snug text-fg-subtle sm:text-[0.8rem]">
-                    {walletHint(id)}
+                    {t(`payment.wallets.${id}.hint`)}
                   </span>
                 </span>
               </button>

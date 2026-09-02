@@ -51,7 +51,7 @@
     "wallets": {
       "card": {
         "title": "Банковская карта",
-        "hint": "VISA / MasterCard / МИР"
+        "hint": "В любой валюте"
       },
       "crypto": {
         "title": "Криптовалюта",
