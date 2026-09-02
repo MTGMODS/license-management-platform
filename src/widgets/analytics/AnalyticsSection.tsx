@@ -13,7 +13,6 @@ import { FactionsChart, VersionsChart } from './DistributionCharts'
 import { MetricControl } from './MetricControl'
 import { PeriodControl } from './PeriodControl'
 import { ServersChart } from './ServersChart'
-import { WorldMap } from './WorldMap'
 
 export function AnalyticsSection() {
   const { t } = useTranslation('helper')
@@ -61,7 +60,6 @@ export function AnalyticsSection() {
           period={period}
           metric={metric}
         />
-        <WorldMap countries={data.distribution.countries} period={period} metric={metric} />
         <DevicesChart devices={data.overview.devices} period={period} metric={metric} />
         <VersionsChart versions={data.distribution.versions} period={period} metric={metric} />
       </div>

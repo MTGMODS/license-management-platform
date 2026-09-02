@@ -91,7 +91,7 @@ export function categoryChartHeight(rowCount: number) {
   return Math.max(rowCount, 1) * CATEGORY_ROW_HEIGHT + CATEGORY_X_AXIS_HEIGHT
 }
 
-/** Shared hover outline for chart bars and map countries. */
+/** Shared hover outline for chart bars. */
 export const HOVER_OUTLINE = {
   stroke: 'rgba(245, 246, 249, 0.55)',
   strokeWidth: 1.5,

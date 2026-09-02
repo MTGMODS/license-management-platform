@@ -12,9 +12,8 @@ import { MediaGallery } from '@/widgets/gallery/MediaGallery'
 import { QuickStats } from '@/widgets/stats/QuickStats'
 
 /**
- * The charting library and the world atlas together outweigh the rest of the
- * app, and this section sits below the fold, so it is fetched only once the
- * page itself is interactive.
+ * Recharts outweighs the rest of the app, and this section sits below the
+ * fold, so it is fetched only once the page itself is interactive.
  */
 const AnalyticsSection = lazy(() =>
   import('@/widgets/analytics/AnalyticsSection').then((module) => ({

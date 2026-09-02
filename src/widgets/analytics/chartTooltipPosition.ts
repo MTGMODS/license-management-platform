@@ -33,18 +33,6 @@ export function resolveCategoryBarTooltipTranslateX(
   return plotLeft + plotWidth / 2 - TOOLTIP_HALF_WIDTH
 }
 
-/** Clamps a pointer-relative X for absolutely positioned overlays (world map). */
-export function clampTooltipAnchorX(x: number, containerWidth: number): number {
-  if (containerWidth < NARROW_CHART_WIDTH) {
-    return containerWidth / 2
-  }
-
-  const pad = 12
-  const minX = TOOLTIP_HALF_WIDTH + pad
-  const maxX = containerWidth - TOOLTIP_HALF_WIDTH - pad
-  return Math.min(Math.max(x, minX), maxX)
-}
-
 export const CHART_TOOLTIP_WRAPPER_STYLE = {
   zIndex: 20,
   pointerEvents: 'none',

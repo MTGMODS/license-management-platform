@@ -1,4 +1,4 @@
-import { ArrowDown, Crown, Globe2, MonitorSmartphone, Rocket, Server, Users } from 'lucide-react'
+import { ArrowDown, Crown, MonitorSmartphone, Rocket, Users } from 'lucide-react'
 import type { ComponentType } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -29,8 +29,8 @@ export function QuickStats() {
           {t('stats.title')}
         </h2>
         <p className="mt-1 text-[clamp(0.75rem,1.4vh,0.875rem)] text-fg-muted">{t('stats.subtitle')}</p>
-        <div className="mt-[clamp(0.5rem,1.2vh,1rem)] grid grid-cols-2 gap-[clamp(0.5rem,1.2vh,1rem)] lg:grid-cols-6 lg:gap-3">
-          {Array.from({ length: 6 }, (_, index) => (
+        <div className="mt-[clamp(0.5rem,1.2vh,1rem)] grid grid-cols-2 gap-[clamp(0.5rem,1.2vh,1rem)] lg:grid-cols-4 lg:gap-3">
+          {Array.from({ length: 4 }, (_, index) => (
             <Skeleton
               key={index}
               className="h-[clamp(3.75rem,10vh,5rem)]"
@@ -67,20 +67,6 @@ export function QuickStats() {
       value: `${format.percent(data.overview.metrics.pc_ratio)} / ${format.percent(data.overview.metrics.mobile_ratio)}`,
       icon: MonitorSmartphone,
     },
-    {
-      id: 'servers',
-      label: t('stats.servers'),
-      value: format.number(data.distribution.servers.length),
-      icon: Server,
-    },
-    {
-      id: 'countries',
-      label: t('stats.countries'),
-      value: format.number(
-        data.distribution.countries.filter((item) => item.code !== 'UNKNOWN').length,
-      ),
-      icon: Globe2,
-    },
   ]
 
   return (
@@ -90,7 +76,7 @@ export function QuickStats() {
       </h2>
       <p className="mt-1 text-[clamp(0.75rem,1.4vh,0.875rem)] text-fg-muted">{t('stats.subtitle')}</p>
 
-        <div className="mt-[clamp(0.5rem,1.2vh,1rem)] grid grid-cols-2 gap-[clamp(0.5rem,1.2vh,1rem)] lg:grid-cols-6 lg:gap-3">
+      <div className="mt-[clamp(0.5rem,1.2vh,1rem)] grid grid-cols-2 gap-[clamp(0.5rem,1.2vh,1rem)] lg:grid-cols-4 lg:gap-3">
         {items.map((item) => {
           const Icon = item.icon
           return (
