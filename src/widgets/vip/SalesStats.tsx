@@ -25,7 +25,7 @@ import type {
   LicenseTimelineDay,
   LicenseTimelineMonth,
 } from '@/shared/api/license'
-import { parseApiDateTime } from '@/shared/lib/datetime'
+import { utcCalendarDayKey, utcTodayKey } from '@/shared/lib/datetime'
 import { cn } from '@/shared/lib/cn'
 import { useFormatters } from '@/shared/lib/format'
 import { Card, ErrorState, SegmentedControl, Skeleton } from '@/shared/ui'
@@ -490,15 +490,7 @@ type SalesRangeMode = 'all' | 'day' | 'range'
 function saleDayKey(row: LicenseSaleRow): string | null {
   const when = saleDate(row)
   if (!when) return null
-  const date = parseApiDateTime(when)
-  const pad = (value: number) => String(value).padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-}
-
-function localTodayKey(): string {
-  const now = new Date()
-  const pad = (value: number) => String(value).padStart(2, '0')
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+  return utcCalendarDayKey(when)
 }
 
 function isSaleActive(status: string): boolean {
@@ -509,7 +501,7 @@ function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const [mode, setMode] = useState<SalesRangeMode>('day')
-  const [day, setDay] = useState(() => localTodayKey())
+  const [day, setDay] = useState(() => utcTodayKey())
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
 
@@ -639,8 +631,8 @@ function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
                     key={`${when ?? 'x'}-${row.method}-${row.amount}-${index}`}
                     className="border-b border-white/5 last:border-0"
                   >
-                    <td className="px-3 py-2.5 tabular text-fg-muted sm:px-4">
-                      {when ? format.dateTime(when) : '—'}
+                    <td className="px-3 py-2.5 text-xs leading-snug tabular text-fg-muted sm:px-4 sm:text-sm">
+                      {when ? format.dateTimeWithUtc(when) : '—'}
                     </td>
                     <td className="px-3 py-2.5 text-fg-muted sm:px-4">{row.method}</td>
                     <td className="px-3 py-2.5 tabular font-medium sm:px-4">
