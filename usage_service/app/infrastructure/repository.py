@@ -13,7 +13,6 @@ class LaunchModel(Base):
     device = Column(String, nullable=False)
     hwid = Column(String, index=True, nullable=False)
     server = Column(Integer, index=True, nullable=True)
-    country = Column(String, nullable=True)
     mode = Column(String, index=True, nullable=True)
     launched_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
@@ -46,14 +45,13 @@ class LaunchRepository:
     def _launches_per_user(users, launches) -> float:
         return round(launches / users, 2) if users else 0
 
-    async def save(self, version: str, hwid: str, device: str, server: int, country: str, mode: str):
+    async def save(self, version: str, hwid: str, device: str, server: int, mode: str):
         new_launch = LaunchModel(
-            version=version, 
-            hwid=hwid, 
-            device=device, 
-            server=server, 
-            country=country,
-            mode=mode
+            version=version,
+            hwid=hwid,
+            device=device,
+            server=server,
+            mode=mode,
         )
         self.db.add(new_launch)
         await self.db.commit()
@@ -206,44 +204,6 @@ class LaunchRepository:
             metrics = self._period_metrics(users, launches, g_users, vip_users)
             result.append({
                 "server": row.server,
-                "user_share": metrics["user_share"],
-                "launches_per_user": metrics["launches_per_user"],
-                "vip_percent": metrics["vip_percent"],
-                "users": users,
-                "vip_users": vip_users,
-                "launches": launches,
-            })
-        return result
-
-    async def _get_countries(self, d30, d1, d1h, g_users):
-        stmt = (
-            select(
-                func.coalesce(LaunchModel.country, 'UNKNOWN').label("c_code"),
-                func.count(distinct(LaunchModel.hwid)).label("u_all"),
-                func.count(distinct(case((LaunchModel.launched_at >= d30, LaunchModel.hwid)))).label("u_30d"),
-                func.count(distinct(case((LaunchModel.launched_at >= d1, LaunchModel.hwid)))).label("u_24h"),
-                func.count(distinct(case((LaunchModel.launched_at >= d1h, LaunchModel.hwid)))).label("u_1h"),
-                func.count(distinct(case((LaunchModel.version.ilike('%VIP%'), LaunchModel.hwid)))).label("vip_all"),
-                func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label("vip_30d"),
-                func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label("vip_24h"),
-                func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label("vip_1h"),
-                func.count(LaunchModel.id).label("l_all"),
-                func.count(case((LaunchModel.launched_at >= d30, LaunchModel.id))).label("l_30d"),
-                func.count(case((LaunchModel.launched_at >= d1, LaunchModel.id))).label("l_24h"),
-                func.count(case((LaunchModel.launched_at >= d1h, LaunchModel.id))).label("l_1h")
-            )
-            .group_by("c_code")
-            .order_by(desc("u_all"))
-        )
-        res = await self.db.execute(stmt)
-        result = []
-        for row in res.all():
-            users = {"all_time": row.u_all, "30d": row.u_30d, "24h": row.u_24h, "1h": row.u_1h}
-            launches = {"all_time": row.l_all, "30d": row.l_30d, "24h": row.l_24h, "1h": row.l_1h}
-            vip_users = {"all_time": row.vip_all, "30d": row.vip_30d, "24h": row.vip_24h, "1h": row.vip_1h}
-            metrics = self._period_metrics(users, launches, g_users, vip_users)
-            result.append({
-                "code": row.c_code,
                 "user_share": metrics["user_share"],
                 "launches_per_user": metrics["launches_per_user"],
                 "vip_percent": metrics["vip_percent"],
@@ -480,7 +440,6 @@ class LaunchRepository:
 
         factions = await self._get_factions(d30, d1, d1h, g_users)
         servers = await self._get_servers(d30, d1, d1h, g_users)
-        countries = await self._get_countries(d30, d1, d1h, g_users)
         versions = await self._get_versions(d30, d1, d1h, g_users)
         products = await self._get_products(d30, d1, d1h, g_users)
         
@@ -501,9 +460,8 @@ class LaunchRepository:
             "distribution": {
                 "factions": factions,
                 "servers": servers,
-                "countries": countries,
                 "versions": versions,
-                "products": products
+                "products": products,
             },
             "analytics": {
                 "timeline": {
