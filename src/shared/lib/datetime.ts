@@ -40,6 +40,16 @@ export function parseApiCalendarDate(value: string): Date {
   return new Date(`${value}T00:00:00Z`)
 }
 
+/** Today's UTC calendar day (`YYYY-MM-DD`), matching backend daily buckets. */
+export function utcTodayKey(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+/** UTC calendar day for an API timestamp, matching backend daily buckets. */
+export function utcCalendarDayKey(iso: string): string {
+  return parseApiDateTime(iso).toISOString().slice(0, 10)
+}
+
 /** Milliseconds from now until `value`; negative once it has passed. */
 export function millisecondsUntil(value: string, now: number = Date.now()): number {
   return parseApiDateTime(value).getTime() - now
