@@ -338,14 +338,16 @@ function PaymentsChart({
         <div
           className={cn(
             'mt-5 flex min-h-0 flex-1 gap-4 sm:gap-5',
-            inline ? 'flex-row items-center' : 'flex-col gap-6 sm:flex-row sm:items-stretch',
+            inline
+              ? 'flex-col items-center gap-5 sm:flex-row sm:items-center'
+              : 'flex-col gap-6 sm:flex-row sm:items-stretch',
           )}
         >
           <div
             className={cn(
               'flex shrink-0 items-center justify-center',
               inline
-                ? 'w-auto'
+                ? 'w-full sm:w-auto'
                 : 'min-h-[12rem] sm:min-h-0 sm:basis-[44%] lg:basis-[46%]',
             )}
           >
@@ -353,7 +355,7 @@ function PaymentsChart({
               className={cn(
                 'relative aspect-square',
                 inline
-                  ? 'h-36 w-36 sm:h-44 sm:w-44'
+                  ? 'h-52 w-52 sm:h-55 sm:w-55'
                   : 'h-52 w-52 sm:h-full sm:w-auto sm:max-h-full sm:max-w-full sm:scale-[0.9025]',
               )}
             >
@@ -399,7 +401,7 @@ function PaymentsChart({
           <ul
             className={cn(
               'flex min-w-0 flex-col',
-              inline ? 'min-w-0 flex-1 gap-2.5 sm:gap-3' : 'flex-1 justify-center gap-3.5',
+              inline ? 'w-full gap-3 sm:min-w-0 sm:flex-1 sm:gap-3' : 'flex-1 justify-center gap-3.5',
             )}
           >
             {payments.map((item, index) => {
