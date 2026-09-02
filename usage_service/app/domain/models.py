@@ -44,5 +44,4 @@ class Launch(BaseModel):
     hwid: str
     device: str
     server: int
-    country: str
     launched_at: Optional[UtcDateTime] = None
