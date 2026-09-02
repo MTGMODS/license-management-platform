@@ -116,8 +116,6 @@ services:
       - ./usage_service/.env
     ports:
       - "8003:8000"
-    volumes:
-      - ./usage_service/app/infrastructure/data/GeoLite2-Country.mmdb:/app/app/infrastructure/data/GeoLite2-Country.mmdb:ro
     depends_on:
       usage-postgres:
         condition: service_healthy
