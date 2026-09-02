@@ -614,9 +614,9 @@ function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
             <thead className="sticky top-0 z-10 bg-ink-850/95 backdrop-blur-sm">
               <tr className="border-b border-white/8 text-fg-subtle">
                 <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.date')}</th>
-                <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.method')}</th>
-                <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.amount')}</th>
                 <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.plan')}</th>
+                <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.amount')}</th>
+                <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.method')}</th>
                 <th className="px-3 py-2.5 text-center font-medium sm:px-4">
                   {t('stats.salesList.status')}
                 </th>
@@ -634,15 +634,15 @@ function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
                     <td className="px-3 py-2.5 text-xs leading-snug tabular text-fg-muted sm:px-4 sm:text-sm">
                       {when ? format.dateTimeWithUtc(when) : '—'}
                     </td>
-                    <td className="px-3 py-2.5 text-fg-muted sm:px-4">{row.method}</td>
-                    <td className="px-3 py-2.5 tabular font-medium sm:px-4">
-                      {usdWhole(format, row.amount)}
-                    </td>
                     <td className="px-3 py-2.5 sm:px-4">
                       {row.duration_days == null
                         ? '—'
                         : t('pricing.days', { count: row.duration_days })}
                     </td>
+                    <td className="px-3 py-2.5 tabular font-medium sm:px-4">
+                      {usdWhole(format, row.amount)}
+                    </td>
+                    <td className="px-3 py-2.5 text-fg-muted sm:px-4">{row.method}</td>
                     <td className="px-3 py-2.5 text-center sm:px-4">
                       <span className="inline-flex items-center justify-center" title={row.status}>
                         <span
