@@ -2,7 +2,6 @@ import { request } from '../http'
 import { ApiError } from '../errors'
 
 import type {
-  CountryStats,
   DailyPoint,
   DeviceFamilyStats,
   FactionStats,
@@ -100,18 +99,6 @@ function normalizeVersion(raw: Record<string, unknown>): VersionStats {
   }
 }
 
-function normalizeCountry(raw: Record<string, unknown>): CountryStats {
-  return {
-    code: typeof raw.code === 'string' ? raw.code : 'UNKNOWN',
-    users: asPeriodCounts(raw.users),
-    launches: asPeriodCounts(raw.launches),
-    vip_users: asPeriodCounts(raw.vip_users),
-    user_share: asPeriodCounts(raw.user_share),
-    launches_per_user: asPeriodCounts(raw.launches_per_user),
-    vip_percent: asPeriodCounts(raw.vip_percent),
-  }
-}
-
 function normalizeProduct(raw: Record<string, unknown>): ProductStats {
   return {
     product: typeof raw.product === 'string' ? raw.product : 'unknown',
@@ -191,7 +178,6 @@ function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
     factions: [],
     servers: [],
     versions: [],
-    countries: [],
     products: [],
   }
   const overview = payload.overview
@@ -199,7 +185,6 @@ function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
 
   const serversRaw = (distribution.servers ?? []) as unknown as Record<string, unknown>[]
   const versionsRaw = (distribution.versions ?? []) as unknown as Record<string, unknown>[]
-  const countriesRaw = (distribution.countries ?? []) as unknown as Record<string, unknown>[]
   const productsRaw = (distribution.products ?? []) as unknown as Record<string, unknown>[]
   const devicesRaw = (overview?.devices ?? {}) as unknown as Record<string, unknown>
   const dailyRaw = (analytics?.timeline?.daily ?? []) as unknown as Record<string, unknown>[]
@@ -223,11 +208,9 @@ function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
       },
     },
     distribution: {
-      ...distribution,
       factions: normalizeFactions(distribution.factions),
       servers: serversRaw.map(normalizeServer),
       versions: versionsRaw.map(normalizeVersion),
-      countries: countriesRaw.map(normalizeCountry),
       products: productsRaw.map(normalizeProduct),
     },
     analytics: {

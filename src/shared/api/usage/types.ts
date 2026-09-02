@@ -67,19 +67,6 @@ export interface ServerStats {
   vip_percent: PeriodCounts
 }
 
-export interface CountryStats {
-  /** ISO 3166-1 alpha-2, or the literal `UNKNOWN`. */
-  code: string
-  /** Share of overview users for the window, 0–100. */
-  user_share: PeriodCounts
-  launches_per_user: PeriodCounts
-  users: PeriodCounts
-  launches: PeriodCounts
-  vip_users: PeriodCounts
-  /** Share of country users with VIP for the window, 0–100. */
-  vip_percent: PeriodCounts
-}
-
 export interface VersionStats {
   version: string
   users: PeriodCounts
@@ -145,7 +132,6 @@ export interface UsagePublicStats {
   distribution: {
     factions: FactionStats[]
     servers: ServerStats[]
-    countries: CountryStats[]
     versions: VersionStats[]
     products: ProductStats[]
   }
