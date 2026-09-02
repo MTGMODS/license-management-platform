@@ -5,18 +5,9 @@ import { useLocalUsdPrice } from '@/features/geo/useLocalUsdPrice'
 import { useTariffs } from '@/features/license/useTariffs'
 import { cn } from '@/shared/lib/cn'
 import { useFormatters } from '@/shared/lib/format'
-import { Badge, Card, Skeleton } from '@/shared/ui'
-
-const BEST_VALUE_DAYS = 365
+import { Card, Skeleton } from '@/shared/ui'
 
 const SHORT_DESKTOP = '[@media(min-width:1024px)_and_(max-height:48rem)]'
-
-function planBadge(days: number): 'pricing.cheapest' | 'pricing.featured' | '2+1' | null {
-  if (days === 7) return 'pricing.cheapest'
-  if (days === BEST_VALUE_DAYS) return 'pricing.featured'
-  if (days === 90) return '2+1'
-  return null
-}
 
 function catalogPrice(price: number, format: ReturnType<typeof useFormatters>): string {
   return Number.isInteger(price) ? String(price) : format.money(price)
@@ -55,7 +46,6 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
   return (
     <div className={gridClass}>
       {data.plans.map((plan) => {
-        const badge = planBadge(plan.duration_days)
         const devices = t('pricing.devices', { count: plan.max_devices })
         const devicesLine =
           plan.reset_limit > 0
@@ -65,6 +55,12 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
               })
             : devices
         const localApprox = formatApprox(plan.price)
+        const daysLabel = t('pricing.days', { count: plan.duration_days })
+        const perDayPrice = format.money(plan.price / plan.duration_days)
+        const daysLine = {
+          days: daysLabel,
+          price: perDayPrice,
+        }
 
         return (
           <Card
@@ -76,30 +72,22 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
                 : 'p-3.5 sm:p-4',
             )}
           >
-            <div className="flex items-start justify-between gap-2">
-              <p
-                className={cn(
-                  'text-fg-muted',
-                  compact
-                    ? cn(
-                        'text-[clamp(0.7rem,1.2vh,0.85rem)]',
-                        `${SHORT_DESKTOP}:text-[0.7rem]`,
-                      )
-                    : 'text-xs sm:text-sm',
-                )}
-              >
-                {t('pricing.days', { count: plan.duration_days })}
-              </p>
-              {badge === '2+1' ? (
-                <Badge tone="accent" className="shrink-0 px-1.5 py-0 text-[0.65rem]">
-                  2+1
-                </Badge>
-              ) : badge ? (
-                <Badge tone="accent" className="shrink-0 px-1.5 py-0 text-[0.65rem]">
-                  {t(badge)}
-                </Badge>
-              ) : null}
-            </div>
+            <p
+              className={cn(
+                'whitespace-nowrap text-fg-muted tabular',
+                compact
+                  ? cn(
+                      'text-[clamp(0.6rem,1.1vh,0.75rem)]',
+                      `${SHORT_DESKTOP}:text-[0.65rem]`,
+                    )
+                  : 'text-[0.7rem] sm:text-sm',
+              )}
+            >
+              <span className="inline sm:hidden lg:inline">
+                {t('pricing.daysWithPerDayTight', daysLine)}
+              </span>
+              <span className="hidden sm:inline lg:hidden">{t('pricing.daysWithPerDay', daysLine)}</span>
+            </p>
 
             <div
               className={cn(
@@ -154,19 +142,6 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
                 </>
               ) : null}
             </div>
-            <p
-              className={cn(
-                'tabular text-fg-subtle',
-                compact
-                  ? cn(
-                      'mt-0.5 text-[clamp(0.65rem,1.1vh,0.75rem)]',
-                      `${SHORT_DESKTOP}:text-[0.65rem]`,
-                    )
-                  : 'mt-0.5 text-xs',
-              )}
-            >
-              {t('pricing.perDay', { price: format.money(plan.price / plan.duration_days) })}
-            </p>
 
             <p
               className={cn(
