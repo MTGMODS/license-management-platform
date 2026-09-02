@@ -26,7 +26,11 @@ export function useFormatters() {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })
-    const dayMonth = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' })
+    const dayMonth = new Intl.DateTimeFormat(locale, {
+      day: 'numeric',
+      month: 'short',
+      timeZone: 'UTC',
+    })
     const monthShort = new Intl.DateTimeFormat(locale, { month: 'short', timeZone: 'UTC' })
     const monthYear = new Intl.DateTimeFormat(locale, {
       month: 'long',
@@ -38,6 +42,12 @@ export function useFormatters() {
       month: 'short',
       hour: '2-digit',
       minute: '2-digit',
+    })
+    const calendarFullDate = new Intl.DateTimeFormat(locale, {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'UTC',
     })
     const fullDate = new Intl.DateTimeFormat(locale, {
       day: 'numeric',
@@ -80,7 +90,7 @@ export function useFormatters() {
         monthYear.format(parseApiCalendarDate(`${yearMonth}-01`)),
       /** Hourly all-time ticks: day + hour, so a multi-year series stays readable. */
       dayHour: (iso: string) => dayHour.format(parseApiDateTime(iso)),
-      fullDate: (isoDate: string) => fullDate.format(parseApiCalendarDate(isoDate)),
+      fullDate: (isoDate: string) => calendarFullDate.format(parseApiCalendarDate(isoDate)),
       /** API datetimes: `YYYY-MM-DDTHH:mm:ssZ`, shown in the visitor's locale. */
       dateTime: (iso: string) => dateTime.format(parseApiDateTime(iso)),
       /** Full month and year, for cabinets and other places where space is not tight. */
