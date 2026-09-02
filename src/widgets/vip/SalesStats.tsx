@@ -315,54 +315,17 @@ function PaymentsChart({
   payments,
   title,
   subtitle,
-  compact = false,
-  layout,
+  layout = 'default',
 }: {
   payments: LicensePaymentStat[]
   title: string
   subtitle?: string
-  compact?: boolean
-  layout?: 'default' | 'compact' | 'inline'
+  layout?: 'default' | 'inline'
 }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const totalMoney = payments.reduce((sum, item) => sum + item.sum, 0)
-  const resolvedLayout = layout ?? (compact ? 'compact' : 'default')
-
-  const bodyLayoutClass =
-    resolvedLayout === 'compact'
-      ? 'items-center gap-5'
-      : resolvedLayout === 'inline'
-        ? 'flex-row items-center gap-4 sm:gap-5'
-        : 'sm:flex-row sm:items-stretch'
-
-  const pieWrapClass =
-    resolvedLayout === 'compact'
-      ? 'w-full'
-      : resolvedLayout === 'inline'
-        ? 'shrink-0'
-        : 'min-h-[12rem] sm:min-h-0 sm:basis-[44%] lg:basis-[46%]'
-
-  const pieSizeClass =
-    resolvedLayout === 'compact'
-      ? 'h-40 w-40 sm:h-[12rem] sm:w-[12rem]'
-      : resolvedLayout === 'inline'
-        ? 'h-28 w-28 sm:h-55 sm:w-55'
-        : 'h-52 w-52 sm:h-full sm:w-auto sm:max-h-full sm:max-w-full sm:scale-[0.9025]'
-
-  const totalSizeClass =
-    resolvedLayout === 'compact'
-      ? 'text-base sm:text-lg'
-      : resolvedLayout === 'inline'
-        ? 'text-sm sm:text-base'
-        : 'text-xl sm:text-2xl'
-
-  const legendClass =
-    resolvedLayout === 'compact'
-      ? 'w-full gap-3'
-      : resolvedLayout === 'inline'
-        ? 'min-w-0 flex-1 gap-2.5 sm:gap-3'
-        : 'flex-1 justify-center gap-3.5'
+  const inline = layout === 'inline'
 
   return (
     <Card className="flex h-full flex-col p-6">
@@ -372,9 +335,28 @@ function PaymentsChart({
       {payments.length === 0 ? (
         <p className="mt-8 text-sm text-fg-subtle">{t('stats.empty')}</p>
       ) : (
-        <div className={cn('mt-5 flex min-h-0 flex-1 flex-col gap-6', bodyLayoutClass)}>
-          <div className={cn('flex shrink-0 items-center justify-center', pieWrapClass)}>
-            <div className={cn('relative aspect-square', pieSizeClass)}>
+        <div
+          className={cn(
+            'mt-5 flex min-h-0 flex-1 gap-4 sm:gap-5',
+            inline ? 'flex-row items-center' : 'flex-col gap-6 sm:flex-row sm:items-stretch',
+          )}
+        >
+          <div
+            className={cn(
+              'flex shrink-0 items-center justify-center',
+              inline
+                ? 'w-auto'
+                : 'min-h-[12rem] sm:min-h-0 sm:basis-[44%] lg:basis-[46%]',
+            )}
+          >
+            <div
+              className={cn(
+                'relative aspect-square',
+                inline
+                  ? 'h-36 w-36 sm:h-44 sm:w-44'
+                  : 'h-52 w-52 sm:h-full sm:w-auto sm:max-h-full sm:max-w-full sm:scale-[0.9025]',
+              )}
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -394,17 +376,32 @@ function PaymentsChart({
                 </PieChart>
               </ResponsiveContainer>
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <p className={cn('tabular font-semibold tracking-tight', totalSizeClass)}>
+                <p
+                  className={cn(
+                    'tabular font-semibold tracking-tight',
+                    inline ? 'text-base sm:text-xl' : 'text-xl sm:text-2xl',
+                  )}
+                >
                   {usdWhole(format, totalMoney)}
                 </p>
-                <p className="mt-0.5 text-[0.65rem] text-fg-subtle sm:text-xs">
+                <p
+                  className={cn(
+                    'mt-0.5 text-fg-subtle',
+                    inline ? 'text-[0.65rem] sm:text-sm' : 'text-[0.65rem] sm:text-xs',
+                  )}
+                >
                   {t('stats.payments.total')}
                 </p>
               </div>
             </div>
           </div>
 
-          <ul className={cn('flex min-w-0 flex-col', legendClass)}>
+          <ul
+            className={cn(
+              'flex min-w-0 flex-col',
+              inline ? 'min-w-0 flex-1 gap-2.5 sm:gap-3' : 'flex-1 justify-center gap-3.5',
+            )}
+          >
             {payments.map((item, index) => {
               const moneyShare =
                 item.money_share || (totalMoney > 0 ? (item.sum / totalMoney) * 100 : 0)
@@ -633,13 +630,13 @@ function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
           <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
             <thead className="sticky top-0 z-10 bg-ink-850/95 backdrop-blur-sm">
               <tr className="border-b border-white/8 text-fg-subtle">
-                <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.date')}</th>
-                <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.plan')}</th>
-                <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.amount')}</th>
-                <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.method')}</th>
                 <th className="px-3 py-2.5 text-center font-medium sm:px-4">
                   {t('stats.salesList.status')}
                 </th>
+                <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.plan')}</th>
+                <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.amount')}</th>
+                <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.method')}</th>
+                <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.date')}</th>
               </tr>
             </thead>
             <tbody>
@@ -651,18 +648,6 @@ function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
                     key={`${when ?? 'x'}-${row.method}-${row.amount}-${index}`}
                     className="border-b border-white/5 last:border-0"
                   >
-                    <td className="px-3 py-2.5 text-xs leading-snug tabular text-fg-muted sm:px-4 sm:text-sm">
-                      {when ? format.dateTimeWithUtc(when) : '—'}
-                    </td>
-                    <td className="px-3 py-2.5 sm:px-4">
-                      {row.duration_days == null
-                        ? '—'
-                        : t('pricing.days', { count: row.duration_days })}
-                    </td>
-                    <td className="px-3 py-2.5 tabular font-medium sm:px-4">
-                      {usdWhole(format, row.amount)}
-                    </td>
-                    <td className="px-3 py-2.5 text-fg-muted sm:px-4">{row.method}</td>
                     <td className="px-3 py-2.5 text-center sm:px-4">
                       <span className="inline-flex items-center justify-center" title={row.status}>
                         <span
@@ -674,6 +659,18 @@ function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
                           }
                         />
                       </span>
+                    </td>
+                    <td className="px-3 py-2.5 sm:px-4">
+                      {row.duration_days == null
+                        ? '—'
+                        : t('pricing.days', { count: row.duration_days })}
+                    </td>
+                    <td className="px-3 py-2.5 tabular font-medium sm:px-4">
+                      {usdWhole(format, row.amount)}
+                    </td>
+                    <td className="px-3 py-2.5 text-fg-muted sm:px-4">{row.method}</td>
+                    <td className="px-3 py-2.5 text-xs leading-snug tabular text-fg-muted sm:px-4 sm:text-sm">
+                      {when ? format.dateTimeWithUtc(when) : '—'}
                     </td>
                   </tr>
                 )
@@ -755,7 +752,7 @@ function ForeverSection({ forever }: { forever: LicenseForeverStats }) {
       <div
         className={cn(
           'grid gap-4',
-          hasPrice && 'lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-stretch',
+          hasPrice && 'lg:grid-cols-2 lg:items-stretch',
         )}
       >
         <div className="flex min-w-0 flex-col gap-4">
