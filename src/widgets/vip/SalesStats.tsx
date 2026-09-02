@@ -84,15 +84,24 @@ function MetricCard({
   label,
   value,
   hint,
+  dense = false,
 }: {
   label: string
   value: string
   hint?: string
+  dense?: boolean
 }) {
   return (
-    <Card className="p-4 sm:p-5">
-      <p className="tabular text-xl font-semibold tracking-tight sm:text-2xl">{value}</p>
-      <p className="mt-1 text-sm text-fg-muted">{label}</p>
+    <Card className={cn('p-4 sm:p-5', dense && 'p-3 sm:p-4')}>
+      <p
+        className={cn(
+          'tabular text-xl font-semibold tracking-tight sm:text-2xl',
+          dense && 'text-base sm:text-xl',
+        )}
+      >
+        {value}
+      </p>
+      <p className={cn('mt-1 text-sm text-fg-muted', dense && 'text-xs sm:text-sm')}>{label}</p>
       {hint ? <p className="mt-0.5 text-xs text-fg-subtle">{hint}</p> : null}
     </Card>
   )
@@ -307,15 +316,53 @@ function PaymentsChart({
   title,
   subtitle,
   compact = false,
+  layout,
 }: {
   payments: LicensePaymentStat[]
   title: string
   subtitle?: string
   compact?: boolean
+  layout?: 'default' | 'compact' | 'inline'
 }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const totalMoney = payments.reduce((sum, item) => sum + item.sum, 0)
+  const resolvedLayout = layout ?? (compact ? 'compact' : 'default')
+
+  const bodyLayoutClass =
+    resolvedLayout === 'compact'
+      ? 'items-center gap-5'
+      : resolvedLayout === 'inline'
+        ? 'flex-row items-center gap-4 sm:gap-5'
+        : 'sm:flex-row sm:items-stretch'
+
+  const pieWrapClass =
+    resolvedLayout === 'compact'
+      ? 'w-full'
+      : resolvedLayout === 'inline'
+        ? 'shrink-0'
+        : 'min-h-[12rem] sm:min-h-0 sm:basis-[44%] lg:basis-[46%]'
+
+  const pieSizeClass =
+    resolvedLayout === 'compact'
+      ? 'h-40 w-40 sm:h-[12rem] sm:w-[12rem]'
+      : resolvedLayout === 'inline'
+        ? 'h-28 w-28 sm:h-55 sm:w-55'
+        : 'h-52 w-52 sm:h-full sm:w-auto sm:max-h-full sm:max-w-full sm:scale-[0.9025]'
+
+  const totalSizeClass =
+    resolvedLayout === 'compact'
+      ? 'text-base sm:text-lg'
+      : resolvedLayout === 'inline'
+        ? 'text-sm sm:text-base'
+        : 'text-xl sm:text-2xl'
+
+  const legendClass =
+    resolvedLayout === 'compact'
+      ? 'w-full gap-3'
+      : resolvedLayout === 'inline'
+        ? 'min-w-0 flex-1 gap-2.5 sm:gap-3'
+        : 'flex-1 justify-center gap-3.5'
 
   return (
     <Card className="flex h-full flex-col p-6">
@@ -325,26 +372,9 @@ function PaymentsChart({
       {payments.length === 0 ? (
         <p className="mt-8 text-sm text-fg-subtle">{t('stats.empty')}</p>
       ) : (
-        <div
-          className={cn(
-            'mt-5 flex min-h-0 flex-1 flex-col gap-6',
-            compact ? 'items-center gap-5' : 'sm:flex-row sm:items-stretch',
-          )}
-        >
-          <div
-            className={cn(
-              'flex shrink-0 items-center justify-center',
-              compact ? 'w-full' : 'min-h-[12rem] sm:min-h-0 sm:basis-[44%] lg:basis-[46%]',
-            )}
-          >
-            <div
-              className={cn(
-                'relative aspect-square',
-                compact
-                  ? 'h-40 w-40 sm:h-[12rem] sm:w-[12rem]'
-                  : 'h-52 w-52 sm:h-full sm:w-auto sm:max-h-full sm:max-w-full sm:scale-[0.9025]',
-              )}
-            >
+        <div className={cn('mt-5 flex min-h-0 flex-1 flex-col gap-6', bodyLayoutClass)}>
+          <div className={cn('flex shrink-0 items-center justify-center', pieWrapClass)}>
+            <div className={cn('relative aspect-square', pieSizeClass)}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -364,12 +394,7 @@ function PaymentsChart({
                 </PieChart>
               </ResponsiveContainer>
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <p
-                  className={cn(
-                    'tabular font-semibold tracking-tight',
-                    compact ? 'text-base sm:text-lg' : 'text-xl sm:text-2xl',
-                  )}
-                >
+                <p className={cn('tabular font-semibold tracking-tight', totalSizeClass)}>
                   {usdWhole(format, totalMoney)}
                 </p>
                 <p className="mt-0.5 text-[0.65rem] text-fg-subtle sm:text-xs">
@@ -379,12 +404,7 @@ function PaymentsChart({
             </div>
           </div>
 
-          <ul
-            className={cn(
-              'flex min-w-0 flex-col',
-              compact ? 'w-full gap-3' : 'flex-1 justify-center gap-3.5',
-            )}
-          >
+          <ul className={cn('flex min-w-0 flex-col', legendClass)}>
             {payments.map((item, index) => {
               const moneyShare =
                 item.money_share || (totalMoney > 0 ? (item.sum / totalMoney) * 100 : 0)
@@ -732,31 +752,31 @@ function ForeverSection({ forever }: { forever: LicenseForeverStats }) {
         <p className="mt-1 text-sm text-fg-muted">{t('stats.legacy.subtitle')}</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <MetricCard label={t('stats.legacy.sold')} value={format.number(o.paid_sold)} />
-        <MetricCard label={t('stats.legacy.money')} value={usdWhole(format, o.total_money)} />
-        <MetricCard label={t('stats.legacy.active')} value={format.number(o.active)} />
-        <MetricCard label={t('stats.overview.avgCheck')} value={usd(format, o.avg_check)} />
-      </div>
+      <div
+        className={cn(
+          'grid gap-4',
+          hasPrice && 'lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-stretch',
+        )}
+      >
+        <div className="flex min-w-0 flex-col gap-4">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <MetricCard dense label={t('stats.legacy.sold')} value={format.number(o.paid_sold)} />
+            <MetricCard dense label={t('stats.legacy.money')} value={usdWhole(format, o.total_money)} />
+            <MetricCard dense label={t('stats.overview.avgCheck')} value={usd(format, o.avg_check)} />
+          </div>
 
-      {(hasPrice || hasMethods) && (
-        <div
-          className={cn(
-            'grid gap-4',
-            hasPrice && hasMethods && 'lg:grid-cols-2 lg:items-stretch',
-          )}
-        >
-          {hasPrice ? <ForeverPricesChart prices={forever.by_price} /> : null}
           {hasMethods ? (
             <PaymentsChart
               payments={forever.by_method}
               title={t('stats.legacy.payments')}
               subtitle={t('stats.legacy.paymentsHint')}
-              compact
+              layout="inline"
             />
           ) : null}
         </div>
-      )}
+
+        {hasPrice ? <ForeverPricesChart prices={forever.by_price} /> : null}
+      </div>
     </div>
   )
 }
