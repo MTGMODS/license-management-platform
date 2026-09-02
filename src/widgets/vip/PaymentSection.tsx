@@ -4,7 +4,7 @@ import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 
-import { useBankCardAllowed, useViewerCountry } from '@/features/geo/useViewerCountry'
+import { useBankCardAllowed } from '@/features/geo/useViewerCountry'
 import { useTariffs } from '@/features/license/useTariffs'
 import {
   BRAND_ASSETS,
@@ -165,13 +165,10 @@ function StarsPrices() {
 
 function FunpayBody({ wallet }: { wallet: WalletId }) {
   const { t } = useTranslation('vip')
-  const { data: country } = useViewerCountry()
   const payMethods =
     wallet === 'crypto'
       ? t('payment.routes.funpay.payCrypto')
-      : country === 'RU'
-        ? t('payment.routes.funpay.payCardRu')
-        : t('payment.routes.funpay.payCard')
+      : t('payment.routes.funpay.payCard')
 
   return (
     <div className="space-y-5">
