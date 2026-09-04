@@ -1,0 +1,96 @@
+{
+  "title": "Личный кабинет",
+  "subtitle": "Подписка, файл и устройства — в одном месте.",
+  "sections": {
+    "vip": "MTGVIP",
+    "account": "Аккаунт"
+  },
+  "activate": {
+    "title": "Активация нового ключа",
+    "subtitle": "Введите ключ формата XXXX-XXXX-XXXX-XXXX.",
+    "placeholder": "XXXX-XXXX-XXXX-XXXX",
+    "action": "Активировать",
+    "success": "MTGVIP активирован",
+    "forceTitle": "У вас уже есть активный MTGVIP",
+    "forceBody": "Новый ключ заменит текущий. Оставшееся время не переносится.",
+    "forceConfirm": "Заменить",
+    "forceCancel": "Отмена",
+    "successSlide": {
+      "close": "Закрыть",
+      "backToDashboard": "Вернуться в личный кабинет",
+      "firstTitle": "Вы успешно активировали подписку!",
+      "renewalTitle": "Вы успешно продлили подписку!",
+      "subtitle": "Теперь скачайте платный файл хелпера в кабинете",
+      "warningTitle": "Важное напоминание",
+      "warningBody1": "Ваш ключ и платный функционал хелпера предназначены исключительно для личного использования.",
+      "warningBody2": "При передаче доступа третьим лицам подписка может быть приостановлена согласно <terms>условиям использования</terms>.",
+      "cta": "ОК"
+    }
+  },
+  "vip": {
+    "headlineActive": "Подписка MTGVIP активна",
+    "headlineExpired": "Подписка MTGVIP истекла",
+    "headlineBanned": "Подписка MTGVIP заблокирована",
+    "headlinePast": "Прошедшая подписка",
+    "remaining": "Осталось",
+    "inactive": "Нет активного MTGVIP",
+    "inactiveHint": "Активируйте ключ ниже или выберите тариф — и платный файл появится здесь.",
+    "unavailable": "Сервис временно недоступен",
+    "unavailableHint": "Подписка в безопасности. Попробуйте ещё раз через минуту.",
+    "until": "Действительна до",
+    "activated": "Активирована",
+    "paid": "Получена через {{method}} за ${{amount}}",
+    "key": "Ваш ключ",
+    "showKey": "Показать ключ",
+    "hideKey": "Скрыть ключ",
+    "devices": "Устройства",
+    "devicesCount": "{{used}} из {{max}} устройств использовано",
+    "resetsCount": "Можно сбросить ещё {{count}}",
+    "slotFreeTitle": "Свободный слот",
+    "slotFreeHint": "Войдите в хелпер с нового устройства — слот займётся сам.",
+    "slotOccupied": "Устройство {{index}}",
+    "hwid": "HWID",
+    "ip": "Последний IP",
+    "firstUsed": "Первое использование",
+    "lastUsed": "Последнее использование",
+    "resetDevice": "Сбросить",
+    "resetConfirm": "Отвязать это устройство?",
+    "resetConfirmAction": "Да, сбросить",
+    "resetCancel": "Отмена",
+    "resetSuccess": "Устройство отвязано",
+    "goVip": "Выбрать тариф"
+  },
+  "past": {
+    "title": "Прошедшие подписки"
+  },
+  "download": {
+    "subtitle": "Персональный файл только для вас.",
+    "action": "Скачать версию",
+    "actionVersion": "Скачать версию {{version}}",
+    "success": "Файл готов",
+    "started": "Загрузка началась"
+  },
+  "account": {
+    "registered": "Дата регистрации: {{date}}",
+    "roleWithId": "{{role}} #{{id}}",
+    "roles": {
+      "USER": "Пользователь",
+      "SMART": "Smart",
+      "ADMIN": "Админ"
+    },
+    "telegram": "Telegram",
+    "discord": "Discord",
+    "linked": "Привязан",
+    "notLinked": "Не привязан",
+    "linkAction": "Привязать",
+    "linkSuccess": "Соцсеть привязана",
+    "unlinkAction": "Отвязать",
+    "unlinkSuccess": "Соцсеть отвязана",
+    "telegramChatTitle": "Наш Telegram чат",
+    "telegramChatText": "Чат VIP подписчиков",
+    "telegramChatAction": "Войти",
+    "discordServerTitle": "Наш Discord сервер",
+    "discordServerText": "VIP роль (команда /role) и VIP чат подписчиков",
+    "discordServerAction": "Войти"
+  }
+}

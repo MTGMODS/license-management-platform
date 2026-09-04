@@ -1,0 +1,70 @@
+{
+  "brand": "MTG MODS",
+  "tab": {
+    "home": "MTG MODS",
+    "helper": "Arizona&Rodina Helper",
+    "helperDownload": "Скачать Arizona&Rodina Helper",
+    "vip": "Подписка MTG VIP для хелпера",
+    "promo": "Промо-акции",
+    "promoLeaders": "Партнёрка для лидеров и заместителей",
+    "promoSmart": "Редактор Smart-конфигов",
+    "login": "Вход в личный кабинет",
+    "dashboard": "Личный кабинет",
+    "admin": "Админка",
+    "terms": "Условия и конфиденциальность"
+  },
+  "footer": {
+    "terms": "Условия и конфиденциальность"
+  },
+  "meta": {
+    "description": {
+      "home": "MTG MODS — Arizona & Rodina Helper для SA-MP: открытая статистика, бесплатная версия и VIP-подписка.",
+      "helper": "Arizona & Rodina Helper — бесплатный помощник для любых фракций на Arizona и Rodina. Статистика, скачивание, VIP.",
+      "helperDownload": "Скачайте Arizona & Rodina Helper для PC и телефона: установщик и пошаговые инструкции.",
+      "vip": "Подписка MTG VIP: безлимит, золотые функции ассистента и VIP-сообщество. Оплата и активация на mtgmods.com.",
+      "promo": "Акции MTG MODS: партнёрка для лидеров и программа редакторов Smart.",
+      "promoLeaders": "Партнёрка для лидеров и заместителей: MTGVIP на 30 дней за 10 сотрудников с хелпером.",
+      "promoSmart": "Редактор Smart-конфигов хелпера: подписка на 7 дней за каждый сделанный сервер.",
+      "terms": "Пользовательское соглашение и политика конфиденциальности MTG MODS.",
+      "login": "Вход в личный кабинет MTG MODS через Discord или Telegram.",
+      "dashboard": "Личный кабинет MTG MODS: лицензии, устройства и загрузка VIP-файла.",
+      "admin": "Админ-панель MTG MODS.",
+      "notFound": "Запрошенная страница не найдена на mtgmods.com."
+    }
+  },
+  "actions": {
+    "retry": "Повторить",
+    "copy": "Скопировать",
+    "copied": "Скопировано",
+    "copyFailed": "Не удалось скопировать",
+    "cancel": "Отмена",
+    "confirm": "Подтвердить"
+  },
+  "state": {
+    "error": "Не удалось загрузить данные",
+    "errorHint": "Проверьте соединение и попробуйте ещё раз"
+  },
+  "notFound": {
+    "title": "Страница не найдена",
+    "body": "Возможно, ссылка устарела или в адресе опечатка.",
+    "action": "На главную"
+  },
+  "units": {
+    "days_one": "{{count}} день",
+    "days_few": "{{count}} дня",
+    "days_many": "{{count}} дней",
+    "days_other": "{{count}} дня",
+    "hours_one": "{{count}} час",
+    "hours_few": "{{count}} часа",
+    "hours_many": "{{count}} часов",
+    "hours_other": "{{count}} часа",
+    "minutes_one": "{{count}} минута",
+    "minutes_few": "{{count}} минуты",
+    "minutes_many": "{{count}} минут",
+    "minutes_other": "{{count}} минуты",
+    "seconds_one": "{{count}} секунда",
+    "seconds_few": "{{count}} секунды",
+    "seconds_many": "{{count}} секунд",
+    "seconds_other": "{{count}} секунды"
+  }
+}

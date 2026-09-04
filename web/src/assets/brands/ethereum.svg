@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img">
+  <title>Ethereum</title>
+  <circle cx="12" cy="12" r="12" fill="#627EEA"/>
+  <path fill="#FFFFFF" fill-opacity=".6" d="M12.373 3v6.652l5.623 2.513L12.373 3z"/>
+  <path fill="#FFFFFF" d="M12.373 3 6.75 12.165l5.623-2.513V3z"/>
+  <path fill="#FFFFFF" fill-opacity=".6" d="M12.373 16.478v4.52L18 13.204l-5.627 3.274z"/>
+  <path fill="#FFFFFF" d="M12.373 20.999v-4.521L6.75 13.204l5.623 7.795z"/>
+  <path fill="#FFFFFF" fill-opacity=".2" d="m12.373 15.43 5.623-3.265-5.623-2.512v5.777z"/>
+  <path fill="#FFFFFF" fill-opacity=".6" d="m6.75 12.165 5.623 3.265v-5.777L6.75 12.165z"/>
+</svg>

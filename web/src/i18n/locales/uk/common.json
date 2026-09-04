@@ -1,0 +1,70 @@
+{
+  "brand": "MTG MODS",
+  "tab": {
+    "home": "MTG MODS",
+    "helper": "Arizona&Rodina Helper",
+    "helperDownload": "Завантажити Arizona&Rodina Helper",
+    "vip": "Підписка MTG VIP для хелпера",
+    "promo": "Промо-акції",
+    "promoLeaders": "Партнерка для лідерів і заступників",
+    "promoSmart": "Редактор Smart-конфігів",
+    "login": "Вхід в особистий кабінет",
+    "dashboard": "Особистий кабінет",
+    "admin": "Адмінка",
+    "terms": "Умови та конфіденційність"
+  },
+  "footer": {
+    "terms": "Умови та конфіденційність"
+  },
+  "meta": {
+    "description": {
+      "home": "MTG MODS — Arizona & Rodina Helper для SA-MP: відкрита статистика, безкоштовна версія та VIP-підписка.",
+      "helper": "Arizona & Rodina Helper — безкоштовний помічник для будь-яких фракцій на Arizona і Rodina. Статистика, завантаження, VIP.",
+      "helperDownload": "Завантажте Arizona & Rodina Helper для ПК і телефона: інсталятор і покрокові інструкції.",
+      "vip": "Підписка MTG VIP: безліміт, золоті функції асистента та VIP-спільнота. Оплата й активація на mtgmods.com.",
+      "promo": "Акції MTG MODS: партнерка для лідерів і програма редакторів Smart.",
+      "promoLeaders": "Партнерка для лідерів і заступників: MTGVIP на 30 днів за 10 співробітників з хелпером.",
+      "promoSmart": "Редактор Smart-конфігів хелпера: підписка на 7 днів за кожен зроблений сервер.",
+      "terms": "Угода користувача та політика конфіденційності MTG MODS.",
+      "login": "Вхід в особистий кабінет MTG MODS через Discord або Telegram.",
+      "dashboard": "Особистий кабінет MTG MODS: ліцензії, пристрої та завантаження VIP-файла.",
+      "admin": "Адмін-панель MTG MODS.",
+      "notFound": "Запитану сторінку не знайдено на mtgmods.com."
+    }
+  },
+  "actions": {
+    "retry": "Повторити",
+    "copy": "Скопіювати",
+    "copied": "Скопійовано",
+    "copyFailed": "Не вдалося скопіювати",
+    "cancel": "Скасувати",
+    "confirm": "Підтвердити"
+  },
+  "state": {
+    "error": "Не вдалося завантажити дані",
+    "errorHint": "Перевірте з'єднання і спробуйте ще раз"
+  },
+  "notFound": {
+    "title": "Сторінку не знайдено",
+    "body": "Можливо, посилання застаріло або в адресі помилка.",
+    "action": "На головну"
+  },
+  "units": {
+    "days_one": "{{count}} день",
+    "days_few": "{{count}} дні",
+    "days_many": "{{count}} днів",
+    "days_other": "{{count}} дня",
+    "hours_one": "{{count}} година",
+    "hours_few": "{{count}} години",
+    "hours_many": "{{count}} годин",
+    "hours_other": "{{count}} години",
+    "minutes_one": "{{count}} хвилина",
+    "minutes_few": "{{count}} хвилини",
+    "minutes_many": "{{count}} хвилин",
+    "minutes_other": "{{count}} хвилини",
+    "seconds_one": "{{count}} секунда",
+    "seconds_few": "{{count}} секунди",
+    "seconds_many": "{{count}} секунд",
+    "seconds_other": "{{count}} секунди"
+  }
+}
