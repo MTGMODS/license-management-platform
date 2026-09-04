@@ -276,9 +276,6 @@ function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
             {rows.map((item, index) => {
               const moneyShare =
                 item.money_share || (totalMoney > 0 ? (item.sum / totalMoney) * 100 : 0)
-              const planLabel = t('stats.top.product', {
-                plan: t('pricing.days', { count: item.days }),
-              })
               return (
                 <li key={item.days} className="flex items-center gap-3">
                   <div className="flex min-w-0 flex-1 items-start gap-2.5">
@@ -288,7 +285,9 @@ function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
                       style={{ backgroundColor: durationColor(item.days, index) }}
                     />
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-fg-muted">{planLabel}</p>
+                      <p className="truncate text-sm font-medium text-fg-muted">
+                        {t('pricing.days', { count: item.days })}
+                      </p>
                       <p className="tabular text-xs text-fg-subtle">
                         {format.number(item.count)} · {t('stats.durations.active')}:{' '}
                         {format.number(item.active)}

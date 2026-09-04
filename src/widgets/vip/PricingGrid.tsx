@@ -83,10 +83,8 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
                   : 'text-[0.7rem] sm:text-sm',
               )}
             >
-              <span className="inline sm:hidden lg:inline">
-                {t('pricing.daysWithPerDayTight', daysLine)}
-              </span>
-              <span className="hidden sm:inline lg:hidden">{t('pricing.daysWithPerDay', daysLine)}</span>
+              <span className="sm:hidden">{t('pricing.daysWithPerDayTight', daysLine)}</span>
+              <span className="hidden sm:inline">{t('pricing.daysWithPerDay', daysLine)}</span>
             </p>
 
             <div
