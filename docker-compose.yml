@@ -5,7 +5,7 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     env_file:
-      - ./user_service/.env
+      - ./services/user/.env
     volumes:
       - user_pg_data:/var/lib/postgresql/data
     healthcheck:
@@ -18,7 +18,7 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     env_file:
-      - ./license_service/.env
+      - ./services/license/.env
     volumes:
       - license_pg_data:/var/lib/postgresql/data
     healthcheck:
@@ -31,7 +31,7 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     env_file:
-      - ./usage_service/.env
+      - ./services/usage/.env
     volumes:
       - usage_pg_data:/var/lib/postgresql/data
     healthcheck:
@@ -44,7 +44,7 @@ services:
     image: rabbitmq:3.13-management-alpine
     restart: unless-stopped
     env_file:
-      - ./license_service/.env
+      - ./services/license/.env
     ports:
       - "15672:15672"
     healthcheck:
@@ -55,11 +55,11 @@ services:
 
   user-service:
     build:
-      context: ./user_service
+      context: ./services/user
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
-      - ./user_service/.env
+      - ./services/user/.env
     ports:
       - "8001:8000"
     depends_on:
@@ -80,11 +80,11 @@ services:
 
   license-service:
     build:
-      context: ./license_service
+      context: ./services/license
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
-      - ./license_service/.env
+      - ./services/license/.env
     ports:
       - "8002:8000"
     depends_on:
@@ -109,11 +109,11 @@ services:
 
   usage-service:
     build:
-      context: ./usage_service
+      context: ./services/usage
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
-      - ./usage_service/.env
+      - ./services/usage/.env
     ports:
       - "8003:8000"
     depends_on:
@@ -134,15 +134,15 @@ services:
 
   distribution-service:
     build:
-      context: ./distribution_service
+      context: ./services/distribution
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
-      - ./distribution_service/.env
+      - ./services/distribution/.env
     ports:
       - "8005:8000"
     volumes:
-      - ./distribution_service/app/builds:/app/app/builds
+      - ./services/distribution/app/builds:/app/app/builds
     depends_on:
       rabbitmq:
         condition: service_healthy
