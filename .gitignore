@@ -1,9 +1,11 @@
 venv/
 **/__pycache__/
 *.pyc
-*.env
 *.db
 /services/distribution/app/builds/
 /services/distribution/app/tools/
 web/node_modules/
 web/dist/
+.env
+.env.*
+!.env.example
