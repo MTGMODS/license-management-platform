@@ -10,6 +10,8 @@ type TabKey =
   | 'tab.helperDownload'
   | 'tab.vip'
   | 'tab.promo'
+  | 'tab.promoLeaders'
+  | 'tab.promoSmart'
   | 'tab.login'
   | 'tab.dashboard'
   | 'tab.admin'
@@ -21,6 +23,8 @@ type DescriptionKey =
   | 'meta.description.helperDownload'
   | 'meta.description.vip'
   | 'meta.description.promo'
+  | 'meta.description.promoLeaders'
+  | 'meta.description.promoSmart'
   | 'meta.description.terms'
   | 'meta.description.login'
   | 'meta.description.dashboard'
@@ -63,6 +67,22 @@ function resolveRoute(pathname: string): {
     return {
       titleKey: 'tab.vip',
       descriptionKey: 'meta.description.vip',
+      index: true,
+      canonicalPath: pathname,
+    }
+  }
+  if (pathname.startsWith('/promo/leaders')) {
+    return {
+      titleKey: 'tab.promoLeaders',
+      descriptionKey: 'meta.description.promoLeaders',
+      index: true,
+      canonicalPath: pathname,
+    }
+  }
+  if (pathname.startsWith('/promo/smart')) {
+    return {
+      titleKey: 'tab.promoSmart',
+      descriptionKey: 'meta.description.promoSmart',
       index: true,
       canonicalPath: pathname,
     }

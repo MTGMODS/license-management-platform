@@ -28,6 +28,14 @@ const NotFoundPage = lazy(() =>
 const PromoPage = lazy(() =>
   import('@/pages/promo/PromoPage').then((module) => ({ default: module.PromoPage })),
 )
+const PromoLeadersPage = lazy(() =>
+  import('@/pages/promo/PromoLeadersPage').then((module) => ({
+    default: module.PromoLeadersPage,
+  })),
+)
+const PromoSmartPage = lazy(() =>
+  import('@/pages/promo/PromoSmartPage').then((module) => ({ default: module.PromoSmartPage })),
+)
 const TermsPage = lazy(() =>
   import('@/pages/terms/TermsPage').then((module) => ({ default: module.TermsPage })),
 )
@@ -52,6 +60,8 @@ export function AppRoutes() {
           <Route path="helper/download" element={<DownloadPage />} />
           <Route path="vip" element={<VipPage />} />
           <Route path="promo" element={<PromoPage />} />
+          <Route path="promo/leaders" element={<PromoLeadersPage />} />
+          <Route path="promo/smart" element={<PromoSmartPage />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="auth/callback" element={<AuthCallbackPage />} />
           <Route path="terms" element={<TermsPage />} />
