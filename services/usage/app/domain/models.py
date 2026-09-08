@@ -13,8 +13,8 @@ class LaunchPayload(BaseModel):
     @field_validator('server')
     @classmethod
     def validate_server(cls, v: int) -> int:
-        # 0, 1-32, 101-103, 200, 301-307, 401-402
-        valid_servers = {0, 200} | set(range(1, 33)) | set(range(101, 104)) | set(range(301, 308)) | set(range(401, 403))
+        # 0, 1-33, 101-103, 200, 301-307, 401-403
+        valid_servers = {0, 200} | set(range(1, 34)) | set(range(101, 104)) | set(range(301, 308)) | set(range(401, 404))
         if v not in valid_servers:
             raise ValueError(f"Invalid server: {v}")
         return v

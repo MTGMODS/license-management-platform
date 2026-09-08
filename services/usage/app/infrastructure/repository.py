@@ -284,10 +284,10 @@ class LaunchRepository:
 
     async def _get_products(self, d30, d1, d1h, g_users):
         families = [
-            ("arizona_pc", LaunchModel.server.between(1, 32)),
+            ("arizona_pc", LaunchModel.server.between(1, 33)),
             ("arizona_mobile", LaunchModel.server.between(101, 103)),
             ("rodina_pc", LaunchModel.server.between(301, 307)),
-            ("rodina_mobile", LaunchModel.server.between(401, 402)),
+            ("rodina_mobile", LaunchModel.server.between(401, 403)),
         ]
 
         select_cols = []
