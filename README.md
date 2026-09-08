@@ -1,87 +1,55 @@
-# MTGMODS License Management Platform 🚀
+# MTG MODS platform
 
-A robust, microservices-based micro SaaS platform designed for managing licenses, securely distributing digital product, and tracking usage analytics.
-
-This repository contains the backend core of the MTG VIP ecosystem (Arizona & Rodina Helper), built with high scalability, strict service isolation, and event-driven communication in mind.
-
-## 🏗 Architecture Overview
-
-The system is built on a **Microservices Architecture** using Python and FastAPI. 
-
-It separates concerns into four isolated domains, communicating synchronously via HTTP (REST) and asynchronously via RabbitMQ.
-
-### Core Microservices
-
-*   🧠 **License Service (`license_service`)**
-    *   The "Brain" of the platform.
-    *   Handles VIP keys generation, activation, duration tracking, and HWID (Device) binding.
-    *   Manages the core business logic and dashboard information.
-*   👤 **User Service (`user_service`)**
-    *   Handles user identity and authentication.
-    *   Integrates OAuth2/OIDC for Telegram WebApp Login and Discord linking.
-    *   Issues and validates JWT Bearer tokens for the entire platform.
-*   📦 **Distribution Service (`distribution_service`)**
-    *   Responsible for secure file delivery.
-    *   Validates temporary download tokens and dynamically serves personalized `.lua` script files to prevent piracy.
-*   📊 **Usage Service (`usage_service`)**
-    *   Collects and processes analytics.
-    *   Tracks script launches, active users, GeoIP data, and generates statistics for the admin dashboard.
-
-### Adapters (Thin Clients)
-
-The ecosystem also includes independent bot microservices that act strictly as interfaces, containing no business logic:
-*   🤖 **Telegram Bot:** Handles Stars payments, VIP chat join requests, and automated kicks via RabbitMQ.
-*   🤖 **Discord Bot:** Manages VIP role assignment/removal based on RabbitMQ events.
-
-## 🛠 Tech Stack
-
-*   **Framework:** FastAPI (Python 3.12+)
-*   **Database:** SQLAlchemy (ORM)
-*   **Message Broker:** RabbitMQ (aio-pika)
-*   **Authentication:** JWT (JSON Web Tokens), OAuth2
-*   **Networking:** aiohttp (for S2S communication)
-*   **Deployment:** Docker & Docker Compose
-
-## 📂 Repository Structure
+Micro-SaaS around a freemium digital product: identity, licenses, usage analytics, protected file delivery, public web app, Telegram and Discord adapters.
 
 ```
-license-management-platform/
-├── license_service/         # VIP keys, HWID checks, Admin generation
-├── user_service/            # Auth, Telegram/Discord OAuth, Profiles
-├── distribution_service/    # Secure script downloads
-├── usage_service/           # Launch analytics, GeoIP tracking
-└── README.md
+├── services/user/           # OAuth, JWT, profiles
+├── services/license/        # keys, HWID, tariffs, sales, bot API
+├── services/usage/          # launch telemetry, public stats
+├── services/distribution/   # one-shot VIP file download
+├── web/                     # SPA (cabinet, open stats, admin)
+├── bots/telegram/           # Stars, VIP chat, Mini App entry
+├── bots/discord/            # VIP role / DMs
+└── docker-compose.yml
 ```
 
-## 🔐 Security & Communication
+APIs talk over HTTP and RabbitMQ. Bots and license↔user stay on the **Docker network** (not through public nginx). The browser and Telegram Mini App still use `https://api.mtgmods.com` / `https://mtgmods.com`.
 
-- **Client to API:** Secured via `Authorization: Bearer <JWT>`.
-- **Service to Service (Sync):** Internal HTTP requests are verified using a shared `x-internal-token` header.
-- **Service to Service (Async):** Background tasks (like kicking expired users) are published to a RabbitMQ Topic Exchange (`mtgmods.bot.commands`).
+## Stack
 
-## 🚀 Getting Started
+Python 3.12, FastAPI, PostgreSQL 16 (one database per service), RabbitMQ 3.13, React 19 + Vite, Docker Compose.
 
-### Docker Compose
+## Run
 
-Each service owns its `.env` and `Dockerfile`. Three isolated Postgres instances, one shared RabbitMQ.
+Each unit has `.env.example`. Copy and align secrets **before** `up`:
 
 ```bash
-git clone <repo-url>
-cd license-management-platform
+cp services/user/.env.example services/user/.env
+cp services/license/.env.example services/license/.env
+cp services/usage/.env.example services/usage/.env
+cp services/distribution/.env.example services/distribution/.env
+cp bots/telegram/.env.example bots/telegram/.env
+cp bots/discord/.env.example bots/discord/.env
+```
 
-cp user_service/.env.example user_service/.env
-cp license_service/.env.example license_service/.env
-cp usage_service/.env.example usage_service/.env
-cp distribution_service/.env.example distribution_service/.env
+Must match across files:
 
-# Align secrets: JWT_SECRET + INTERNAL_SECRET_TOKEN (user ↔ license),
-# RABBITMQ credentials (license ↔ distribution), change POSTGRES_PASSWORD values.
+- `JWT_SECRET` — user + license
+- `INTERNAL_SECRET_TOKEN` — user + license
+- `BOT_SECRET_TOKEN` — license + both bots
+- RabbitMQ user/password — license `.env` (broker) + `RABBITMQ_URL` in license, distribution, bots (`@rabbitmq`)
 
-# VIP template (not in git):
-#   distribution_service/app/builds/vip/Arizona Helper.lua
+VIP template and obfuscator are **not** in git. On the server, overlay:
 
+`services/distribution/app/builds/vip/` and `services/distribution/app/tools/`
+
+then rebuild `distribution-service`.
+
+```bash
 docker compose up --build
 ```
+
+The Compose project name stays `mtgmods_backend` so existing Postgres volumes keep their names.
 
 | Service | URL |
 |---------|-----|
@@ -89,19 +57,28 @@ docker compose up --build
 | License | http://localhost:8002/health |
 | Usage | http://localhost:8003/health |
 | Distribution | http://localhost:8005/health |
-| RabbitMQ UI | http://localhost:15672 (credentials from `license_service/.env`) |
+| Web | http://localhost:8080 |
+| RabbitMQ UI | http://localhost:15672 |
 
-Set `DEBUG_MODE=False` and Postgres URLs in each service `.env` for Compose. OAuth redirect URIs use **host** port `8001`.
+OAuth redirect URIs for local compose use host port **8001**. Production callbacks: `https://api.mtgmods.com/v1/users/auth/...` (see comments in `services/user/.env.example`).
 
-### Local Python (SQLite)
+Bots call `http://license-service:8000/api/v1/license/...`. After switching from standalone bot containers, stop the old ones — two processes with the same Telegram token will fight.
+
+`web` bakes `VITE_API_URL` at **image build** (default `https://api.mtgmods.com`). Override: `VITE_API_URL=... docker compose build web`.
+
+## Local API without Docker
 
 ```bash
-cd user_service   # or license_service / usage_service / distribution_service
+cd services/user   # or license / usage / distribution
 python -m venv venv
-venv\Scripts\activate
+venv/Scripts/activate   # Linux: source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env    # DEBUG_MODE=True
+cp .env.example .env    # set DEBUG_MODE=True and SQLite URLs
 fastapi dev main.py --port 8001
 ```
 
-Ports: users **8001**, license **8002**, usage **8003**, distribution **8005**.
+Ports: **8001 / 8002 / 8003 / 8005**. Vite for the SPA: `cd web && npm ci && npm run dev` (port 5173; optional `VITE_DEV_*_TARGET` in `web/.env.example`).
+
+## License
+
+MIT — see `LICENSE` in the repository root.

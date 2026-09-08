@@ -159,6 +159,42 @@ services:
       retries: 5
       start_period: 25s
 
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-https://api.mtgmods.com}
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+
+  telegram-bot:
+    build:
+      context: ./bots/telegram
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./bots/telegram/.env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      license-service:
+        condition: service_healthy
+
+  discord-bot:
+    build:
+      context: ./bots/discord
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./bots/discord/.env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      license-service:
+        condition: service_healthy
+
 volumes:
   user_pg_data:
   license_pg_data:
