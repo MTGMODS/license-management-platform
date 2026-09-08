@@ -363,31 +363,6 @@ class LaunchRepository:
             for row in res.all()
         ]
 
-    async def _get_timeline_hourly(self):
-        stmt = (
-            select(
-                func.date(LaunchModel.launched_at).label("dt"),
-                func.extract("hour", LaunchModel.launched_at).label("hr"),
-                func.count(distinct(LaunchModel.hwid)).label("u_all"),
-                func.count(distinct(case((LaunchModel.version.ilike("%VIP%"), LaunchModel.hwid)))).label("vip_all"),
-                func.count(LaunchModel.id).label("l_all")
-            )
-            .group_by(func.date(LaunchModel.launched_at), func.extract("hour", LaunchModel.launched_at))
-            .order_by(func.date(LaunchModel.launched_at), func.extract("hour", LaunchModel.launched_at))
-        )
-        res = await self.db.execute(stmt)
-        return [
-            {
-                "date": str(row.dt) if row.dt else "Unknown",
-                "hour": int(row.hr) if row.hr is not None else 0,
-                "users": row.u_all,
-                "vip_users": row.vip_all,
-                "launches": row.l_all,
-                "launches_per_user": self._launches_per_user(row.u_all, row.l_all),
-            }
-            for row in res.all()
-        ]
-
     async def _get_activity_hourly(self):
         stmt = (
             select(
@@ -444,7 +419,6 @@ class LaunchRepository:
         products = await self._get_products(d30, d1, d1h, g_users)
         
         timeline_daily = await self._get_timeline_daily()
-        timeline_hourly = await self._get_timeline_hourly()
         
         activity_hourly = await self._get_activity_hourly()
         activity_weekday = await self._get_activity_weekday()
@@ -466,7 +440,6 @@ class LaunchRepository:
             "analytics": {
                 "timeline": {
                     "daily": timeline_daily,
-                    "hourly": timeline_hourly
                 },
                 "activity": {
                     "hourly": activity_hourly,
