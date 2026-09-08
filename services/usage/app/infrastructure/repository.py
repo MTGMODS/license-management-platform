@@ -1,6 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, select, func, distinct, case, and_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.sql import func as sql_func
 from datetime import datetime, timedelta, timezone
 from app.shared.database import Base
 from app.shared.datetime_utils import format_utc
@@ -73,11 +72,6 @@ class LaunchRepository:
             func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label("vip_24h"),
             func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label("vip_1h"),
 
-            func.count(distinct(case((~LaunchModel.version.ilike('%VIP%'), LaunchModel.hwid)))).label("free_all"),
-            func.count(distinct(case((and_(~LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label("free_30d"),
-            func.count(distinct(case((and_(~LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label("free_24h"),
-            func.count(distinct(case((and_(~LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label("free_1h"),
-
             func.count(LaunchModel.id).label("l_all"),
             func.count(case((LaunchModel.launched_at >= d30, LaunchModel.id))).label("l_30d"),
             func.count(case((LaunchModel.launched_at >= d1, LaunchModel.id))).label("l_24h"),
@@ -116,7 +110,6 @@ class LaunchRepository:
         res = (await self.db.execute(stmt)).first()
         
         g_u_all = res.u_all if res and res.u_all > 0 else 0
-        g_l_all = res.l_all if res and res.l_all > 0 else 0
         g_users = {
             "all_time": res.u_all or 0,
             "30d": res.u_30d or 0,
@@ -134,12 +127,10 @@ class LaunchRepository:
                 "vip_conversion": vip_conversion,
                 "pc_ratio": pc_ratio,
                 "mobile_ratio": mob_ratio,
-                "global_launches_per_user": round(g_l_all / g_u_all, 2) if g_u_all > 0 else 0
             },
             "users": {
                 "total": g_users,
                 "vip": {"all_time": res.vip_all, "30d": res.vip_30d, "24h": res.vip_24h, "1h": res.vip_1h},
-                "free": {"all_time": res.free_all, "30d": res.free_30d, "24h": res.free_24h, "1h": res.free_1h}
             },
             "launches": {
                 "all_time": res.l_all,

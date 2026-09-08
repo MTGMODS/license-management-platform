@@ -1,7 +1,6 @@
 import re
 from typing import Optional
 from pydantic import BaseModel, Field, field_validator, AliasChoices
-from app.shared.datetime_utils import UtcDateTime
 
 class LaunchPayload(BaseModel):
     version: str = Field(..., max_length=25, description="Product version")
@@ -36,12 +35,3 @@ class LaunchPayload(BaseModel):
         if not re.match(r"^\d+(?:\.\d+)+\s+(Free|VIP|Launcher Edition)$", v):
             raise ValueError("Invalid version format.")
         return v
-        
-
-class Launch(BaseModel):
-    id: Optional[int] = None
-    version: str
-    hwid: str
-    device: str
-    server: int
-    launched_at: Optional[UtcDateTime] = None
