@@ -37,12 +37,6 @@ export function useFormatters() {
       year: 'numeric',
       timeZone: 'UTC',
     })
-    const dayHour = new Intl.DateTimeFormat(locale, {
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
     const calendarFullDate = new Intl.DateTimeFormat(locale, {
       day: 'numeric',
       month: 'long',
@@ -88,8 +82,6 @@ export function useFormatters() {
       /** Sales monthly buckets: `YYYY-MM` → full month + year (tooltips). */
       monthYear: (yearMonth: string) =>
         monthYear.format(parseApiCalendarDate(`${yearMonth}-01`)),
-      /** Hourly all-time ticks: day + hour, so a multi-year series stays readable. */
-      dayHour: (iso: string) => dayHour.format(parseApiDateTime(iso)),
       fullDate: (isoDate: string) => calendarFullDate.format(parseApiCalendarDate(isoDate)),
       /** API datetimes: `YYYY-MM-DDTHH:mm:ssZ`, shown in the visitor's locale. */
       dateTime: (iso: string) => dateTime.format(parseApiDateTime(iso)),

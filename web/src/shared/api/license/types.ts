@@ -9,7 +9,7 @@ export interface LicenseDevice {
   id: number
   /** Masked server-side, e.g. `abc******xyz`. */
   hwid: string
-  /** Masked server-side, e.g. `192.168.*.*`, or `Unknown`. */
+  /** Client IP as stored on the device row, or `Unknown`. */
   ip: string
   /** First bind time (`created_at` on the device row). */
   first_used_at?: ApiDateTime | null
@@ -117,8 +117,8 @@ export interface LicenseSubscriptionsStats {
     total_sold: number
     total_money: number
     active: number
-    first_sale_at: ApiDateTime | null
-    last_sale_at: ApiDateTime | null
+    first_activated_at: ApiDateTime | null
+    last_activated_at: ApiDateTime | null
     avg_check: number
     avg_subscriptions_per_buyer: number
     avg_revenue_per_buyer: number
@@ -172,7 +172,7 @@ export interface DownloadRequestResult {
   download_url: string
 }
 
-/** Defaults from `GET /license/tariffs`. Generate still accepts overrides. */
+/** Catalog limits from `GET /license/tariffs`. Generate stores whatever the caller sends. */
 export interface TariffLimits {
   max_devices: number
   reset_limit: number

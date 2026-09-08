@@ -13,7 +13,6 @@ export interface UsageOverviewMetrics {
   vip_conversion: number
   pc_ratio: number
   mobile_ratio: number
-  global_launches_per_user: number
 }
 
 export interface DeviceFamilyStats {
@@ -32,7 +31,6 @@ export interface UsageOverview {
   users: {
     total: PeriodCounts
     vip: PeriodCounts
-    free: PeriodCounts
   }
   launches: PeriodCounts
   devices: {
