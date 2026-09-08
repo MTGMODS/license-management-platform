@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.repository import UserRepository
-from app.domain.models import User, UserStatus, UserRole
+from app.domain.models import User, UserStatus
 from app.domain.schemas import UpdateUser
 from app.shared.exceptions import DomainException
 
