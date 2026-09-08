@@ -164,7 +164,7 @@ class LicenseService:
         raw = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(n))
         return '-'.join(raw[i:i+4] for i in range(0, n, 4))
     
-    async def generate_and_bill(self, payload: GeneratePurchaseDTO):
+    async def generate_and_bill(self, payload: GeneratePurchaseDTO) -> tuple[list[str], list[int]]:
         keys = [self._make_key() for _ in range(payload.count)]
         
         licenses_to_insert = [
@@ -191,11 +191,7 @@ class LicenseService:
         inserted_txs = await self.tx_repo.create_transactions_bulk(txs_to_insert)
         
         await self.db.commit()
-        
-        if payload.count == 1:
-            return {"key": keys[0], "transaction_id": inserted_txs[0].id}
-            
-        return keys
+        return keys, [tx.id for tx in inserted_txs]
 
     async def activate_key_for_user(self, payload: ActivateKeyDTO, user_id: int) -> int:
         db_sub = await self.license_repo.get_by_key(payload.key)

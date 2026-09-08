@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.shared.database import get_db
 from app.domain.schemas import GeneratePurchaseDTO, UpdateLicenseDTO
-from app.domain.models import LicenseStatus
 from app.application.service import LicenseService
 from app.application.jwt_utils import get_admin_user_id
 
@@ -13,15 +12,15 @@ router = APIRouter(prefix="/api/v1/license", tags=["Admin Panel"])
 async def generate_new_key(payload: GeneratePurchaseDTO, admin_id: int = Depends(get_admin_user_id), db: AsyncSession = Depends(get_db)):
     payload.count = 1
     service = LicenseService(db)
-    result = await service.generate_and_bill(payload)
-    return {"status": "success", "data": result}
+    keys, tx_ids = await service.generate_and_bill(payload)
+    return {"status": "success", "data": {"key": keys[0], "transaction_id": tx_ids[0]}}
 
 @router.post("/generate/bulk", description="Mass generate unactivated license keys")
 async def generate_bulk_keys(payload: GeneratePurchaseDTO, admin_id: int = Depends(get_admin_user_id), db: AsyncSession = Depends(get_db)):
     service = LicenseService(db)
-    keys = await service.generate_and_bill(payload)
+    keys, _tx_ids = await service.generate_and_bill(payload)
     return {
-        "status": "success", 
+        "status": "success",
         "count": len(keys),
         "data": {"keys": keys}
     }

@@ -98,12 +98,6 @@ class LicenseRepository:
         result = await self.db.execute(query)
         return list(result.scalars().all())
 
-    async def create_license(self, key: str, duration_days: int, status: LicenseStatus, max_devices: int) -> LicenseModel:
-        db_sub = LicenseModel(key=key, duration_days=duration_days, status=status, max_devices=max_devices)
-        self.db.add(db_sub)
-        await self.db.flush()
-        return db_sub
-
     async def create_licenses_bulk(self, licenses: list[LicenseModel]) -> list[LicenseModel]:
         self.db.add_all(licenses)
         await self.db.flush()
@@ -428,14 +422,6 @@ class LicenseRepository:
 class TransactionRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
-
-    async def create(self, amount: float, method: str, user_id: int = None, license_id: int = None, status: str = "COMPLETED") -> TransactionModel:
-        purchase = TransactionModel(
-            user_id=user_id, license_id=license_id, amount=amount, payment_method=method, status=status
-        )
-        self.db.add(purchase)
-        await self.db.flush()
-        return purchase
 
     async def create_transactions_bulk(self, transactions: list[TransactionModel]) -> list[TransactionModel]:
         self.db.add_all(transactions)

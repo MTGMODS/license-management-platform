@@ -17,8 +17,8 @@ async def verify_bot_access(x_bot_token: str = Header(None)):
 async def tg_bot_generate_key(payload: TelegramBotGenerateDTO, is_bot: bool = Depends(verify_bot_access), db: AsyncSession = Depends(get_db)):
     service = LicenseService(db)
     new_payload = GeneratePurchaseDTO(duration_days=payload.duration_days, amount=payload.amount, method=PaymentMethod.STARS, reset_limit=payload.reset_limit, max_devices=payload.max_devices)
-    result = await service.generate_and_bill(new_payload)
-    return {"status": "success", "data": result}
+    keys, tx_ids = await service.generate_and_bill(new_payload)
+    return {"status": "success", "data": {"key": keys[0], "transaction_id": tx_ids[0]}}
 
 @router.get("/check/info", description="Check user license from media ids")
 async def check_bot_status(telegram_id: int = None, discord_id: int = None, is_bot: bool = Depends(verify_bot_access), db: AsyncSession = Depends(get_db)):

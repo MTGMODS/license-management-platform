@@ -12,6 +12,6 @@ async def get_public_stats(background_tasks: BackgroundTasks, db: AsyncSession =
     stats = await service.get_website_stats(background_tasks)
     return {"status": "success", "data": stats}
 
-@router.get("/tariffs", description="Default prices and limits. Generate accepts overrides.")
+@router.get("/tariffs", description="Catalog prices and per-plan device limits for the site and bots.")
 async def get_tariffs():
     return {"status": "success", "data": public_tariffs()}

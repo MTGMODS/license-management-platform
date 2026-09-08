@@ -1,8 +1,4 @@
 import enum
-from typing import Optional
-from datetime import datetime, timezone
-from pydantic import BaseModel
-from app.shared.datetime_utils import UtcDateTime
 
 class LicenseStatus(str, enum.Enum):
     NOT_ACTIVATED = "NOT_ACTIVATED"
@@ -19,33 +15,3 @@ class PaymentMethod(str, enum.Enum):
     STEAM = "Steam"
     GIFT = "Gift"
     PROMO = "Promo"
-
-class License(BaseModel):
-    id: Optional[int] = None
-    key: str
-    user_id: Optional[int] = None
-    duration_days: Optional[int] = None
-    status: LicenseStatus = LicenseStatus.NOT_ACTIVATED
-    activated_at: Optional[UtcDateTime] = None
-    expires_at: Optional[UtcDateTime] = None
-
-    def is_valid(self) -> bool:
-        if self.status != LicenseStatus.ACTIVE:
-            return False
-        
-        if self.expires_at:
-            exp = self.expires_at
-            if exp.tzinfo is None:
-                exp = exp.replace(tzinfo=timezone.utc)
-            if datetime.now(timezone.utc) > exp:
-                return False
-            
-        return True
-
-class Transaction(BaseModel):
-    id: Optional[int] = None
-    user_id: Optional[int] = None
-    amount: float
-    method: str
-    status: str
-    purchased_at: Optional[UtcDateTime] = None
