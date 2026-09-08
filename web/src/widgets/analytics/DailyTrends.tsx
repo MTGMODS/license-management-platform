@@ -10,9 +10,9 @@ import {
   YAxis,
 } from 'recharts'
 
-import type { DailyPoint, HourlyTimelinePoint } from '@/shared/api/usage'
+import type { DailyPoint } from '@/shared/api/usage'
 import { useFormatters } from '@/shared/lib/format'
-import { Card, SegmentedControl } from '@/shared/ui'
+import { Card } from '@/shared/ui'
 
 import { AXIS_PROPS, CHART, type ChartMetric, chartColor, Y_AXIS_NUMERIC } from './chartTheme'
 import { CHART_TOOLTIP_WRAPPER_STYLE, readTooltipViewBox } from './chartTooltipPosition'
@@ -20,8 +20,6 @@ import { ChartTooltip } from './ChartTooltip'
 import { RechartsTooltipContent } from './RechartsTooltipContent'
 import { statsTooltipRows } from './statsTooltip'
 import { useExclusiveAnalyticsTooltip } from './useExclusiveAnalyticsTooltip'
-
-type TimelineGrain = 'daily' | 'hourly'
 
 interface TrendPoint {
   key: string
@@ -36,40 +34,11 @@ function utcToday(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-function hourlyIso(date: string, hour: number): string {
-  return `${date}T${String(hour).padStart(2, '0')}:00:00Z`
-}
-
-function isCurrentUtcHour(date: string, hour: number, now = new Date()): boolean {
-  return date === now.toISOString().slice(0, 10) && hour === now.getUTCHours()
-}
-
-export function DailyTrends({
-  daily,
-  hourly,
-  metric,
-}: {
-  daily: DailyPoint[]
-  hourly: HourlyTimelinePoint[]
-  metric: ChartMetric
-}) {
+export function DailyTrends({ daily, metric }: { daily: DailyPoint[]; metric: ChartMetric }) {
   const { t } = useTranslation('helper')
   const format = useFormatters()
-  const [grain, setGrain] = useState<TimelineGrain>('daily')
 
   const points = useMemo<TrendPoint[]>(() => {
-    if (grain === 'hourly') {
-      return hourly
-        .filter((point) => !isCurrentUtcHour(point.date, point.hour))
-        .map((point) => ({
-          key: hourlyIso(point.date, point.hour),
-          users: point.users,
-          vip_users: point.vip_users,
-          launches: point.launches,
-          launches_per_user: point.launches_per_user,
-        }))
-    }
-
     const today = utcToday()
     return daily
       .filter((point) => point.date !== today)
@@ -80,35 +49,18 @@ export function DailyTrends({
         launches: point.launches,
         launches_per_user: point.launches_per_user,
       }))
-  }, [daily, grain, hourly])
+  }, [daily])
 
   const color = chartColor(metric)
-  const gradientId = `timeline-${grain}-${metric}`
+  const gradientId = `timeline-daily-${metric}`
   const [tooltipX, setTooltipX] = useState<number | undefined>()
   const tooltip = useExclusiveAnalyticsTooltip()
 
   return (
     <Card className="p-4 text-left sm:p-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h3 className="text-lg font-semibold tracking-tight">
-            {t(`analytics.daily.${grain === 'daily' ? 'title' : 'hourlyTitle'}`)}
-          </h3>
-          <p className="mt-1 text-sm text-fg-muted">
-            {t(`analytics.daily.${grain === 'daily' ? 'subtitle' : 'hourlySubtitle'}`)}
-          </p>
-        </div>
-        <SegmentedControl
-          className="shrink-0 self-start sm:mt-0.5"
-          size="sm"
-          label={t('analytics.daily.grain')}
-          value={grain}
-          onChange={setGrain}
-          options={[
-            { id: 'daily', label: t('analytics.daily.byDay') },
-            { id: 'hourly', label: t('analytics.daily.byHour') },
-          ]}
-        />
+      <div className="min-w-0">
+        <h3 className="text-lg font-semibold tracking-tight">{t('analytics.daily.title')}</h3>
+        <p className="mt-1 text-sm text-fg-muted">{t('analytics.daily.subtitle')}</p>
       </div>
 
       {points.length === 0 ? (
@@ -125,12 +77,7 @@ export function DailyTrends({
               </defs>
 
               <CartesianGrid stroke={CHART.grid} vertical={false} />
-              <XAxis
-                dataKey="key"
-                {...AXIS_PROPS}
-                tickFormatter={grain === 'daily' ? format.dayMonth : format.dayHour}
-                minTickGap={grain === 'daily' ? 28 : 40}
-              />
+              <XAxis dataKey="key" {...AXIS_PROPS} tickFormatter={format.dayMonth} minTickGap={28} />
               <YAxis {...Y_AXIS_NUMERIC} tickFormatter={format.compact} />
               <Tooltip
                 cursor={{ stroke: CHART.axis, strokeDasharray: '4 4' }}
@@ -152,9 +99,7 @@ export function DailyTrends({
                     onTranslateX={setTooltipX}
                     renderTooltip={(point) => (
                       <ChartTooltip
-                        title={
-                          grain === 'daily' ? format.fullDate(point.key) : format.dateTime(point.key)
-                        }
+                        title={format.fullDate(point.key)}
                         rows={statsTooltipRows(t, format, point)}
                       />
                     )}

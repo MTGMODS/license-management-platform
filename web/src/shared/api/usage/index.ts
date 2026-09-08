@@ -6,7 +6,6 @@ import type {
   DeviceFamilyStats,
   FactionStats,
   HourActivityPoint,
-  HourlyTimelinePoint,
   PeriodCounts,
   PeriodKey,
   ProductStats,
@@ -140,17 +139,6 @@ function normalizeDailyPoint(raw: Record<string, unknown>): DailyPoint {
   }
 }
 
-function normalizeHourlyTimelinePoint(raw: Record<string, unknown>): HourlyTimelinePoint {
-  return {
-    date: typeof raw.date === 'string' ? raw.date : '',
-    hour: asNumber(raw.hour),
-    users: asNumber(raw.users),
-    vip_users: asNumber(raw.vip_users),
-    launches: asNumber(raw.launches),
-    launches_per_user: asNumber(raw.launches_per_user),
-  }
-}
-
 function normalizeHourActivity(raw: Record<string, unknown>): HourActivityPoint {
   return {
     hour: asNumber(raw.hour),
@@ -188,10 +176,6 @@ function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
   const productsRaw = (distribution.products ?? []) as unknown as Record<string, unknown>[]
   const devicesRaw = (overview?.devices ?? {}) as unknown as Record<string, unknown>
   const dailyRaw = (analytics?.timeline?.daily ?? []) as unknown as Record<string, unknown>[]
-  const hourlyTimelineRaw = (analytics?.timeline?.hourly ?? []) as unknown as Record<
-    string,
-    unknown
-  >[]
   const hourlyActivityRaw = (analytics?.activity?.hourly ?? []) as unknown as Record<
     string,
     unknown
@@ -216,7 +200,6 @@ function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
     analytics: {
       timeline: {
         daily: dailyRaw.map(normalizeDailyPoint),
-        hourly: hourlyTimelineRaw.map(normalizeHourlyTimelinePoint),
       },
       activity: {
         hourly: hourlyActivityRaw.map(normalizeHourActivity),

@@ -70,11 +70,7 @@ export function AnalyticsSection() {
       </div>
 
       <div className="mt-6 space-y-4">
-        <DailyTrends
-          daily={data.analytics.timeline.daily}
-          hourly={data.analytics.timeline.hourly}
-          metric={metric}
-        />
+        <DailyTrends daily={data.analytics.timeline.daily} metric={metric} />
         <ActivityCharts
           hourly={data.analytics.activity.hourly}
           weekday={data.analytics.activity.weekday}
