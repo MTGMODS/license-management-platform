@@ -73,7 +73,6 @@
       "inTelegram": "В Telegram"
     },
     "detailsLabel": "Как оплатить",
-    "pickPlan": "Выберите срок",
     "daysShort_one": "{{count}} день",
     "daysShort_few": "{{count}} дня",
     "daysShort_many": "{{count}} дней",
@@ -157,7 +156,6 @@
     "revenue": "Доход USD",
     "active": "Активные VIP",
     "buyers": "Покупателей",
-    "conversion": "Конверсия в VIP",
     "updated": "Обновлено {{time}}",
     "more": "Подробная аналитика ниже",
     "detailsTitle": "Аналитика продаж",
@@ -168,9 +166,7 @@
     "overview": {
       "avgCheck": "Средний чек",
       "avgPerBuyer": "Подписок на покупателя",
-      "avgRevenuePerBuyer": "Доход с покупателя",
-      "active": "Активные подписки",
-      "period": "Период продаж: {{from}} — {{to}}"
+      "avgRevenuePerBuyer": "Доход с покупателя"
     },
     "timeline": {
       "title": "Динамика доходов",
@@ -183,19 +179,12 @@
     },
     "durations": {
       "title": "Продажи по тарифам",
-      "count": "Куплено",
       "active": "Активных",
-      "sum": "Сумма",
-      "countShare": "Доля продаж",
       "moneyShare": "Доля дохода"
     },
     "payments": {
       "title": "Способы оплаты",
-      "total": "Всего",
-      "count": "Платежей",
-      "sum": "Сумма",
-      "countShare": "Доля платежей",
-      "moneyShare": "Доля дохода"
+      "total": "Всего"
     },
     "retention": {
       "title": "Удержание покупателей",
@@ -206,8 +195,7 @@
       "purchases_one": "{{count}} покупка",
       "purchases_few": "{{count}} покупки",
       "purchases_many": "{{count}} покупок",
-      "purchases_other": "{{count}} покупок",
-      "renewals": "Продлений в группе: {{count}}"
+      "purchases_other": "{{count}} покупок"
     },
     "salesList": {
       "title": "Подробный список всех продаж",
@@ -231,7 +219,6 @@
       "subtitle": "Продавались раньше. Даты покупок после миграции недоступны — ниже только итоги и способы оплаты.",
       "sold": "Продано",
       "money": "Получено",
-      "active": "Активны",
       "payments": "Способы оплаты (бессрочные)",
       "paymentsHint": "Без динамики по датам — в архиве у всех стоит одна служебная дата.",
       "byPrice": {
