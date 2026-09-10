@@ -106,14 +106,6 @@ export interface HourActivityPoint {
   launches_per_user: number
 }
 
-export interface WeekdayActivityPoint {
-  /** PostgreSQL `dow`: 0 = Sunday through 6 = Saturday. */
-  weekday: number
-  users: number
-  launches: number
-  launches_per_user: number
-}
-
 export interface UsagePublicStats {
   updated_at: ApiDateTime
   overview: UsageOverview
@@ -130,7 +122,6 @@ export interface UsagePublicStats {
     }
     activity: {
       hourly: HourActivityPoint[]
-      weekday: WeekdayActivityPoint[]
     }
   }
 }

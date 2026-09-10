@@ -56,13 +56,6 @@ export function useFormatters() {
       hour: '2-digit',
       minute: '2-digit',
     })
-    const weekdayLong = new Intl.DateTimeFormat(locale, { weekday: 'long', timeZone: 'UTC' })
-    const weekdayShort = new Intl.DateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' })
-
-    // 2024-01-07 was a Sunday, matching the payload's index 0, so day names are
-    // derived from the locale instead of being duplicated in every catalogue.
-    const weekdayDate = (index: number) => new Date(Date.UTC(2024, 0, 7 + index))
-
     return {
       locale,
       /** Thousands-separated whole number. */
@@ -96,9 +89,6 @@ export function useFormatters() {
       },
       dateOnly: (iso: string) => fullDate.format(parseApiDateTime(iso)),
       hour: (hour: number) => `${String(hour).padStart(2, '0')}:00`,
-      /** Index 0 is Sunday, matching the payload's PostgreSQL `dow` values. */
-      weekday: (index: number) => weekdayLong.format(weekdayDate(index)),
-      weekdayShort: (index: number) => weekdayShort.format(weekdayDate(index)),
     }
   }, [locale])
 }

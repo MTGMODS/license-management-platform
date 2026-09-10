@@ -12,7 +12,6 @@ import type {
   ServerStats,
   UsagePublicStats,
   VersionStats,
-  WeekdayActivityPoint,
 } from './types'
 import { PERIOD_KEYS } from './types'
 
@@ -148,15 +147,6 @@ function normalizeHourActivity(raw: Record<string, unknown>): HourActivityPoint 
   }
 }
 
-function normalizeWeekdayActivity(raw: Record<string, unknown>): WeekdayActivityPoint {
-  return {
-    weekday: asNumber(raw.weekday),
-    users: asNumber(raw.users),
-    launches: asNumber(raw.launches),
-    launches_per_user: asNumber(raw.launches_per_user),
-  }
-}
-
 function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
   if (!payload || typeof payload !== 'object') {
     throw new Error('Usage stats payload missing')
@@ -180,7 +170,6 @@ function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
     string,
     unknown
   >[]
-  const weekdayRaw = (analytics?.activity?.weekday ?? []) as unknown as Record<string, unknown>[]
 
   return {
     ...payload,
@@ -203,7 +192,6 @@ function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
       },
       activity: {
         hourly: hourlyActivityRaw.map(normalizeHourActivity),
-        weekday: weekdayRaw.map(normalizeWeekdayActivity),
       },
     },
   }
