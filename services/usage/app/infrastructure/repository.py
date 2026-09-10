@@ -375,27 +375,6 @@ class LaunchRepository:
             for row in res.all()
         ]
 
-    async def _get_activity_weekday(self):
-        stmt = (
-            select(
-                func.extract('dow', LaunchModel.launched_at).label("dow"),
-                func.count(distinct(LaunchModel.hwid)).label("u_all"),
-                func.count(LaunchModel.id).label("l_all")
-            )
-            .group_by(func.extract('dow', LaunchModel.launched_at))
-            .order_by(func.extract('dow', LaunchModel.launched_at))
-        )
-        res = await self.db.execute(stmt)
-        return [
-            {
-                "weekday": int(row.dow) if row.dow is not None else 0,
-                "users": row.u_all,
-                "launches": row.l_all,
-                "launches_per_user": self._launches_per_user(row.u_all, row.l_all),
-            }
-            for row in res.all()
-        ]
-
     async def get_heavy_public_stats(self):
         now = datetime.now(timezone.utc)
         d30 = now - timedelta(days=30)
@@ -412,7 +391,6 @@ class LaunchRepository:
         timeline_daily = await self._get_timeline_daily()
         
         activity_hourly = await self._get_activity_hourly()
-        activity_weekday = await self._get_activity_weekday()
 
         return {
             "updated_at": format_utc(now),
@@ -433,8 +411,7 @@ class LaunchRepository:
                     "daily": timeline_daily,
                 },
                 "activity": {
-                    "hourly": activity_hourly,
-                    "weekday": activity_weekday
+                    "hourly": activity_hourly
                 }
             }
         }
