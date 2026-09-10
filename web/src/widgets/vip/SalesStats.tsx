@@ -123,7 +123,7 @@ function RevenueTimeline({
       return daily.map((point) => ({
         key: point.date,
         axis: format.dayMonth(point.date),
-        label: format.dayMonth(point.date),
+        label: format.fullDate(point.date),
         count: point.count,
         sum: point.sum,
       }))
