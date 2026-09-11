@@ -1,9 +1,8 @@
-import { ExternalLink } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { PROMO_LINKS } from '@/shared/config/promo'
-import { buttonStyles, Card } from '@/shared/ui'
-import { TelegramIcon } from '@/shared/ui/BrandIcons'
+import { Card } from '@/shared/ui'
+import { DiscordIcon, TelegramIcon } from '@/shared/ui/BrandIcons'
 
 import {
   PromoBackLink,
@@ -48,21 +47,15 @@ export function PromoLeadersPage() {
         <PromoSteps
           items={[t('leaders.claim.step1'), t('leaders.claim.step2'), t('leaders.claim.step3')]}
         />
-        <p className="text-sm text-fg-muted">{t('leaders.claim.done')}</p>
         <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
           <PromoCtaLink href={PROMO_LINKS.contactTelegram}>
             <TelegramIcon className="size-4" />
-            {t('leaders.cta')}
+            {t('leaders.ctaTelegram')}
           </PromoCtaLink>
-          <a
-            href={PROMO_LINKS.telegramVip}
-            target="_blank"
-            rel="noreferrer"
-            className={buttonStyles({ variant: 'secondary' })}
-          >
-            {t('leaders.ctaVip')}
-            <ExternalLink aria-hidden className="size-3.5 opacity-60" />
-          </a>
+          <PromoCtaLink href={PROMO_LINKS.contactDiscord} variant="secondary">
+            <DiscordIcon className="size-4" />
+            {t('leaders.ctaDiscord')}
+          </PromoCtaLink>
         </div>
       </Card>
     </div>

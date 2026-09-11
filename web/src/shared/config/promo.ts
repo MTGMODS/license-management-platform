@@ -1,4 +1,4 @@
-import { CONTACT_URL } from '@/shared/config/payment'
+import { CONTACT_DISCORD_URL, CONTACT_URL } from '@/shared/config/payment'
 import {
   DISCORD_SERVER_URL,
   FREE_LUA_FALLBACK_URL,
@@ -12,6 +12,7 @@ export const BLASTHACK_HELPER_URL = 'https://www.blast.hk/threads/244597/'
 
 export const PROMO_LINKS = {
   contactTelegram: CONTACT_URL,
+  contactDiscord: CONTACT_DISCORD_URL,
   discordServer: DISCORD_SERVER_URL,
   telegramHelper: TELEGRAM_HELPER_POST_URL,
   telegramVip: TELEGRAM_VIP_POST_URL,
