@@ -56,7 +56,7 @@ async def publish_bot_command(routing_key: str, payload: dict):
             message = aio_pika.Message(body=message_body, delivery_mode=aio_pika.DeliveryMode.PERSISTENT)
             
             await exchange.publish(message, routing_key=routing_key)
-            # print(f"[RabbitMQ] Published command '{routing_key}'")
+            print(f"[RabbitMQ] Published command '{routing_key}'")
             
     except Exception as e:
         print(f"[RabbitMQ] ❌ Publish Error ({routing_key}): {e}")
