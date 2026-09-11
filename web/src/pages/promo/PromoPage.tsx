@@ -67,14 +67,7 @@ function PromoBanner({
           'transition-[border-color,background-color] group-hover:border-accent-400/40 group-hover:bg-ink-800/80',
         )}
       >
-        <div className="relative min-h-0 w-full min-w-0 flex-1 overflow-hidden rounded-xl ring-1 ring-white/8">
-          <img
-            src={image}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover object-center"
-          />
-        </div>
-        <div className="shrink-0 space-y-[clamp(0.2rem,0.55vh,0.5rem)]">
+        <div className="shrink-0 space-y-[clamp(0.2rem,0.55vh,0.5rem)] text-center">
           <h2 className="text-[clamp(0.95rem,2.4vh,2.25rem)] font-semibold tracking-tight">
             {title}
           </h2>
@@ -82,11 +75,25 @@ function PromoBanner({
             {lead}
           </p>
         </div>
-        <p className="inline-flex shrink-0 items-center gap-2 text-[clamp(0.65rem,1.2vh,1rem)] font-medium text-accent-200">
-          <Gift aria-hidden className="size-[1em] shrink-0" />
+        <div className="relative min-h-0 w-full min-w-0 flex-1 overflow-hidden rounded-xl ring-1 ring-white/8">
+          <img
+            src={image}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-center"
+          />
+        </div>
+        <p
+          className={cn(
+            'shrink-0 text-center font-medium text-accent-200',
+            'text-[clamp(0.85rem,1.85vh,1.375rem)] leading-snug',
+          )}
+        >
+          <Gift aria-hidden className="mr-1.5 mb-0.5 inline size-[1em] align-[-0.15em]" />
           {reward}
         </p>
-        <FitOneLine>{hint}</FitOneLine>
+        <div className="mt-[clamp(0.2rem,0.85vh,0.55rem)] shrink-0">
+          <FitOneLine>{hint}</FitOneLine>
+        </div>
       </Card>
     </Link>
   )

@@ -1,3 +1,4 @@
+import { Gift } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { PROMO_LINKS } from '@/shared/config/promo'
@@ -21,6 +22,14 @@ export function PromoLeadersPage() {
       <PromoBackLink label={t('leaders.back')} />
 
       <PromoSectionHeader title={t('leaders.title')} lead={t('leaders.lead')} />
+
+      <Card className="space-y-4 p-5 sm:p-6">
+        <h2 className="inline-flex items-center gap-2 text-base font-semibold tracking-tight sm:text-lg">
+          <Gift aria-hidden className="size-4 text-accent-300" />
+          {t('leaders.reward.title')}
+        </h2>
+        <p className="text-sm leading-relaxed text-fg-muted">{t('leaders.reward.body')}</p>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
         <Card className="space-y-3 p-5 sm:p-6">
