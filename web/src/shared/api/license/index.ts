@@ -1,4 +1,4 @@
-import { STATS_REQUEST_TIMEOUT_MS } from '../config'
+import { STATS_REQUEST_TIMEOUT_MS, VIP_DOWNLOAD_TIMEOUT_MS } from '../config'
 import { request } from '../http'
 
 import type {
@@ -303,6 +303,7 @@ export function requestPremiumDownload(): Promise<DownloadRequestResult> {
     path: '/download',
     method: 'POST',
     auth: true,
+    timeoutMs: VIP_DOWNLOAD_TIMEOUT_MS,
   })
 }
 
