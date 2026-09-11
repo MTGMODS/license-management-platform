@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { useViewerCountry } from '@/features/geo/useViewerCountry'
-import { currencyForCountry, formatLocalMoney, localApproxFromRate } from '@/shared/lib/localCurrency'
+import { currencyForCountry, localApproxDisplay, localApproxFromRate } from '@/shared/lib/localCurrency'
 
 const RATES_URL = 'https://open.er-api.com/v6/latest/USD'
 const RATES_STORAGE_KEY = 'mtg:usd-rates-v1'
@@ -76,9 +76,9 @@ export function useLocalUsdPrice() {
     currency,
     /** True once a local unit rate is available for the visitor's country. */
     ready: approx !== null,
-    formatApprox(usd: number): string | null {
-      if (!currency || !approx) return null
-      return formatLocalMoney(usd * approx.unitRate, currency, approx.fractionDigits)
+    formatApprox(usd: number) {
+      if (!currency || currency === 'USD' || !approx) return null
+      return localApproxDisplay(usd * approx.unitRate, currency, approx.fractionDigits)
     },
   }
 }

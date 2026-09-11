@@ -1,5 +1,6 @@
-/** ISO 4217 currency for a visitor country (IP). USD / unknown → null (no second line). */
+/** ISO 4217 currency for a visitor country (IP). USD / unknown → null (no second price). */
 const COUNTRY_TO_CURRENCY: Readonly<Record<string, string>> = {
+  US: 'USD',
   UA: 'UAH',
   RU: 'RUB',
   BY: 'BYN',
@@ -73,22 +74,50 @@ const COUNTRY_TO_CURRENCY: Readonly<Record<string, string>> = {
 export function currencyForCountry(countryCode: string | null | undefined): string | null {
   if (!countryCode) return null
   const currency = COUNTRY_TO_CURRENCY[countryCode.toUpperCase()]
+  // US (and any USD mapping) stays USD-only: never `$1 ≈ $1`.
   if (!currency || currency === 'USD') return null
   return currency
 }
 
-/** Narrow symbol for a currency (₴, ₽, €…). Falls back to the ISO code. */
+/** Established marks only. Missing ones stay ISO text (`UZS`), not a fake `$`. */
+const CURRENCY_SYMBOLS: Readonly<Record<string, string>> = {
+  EUR: '€',
+  GBP: '£',
+  JPY: '¥',
+  CNY: '¥',
+  INR: '₹',
+  RUB: '₽',
+  UAH: '₴',
+  TRY: '₺',
+  GEL: '₾',
+  KZT: '₸',
+  AZN: '₼',
+  KRW: '₩',
+  VND: '₫',
+  NGN: '₦',
+  PYG: '₲',
+  GHS: '₵',
+  CRC: '₡',
+  THB: '฿',
+  PHP: '₱',
+  LAK: '₭',
+  MNT: '₮',
+  ILS: '₪',
+  AFN: '؋',
+  AMD: '֏',
+  BDT: '৳',
+  KHR: '៛',
+  IRR: '﷼',
+  SAR: '﷼',
+}
+
+export function hasEstablishedCurrencySymbol(currency: string): boolean {
+  return Object.hasOwn(CURRENCY_SYMBOLS, currency)
+}
+
+/** ₴ / € / ₸ from the curated list; otherwise the ISO code. */
 export function currencySymbol(currency: string): string {
-  try {
-    const parts = new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency,
-      currencyDisplay: 'narrowSymbol',
-    }).formatToParts(0)
-    return parts.find((part) => part.type === 'currency')?.value ?? currency
-  } catch {
-    return currency
-  }
+  return CURRENCY_SYMBOLS[currency] ?? currency
 }
 
 /**
@@ -107,15 +136,39 @@ export function localApproxFromRate(rate: number): {
   return { unitRate: Math.ceil(rate), fractionDigits: 0 }
 }
 
-/** Symbol on the right: `123₴` / `13,80€`. */
+/** Symbol on the right: `123₴` / `13,80€`. No thousands grouping. ISO codes get a nbsp. */
 export function formatLocalMoney(
   amount: number,
   currency: string,
   fractionDigits = 0,
 ): string {
-  const number = new Intl.NumberFormat(undefined, {
+  const number = new Intl.NumberFormat('uk', {
+    useGrouping: false,
     maximumFractionDigits: fractionDigits,
     minimumFractionDigits: fractionDigits,
   }).format(amount)
-  return `${number}${currencySymbol(currency)}`
+  const symbol = currencySymbol(currency)
+  if (hasEstablishedCurrencySymbol(currency)) {
+    return `${number}${symbol}`
+  }
+  return `${number}\u00a0${symbol}`
+}
+
+export interface LocalApproxDisplay {
+  text: string
+  /** Integer digits of the converted amount (`135₴` → 3). */
+  integerDigits: number
+  hasSymbol: boolean
+}
+
+export function localApproxDisplay(
+  amount: number,
+  currency: string,
+  fractionDigits = 0,
+): LocalApproxDisplay {
+  return {
+    text: formatLocalMoney(amount, currency, fractionDigits),
+    integerDigits: String(Math.trunc(Math.abs(amount))).length,
+    hasSymbol: hasEstablishedCurrencySymbol(currency),
+  }
 }

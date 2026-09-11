@@ -1,16 +1,118 @@
 import { MonitorSmartphone, Unlink } from 'lucide-react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useLocalUsdPrice } from '@/features/geo/useLocalUsdPrice'
 import { useTariffs } from '@/features/license/useTariffs'
 import { cn } from '@/shared/lib/cn'
 import { useFormatters } from '@/shared/lib/format'
+import type { LocalApproxDisplay } from '@/shared/lib/localCurrency'
 import { Card, Skeleton } from '@/shared/ui'
 
 const SHORT_DESKTOP = '[@media(min-width:1024px)_and_(max-height:48rem)]'
 
 function catalogPrice(price: number, format: ReturnType<typeof useFormatters>): string {
   return Number.isInteger(price) ? String(price) : format.money(price)
+}
+
+function priceTypeClass(compact: boolean): string {
+  return compact
+    ? cn('text-[clamp(1.25rem,2.8vh,1.875rem)]', `${SHORT_DESKTOP}:text-xl`)
+    : 'text-2xl sm:text-3xl'
+}
+
+function PlanPrice({
+  usd,
+  local,
+  compact,
+}: {
+  usd: string
+  local: LocalApproxDisplay | null
+  compact: boolean
+}) {
+  const rowRef = useRef<HTMLDivElement>(null)
+  const stacked = local != null && (!local.hasSymbol || local.integerDigits >= 5)
+  const canTighten = local != null && local.hasSymbol && local.integerDigits === 4
+  const [cramped, setCramped] = useState(false)
+  const usdClass = cn('tabular font-semibold tracking-tight', priceTypeClass(compact))
+  const stackedLocalClass = cn(
+    'tabular font-semibold tracking-tight text-fg-muted',
+    compact
+      ? cn('text-[clamp(1rem,2.2vh,1.35rem)]', `${SHORT_DESKTOP}:text-lg`)
+      : 'text-xl sm:text-2xl',
+  )
+  const spacedGapPx = compact ? 6 : 8
+
+  useLayoutEffect(() => {
+    const el = rowRef.current
+    if (!el || stacked || !canTighten) {
+      setCramped(false)
+      return
+    }
+
+    const measure = () => {
+      if (el.clientWidth < 8) return
+      const kids = el.children
+      if (kids.length < 3) {
+        setCramped(false)
+        return
+      }
+      let content = 0
+      for (const child of kids) {
+        content += (child as HTMLElement).offsetWidth
+      }
+      const needed = content + spacedGapPx * (kids.length - 1)
+      const overflow = needed > el.clientWidth + 1
+      setCramped((prev) => (prev === overflow ? prev : overflow))
+    }
+
+    let frame = 0
+    const schedule = () => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(measure)
+    }
+
+    measure()
+    const observer = new ResizeObserver(schedule)
+    observer.observe(el)
+    return () => {
+      cancelAnimationFrame(frame)
+      observer.disconnect()
+    }
+  }, [canTighten, compact, local?.text, spacedGapPx, stacked, usd])
+
+  return (
+    <div
+      ref={rowRef}
+      className={cn(
+        'w-full min-w-0',
+        stacked
+          ? 'flex flex-col items-start'
+          : cn(
+              'flex flex-nowrap items-baseline',
+              canTighten && cramped ? 'gap-x-0' : compact ? 'gap-x-1.5' : 'gap-x-2',
+            ),
+        compact ? cn('mt-[clamp(0.25rem,0.7vh,0.5rem)]', `${SHORT_DESKTOP}:mt-1`) : 'mt-1.5',
+      )}
+    >
+      <p className={usdClass}>${usd}</p>
+      {local ? (
+        stacked ? (
+          <p className={stackedLocalClass}>
+            <span className="text-fg-subtle">≈</span>
+            {local.text}
+          </p>
+        ) : (
+          <>
+            <span className={cn(usdClass, 'text-fg-subtle')} aria-hidden>
+              ≈
+            </span>
+            <p className={usdClass}>{local.text}</p>
+          </>
+        )
+      ) : null}
+    </div>
+  )
 }
 
 export function PricingGrid({ compact = false }: { compact?: boolean }) {
@@ -86,59 +188,11 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
               </span>
             </p>
 
-            <div
-              className={cn(
-                'flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5',
-                compact
-                  ? cn('mt-[clamp(0.25rem,0.7vh,0.5rem)]', `${SHORT_DESKTOP}:mt-1`)
-                  : 'mt-1.5 gap-x-2',
-              )}
-            >
-              <p
-                className={cn(
-                  'tabular font-semibold tracking-tight',
-                  compact
-                    ? cn(
-                        'text-[clamp(1.25rem,2.8vh,1.875rem)]',
-                        `${SHORT_DESKTOP}:text-xl`,
-                      )
-                    : 'text-2xl sm:text-3xl',
-                )}
-              >
-                ${catalogPrice(plan.price, format)}
-              </p>
-              {localApprox ? (
-                <>
-                  <span
-                    className={cn(
-                      'font-semibold text-fg-subtle',
-                      compact
-                        ? cn(
-                            'text-[clamp(1.25rem,2.8vh,1.875rem)]',
-                            `${SHORT_DESKTOP}:text-xl`,
-                          )
-                        : 'text-2xl sm:text-3xl',
-                    )}
-                    aria-hidden
-                  >
-                    ≈
-                  </span>
-                  <p
-                    className={cn(
-                      'tabular font-semibold tracking-tight',
-                      compact
-                        ? cn(
-                            'text-[clamp(1.25rem,2.8vh,1.875rem)]',
-                            `${SHORT_DESKTOP}:text-xl`,
-                          )
-                        : 'text-2xl sm:text-3xl',
-                    )}
-                  >
-                    {localApprox}
-                  </p>
-                </>
-              ) : null}
-            </div>
+            <PlanPrice
+              usd={catalogPrice(plan.price, format)}
+              local={localApprox}
+              compact={compact}
+            />
 
             <div
               className={cn(
