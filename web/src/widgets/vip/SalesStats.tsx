@@ -503,7 +503,7 @@ const DATE_INPUT =
   'rounded-lg border border-white/8 bg-ink-800 px-2.5 py-1.5 text-sm text-fg outline-none ' +
   'focus:border-accent-500/40 [color-scheme:dark]'
 
-type SalesRangeMode = 'all' | 'day' | 'range'
+type SalesRangeMode = 'day' | 'range'
 
 function saleDayKey(row: LicenseSaleRow): string | null {
   const when = saleDate(row)
@@ -534,8 +534,6 @@ function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
   )
 
   const rows = useMemo(() => {
-    if (mode === 'all') return sorted
-
     if (mode === 'day') {
       if (!day) return sorted
       return sorted.filter((row) => saleDayKey(row) === day)
@@ -573,7 +571,6 @@ function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
             options={[
               { id: 'day', label: t('stats.salesList.oneDay') },
               { id: 'range', label: t('stats.salesList.period') },
-              { id: 'all', label: t('stats.salesList.allTime') },
             ]}
           />
 
