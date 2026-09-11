@@ -75,7 +75,12 @@ function PromoBanner({
             {lead}
           </p>
         </div>
-        <div className="relative min-h-0 w-full min-w-0 flex-1 overflow-hidden rounded-xl ring-1 ring-white/8">
+        <div
+          className={cn(
+            'relative w-full min-w-0 flex-1 overflow-hidden rounded-xl ring-1 ring-white/8',
+            'min-h-[12rem] sm:min-h-[14rem] lg:min-h-[16rem]',
+          )}
+        >
           <img
             src={image}
             alt=""
@@ -105,14 +110,14 @@ export function PromoPage() {
   return (
     <div
       className={cn(
-        'shell flex min-h-0 flex-1 flex-col overflow-hidden',
+        'shell flex min-h-0 flex-1 flex-col overflow-y-auto',
         'py-[clamp(0.5rem,1.4vh,1.75rem)]',
       )}
     >
       <div
         className={cn(
-          'flex min-h-0 flex-1 flex-col gap-[clamp(0.85rem,2.8vh,2.5rem)]',
-          'lg:max-h-[min(65dvh,42rem)]',
+          'flex flex-col gap-[clamp(0.85rem,2.8vh,2.5rem)]',
+          'lg:min-h-0 lg:flex-1 lg:max-h-[min(65dvh,42rem)]',
         )}
       >
         <header className="mx-auto w-full max-w-3xl shrink-0 space-y-[clamp(0.2rem,0.6vh,0.75rem)] text-center">
@@ -131,8 +136,8 @@ export function PromoPage() {
 
         <div
           className={cn(
-            'grid min-h-0 flex-1 grid-cols-1 grid-rows-2 gap-[clamp(0.4rem,1.2vh,1.5rem)]',
-            'lg:grid-cols-2 lg:grid-rows-1 lg:gap-[clamp(0.75rem,1.6vh,2rem)]',
+            'grid grid-cols-1 gap-[clamp(0.4rem,1.2vh,1.5rem)]',
+            'lg:min-h-0 lg:flex-1 lg:grid-cols-2 lg:grid-rows-1 lg:gap-[clamp(0.75rem,1.6vh,2rem)]',
           )}
         >
           <PromoBanner
