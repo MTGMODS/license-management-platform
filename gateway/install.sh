@@ -24,7 +24,6 @@ sudo cp /etc/nginx/nginx.conf "/etc/nginx/nginx.conf.bak.$(date +%Y%m%d%H%M%S)"
 echo "==> install nginx.conf + snippets"
 sudo cp "$ROOT/nginx.conf" /etc/nginx/nginx.conf
 sudo cp "$ROOT/snippets/proxy_api.conf" /etc/nginx/snippets/proxy_api.conf
-sudo cp "$ROOT/snippets/proxy_api_files.conf" /etc/nginx/snippets/proxy_api_files.conf
 
 echo "==> install sites ($MODE)"
 sudo cp "$SITES_SRC/mtgmods.com" /etc/nginx/sites-available/mtgmods.com
