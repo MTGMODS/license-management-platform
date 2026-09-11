@@ -1,8 +1,9 @@
 import { lazy, Suspense } from 'react'
-import { Navigate, Route, Routes } from 'react-router'
+import { Route, Routes } from 'react-router'
 
 import { DownloadPage } from '@/pages/helper/DownloadPage'
 import { HelperPage } from '@/pages/helper/HelperPage'
+import { HomePage } from '@/pages/home/HomePage'
 import { VipPage } from '@/pages/vip/VipPage'
 import { Skeleton } from '@/shared/ui'
 
@@ -54,8 +55,7 @@ export function AppRoutes() {
     <Suspense fallback={<RouteFallback />}>
       <Routes>
         <Route element={<AppLayout />}>
-          {/* Home / bio page stays off until 1.1 — index is the helper landing. */}
-          <Route index element={<Navigate to="/helper" replace />} />
+          <Route index element={<HomePage />} />
           <Route path="helper" element={<HelperPage />} />
           <Route path="helper/download" element={<DownloadPage />} />
           <Route path="vip" element={<VipPage />} />

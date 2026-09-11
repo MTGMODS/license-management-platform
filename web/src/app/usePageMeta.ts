@@ -36,15 +36,14 @@ function resolveRoute(pathname: string): {
   notFoundTitle?: true
   descriptionKey: DescriptionKey
   index: boolean
-  /** Canonical path (may differ from the current URL, e.g. `/` → `/helper`). */
   canonicalPath: string
 } {
   if (pathname === '/' || pathname === '') {
     return {
-      titleKey: 'tab.helper',
-      descriptionKey: 'meta.description.helper',
+      titleKey: 'tab.home',
+      descriptionKey: 'meta.description.home',
       index: true,
-      canonicalPath: '/helper',
+      canonicalPath: '/',
     }
   }
   if (pathname.startsWith('/helper/download')) {
