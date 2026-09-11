@@ -34,12 +34,6 @@ server {
         log_not_found off;
     }
 
-    location = /v1/gemini_editor {
-        limit_req zone=client_heavy burst=5 nodelay;
-        proxy_pass http://127.0.0.1:5002/api/v1/gemini_editor;
-        include /etc/nginx/snippets/proxy_api.conf;
-    }
-
     location = /v1/license/check {
         limit_req zone=client_heavy burst=5 nodelay;
         proxy_pass http://127.0.0.1:8002/api/v1/license/check;
