@@ -1,5 +1,6 @@
-import { request } from '../http'
+import { STATS_REQUEST_TIMEOUT_MS } from '../config'
 import { ApiError } from '../errors'
+import { request } from '../http'
 
 import type {
   DailyPoint,
@@ -207,6 +208,7 @@ export async function getUsagePublicStats(signal?: AbortSignal): Promise<UsagePu
     service: 'usage',
     path: '/stats/public',
     signal,
+    timeoutMs: STATS_REQUEST_TIMEOUT_MS,
   })
   try {
     return normalizePublicStats(payload)

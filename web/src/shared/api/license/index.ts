@@ -1,3 +1,4 @@
+import { STATS_REQUEST_TIMEOUT_MS } from '../config'
 import { request } from '../http'
 
 import type {
@@ -262,6 +263,7 @@ export async function getLicenseSalesStats(signal?: AbortSignal): Promise<Licens
     service: 'license',
     path: '/stats/public',
     signal,
+    timeoutMs: STATS_REQUEST_TIMEOUT_MS,
   })
 
   return normalizeSalesStats(response.data)

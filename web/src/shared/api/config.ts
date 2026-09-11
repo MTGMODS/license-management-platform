@@ -66,3 +66,6 @@ export function serviceOrigin(service: ServiceName): string {
 }
 
 export const REQUEST_TIMEOUT_MS = 20_000
+
+/** Public `/stats/public` can stall after a restart; 5s then one 5s retry. */
+export const STATS_REQUEST_TIMEOUT_MS = 5_000

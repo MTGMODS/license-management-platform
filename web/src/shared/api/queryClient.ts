@@ -2,6 +2,12 @@ import { QueryClient } from '@tanstack/react-query'
 
 import { ApiError } from './errors'
 
+/** One immediate retry (5s + 5s). 4xx is a real answer — do not repeat it. */
+export function shouldRetryPublicStats(failureCount: number, error: unknown): boolean {
+  if (error instanceof ApiError && error.status < 500) return false
+  return failureCount < 1
+}
+
 /**
  * Shared client so auth can drop user-scoped caches on sign-in / sign-out
  * without waiting for a full page reload.

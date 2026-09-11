@@ -15,6 +15,8 @@ export interface RequestConfig {
   /** Attach the bearer token and refresh it once on a 401. */
   auth?: boolean
   signal?: AbortSignal
+  /** Overrides `REQUEST_TIMEOUT_MS` for this call. */
+  timeoutMs?: number
   responseType?: 'json' | 'blob' | 'void'
 }
 
@@ -40,9 +42,9 @@ function combineSignals(signals: AbortSignal[]): AbortSignal | undefined {
   if (present.length === 0) return undefined
   if (present.length === 1) return present[0]
   // Older embedded webviews (notably Android WebView inside Telegram) may not
-  // implement AbortSignal.any; the timeout signal alone is an acceptable
-  // degradation there.
-  return typeof AbortSignal.any === 'function' ? AbortSignal.any(present) : present[0]
+  // implement AbortSignal.any; keep the timeout (last signal) rather than
+  // hanging on the caller signal alone.
+  return typeof AbortSignal.any === 'function' ? AbortSignal.any(present) : present[present.length - 1]
 }
 
 async function readPayload(response: Response): Promise<unknown> {
@@ -97,7 +99,7 @@ function refreshSession(): Promise<RefreshOutcome> {
 }
 
 async function executeRequest(config: RequestConfig, accessToken: string | null): Promise<Response> {
-  const { service, path, method = 'GET', query, body, signal } = config
+  const { service, path, method = 'GET', query, body, signal, timeoutMs } = config
 
   const headers: Record<string, string> = { Accept: 'application/json' }
 
@@ -109,7 +111,7 @@ async function executeRequest(config: RequestConfig, accessToken: string | null)
     headers.Authorization = `Bearer ${accessToken}`
   }
 
-  const timeoutSignal = AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+  const timeoutSignal = AbortSignal.timeout(timeoutMs ?? REQUEST_TIMEOUT_MS)
 
   try {
     return await fetch(buildUrl(service, path, query), {
