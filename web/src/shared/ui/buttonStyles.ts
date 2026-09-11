@@ -26,6 +26,9 @@ const SIZES: Record<ButtonSize, string> = {
   lg: 'h-13 px-7 text-base',
 }
 
+export const discordCtaClass =
+  'bg-[#5865F2] shadow-[0_10px_30px_-12px_#5865F2] hover:bg-[#4752c4] hover:shadow-[0_10px_32px_-8px_#5865F2]'
+
 export function buttonStyles(options?: {
   variant?: ButtonVariant
   size?: ButtonSize

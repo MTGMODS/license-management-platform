@@ -126,13 +126,15 @@ export function PromoCtaLink({
   href,
   children,
   variant = 'primary',
+  className,
 }: {
   href: string
   children: ReactNode
   variant?: 'primary' | 'secondary'
+  className?: string
 }) {
   return (
-    <a href={href} target="_blank" rel="noreferrer" className={buttonStyles({ variant })}>
+    <a href={href} target="_blank" rel="noreferrer" className={buttonStyles({ variant, className })}>
       {children}
     </a>
   )

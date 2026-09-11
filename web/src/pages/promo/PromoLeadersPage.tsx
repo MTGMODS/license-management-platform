@@ -2,7 +2,7 @@ import { Gift } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { PROMO_LINKS } from '@/shared/config/promo'
-import { Card } from '@/shared/ui'
+import { Card, discordCtaClass } from '@/shared/ui'
 import { DiscordIcon, TelegramIcon } from '@/shared/ui/BrandIcons'
 
 import {
@@ -61,7 +61,10 @@ export function PromoLeadersPage() {
             <TelegramIcon className="size-4" />
             {t('leaders.ctaTelegram')}
           </PromoCtaLink>
-          <PromoCtaLink href={PROMO_LINKS.contactDiscord} variant="secondary">
+          <PromoCtaLink
+            href={PROMO_LINKS.contactDiscord}
+            className={discordCtaClass}
+          >
             <DiscordIcon className="size-4" />
             {t('leaders.ctaDiscord')}
           </PromoCtaLink>
