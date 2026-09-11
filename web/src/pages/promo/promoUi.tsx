@@ -5,7 +5,7 @@ import { Link } from 'react-router'
 import { toast } from 'sonner'
 
 import { copyText } from '@/shared/lib/clipboard'
-import { Badge, Button, buttonStyles } from '@/shared/ui'
+import { Button, buttonStyles } from '@/shared/ui'
 
 export function PromoBackLink({ label }: { label: string }) {
   return (
@@ -19,20 +19,15 @@ export function PromoBackLink({ label }: { label: string }) {
 }
 
 export function PromoSectionHeader({
-  eyebrow,
   title,
   lead,
 }: {
-  eyebrow: string
   title: string
   lead: string
 }) {
   return (
     <div className="max-w-3xl">
-      <Badge tone="accent" className="px-2 py-0.5 text-[0.7rem] font-medium normal-case tracking-normal">
-        {eyebrow}
-      </Badge>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1>
+      <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1>
       <p className="mt-3 text-sm leading-relaxed text-fg-muted sm:text-base">{lead}</p>
     </div>
   )

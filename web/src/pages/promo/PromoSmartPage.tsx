@@ -19,13 +19,9 @@ export function PromoSmartPage() {
     <div className="shell flex flex-col gap-8 py-8 sm:gap-10 sm:py-10">
       <PromoBackLink label={t('smart.back')} />
 
-      <PromoSectionHeader
-        eyebrow={t('smart.audience')}
-        title={t('smart.title')}
-        lead={t('smart.lead')}
-      />
+      <PromoSectionHeader title={t('smart.title')} lead={t('smart.lead')} />
 
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+      <div className="flex max-w-3xl flex-col gap-4">
         <Card className="space-y-4 p-5 sm:p-6">
           <h2 className="text-base font-semibold tracking-tight sm:text-lg">
             {t('smart.role.title')}
@@ -47,14 +43,17 @@ export function PromoSmartPage() {
           </h2>
           <p className="text-sm leading-relaxed text-fg-muted">{t('smart.reward.body')}</p>
         </Card>
-      </div>
 
-      <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center">
-        <PromoCtaLink href={PROMO_LINKS.discordServer}>
-          <DiscordIcon className="size-4" />
-          {t('smart.ctaDiscord')}
-        </PromoCtaLink>
-        <p className="text-sm text-fg-muted sm:max-w-md">{t('smart.ctaHelp')}</p>
+        <Card className="space-y-4 p-5 sm:p-6">
+          <h2 className="text-base font-semibold tracking-tight sm:text-lg">
+            {t('smart.join.title')}
+          </h2>
+          <p className="text-sm leading-relaxed text-fg-muted">{t('smart.ctaHelp')}</p>
+          <PromoCtaLink href={PROMO_LINKS.discordServer}>
+            <DiscordIcon className="size-4" />
+            {t('smart.ctaDiscord')}
+          </PromoCtaLink>
+        </Card>
       </div>
     </div>
   )

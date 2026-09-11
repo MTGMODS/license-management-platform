@@ -22,11 +22,7 @@ export function PromoLeadersPage() {
     <div className="shell flex flex-col gap-8 py-8 sm:gap-10 sm:py-10">
       <PromoBackLink label={t('leaders.back')} />
 
-      <PromoSectionHeader
-        eyebrow={t('leaders.audience')}
-        title={t('leaders.title')}
-        lead={t('leaders.lead')}
-      />
+      <PromoSectionHeader title={t('leaders.title')} lead={t('leaders.lead')} />
 
       <p className="inline-flex items-center gap-2 text-sm font-medium text-accent-200">
         <Gift aria-hidden className="size-4 shrink-0" />
