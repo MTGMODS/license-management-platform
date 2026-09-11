@@ -79,8 +79,8 @@ export function currencyForCountry(countryCode: string | null | undefined): stri
   return currency
 }
 
-/** Established marks only. Missing ones stay ISO text (`UZS`), not a fake `$`. */
-const CURRENCY_SYMBOLS: Readonly<Record<string, string>> = {
+/** Established marks, glued: `675₴`. Missing ones are not a fake `$`. */
+const CURRENCY_MARKS: Readonly<Record<string, string>> = {
   EUR: '€',
   GBP: '£',
   JPY: '¥',
@@ -111,13 +111,42 @@ const CURRENCY_SYMBOLS: Readonly<Record<string, string>> = {
   SAR: '﷼',
 }
 
-export function hasEstablishedCurrencySymbol(currency: string): boolean {
-  return Object.hasOwn(CURRENCY_SYMBOLS, currency)
+/**
+ * Letter abbreviations that sit after the amount: `60 zł`.
+ * Prefix-only units (R$, Rp, C$) stay ISO so they are not glued on the wrong side.
+ */
+const CURRENCY_ABBREVS: Readonly<Record<string, string>> = {
+  PLN: 'zł',
+  CZK: 'Kč',
+  HUF: 'Ft',
+  RON: 'lei',
+  BGN: 'лв',
+  BYN: 'Br',
+  MDL: 'L',
+  CHF: 'Fr',
+  SEK: 'kr',
+  NOK: 'kr',
+  DKK: 'kr',
+  KGS: 'сом',
+  TJS: 'ЅМ',
+  UZS: 'сум',
 }
 
-/** ₴ / € / ₸ from the curated list; otherwise the ISO code. */
+export function hasEstablishedCurrencySymbol(currency: string): boolean {
+  return Object.hasOwn(CURRENCY_MARKS, currency)
+}
+
+function currencyLabel(currency: string): { text: string; glued: boolean } {
+  const mark = CURRENCY_MARKS[currency]
+  if (mark) return { text: mark, glued: true }
+  const abbrev = CURRENCY_ABBREVS[currency]
+  if (abbrev) return { text: abbrev, glued: false }
+  return { text: currency, glued: false }
+}
+
+/** ₴ / € / zł / ISO code. */
 export function currencySymbol(currency: string): string {
-  return CURRENCY_SYMBOLS[currency] ?? currency
+  return currencyLabel(currency).text
 }
 
 /**
@@ -136,7 +165,7 @@ export function localApproxFromRate(rate: number): {
   return { unitRate: Math.ceil(rate), fractionDigits: 0 }
 }
 
-/** Symbol on the right: `123₴` / `13,80€`. No thousands grouping. ISO codes get a nbsp. */
+/** `123₴` / `13,80€` / `60 zł` / `80 BRL`. No thousands grouping. */
 export function formatLocalMoney(
   amount: number,
   currency: string,
@@ -147,18 +176,13 @@ export function formatLocalMoney(
     maximumFractionDigits: fractionDigits,
     minimumFractionDigits: fractionDigits,
   }).format(amount)
-  const symbol = currencySymbol(currency)
-  if (hasEstablishedCurrencySymbol(currency)) {
-    return `${number}${symbol}`
-  }
-  return `${number}\u00a0${symbol}`
+  const label = currencyLabel(currency)
+  if (label.glued) return `${number}${label.text}`
+  return `${number}\u00a0${label.text}`
 }
 
 export interface LocalApproxDisplay {
   text: string
-  /** Integer digits of the converted amount (`135₴` → 3). */
-  integerDigits: number
-  hasSymbol: boolean
 }
 
 export function localApproxDisplay(
@@ -166,9 +190,5 @@ export function localApproxDisplay(
   currency: string,
   fractionDigits = 0,
 ): LocalApproxDisplay {
-  return {
-    text: formatLocalMoney(amount, currency, fractionDigits),
-    integerDigits: String(Math.trunc(Math.abs(amount))).length,
-    hasSymbol: hasEstablishedCurrencySymbol(currency),
-  }
+  return { text: formatLocalMoney(amount, currency, fractionDigits) }
 }

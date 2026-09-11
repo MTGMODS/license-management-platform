@@ -21,6 +21,8 @@ function priceTypeClass(compact: boolean): string {
     : 'text-2xl sm:text-3xl'
 }
 
+type PriceFit = 'spaced' | 'tight' | 'stacked'
+
 function PlanPrice({
   usd,
   local,
@@ -30,10 +32,9 @@ function PlanPrice({
   local: LocalApproxDisplay | null
   compact: boolean
 }) {
-  const rowRef = useRef<HTMLDivElement>(null)
-  const stacked = local != null && (!local.hasSymbol || local.integerDigits >= 5)
-  const canTighten = local != null && local.hasSymbol && local.integerDigits === 4
-  const [cramped, setCramped] = useState(false)
+  const boxRef = useRef<HTMLDivElement>(null)
+  const measureRef = useRef<HTMLDivElement>(null)
+  const [fit, setFit] = useState<PriceFit>('spaced')
   const usdClass = cn('tabular font-semibold tracking-tight', priceTypeClass(compact))
   const stackedLocalClass = cn(
     'tabular font-semibold tracking-tight text-fg-muted',
@@ -44,26 +45,25 @@ function PlanPrice({
   const spacedGapPx = compact ? 6 : 8
 
   useLayoutEffect(() => {
-    const el = rowRef.current
-    if (!el || stacked || !canTighten) {
-      setCramped(false)
+    const box = boxRef.current
+    const measureEl = measureRef.current
+    if (!box || !measureEl || !local) {
+      setFit('spaced')
       return
     }
 
     const measure = () => {
-      if (el.clientWidth < 8) return
-      const kids = el.children
-      if (kids.length < 3) {
-        setCramped(false)
-        return
-      }
+      if (box.clientWidth < 8) return
       let content = 0
-      for (const child of kids) {
+      for (const child of measureEl.children) {
         content += (child as HTMLElement).offsetWidth
       }
-      const needed = content + spacedGapPx * (kids.length - 1)
-      const overflow = needed > el.clientWidth + 1
-      setCramped((prev) => (prev === overflow ? prev : overflow))
+      const avail = box.clientWidth
+      let next: PriceFit
+      if (content + spacedGapPx * 2 <= avail + 1) next = 'spaced'
+      else if (content <= avail + 1) next = 'tight'
+      else next = 'stacked'
+      setFit((prev) => (prev === next ? prev : next))
     }
 
     let frame = 0
@@ -74,43 +74,59 @@ function PlanPrice({
 
     measure()
     const observer = new ResizeObserver(schedule)
-    observer.observe(el)
+    observer.observe(box)
     return () => {
       cancelAnimationFrame(frame)
       observer.disconnect()
     }
-  }, [canTighten, compact, local?.text, spacedGapPx, stacked, usd])
+  }, [compact, local, spacedGapPx, usd])
 
   return (
     <div
-      ref={rowRef}
+      ref={boxRef}
       className={cn(
-        'w-full min-w-0',
-        stacked
-          ? 'flex flex-col items-start'
-          : cn(
-              'flex flex-nowrap items-baseline',
-              canTighten && cramped ? 'gap-x-0' : compact ? 'gap-x-1.5' : 'gap-x-2',
-            ),
+        'relative w-full min-w-0',
         compact ? cn('mt-[clamp(0.25rem,0.7vh,0.5rem)]', `${SHORT_DESKTOP}:mt-1`) : 'mt-1.5',
       )}
     >
-      <p className={usdClass}>${usd}</p>
       {local ? (
-        stacked ? (
-          <p className={stackedLocalClass}>
-            <span className="text-fg-subtle">≈</span>
-            {local.text}
-          </p>
-        ) : (
-          <>
-            <span className={cn(usdClass, 'text-fg-subtle')} aria-hidden>
-              ≈
-            </span>
-            <p className={usdClass}>{local.text}</p>
-          </>
-        )
+        <div
+          ref={measureRef}
+          aria-hidden
+          className="pointer-events-none invisible absolute flex flex-nowrap items-baseline gap-0"
+        >
+          <span className={usdClass}>${usd}</span>
+          <span className={usdClass}>≈</span>
+          <span className={usdClass}>{local.text}</span>
+        </div>
       ) : null}
+      <div
+        className={
+          local && fit === 'stacked'
+            ? 'flex flex-col items-start'
+            : cn(
+                'flex flex-nowrap items-baseline',
+                fit === 'tight' ? 'gap-x-0' : compact ? 'gap-x-1.5' : 'gap-x-2',
+              )
+        }
+      >
+        <p className={usdClass}>${usd}</p>
+        {local ? (
+          fit === 'stacked' ? (
+            <p className={stackedLocalClass}>
+              <span className="text-fg-subtle">≈</span>
+              {local.text}
+            </p>
+          ) : (
+            <>
+              <span className={cn(usdClass, 'text-fg-subtle')} aria-hidden>
+                ≈
+              </span>
+              <p className={usdClass}>{local.text}</p>
+            </>
+          )
+        ) : null}
+      </div>
     </div>
   )
 }
@@ -148,7 +164,7 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
   return (
     <div className={gridClass}>
       {data.plans.map((plan) => {
-        const resetValue = plan.reset_limit > 0 ? String(plan.reset_limit) : '—'
+        const resetValue = String(plan.reset_limit)
         const localApprox = formatApprox(plan.price)
         const daysLabel = t('pricing.days', { count: plan.duration_days })
         const perDayPrice = format.money(plan.price / plan.duration_days)
