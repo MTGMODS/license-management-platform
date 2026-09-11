@@ -31,7 +31,7 @@ import {
 } from '@/shared/config/payment'
 import { copyText } from '@/shared/lib/clipboard'
 import { cn } from '@/shared/lib/cn'
-import { Badge, Button, buttonStyles, Card } from '@/shared/ui'
+import { Badge, Button, buttonStyles, Card, discordCtaClass } from '@/shared/ui'
 import { DiscordIcon, TelegramIcon } from '@/shared/ui/BrandIcons'
 
 function BrandMark({ brand, className }: { brand: BrandId; className?: string }) {
@@ -59,6 +59,40 @@ function ExternalLink({ href, children, className }: { href: string; children?: 
     >
       {children}
     </a>
+  )
+}
+
+function CabinetLink({ children }: { children?: ReactNode }) {
+  return (
+    <Link
+      to="/dashboard"
+      className="font-medium text-accent-300 underline decoration-accent-500/40 underline-offset-2 transition-colors hover:text-accent-200"
+    >
+      {children}
+    </Link>
+  )
+}
+
+function CheckoutStep({ n, children }: { n: number; children: ReactNode }) {
+  return (
+    <li className="flex gap-3 text-sm text-fg-muted">
+      <span className="grid size-6 shrink-0 place-items-center rounded-full bg-accent-500/15 text-xs font-semibold text-accent-200">
+        {n}
+      </span>
+      <span className="min-w-0 pt-0.5">{children}</span>
+    </li>
+  )
+}
+
+function CabinetKeyStep({ n }: { n: number }) {
+  return (
+    <CheckoutStep n={n}>
+      <Trans
+        i18nKey="payment.activateKey"
+        ns="vip"
+        components={{ cabinet: <CabinetLink /> }}
+      />
+    </CheckoutStep>
   )
 }
 
@@ -219,11 +253,9 @@ function FunpayBody({ wallet }: { wallet: WalletId }) {
             />
           </span>
         </li>
-      </ol>
 
-      <Link to="/dashboard" className={buttonStyles({ fullWidth: true })}>
-        {t('payment.routes.funpay.cabinetCta')}
-      </Link>
+        <CabinetKeyStep n={5} />
+      </ol>
     </div>
   )
 }
@@ -260,14 +292,9 @@ function TgStarsBody() {
   return (
     <div className="space-y-5">
       <ol className="space-y-3">
-        {(['step1', 'step2'] as const).map((key, index) => (
-          <li key={key} className="flex gap-3 text-sm text-fg-muted">
-            <span className="grid size-6 shrink-0 place-items-center rounded-full bg-accent-500/15 text-xs font-semibold text-accent-200">
-              {index + 1}
-            </span>
-            <span className="min-w-0 pt-0.5">{t(`payment.routes.tgStars.${key}`)}</span>
-          </li>
-        ))}
+        <CheckoutStep n={1}>{t('payment.routes.tgStars.step1')}</CheckoutStep>
+        <CheckoutStep n={2}>{t('payment.payStarsInBot')}</CheckoutStep>
+        <CabinetKeyStep n={3} />
       </ol>
 
       <StarsPrices />
@@ -291,14 +318,11 @@ function FragmentBody() {
   return (
     <div className="space-y-5">
       <ol className="space-y-3">
-        {(['step1', 'step2', 'step3', 'step4'] as const).map((key, index) => (
-          <li key={key} className="flex gap-3 text-sm text-fg-muted">
-            <span className="grid size-6 shrink-0 place-items-center rounded-full bg-accent-500/15 text-xs font-semibold text-accent-200">
-              {index + 1}
-            </span>
-            <span className="min-w-0 pt-0.5">{t(`payment.routes.fragment.${key}`)}</span>
-          </li>
-        ))}
+        <CheckoutStep n={1}>{t('payment.routes.fragment.step1')}</CheckoutStep>
+        <CheckoutStep n={2}>{t('payment.routes.fragment.step2')}</CheckoutStep>
+        <CheckoutStep n={3}>{t('payment.routes.fragment.step3')}</CheckoutStep>
+        <CheckoutStep n={4}>{t('payment.payStarsInBot')}</CheckoutStep>
+        <CabinetKeyStep n={5} />
       </ol>
 
       <StarsPrices />
@@ -387,7 +411,7 @@ function ContactDmButtons() {
         href={CONTACT_DISCORD_URL}
         target="_blank"
         rel="noreferrer"
-        className={buttonStyles({ fullWidth: true })}
+        className={buttonStyles({ fullWidth: true, className: discordCtaClass })}
       >
         <DiscordIcon className="size-4" />
         {t('payment.routes.bank.discord')}
