@@ -260,7 +260,7 @@ function FunpayBody({ wallet }: { wallet: WalletId }) {
   )
 }
 
-function StarsBody({ wallet }: { wallet: WalletId }) {
+function StarsBody() {
   const { t } = useTranslation('vip')
 
   return (
@@ -269,9 +269,7 @@ function StarsBody({ wallet }: { wallet: WalletId }) {
 
       <StarsPrices />
 
-      {wallet === 'stars' ? null : (
-        <p className="text-sm text-fg-muted">{t('payment.routes.stars.buyHint')}</p>
-      )}
+      <p className="text-sm text-fg-muted">{t('payment.routes.stars.buyHint')}</p>
 
       <a
         href={VIP_BOT_START.pay}
@@ -451,7 +449,7 @@ function RouteBody({ route, wallet }: { route: CheckoutRouteId; wallet: WalletId
     case 'funpay':
       return <FunpayBody wallet={wallet} />
     case 'stars':
-      return <StarsBody wallet={wallet} />
+      return <StarsBody />
     case 'tgStars':
       return <TgStarsBody />
     case 'fragment':
