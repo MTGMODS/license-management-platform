@@ -16,38 +16,23 @@
   },
   "leaders": {
     "title": "Партнерка для лідерів і заступників",
-    "lead": "Допомагаєте співробітникам зручніше грати з Arizona&Rodina Helper — отримуєте MTGVIP на 30 днів безкоштовно.",
-    "back": "До акцій",
-    "download": {
-      "title": "Куди направляти співробітників",
-      "body": "Дайте будь-яке з посилань на хелпер — зручне вам.",
-      "site": "Сайт",
-      "telegram": "Telegram",
-      "discord": "Discord",
-      "blastHack": "BlastHack",
-      "github": "GitHub",
-      "copyHint": "Короткий текст для чату",
-      "copyText": "Скачайте Arizona&Rodina Helper: mtgmods.com/helper"
-    },
+    "lead": "Допомагаєте співробітникам зручніше грати з хелпером",
+    "back": "Назад до акцій",
+    "copyText": "Скачайте Arizona&Rodina Helper (mtgmods.com/helper)",
     "board": {
       "title": "Дошка організації",
-      "body": "Якщо можете — напишіть на дошці:",
-      "snippet": "Використовуємо Arizona&Rodina Helper від MTG MODS"
+      "body": "Якщо можете — напишіть на дошці:"
     },
     "promo": {
       "title": "Система підвищень",
-      "body": "За бажанням додавайте в підвищення пункт:",
-      "snippet": "Встановіть Arizona&Rodina Helper від MTG MODS"
+      "body": "За бажанням додайте в підвищення пункт:"
     },
     "claim": {
-      "title": "Як забрати MTGVIP",
+      "title": "Як отримати підписку MTGVIP",
       "step1": "Мінімум 10 співробітників мають встановити хелпер",
-      "step2": "Попросіть у них скріншоти /helper і /time",
-      "step3": "Перешліть ці 10 скрінів у особисті повідомлення",
-      "done": "Після перевірки видамо MTGVIP на 30 днів."
-    },
-    "cta": "Написати в Telegram",
-    "ctaVip": "Що таке MTGVIP"
+      "step2": "Попросіть у них скріншот /helper + /time, а від вас /stats + /time",
+      "step3": "Перешліть ці 11 скріншотів мені у особисті повідомлення"
+    }
   },
   "smart": {
     "title": "Редактор Smart-конфігів",

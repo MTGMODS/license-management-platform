@@ -1,5 +1,5 @@
-import { Check, Copy, ExternalLink } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { Check, Copy } from 'lucide-react'
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
@@ -61,18 +61,43 @@ export function PromoBulletList({ items }: { items: string[] }) {
   )
 }
 
-export function PromoCopySnippet({ label, value }: { label: string; value: string }) {
+export function PromoCopySnippet({ value }: { value: string }) {
   const { t } = useTranslation(['promo', 'common'])
   const [copied, setCopied] = useState(false)
+  const boxRef = useRef<HTMLDivElement>(null)
+  const textRef = useRef<HTMLParagraphElement>(null)
+
+  useLayoutEffect(() => {
+    const box = boxRef.current
+    const el = textRef.current
+    if (!box || !el) return
+
+    const fit = () => {
+      el.style.fontSize = ''
+      let size = Number.parseFloat(getComputedStyle(el).fontSize)
+      while (el.scrollWidth > el.clientWidth + 1 && size > 8) {
+        size -= 0.5
+        el.style.fontSize = `${size}px`
+      }
+    }
+
+    fit()
+    const observer = new ResizeObserver(fit)
+    observer.observe(box)
+    return () => observer.disconnect()
+  }, [value])
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl bg-ink-900/50 p-3 ring-1 ring-white/6 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-      <div className="min-w-0">
-        <p className="text-xs text-fg-subtle">{label}</p>
-        <p className="mt-0.5 break-words font-mono text-[0.8rem] leading-snug text-fg sm:text-sm">
-          {value}
-        </p>
-      </div>
+    <div
+      ref={boxRef}
+      className="@container flex flex-col gap-2 rounded-xl bg-ink-900/50 p-3 ring-1 ring-white/6 sm:flex-row sm:items-center sm:gap-3"
+    >
+      <p
+        ref={textRef}
+        className="min-w-0 overflow-hidden font-mono text-[clamp(0.7rem,4.2cqi,0.875rem)] leading-none whitespace-nowrap text-fg sm:flex-1"
+      >
+        {value}
+      </p>
       <Button
         type="button"
         size="sm"
@@ -94,29 +119,6 @@ export function PromoCopySnippet({ label, value }: { label: string; value: strin
         {copied ? t('copy.done') : t('copy.label')}
       </Button>
     </div>
-  )
-}
-
-export function PromoLinkChip({
-  href,
-  label,
-  icon,
-}: {
-  href: string
-  label: string
-  icon?: ReactNode
-}) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      className="inline-flex items-center gap-2 rounded-xl border border-white/8 bg-ink-850/80 px-3 py-2 text-sm font-medium text-fg transition-colors hover:border-white/15 hover:bg-ink-800"
-    >
-      {icon}
-      {label}
-      <ExternalLink aria-hidden className="size-3.5 opacity-50" />
-    </a>
   )
 }
 
