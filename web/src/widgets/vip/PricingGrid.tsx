@@ -1,4 +1,4 @@
-import { Smartphone } from 'lucide-react'
+import { MonitorSmartphone, Unlink } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { useLocalUsdPrice } from '@/features/geo/useLocalUsdPrice'
@@ -46,21 +46,17 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
   return (
     <div className={gridClass}>
       {data.plans.map((plan) => {
-        const devices = t('pricing.devices', { count: plan.max_devices })
-        const devicesLine =
-          plan.reset_limit > 0
-            ? t('pricing.devicesWithReset', {
-                devices,
-                reset: t('pricing.resetShort', { count: plan.reset_limit }),
-              })
-            : devices
+        const resetValue = plan.reset_limit > 0 ? String(plan.reset_limit) : '—'
         const localApprox = formatApprox(plan.price)
         const daysLabel = t('pricing.days', { count: plan.duration_days })
         const perDayPrice = format.money(plan.price / plan.duration_days)
-        const daysLine = {
-          days: daysLabel,
-          price: perDayPrice,
-        }
+        const perDay = { price: perDayPrice }
+        const metaText = compact
+          ? cn(
+              'text-[clamp(0.65rem,1.15vh,0.8rem)]',
+              `${SHORT_DESKTOP}:text-[0.65rem]`,
+            )
+          : 'text-xs sm:text-sm'
 
         return (
           <Card
@@ -74,7 +70,7 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
           >
             <p
               className={cn(
-                'whitespace-nowrap text-fg-muted tabular',
+                'whitespace-nowrap tabular',
                 compact
                   ? cn(
                       'text-[clamp(0.6rem,1.1vh,0.75rem)]',
@@ -83,8 +79,11 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
                   : 'text-[0.7rem] sm:text-sm',
               )}
             >
-              <span className="sm:hidden">{t('pricing.daysWithPerDayTight', daysLine)}</span>
-              <span className="hidden sm:inline">{t('pricing.daysWithPerDay', daysLine)}</span>
+              <span className="font-semibold text-fg">{daysLabel}</span>
+              <span className="text-fg-muted">
+                <span className="sm:hidden">{t('pricing.daysWithPerDayTight', perDay)}</span>
+                <span className="hidden sm:inline">{t('pricing.daysWithPerDay', perDay)}</span>
+              </span>
             </p>
 
             <div
@@ -141,20 +140,31 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
               ) : null}
             </div>
 
-            <p
+            <div
               className={cn(
-                'flex items-center gap-1.5 border-t border-white/8 text-fg-muted',
+                'space-y-1 border-t border-white/8 text-fg-muted',
                 compact
                   ? cn(
-                      'mt-[clamp(0.4rem,1vh,0.7rem)] pt-[clamp(0.35rem,0.9vh,0.6rem)] text-[clamp(0.65rem,1.15vh,0.8rem)]',
-                      `${SHORT_DESKTOP}:mt-2 ${SHORT_DESKTOP}:pt-1.5 ${SHORT_DESKTOP}:text-[0.65rem]`,
+                      'mt-[clamp(0.4rem,1vh,0.7rem)] pt-[clamp(0.35rem,0.9vh,0.6rem)]',
+                      `${SHORT_DESKTOP}:mt-2 ${SHORT_DESKTOP}:pt-1.5`,
                     )
-                  : 'mt-3 pt-2.5 text-xs sm:text-sm',
+                  : 'mt-3 pt-2.5',
+                metaText,
               )}
             >
-              <Smartphone aria-hidden className="size-3.5 shrink-0 text-fg-subtle" />
-              <span className="min-w-0 leading-snug">{devicesLine}</span>
-            </p>
+              <p className="flex items-center gap-1.5">
+                <MonitorSmartphone aria-hidden className="size-3.5 shrink-0 text-fg-subtle" />
+                <span className="min-w-0 leading-snug">
+                  {t('pricing.devicesLabel')}: <span className="tabular">{plan.max_devices}</span>
+                </span>
+              </p>
+              <p className="flex items-center gap-1.5">
+                <Unlink aria-hidden className="size-3.5 shrink-0 text-fg-subtle" />
+                <span className="min-w-0 leading-snug">
+                  {t('pricing.hwidResetLabel')}: <span className="tabular">{resetValue}</span>
+                </span>
+              </p>
+            </div>
           </Card>
         )
       })}
