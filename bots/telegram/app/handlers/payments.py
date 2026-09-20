@@ -74,7 +74,32 @@ async def pay_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def precheckout_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.pre_checkout_query.answer(ok=True)
+    query = update.pre_checkout_query
+
+    try:
+        requested_plan = json.loads(query.invoice_payload)
+    except (TypeError, json.JSONDecodeError):
+        await query.answer(ok=False, error_message="Тариф больше недоступен. Создайте новый платёж.")
+        return
+
+    plans = await load_plans()
+    if not plans:
+        await query.answer(ok=False, error_message="Не удалось проверить тарифы. Попробуйте позже.")
+        return
+
+    plan_exists = any(
+        plan["duration"] == requested_plan.get("duration")
+        and plan["price"] == requested_plan.get("price")
+        and plan["max_devices"] == requested_plan.get("max_devices")
+        and plan["reset_limit"] == requested_plan.get("reset_limit")
+        and plan["stars"] == query.total_amount
+        for plan in plans.values()
+    )
+    if not plan_exists:
+        await query.answer(ok=False, error_message="Тариф больше недоступен. Создайте новый платёж.")
+        return
+
+    await query.answer(ok=True)
 
 
 async def successful_payment_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
