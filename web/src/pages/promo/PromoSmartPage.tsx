@@ -10,6 +10,7 @@ import {
   PromoBulletList,
   PromoCtaLink,
   PromoSectionHeader,
+  PromoSteps,
 } from './promoUi'
 
 export function PromoSmartPage() {
@@ -48,7 +49,7 @@ export function PromoSmartPage() {
           <h2 className="text-base font-semibold tracking-tight sm:text-lg">
             {t('smart.join.title')}
           </h2>
-          <p className="text-sm leading-relaxed text-fg-muted">{t('smart.ctaHelp')}</p>
+          <PromoSteps items={[t('smart.join.step1'), t('smart.join.step2')]} />
           <PromoCtaLink href={PROMO_LINKS.discordServer} className={discordCtaClass}>
             <DiscordIcon className="size-4" />
             {t('smart.ctaDiscord')}
