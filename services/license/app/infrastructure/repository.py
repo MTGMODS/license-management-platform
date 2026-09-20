@@ -15,7 +15,7 @@ class LicenseModel(Base):
     user_id = Column(Integer, index=True, nullable=True)
     key = Column(String, unique=True, index=True, nullable=False)
     duration_days = Column(Integer, nullable=True)
-    reset_limit = Column(Integer, default=1)
+    reset_limit = Column(Integer, default=1, nullable=False)
     max_devices = Column(Integer, default=2, nullable=False)
     status = Column(SQLEnum(LicenseStatus), default=LicenseStatus.NOT_ACTIVATED)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -16,14 +16,14 @@ class GeneratePurchaseDTO(BaseModel):
     amount: float = Field(..., ge=0.0, description="Amount purchased")
     method: PaymentMethod = Field(..., description="Payment method")
     status: Literal["PENDING", "COMPLETED"] = Field(default="COMPLETED", description="PENDING or COMPLETED")
-    max_devices: Optional[int] = Field(None, ge=1, description="Stored as sent; omitted writes NULL, not the tariff")
-    reset_limit: Optional[int] = Field(None, ge=0, description="Stored as sent; omitted writes NULL, not the tariff")
+    max_devices: int = Field(..., ge=1, description="Maximum number of devices for the generated license")
+    reset_limit: int = Field(..., ge=0, description="Number of available device resets for the generated license")
 
 class TelegramBotGenerateDTO(BaseModel):
     duration_days: Optional[int] = Field(None, gt=0, description="Duration of the license in days")
     amount: float = Field(..., ge=0.0, description="Amount purchased")
-    max_devices: Optional[int] = Field(None, ge=1, description="Stored as sent; omitted writes NULL, not the tariff")
-    reset_limit: Optional[int] = Field(None, ge=0, description="Stored as sent; omitted writes NULL, not the tariff")
+    max_devices: int = Field(..., ge=1, description="Maximum number of devices for the generated license")
+    reset_limit: int = Field(..., ge=0, description="Number of available device resets for the generated license")
 
 class UpdateLicenseDTO(BaseModel):
     status: Optional[LicenseStatus] = None
