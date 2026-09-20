@@ -26,6 +26,11 @@ def format_datetime(value: str | None) -> str:
     except (TypeError, ValueError):
         return value
 
+def format_vip_access(expires_at: str | None) -> str:
+    if not expires_at or expires_at == "FOREVER":
+        return "FOREVER"
+    return f"до {format_datetime(expires_at)}"
+
 def format_price(value) -> str:
     try:
         return str(int(float(value)))
@@ -151,13 +156,13 @@ async def handle_join_request(update: Update, context: ContextTypes.DEFAULT_TYPE
         await context.bot.send_message(chat_id=telegram_id, text="✅ Вы добавлены в VIP чат ✅")
 
         license_info = vip_data.get("license")
-        expires_at = format_datetime(license_info.get("expires_at", "FOREVER"))
+        vip_access = format_vip_access(license_info.get("expires_at"))
         price = format_price(license_info.get("purchase_price"))
         method = license_info.get("purchase_method")
 
         welcome_text = (
             f"👋 <b>{request.from_user.mention_html()} ({telegram_id}), добро пожаловать!</b>\n\n"
-            f"🔒 <b>Доступ к VIP:</b> до {expires_at}\n"
+            f"🔒 <b>Доступ к VIP:</b> {vip_access}\n"
             f"ℹ️ <b>Оплата:</b> ${price} через {method}"
         )
         await context.bot.send_message(chat_id=chat_id, text=welcome_text, parse_mode="HTML")
@@ -195,13 +200,13 @@ async def vip_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     license_info = vip_data.get("license", {})
     activated_at = format_datetime(license_info.get("activated_at"))
-    expires_at = format_datetime(license_info.get("expires_at", "FOREVER"))
+    vip_access = format_vip_access(license_info.get("expires_at"))
     method = license_info.get("purchase_method")
     price = format_price(license_info.get("purchase_price"))
 
     text = (
         f"📅 <b>Активация VIP:</b> {activated_at}\n"
-        f"🔒 <b>Доступ к VIP:</b> до {expires_at}\n"
+        f"🔒 <b>Доступ к VIP:</b> {vip_access}\n"
         f"ℹ️ <b>Оплата:</b> ${price} через {method}"
     )
     
