@@ -18,7 +18,7 @@ export function PromoLeadersPage() {
   const copyText = t('leaders.copyText')
 
   return (
-    <div className="shell flex flex-col gap-8 py-8 sm:gap-10 sm:py-10">
+    <div className="shell flex flex-col gap-8 py-8 sm:gap-10 sm:py-10 lg:gap-6 lg:py-6">
       <PromoBackLink label={t('leaders.back')} />
 
       <PromoSectionHeader title={t('leaders.title')} lead={t('leaders.lead')} />
