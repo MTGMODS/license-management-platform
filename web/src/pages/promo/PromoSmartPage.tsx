@@ -2,7 +2,7 @@ import { Gift } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { PROMO_LINKS } from '@/shared/config/promo'
-import { Card } from '@/shared/ui'
+import { Card, discordCtaClass } from '@/shared/ui'
 import { DiscordIcon } from '@/shared/ui/BrandIcons'
 
 import {
@@ -49,7 +49,7 @@ export function PromoSmartPage() {
             {t('smart.join.title')}
           </h2>
           <p className="text-sm leading-relaxed text-fg-muted">{t('smart.ctaHelp')}</p>
-          <PromoCtaLink href={PROMO_LINKS.discordServer}>
+          <PromoCtaLink href={PROMO_LINKS.discordServer} className={discordCtaClass}>
             <DiscordIcon className="size-4" />
             {t('smart.ctaDiscord')}
           </PromoCtaLink>
