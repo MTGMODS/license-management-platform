@@ -4,6 +4,8 @@ import discord
 from app.config import RABBITMQ_URL, DISCORD_GUILD_ID, VIP_ROLE_ID
 
 async def start_rabbitmq_consumer(discord_bot):
+    await discord_bot.wait_until_ready()
+
     connection = await aio_pika.connect_robust(RABBITMQ_URL)
     channel = await connection.channel()
 
