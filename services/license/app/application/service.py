@@ -145,6 +145,7 @@ class LicenseService:
                 "activated_at": format_utc(license_obj.activated_at),
                 "expires_at": format_utc(license_obj.expires_at),
                 "duration_days": license_obj.duration_days,
+                "purchased_at": format_utc(transaction.purchased_at) if transaction else None,
                 "purchase_method": transaction.payment_method if transaction else None,
                 "purchase_price": transaction.amount if transaction else None
             }
