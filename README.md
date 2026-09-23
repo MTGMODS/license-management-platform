@@ -79,10 +79,6 @@ fastapi dev main.py --port 8001
 
 Ports: **8001 / 8002 / 8003 / 8005**. Vite for the SPA: `cd web && npm ci && npm run dev` (port 5173; optional `VITE_DEV_*_TARGET` in `web/.env.example`).
 
-## University lab materials
-
-The System Design and database model prepared for ІВСАВПЗ Lab 1 are in [`docs/ivsa-lab-01/system-design.md`](docs/ivsa-lab-01/system-design.md): API specification, load scenarios, bottleneck analysis, C4 Container diagram, and DBML source for dbdiagram.io.
-
 ## License
 
 MIT — see `LICENSE` in the repository root.
