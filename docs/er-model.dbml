@@ -105,4 +105,4 @@ Table usage_db.launches {
 
 Ref: license_db.license_activations.license_id > license_db.licenses.id [delete: cascade]
 Ref: license_db.licenses.id - license_db.transaction_purchases.license_id [delete: cascade]
-
+Ref: user_db.refresh_sessions.user_id > user_db.users.id [delete: cascade]
