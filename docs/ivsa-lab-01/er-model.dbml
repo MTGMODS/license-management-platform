@@ -1,0 +1,108 @@
+Project MTG_MODS_Lab01 {
+  database_type: 'PostgreSQL'
+  Note: 'One diagram contains three physically separate PostgreSQL databases. IDs crossing service boundaries are logical references only; they are not database foreign keys.'
+}
+
+Enum user_db.user_status {
+  ACTIVE
+  BANNED
+  DELETED
+}
+
+Enum license_db.license_status {
+  NOT_ACTIVATED
+  ACTIVE
+  EXPIRED
+  BANNED
+}
+
+Table user_db.users {
+  id int [pk, increment]
+  telegram_id bigint [unique, null, note: 'External Telegram ID; unique index in User DB']
+  discord_id bigint [unique, null, note: 'External Discord ID; unique index in User DB']
+  nickname varchar(50) [not null, note: 'Indexed; substring search uses ILIKE']
+  avatar_url varchar [null]
+  role varchar(20) [not null, note: 'ORM default: USER']
+  status user_db.user_status [null, note: 'ORM default: ACTIVE']
+  created_at timestamptz [null, default: `now()`]
+  last_login_at timestamptz [null]
+
+  Indexes {
+    nickname [name: 'ix_users_nickname']
+  }
+}
+
+Table user_db.oauth_handoffs {
+  ticket varchar(64) [pk]
+  payload text [not null]
+  expires_at timestamptz [not null]
+}
+
+Table user_db.refresh_sessions {
+  id int [pk, increment]
+  user_id int [not null, note: 'Logical reference to user_db.users.id; no FK constraint in current model']
+  token_hash varchar(64) [unique, not null]
+  expires_at timestamptz [not null]
+}
+
+Table license_db.licenses {
+  id int [pk, increment]
+  user_id int [null, note: 'Logical reference to user_db.users.id across services; no FK constraint']
+  key varchar [unique, not null]
+  duration_days int [null, note: 'NULL represents lifetime access']
+  reset_limit int [not null, note: 'ORM default: 1']
+  max_devices int [not null, note: 'ORM default: 2']
+  status license_db.license_status [null, note: 'ORM default: NOT_ACTIVATED']
+  created_at timestamptz [null, default: `now()`]
+  activated_at timestamptz [null]
+  expires_at timestamptz [null]
+
+  Indexes {
+    user_id [name: 'ix_licenses_user_id']
+  }
+}
+
+Table license_db.license_activations {
+  id int [pk, increment]
+  license_id int [null]
+  device varchar [not null]
+  ip_address varchar [null]
+  user_agent varchar [null]
+  first_used_at timestamptz [null, default: `now()`]
+  last_used_at timestamptz [null, default: `now()`]
+}
+
+Table license_db.transaction_purchases {
+  id int [pk, increment]
+  user_id int [null, note: 'Logical reference to user_db.users.id across services; no FK constraint']
+  license_id int [unique, null]
+  amount float [not null]
+  payment_method varchar [not null]
+  status varchar [null, note: 'ORM default: COMPLETED']
+  purchased_at timestamptz [null, default: `now()`]
+
+  Indexes {
+    user_id [name: 'ix_transaction_purchases_user_id']
+  }
+}
+
+Table usage_db.launches {
+  id int [pk, increment]
+  version varchar [not null]
+  device varchar [not null, note: 'Validated values: PC or MOBILE']
+  hwid varchar [not null, note: 'Indexed']
+  server int [null, note: 'Indexed']
+  mode varchar [null, note: 'Indexed']
+  launched_at timestamptz [null, default: `now()`, note: 'Indexed']
+
+  Indexes {
+    hwid [name: 'ix_launches_hwid']
+    server [name: 'ix_launches_server']
+    mode [name: 'ix_launches_mode']
+    launched_at [name: 'ix_launches_launched_at']
+  }
+}
+
+Ref: license_db.license_activations.license_id > license_db.licenses.id [delete: cascade]
+Ref: license_db.licenses.id - license_db.transaction_purchases.license_id [delete: cascade]
+

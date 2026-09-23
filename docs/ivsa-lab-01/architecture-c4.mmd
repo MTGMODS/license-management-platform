@@ -1,0 +1,70 @@
+flowchart LR
+  %% C4 Container view: external people/systems, product boundary, runtime containers and protocols.
+
+  Player["Person: MTG MODS user / browser"]
+  Helper["External client: Arizona/Rodina Helper<br/>Free and VIP"]
+  Telegram["External system: Telegram Bot API"]
+  Discord["External system: Discord API"]
+  OAuth["External systems: Telegram / Discord OAuth"]
+  Nginx["Infrastructure: Nginx HTTPS gateway<br/>production host, outside Compose"]
+
+  Player -->|HTTPS| Nginx
+  Helper -->|HTTPS: license check + usage launch| Nginx
+
+  subgraph MTG["Software system: MTG MODS platform"]
+    direction LR
+
+    Web["Container: React Web SPA<br/>Docker service web"]
+
+    subgraph Backend["Backend containers · Docker Compose network"]
+      direction TB
+
+      UserAPI["Container: User Service<br/>FastAPI · OAuth/JWT/profile"]
+      LicenseAPI["Container: License Service<br/>FastAPI · activation/check/sales"]
+      UsageAPI["Container: Usage Service<br/>FastAPI · launch telemetry/stats"]
+      DistributionAPI["Container: Distribution Service<br/>FastAPI · VIP file build/download"]
+
+      UserDB[("Container: PostgreSQL<br/>User DB · users/sessions")]
+      LicenseDB[("Container: PostgreSQL<br/>License DB · licenses/devices/transactions")]
+      UsageDB[("Container: PostgreSQL<br/>Usage DB · launches")]
+      Rabbit["Container: RabbitMQ<br/>file-generation RPC + bot commands"]
+      Assets["Private production overlay<br/>VIP template + obfuscator library"]
+      BuildFiles[("Mounted builds volume<br/>temporary personalized files")]
+      TgBot["Container: Telegram bot"]
+      DsBot["Container: Discord bot"]
+    end
+
+    UserAPI --> UserDB
+    LicenseAPI --> LicenseDB
+    UsageAPI --> UsageDB
+    LicenseAPI -->|HTTP · profile/social ID lookup| UserAPI
+    LicenseAPI -->|RabbitMQ · file request and RPC wait| Rabbit
+    Rabbit -->|file_generation_queue| DistributionAPI
+    DistributionAPI -->|RPC response with download URL| Rabbit
+    DistributionAPI --> Assets
+    DistributionAPI --> BuildFiles
+    LicenseAPI -->|RabbitMQ · VIP expiry commands| Rabbit
+    Rabbit -->|discord.#| DsBot
+    Rabbit -->|telegram.#| TgBot
+    TgBot -->|HTTP · bot endpoints| LicenseAPI
+    DsBot -->|HTTP · bot endpoints| LicenseAPI
+  end
+
+  Nginx -->|HTTP :8080| Web
+  Nginx -->|HTTP :8001| UserAPI
+  Nginx -->|HTTP :8002| LicenseAPI
+  Nginx -->|HTTP :8003| UsageAPI
+  Nginx -->|HTTP :8005| DistributionAPI
+
+  UserAPI -->|HTTPS · OAuth login| OAuth
+  TgBot -->|HTTPS| Telegram
+  DsBot -->|HTTPS| Discord
+
+  classDef person fill:#ffffff,stroke:#374151,color:#111827
+  classDef external fill:#f3f4f6,stroke:#6b7280,color:#111827
+  classDef app fill:#e8f1ff,stroke:#2563eb,color:#111827
+  classDef data fill:#ecfdf5,stroke:#059669,color:#111827
+  class Player person
+  class Helper,Telegram,Discord,OAuth,Nginx external
+  class Web,UserAPI,LicenseAPI,UsageAPI,DistributionAPI,Rabbit,TgBot,DsBot app
+  class UserDB,LicenseDB,UsageDB,Assets,BuildFiles data
