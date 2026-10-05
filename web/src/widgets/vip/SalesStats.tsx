@@ -107,7 +107,7 @@ function MetricCard({
   )
 }
 
-function RevenueTimeline({
+export function RevenueTimeline({
   daily,
   monthly,
 }: {
@@ -146,6 +146,10 @@ function RevenueTimeline({
       }
     })
   }, [daily, format, grain, monthly])
+  const axisLabels = useMemo(
+    () => new Map(points.map(({ key, axis }) => [key, axis])),
+    [points],
+  )
 
   return (
     <Card className="p-6">
@@ -181,10 +185,11 @@ function RevenueTimeline({
               </defs>
               <CartesianGrid stroke={CHART.grid} vertical={false} />
               <XAxis
-                dataKey="axis"
+                dataKey="key"
                 {...AXIS_PROPS}
                 interval="preserveStartEnd"
                 minTickGap={grain === 'daily' ? 28 : 36}
+                tickFormatter={(key: string) => axisLabels.get(key) ?? key}
               />
               <YAxis {...Y_AXIS_NUMERIC} tickFormatter={(value: number) => format.compact(value)} />
               <Tooltip
