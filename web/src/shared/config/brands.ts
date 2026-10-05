@@ -49,5 +49,4 @@ export const ROUTE_BRANDS: Record<CheckoutRouteId, BrandId> = {
   fragment: 'fragment',
   crypto: 'tether',
   paypal: 'paypal',
-  bank: 'card',
 }

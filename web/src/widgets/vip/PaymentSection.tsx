@@ -4,7 +4,6 @@ import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 
-import { useBankCardAllowed } from '@/features/geo/useViewerCountry'
 import { useTariffs } from '@/features/license/useTariffs'
 import {
   BRAND_ASSETS,
@@ -391,7 +390,7 @@ function ContactDmButtons() {
         className={buttonStyles({ fullWidth: true })}
       >
         <TelegramIcon className="size-4" />
-        {t('payment.routes.bank.telegram')}
+        {t('payment.contact.telegram')}
       </a>
       <a
         href={CONTACT_DISCORD_URL}
@@ -400,7 +399,7 @@ function ContactDmButtons() {
         className={buttonStyles({ fullWidth: true, className: discordCtaClass })}
       >
         <DiscordIcon className="size-4" />
-        {t('payment.routes.bank.discord')}
+        {t('payment.contact.discord')}
       </a>
     </div>
   )
@@ -413,20 +412,6 @@ function PaypalBody() {
     <div className="space-y-5">
       <p className="text-sm leading-relaxed text-fg-muted">{t('payment.routes.paypal.what')}</p>
       <CopyRow label="PayPal" value={PAYPAL_EMAIL} />
-      <ContactDmButtons />
-    </div>
-  )
-}
-
-function BankBody() {
-  const { t } = useTranslation('vip')
-
-  return (
-    <div className="space-y-5">
-      <div className="space-y-3 text-sm leading-relaxed text-fg-muted">
-        <p>{t('payment.routes.bank.dm')}</p>
-        <p>{t('payment.routes.bank.dmAfter')}</p>
-      </div>
       <ContactDmButtons />
     </div>
   )
@@ -446,8 +431,6 @@ function RouteBody({ route, wallet }: { route: CheckoutRouteId; wallet: WalletId
       return <CryptoBody />
     case 'paypal':
       return <PaypalBody />
-    case 'bank':
-      return <BankBody />
   }
 }
 
@@ -471,8 +454,6 @@ function routeBadges(route: CheckoutRouteId, labels: {
       return [{ tone: 'accent' as const, label: labels.auto }]
     case 'crypto':
       return []
-    case 'bank':
-      return []
     case 'paypal':
       return [
         { tone: 'accent' as const, label: labels.cheapest },
@@ -483,14 +464,13 @@ function routeBadges(route: CheckoutRouteId, labels: {
 
 export function PaymentSection() {
   const { t } = useTranslation('vip')
-  const { allowed: allowBankCard } = useBankCardAllowed()
   const [wallet, setWallet] = useState<WalletId>('card')
-  const routes = routesForWallet(wallet, allowBankCard)
+  const routes = routesForWallet(wallet)
   const [route, setRoute] = useState<CheckoutRouteId>(routes[0] ?? 'funpay')
   const showRoutePicker = routes.length > 1
 
   const selectWallet = (next: WalletId) => {
-    const nextRoutes = routesForWallet(next, allowBankCard)
+    const nextRoutes = routesForWallet(next)
     setWallet(next)
     setRoute(nextRoutes[0] ?? 'stars')
   }
@@ -579,7 +559,7 @@ export function PaymentSection() {
             {routes.map((id) => {
               const active = activeRoute === id
               const badges = routeBadges(id, badgeLabels)
-              const fullRow = id === 'crypto' || id === 'bank'
+              const fullRow = id === 'crypto'
               return (
                 <button
                   key={id}

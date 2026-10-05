@@ -1,6 +1,6 @@
 /**
  * Hard facts for VIP checkout: links, wallets, invoices.
- * Copy/UI strings live in i18n. Direct bank card is gated by IP country (not locale).
+ * Copy/UI strings live in i18n.
  */
 
 export const VIP_BOT_URL = 'https://t.me/mtgmods_vip_bot'
@@ -72,7 +72,6 @@ export type WalletId = 'card' | 'crypto' | 'stars' | 'paypal'
  * `tgStars` = buy ⭐ in Telegram with a bank card, then pay VIP in the bot.
  * `fragment` = buy ⭐ via Fragment (crypto / GRAM), then pay VIP in the bot.
  * `stars` = already have ⭐ — pay VIP in the bot directly.
- * `bank` = direct Monobank / SWIFT (hidden for RU/BY by IP).
  */
 export type CheckoutRouteId =
   | 'funpay'
@@ -81,14 +80,13 @@ export type CheckoutRouteId =
   | 'fragment'
   | 'crypto'
   | 'paypal'
-  | 'bank'
 
 export const WALLETS: readonly WalletId[] = ['card', 'crypto', 'stars', 'paypal']
 
-/** FunPay + buy ⭐ in Telegram; bank full-width under when allowed. */
+/** FunPay + buy ⭐ in Telegram. */
 const CARD_ROUTES_BASE = ['funpay', 'tgStars'] as const satisfies readonly CheckoutRouteId[]
 
-/** Routes shown for each starting wallet (bank injected when allowed). */
+/** Routes shown for each starting wallet. */
 export const WALLET_ROUTES: Readonly<Record<WalletId, readonly CheckoutRouteId[]>> = {
   card: CARD_ROUTES_BASE,
   /** Fragment + FunPay side by side; direct crypto full-width under. */
@@ -97,12 +95,6 @@ export const WALLET_ROUTES: Readonly<Record<WalletId, readonly CheckoutRouteId[]
   paypal: ['paypal'],
 }
 
-export function routesForWallet(
-  wallet: WalletId,
-  allowBankCard: boolean,
-): readonly CheckoutRouteId[] {
-  if (wallet === 'card' && allowBankCard) {
-    return [...CARD_ROUTES_BASE, 'bank']
-  }
+export function routesForWallet(wallet: WalletId): readonly CheckoutRouteId[] {
   return WALLET_ROUTES[wallet]
 }

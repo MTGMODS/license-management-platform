@@ -4,17 +4,6 @@ const FETCH_MS = 4500
 /** ISO 3166-1 alpha-2. Resolved from the visitor IP, never from UI language. */
 export type CountryCode = string
 
-/**
- * Direct UA card / SWIFT is unavailable for these countries (sanctions / rails).
- * Detected via IP geolocation — locale must not gate this.
- */
-export const BANK_CARD_BLOCKED_COUNTRIES = new Set(['RU', 'BY'])
-
-export function isBankCardAllowed(countryCode: CountryCode | null): boolean {
-  if (!countryCode) return true
-  return !BANK_CARD_BLOCKED_COUNTRIES.has(countryCode)
-}
-
 function normalizeCountry(raw: unknown): CountryCode | null {
   if (typeof raw !== 'string') return null
   const code = raw.trim().toUpperCase()

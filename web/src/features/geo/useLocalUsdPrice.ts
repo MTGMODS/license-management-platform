@@ -35,8 +35,8 @@ function writeCachedRates(rates: Record<string, number>) {
 }
 
 /**
- * USD→local FX from a keyless public API. Currency follows IP country
- * (same source as bank-card gating), not UI language.
+ * USD→local FX from a keyless public API. Currency follows IP country,
+ * not UI language.
  */
 export function useLocalUsdPrice() {
   const { data: country } = useViewerCountry()
