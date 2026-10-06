@@ -378,8 +378,11 @@ class LicenseStatsService:
     async def get_website_stats(self, background_tasks: BackgroundTasks):
         return await self.cache.get(self._load_stats, background_tasks)
 
+    async def get_old_stats(self, background_tasks: BackgroundTasks):
+        return await self.cache.get(self._load_old_stats, background_tasks)
+
     @staticmethod
-    async def get_old_stats():
+    async def _load_old_stats():
         async with AsyncSessionLocal() as db:
             return await LicenseRepository(db).get_old_stats()
 

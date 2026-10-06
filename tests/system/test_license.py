@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, timezone
+import json
 from unittest.mock import AsyncMock
 
+import fakeredis
 import pytest
 from pydantic import ValidationError
 from sqlalchemy import func, select
@@ -25,6 +27,16 @@ async def purchase(component, service, **overrides):
 async def activate(component, service, key, user_id=42, force=False):
     dto = component("app.domain.schemas").ActivateKeyDTO(key=key, force=force)
     return await service.activate_key_for_user(dto, user_id)
+
+
+@pytest.fixture
+async def old_stats_cache(component, monkeypatch):
+    cache_class = component("app.infrastructure.stats_cache").PublicStatsCache
+    main = component("app.main")
+    async with fakeredis.aioredis.FakeRedis() as redis:
+        cache = cache_class(redis, "mtgmods:license:old_stats:v1")
+        monkeypatch.setattr(main.app.state, "old_stats_cache", cache, raising=False)
+        yield cache
 
 
 async def test_purchase_activation_check_and_dashboard(component, db, service):
@@ -191,8 +203,20 @@ async def test_sales_stats_exclude_pending_free_and_unowned_keys(component, db, 
     }
 
 
-async def test_old_stats_are_public_uncached_and_update_after_deletion(api, component, service):
-    # The API fixture does not initialize a Redis cache: this route needs only the DB.
+async def test_old_stats_cache_reuses_data_and_refreshes_after_deletion(
+    api, component, service, old_stats_cache, monkeypatch,
+):
+    stats_class = component("app.application.service").LicenseStatsService
+    loader = AsyncMock(wraps=stats_class._load_old_stats)
+    monkeypatch.setattr(stats_class, "_load_old_stats", loader)
+
+    async def expire_cache():
+        entry = json.loads(await old_stats_cache.redis.get(old_stats_cache.key))
+        entry["fresh_until"] = 0
+        await old_stats_cache.redis.set(
+            old_stats_cache.key, json.dumps(entry), ex=old_stats_cache.RETENTION_SECONDS,
+        )
+
     forever_ids = []
     for user_id, overrides in [
         (1, {"duration_days": None, "amount": 20, "method": "Steam"}),
@@ -218,18 +242,31 @@ async def test_old_stats_are_public_uncached_and_update_after_deletion(api, comp
         {"price": 10, "count": 1, "sum": 10, "count_share": 50, "money_share": 33.3},
         {"price": 20, "count": 1, "sum": 20, "count_share": 50, "money_share": 66.7},
     ]
+    loader.assert_awaited_once()
+    assert (await api.get("/api/v1/license/stats/old")).json()["forever"] == forever
+    loader.assert_awaited_once()
 
     await service.admin_delete_license(forever_ids[0])
+    # Fresh data stays cached; a stale request returns it while refreshing in the background.
+    assert (await api.get("/api/v1/license/stats/old")).json()["forever"] == forever
+    loader.assert_awaited_once()
+    await expire_cache()
+    assert (await api.get("/api/v1/license/stats/old")).json()["forever"] == forever
+    assert loader.await_count == 2
     response = await api.get("/api/v1/license/stats/old")
     assert response.json()["forever"]["overview"] == {
         "paid_sold": 1, "total_money": 10, "avg_check": 10,
     }
     await service.admin_delete_license(forever_ids[1])
+    await expire_cache()
+    stale = (await api.get("/api/v1/license/stats/old")).json()["forever"]
+    assert stale["overview"]["paid_sold"] == 1
     empty = (await api.get("/api/v1/license/stats/old")).json()["forever"]
     assert empty == {
         "overview": {"paid_sold": 0, "total_money": 0, "avg_check": 0},
         "by_method": [], "by_price": [],
     }
+    assert loader.await_count == 3
 
 
 async def test_admin_duration_update_and_ban(component, service):

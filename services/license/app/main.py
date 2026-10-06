@@ -25,12 +25,18 @@ async def lifespan(app: FastAPI):
     app.state.public_stats_cache = PublicStatsCache.from_url(
         settings.REDIS_URL, "mtgmods:license:public_stats:v2",
     )
+    app.state.old_stats_cache = PublicStatsCache.from_url(
+        settings.REDIS_URL, "mtgmods:license:old_stats:v1",
+    )
     try:
         yield
     finally:
         task.cancel()
         await asyncio.gather(task, return_exceptions=True)
-        await app.state.public_stats_cache.aclose()
+        await asyncio.gather(
+            app.state.public_stats_cache.aclose(),
+            app.state.old_stats_cache.aclose(),
+        )
         await engine.dispose()
 
 app = FastAPI(

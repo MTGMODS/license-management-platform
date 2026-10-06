@@ -9,10 +9,11 @@ async def get_public_stats(request: Request, background_tasks: BackgroundTasks):
     service = LicenseStatsService(request.app.state.public_stats_cache)
     return await service.get_website_stats(background_tasks)
 
-@router.get("/stats/old", description="Legacy lifetime license statistics, read directly from the database")
-async def get_old_stats(response: Response):
+@router.get("/stats/old", description="Legacy lifetime license statistics with a shared Redis cache")
+async def get_old_stats(request: Request, background_tasks: BackgroundTasks, response: Response):
     response.headers["Cache-Control"] = "no-store"
-    return await LicenseStatsService.get_old_stats()
+    service = LicenseStatsService(request.app.state.old_stats_cache)
+    return await service.get_old_stats(background_tasks)
 
 @router.get("/tariffs", description="Catalog prices and per-plan device limits for the site and bots.")
 async def get_tariffs():
