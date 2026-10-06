@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 
 import { useOldSalesStats } from '@/features/license/useOldSalesStats'
 import { Card, ErrorState, Skeleton } from '@/shared/ui'
+import { ForeverPriceHistory } from '@/widgets/vip/ForeverPriceHistory'
 import { ForeverStats } from '@/widgets/vip/ForeverStats'
 
 export function OldVipPage() {
@@ -33,6 +34,8 @@ export function OldVipPage() {
       ) : (
         <ForeverStats forever={data.forever} />
       )}
+
+      <ForeverPriceHistory />
     </div>
   )
 }
