@@ -21,27 +21,35 @@ function ForeverPricesChart({ prices }: { prices: LicensePriceStat[] }) {
     <Card className="p-6">
       <h2 className="text-lg font-semibold tracking-tight">{t('stats.legacy.byPrice.title')}</h2>
       <p className="mt-1 text-sm text-fg-muted">{t('stats.legacy.priceHistory.subtitle')}</p>
-      <div aria-hidden="true" className="mt-6 hidden grid-cols-[4rem_minmax(0,1fr)_6rem_7rem_8rem] gap-4 border-b border-white/10 pb-3 text-xs text-fg-subtle xl:grid">
-        <span>{t('stats.salesList.amount')}</span>
-        <span>{t('stats.legacy.byPrice.period')}</span>
-        <span className="text-right">{t('stats.legacy.sold')}</span>
-        <span className="text-right">{t('stats.revenue')}</span>
-        <span className="text-right">{t('stats.legacy.byPrice.salesShare')}</span>
-      </div>
-      <ul className="mt-6 space-y-5 xl:mt-0 xl:space-y-0 xl:divide-y xl:divide-white/5">
-        {allPrices.map((price) => {
-          const item = prices.find((row) => row.price === price)
-          const period = foreverPricePeriods.find((row) => row.price === price)
-          const share = item?.count_share ?? 0
-          return (
-            <li key={price} className="xl:grid xl:grid-cols-[4rem_minmax(0,1fr)_6rem_7rem_8rem] xl:items-center xl:gap-4 xl:py-4">
-              <div className="flex items-start gap-3 xl:contents">
-                <span className="tabular flex w-14 shrink-0 justify-center rounded-lg bg-accent-500/10 py-2 font-semibold text-accent-500 xl:w-full">
-                  {Number.isInteger(price) ? usdWhole(format, price) : usd(format, price)}
-                </span>
-                <div className="min-w-0 flex-1 xl:contents">
-                  <div className="text-xs text-fg-muted sm:text-sm">
-                    <span className="sr-only">{t('stats.legacy.byPrice.period')}: </span>
+      <div className="mt-6 overflow-x-auto">
+        <table className="w-full min-w-[56rem] text-left text-sm">
+          <caption className="sr-only">{t('stats.legacy.byPrice.title')}</caption>
+          <thead>
+            <tr className="border-b border-white/10 text-xs text-fg-subtle">
+              <th scope="col" className="pb-3 pr-4 font-medium">{t('stats.salesList.amount')}</th>
+              <th scope="col" className="min-w-80 px-3 pb-3 font-medium">{t('stats.legacy.byPrice.period')}</th>
+              <th scope="col" className="px-3 pb-3 text-right font-medium">{t('stats.legacy.sold')}</th>
+              <th scope="col" className="px-3 pb-3 text-right font-medium">{t('stats.revenue')}</th>
+              <th scope="col" className="w-32 px-3 pb-3 text-right font-medium">{t('stats.legacy.byPrice.salesShare')}</th>
+              <th scope="col" className="w-32 pl-3 pb-3 text-right font-medium">{t('stats.durations.moneyShare')}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/5">
+            {allPrices.map((price) => {
+              const item = prices.find((row) => row.price === price)
+              const period = foreverPricePeriods.find((row) => row.price === price)
+              const shares = [
+                { key: 'sales', value: item?.count_share ?? 0, color: 'bg-accent-500' },
+                { key: 'revenue', value: item?.money_share ?? 0, color: 'bg-emerald-400' },
+              ]
+              return (
+                <tr key={price}>
+                  <th scope="row" className="py-4 pr-4">
+                    <span className="tabular flex w-16 justify-center rounded-lg bg-accent-500/10 py-2 font-semibold text-accent-500">
+                      {Number.isInteger(price) ? usdWhole(format, price) : usd(format, price)}
+                    </span>
+                  </th>
+                  <td className="px-3 py-4 text-fg-muted">
                     {period ? (
                       <>
                         <time dateTime={period.start}>{format.fullDate(period.start)}</time>
@@ -49,46 +57,24 @@ function ForeverPricesChart({ prices }: { prices: LicensePriceStat[] }) {
                         <time dateTime={period.end}>{format.fullDate(period.end)}</time>
                       </>
                     ) : t('stats.legacy.priceHistory.unknownPeriod')}
-                  </div>
-                  <div className="tabular mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-fg-subtle xl:contents">
-                    <span className="xl:text-right xl:text-sm xl:font-medium xl:text-fg">
-                      <span className="xl:hidden">{t('stats.legacy.byPrice.sales', { value: format.number(item?.count ?? 0) })}</span>
-                      <span className="hidden xl:inline">
-                        <span className="sr-only">{t('stats.legacy.sold')}: </span>
-                        {format.number(item?.count ?? 0)}
-                      </span>
-                    </span>
-                    <span className="xl:text-right xl:text-sm xl:font-medium xl:text-fg">
-                      <span className="sr-only">{t('stats.revenue')}: </span>
-                      {usdWhole(format, item?.sum ?? 0)}
-                    </span>
-                    <div className="xl:text-right xl:text-sm">
-                      <span className="xl:hidden">{t('stats.legacy.byPrice.share', { share: format.percent(share) })}</span>
-                      <span className="hidden xl:inline">
-                        <span className="sr-only">{t('stats.legacy.byPrice.salesShare')}: </span>
-                        {format.percent(share)}
-                      </span>
-                      <div className="mt-2 hidden h-1.5 overflow-hidden rounded-full bg-ink-800 xl:block">
-                        <div className="h-full rounded-full bg-accent-500"
-                          style={{ width: `${Math.max(share, share > 0 ? 1.5 : 0)}%` }} />
+                  </td>
+                  <td className="tabular px-3 py-4 text-right font-medium">{format.number(item?.count ?? 0)}</td>
+                  <td className="tabular whitespace-nowrap px-3 py-4 text-right font-medium">{usdWhole(format, item?.sum ?? 0)}</td>
+                  {shares.map(({ key, value, color }) => (
+                    <td key={key} className="tabular px-3 py-4 text-right last:pr-0">
+                      {format.percent(value)}
+                      <div aria-hidden="true" className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink-800">
+                        <div className={`h-full rounded-full ${color}`}
+                          style={{ width: `${Math.max(value, value > 0 ? 1.5 : 0)}%` }} />
                       </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-1 text-xs text-fg-subtle xl:hidden">
-                {t('stats.durations.moneyShare')}: {format.percent(item?.money_share ?? 0)}
-              </div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink-800 xl:hidden">
-                <div
-                  className="h-full rounded-full bg-accent-500"
-                  style={{ width: `${Math.max(share, share > 0 ? 1.5 : 0)}%` }}
-                />
-              </div>
-            </li>
-          )
-        })}
-      </ul>
+                    </td>
+                  ))}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     </Card>
   )
 }

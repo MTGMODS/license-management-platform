@@ -89,12 +89,20 @@ it('opens the archive anonymously with noindex and reuses fresh data on return',
 it('combines known price periods with actual sales without dropping unlisted prices', () => {
   const { container } = render(<ForeverStats data={{ ...archive, forever: {
     ...archive.forever,
-    by_price: [{ price: 20, count: 2, sum: 40, count_share: 100, money_share: 100 }],
+    by_price: [
+      { price: 10, count: 1, sum: 10, count_share: 50, money_share: 33.3 },
+      { price: 20, count: 1, sum: 20, count_share: 50, money_share: 66.7 },
+    ],
   } }} />)
 
   expect(screen.getByRole('heading', { name: 'stats.legacy.byPrice.title' })).toBeTruthy()
   expect(screen.getByText('stats.legacy.priceHistory.unknownPeriod')).toBeTruthy()
-  expect(screen.getByText('$20')).toBeTruthy()
+  const priceCell = screen.getByRole('rowheader', { name: '$20' })
+  expect(screen.getByRole('table', { name: 'stats.legacy.byPrice.title' })).toBeTruthy()
+  expect(screen.getByRole('columnheader', { name: 'stats.durations.moneyShare' })).toBeTruthy()
+  const priceRow = priceCell.closest('tr')
+  expect(priceRow?.children[4]?.textContent).toBe('50,0%')
+  expect(priceRow?.children[5]?.textContent).toBe('66,7%')
   expect(container.querySelectorAll('time')).toHaveLength(14)
   expect(container.querySelector('time')?.dateTime).toBe('2024-04-01')
   expect(container.querySelectorAll('time')[13]?.dateTime).toBe('2026-03-01')

@@ -11,7 +11,7 @@ export function OldVipPage() {
   return (
     <div className="shell space-y-8 py-10 sm:py-14">
       <div className="text-center">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+        <h1 className="text-gradient text-2xl font-semibold tracking-tight sm:text-3xl">
           {t('stats.legacy.title')}
         </h1>
         <p className="mx-auto mt-2 max-w-3xl text-xs text-fg-muted sm:text-sm">
