@@ -27,11 +27,11 @@ function ForeverPricesChart({ prices }: { prices: LicensePriceStat[] }) {
           <thead>
             <tr className="border-b border-white/10 text-xs text-fg-subtle">
               <th scope="col" className="pb-3 pr-4 font-medium">{t('stats.salesList.amount')}</th>
-              <th scope="col" className="min-w-80 px-3 pb-3 font-medium">{t('stats.legacy.byPrice.period')}</th>
               <th scope="col" className="px-3 pb-3 text-right font-medium">{t('stats.legacy.sold')}</th>
               <th scope="col" className="px-3 pb-3 text-right font-medium">{t('stats.revenue')}</th>
               <th scope="col" className="w-32 px-3 pb-3 text-right font-medium">{t('stats.legacy.byPrice.salesShare')}</th>
               <th scope="col" className="w-32 pl-3 pb-3 text-right font-medium">{t('stats.durations.moneyShare')}</th>
+              <th scope="col" className="min-w-80 px-3 pb-3 font-medium">{t('stats.legacy.byPrice.period')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
@@ -49,15 +49,6 @@ function ForeverPricesChart({ prices }: { prices: LicensePriceStat[] }) {
                       {Number.isInteger(price) ? usdWhole(format, price) : usd(format, price)}
                     </span>
                   </th>
-                  <td className="px-3 py-4 text-fg-muted">
-                    {period ? (
-                      <>
-                        <time dateTime={period.start}>{format.fullDate(period.start)}</time>
-                        {' — '}
-                        <time dateTime={period.end}>{format.fullDate(period.end)}</time>
-                      </>
-                    ) : t('stats.legacy.priceHistory.unknownPeriod')}
-                  </td>
                   <td className="tabular px-3 py-4 text-right font-medium">{format.number(item?.count ?? 0)}</td>
                   <td className="tabular whitespace-nowrap px-3 py-4 text-right font-medium">{usdWhole(format, item?.sum ?? 0)}</td>
                   {shares.map(({ key, value, color }) => (
@@ -69,6 +60,15 @@ function ForeverPricesChart({ prices }: { prices: LicensePriceStat[] }) {
                       </div>
                     </td>
                   ))}
+                  <td className="px-3 py-4 text-fg-muted">
+                    {period ? (
+                      <>
+                        <time dateTime={period.start}>{format.fullDate(period.start)}</time>
+                        {' — '}
+                        <time dateTime={period.end}>{format.fullDate(period.end)}</time>
+                      </>
+                    ) : t('stats.legacy.priceHistory.unknownPeriod')}
+                  </td>
                 </tr>
               )
             })}
