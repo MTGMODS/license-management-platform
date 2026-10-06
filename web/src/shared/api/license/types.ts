@@ -159,6 +159,7 @@ export interface LicenseSalesStats {
 }
 
 export interface LicenseOldSalesStats {
+  updated_at: ApiDateTime
   forever: LicenseForeverStats
 }
 

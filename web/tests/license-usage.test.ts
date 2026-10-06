@@ -15,12 +15,13 @@ it('reads subscription stats without status/data wrapper or legacy lifetime stat
 })
 
 it('reads lifetime stats separately from the public old endpoint', async () => {
-  vi.mocked(request).mockResolvedValue({ forever: {
+  vi.mocked(request).mockResolvedValue({ updated_at: '2026-10-06T12:00:00Z', forever: {
     overview: { paid_sold: 2, total_money: 30, avg_check: 15 },
     by_method: [{ method: 'Steam', count: 2, sum: 30, money_share: 100 }],
     by_price: [{ price: 15, count: 2, sum: 30, count_share: 100, money_share: 100 }],
   } })
   const stats = await getLicenseOldSalesStats()
+  expect(stats.updated_at).toBe('2026-10-06T12:00:00Z')
   expect(stats.forever.overview).toEqual({ paid_sold: 2, total_money: 30, avg_check: 15 })
   expect(stats.forever.by_method[0]?.method).toBe('Steam')
   expect(stats.forever.by_price[0]?.price).toBe(15)

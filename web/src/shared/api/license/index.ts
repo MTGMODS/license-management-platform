@@ -40,6 +40,7 @@ interface SalesStatsWire {
 }
 
 interface OldSalesStatsWire {
+  updated_at: string
   forever?: Record<string, unknown>
 }
 
@@ -261,7 +262,10 @@ export async function getLicenseOldSalesStats(signal?: AbortSignal): Promise<Lic
     timeoutMs: STATS_REQUEST_TIMEOUT_MS,
   })
 
-  return { forever: normalizeForever(response.forever) }
+  return {
+    updated_at: asString(response.updated_at),
+    forever: normalizeForever(response.forever),
+  }
 }
 
 export async function getTariffs(signal?: AbortSignal): Promise<TariffsCatalog> {

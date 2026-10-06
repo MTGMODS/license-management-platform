@@ -60,11 +60,13 @@ export function PaymentsChart({
   title,
   subtitle,
   layout = 'default',
+  donutSize = 'default',
 }: {
   payments: LicensePaymentStat[]
   title: string
   subtitle?: string
   layout?: 'default' | 'inline'
+  donutSize?: 'default' | 'large'
 }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
@@ -99,7 +101,9 @@ export function PaymentsChart({
               className={cn(
                 'relative aspect-square',
                 inline
-                  ? 'h-52 w-52 sm:h-55 sm:w-55'
+                  ? donutSize === 'large'
+                    ? 'h-60 w-60 sm:h-64 sm:w-64'
+                    : 'h-52 w-52 sm:h-55 sm:w-55'
                   : 'h-52 w-52 sm:h-full sm:w-auto sm:max-h-full sm:max-w-full sm:scale-[0.9025]',
               )}
             >
