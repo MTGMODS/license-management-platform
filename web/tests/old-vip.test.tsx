@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Link, MemoryRouter, Outlet } from 'react-router'
 import { expect, it, vi } from 'vitest'
@@ -40,7 +40,7 @@ const archive = { forever: {
   by_price: [{ price: 15, count: 2, sum: 30, count_share: 100, money_share: 100 }],
 } }
 
-it('opens the archive anonymously with noindex and fetches fresh data on return', async () => {
+it('opens the archive anonymously with noindex and reuses fresh data on return', async () => {
   vi.mocked(request).mockClear()
   vi.mocked(request).mockResolvedValue(archive)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -58,13 +58,19 @@ it('opens the archive anonymously with noindex and fetches fresh data on return'
 
   fireEvent.click(screen.getByRole('link', { name: 'Current' }))
   expect(await screen.findByText('Current VIP page')).toBeTruthy()
-  await waitFor(() => expect(client.getQueryData(['license', 'old-sales-stats'])).toBeUndefined())
+  expect(client.getQueryData(['license', 'old-sales-stats'])).toBeTruthy()
   expect(document.head.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('index,follow')
 
   vi.mocked(request).mockResolvedValue({ forever: { ...archive.forever,
     by_method: [{ method: 'Card', count: 2, sum: 30, money_share: 100 }],
   } })
   fireEvent.click(screen.getByRole('link', { name: 'Archive' }))
+  expect(await screen.findByText('Steam')).toBeTruthy()
+  expect(request).toHaveBeenCalledTimes(1)
+
+  await act(async () => {
+    await client.invalidateQueries({ queryKey: ['license', 'old-sales-stats'] })
+  })
   expect(await screen.findByText('Card')).toBeTruthy()
   expect(screen.queryByText('Steam')).toBeNull()
   expect(request).toHaveBeenCalledTimes(2)

@@ -252,7 +252,7 @@ export async function getLicenseSalesStats(signal?: AbortSignal): Promise<Licens
   return normalizeSalesStats(response)
 }
 
-/** Lifetime statistics are fetched separately, without a server-side cache. */
+/** Lifetime statistics use a separate shared Redis cache. */
 export async function getLicenseOldSalesStats(signal?: AbortSignal): Promise<LicenseOldSalesStats> {
   const response = await request<OldSalesStatsWire>({
     service: 'license',
