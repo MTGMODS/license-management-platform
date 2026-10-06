@@ -32,7 +32,7 @@ if service == "license":
 
 server = fakeredis.FakeServer()
 version = "v2" if service == "license" else "v1"
-key = "mtgmods:license:old_stats:v1" if is_old else f"mtgmods:{service}:public_stats:{version}"
+key = "mtgmods:license:old_stats:v2" if is_old else f"mtgmods:{service}:public_stats:{version}"
 cache_attr = "old_stats_cache" if is_old else "public_stats_cache"
 loader_method = "_load_old_stats" if is_old else "_load_stats"
 loader = AsyncMock(wraps=getattr(stats_class, loader_method))
@@ -49,7 +49,8 @@ with patch.object(stats_class, loader_method, loader):
             body = response.json()
             assert "status" not in body and "data" not in body
             if is_old:
-                assert set(body) == {"forever"}
+                assert set(body) == {"updated_at", "forever"}
+                assert body["updated_at"].endswith("Z")
                 assert response.headers["cache-control"] == "no-store"
             elif service == "license":
                 assert "updated_at" in body

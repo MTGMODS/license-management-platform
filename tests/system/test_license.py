@@ -34,7 +34,7 @@ async def old_stats_cache(component, monkeypatch):
     cache_class = component("app.infrastructure.stats_cache").PublicStatsCache
     main = component("app.main")
     async with fakeredis.aioredis.FakeRedis() as redis:
-        cache = cache_class(redis, "mtgmods:license:old_stats:v1")
+        cache = cache_class(redis, "mtgmods:license:old_stats:v2")
         monkeypatch.setattr(main.app.state, "old_stats_cache", cache, raising=False)
         yield cache
 
@@ -197,7 +197,8 @@ async def test_sales_stats_exclude_pending_free_and_unowned_keys(component, db, 
     assert stats["subscriptions"]["overview"]["total_money"] == 5
     assert "forever" not in stats
     old_stats = await service.license_repo.get_old_stats()
-    assert set(old_stats) == {"forever"}
+    assert set(old_stats) == {"updated_at", "forever"}
+    assert datetime.fromisoformat(old_stats["updated_at"]).tzinfo == timezone.utc
     assert old_stats["forever"]["overview"] == {
         "paid_sold": 1, "total_money": 20, "avg_check": 20,
     }
@@ -228,10 +229,19 @@ async def test_old_stats_cache_reuses_data_and_refreshes_after_deletion(
         keys, _ = await purchase(component, service, **overrides)
         forever_ids.append(await activate(component, service, keys[0], user_id))
 
+    class StatsClock(datetime):
+        current = datetime(2026, 10, 6, 12, tzinfo=timezone.utc)
+
+        @classmethod
+        def now(cls, tz=None):
+            return cls.current.astimezone(tz)
+
+    monkeypatch.setattr(component("app.infrastructure.repository"), "datetime", StatsClock)
     response = await api.get("/api/v1/license/stats/old")
     assert response.status_code == 200
     assert response.headers["cache-control"] == "no-store"
-    assert set(response.json()) == {"forever"}
+    assert set(response.json()) == {"updated_at", "forever"}
+    assert response.json()["updated_at"] == "2026-10-06T12:00:00Z"
     forever = response.json()["forever"]
     assert forever["overview"] == {"paid_sold": 2, "total_money": 30, "avg_check": 15}
     assert forever["by_method"] == [
@@ -247,13 +257,19 @@ async def test_old_stats_cache_reuses_data_and_refreshes_after_deletion(
     loader.assert_awaited_once()
 
     await service.admin_delete_license(forever_ids[0])
+    StatsClock.current += timedelta(minutes=5)
     # Fresh data stays cached; a stale request returns it while refreshing in the background.
-    assert (await api.get("/api/v1/license/stats/old")).json()["forever"] == forever
+    fresh = (await api.get("/api/v1/license/stats/old")).json()
+    assert fresh["forever"] == forever
+    assert fresh["updated_at"] == "2026-10-06T12:00:00Z"
     loader.assert_awaited_once()
     await expire_cache()
-    assert (await api.get("/api/v1/license/stats/old")).json()["forever"] == forever
+    stale_response = (await api.get("/api/v1/license/stats/old")).json()
+    assert stale_response["forever"] == forever
+    assert stale_response["updated_at"] == "2026-10-06T12:00:00Z"
     assert loader.await_count == 2
     response = await api.get("/api/v1/license/stats/old")
+    assert response.json()["updated_at"] == "2026-10-06T12:05:00Z"
     assert response.json()["forever"]["overview"] == {
         "paid_sold": 1, "total_money": 10, "avg_check": 10,
     }

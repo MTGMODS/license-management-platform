@@ -414,6 +414,7 @@ class LicenseRepository:
         ]
 
         return {
+            "updated_at": format_utc(datetime.now(timezone.utc)),
             "forever": {
                 "overview": {
                     "paid_sold": forever_paid_sold,

@@ -26,7 +26,7 @@ async def lifespan(app: FastAPI):
         settings.REDIS_URL, "mtgmods:license:public_stats:v2",
     )
     app.state.old_stats_cache = PublicStatsCache.from_url(
-        settings.REDIS_URL, "mtgmods:license:old_stats:v1",
+        settings.REDIS_URL, "mtgmods:license:old_stats:v2",
     )
     try:
         yield

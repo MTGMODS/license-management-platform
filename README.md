@@ -88,14 +88,15 @@ Ports: **8001 / 8002 / 8003 / 8005**. Vite for the SPA: `cd web && npm ci && npm
 License and Usage share Redis with separate keys:
 
 - `mtgmods:license:public_stats:v2`
-- `mtgmods:license:old_stats:v1`
+- `mtgmods:license:old_stats:v2`
 - `mtgmods:usage:public_stats:v1`
 
 All statistics endpoints return their statistics directly. Redis stores an internal
 JSON envelope with `data` and `fresh_until`; this envelope is not exposed by the API.
 `GET /api/v1/license/stats/public` contains only `updated_at` and `subscriptions`.
 Legacy lifetime statistics are available separately at `GET /api/v1/license/stats/old`
-as `{ "forever": { "overview": ..., "by_method": ..., "by_price": ... } }`.
+as `{ "updated_at": "...Z", "forever": { "overview": ..., "by_method": ..., "by_price": ... } }`.
+`updated_at` records when statistics were computed and stays unchanged on cache hits.
 The legacy endpoint uses the same Redis cache mechanism, with its own key and lock.
 It reports paid, completed purchases for lifetime licenses still in the database;
 deleting a license removes its purchase from these figures on the next refresh.
