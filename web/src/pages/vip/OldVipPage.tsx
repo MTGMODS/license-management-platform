@@ -10,11 +10,11 @@ export function OldVipPage() {
 
   return (
     <div className="shell space-y-8 py-10 sm:py-14">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+      <div className="text-center">
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
           {t('stats.legacy.title')}
         </h1>
-        <p className="mt-2 max-w-3xl text-sm text-fg-muted sm:text-base">
+        <p className="mx-auto mt-2 max-w-3xl text-xs text-fg-muted sm:text-sm">
           {t('stats.legacy.subtitle')}
         </p>
       </div>

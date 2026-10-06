@@ -89,7 +89,6 @@ function ForeverPricesChart({ prices }: { prices: LicensePriceStat[] }) {
           )
         })}
       </ul>
-      <p className="mt-5 text-xs text-fg-subtle">{t('stats.legacy.priceHistory.boundaries')}</p>
     </Card>
   )
 }
@@ -111,11 +110,9 @@ export function ForeverStats({ data }: { data: LicenseOldSalesStats }) {
         <h2 id="forever-overview-title" className="text-xl font-semibold tracking-tight sm:text-2xl">
           {t('stats.legacy.overviewTitle')}
         </h2>
-        {updatedAt ? (
-          <p className="mt-1 text-xs text-fg-subtle sm:text-sm">
-            {t('stats.updated', { time: format.dateTime(updatedAt) })}
-          </p>
-        ) : null}
+        <p className="mt-1 text-xs text-fg-muted sm:text-sm">
+          {t('stats.updated', { time: updatedAt ? format.dateTime(updatedAt) : '—' })}
+        </p>
         <div className="mt-4 grid items-start gap-6 xl:grid-cols-2 xl:items-stretch">
           <div className="grid grid-cols-3 gap-2 sm:gap-4 xl:grid-cols-1 xl:grid-rows-3">
             {metrics.map(({ label, value, icon: Icon }) => (

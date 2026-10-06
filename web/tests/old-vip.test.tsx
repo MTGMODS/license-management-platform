@@ -98,6 +98,12 @@ it('combines known price periods with actual sales without dropping unlisted pri
   expect(container.querySelectorAll('time')).toHaveLength(14)
   expect(container.querySelector('time')?.dateTime).toBe('2024-04-01')
   expect(container.querySelectorAll('time')[13]?.dateTime).toBe('2026-03-01')
+  expect(screen.queryByText('stats.legacy.priceHistory.boundaries')).toBeNull()
+})
+
+it('keeps the update label visible without inventing a date for an older API response', () => {
+  render(<ForeverStats data={{ ...archive, updated_at: '' }} />)
+  expect(screen.getByText('stats.updated: —')).toBeTruthy()
 })
 
 it('renders only subscription analytics even if an old response contains lifetime data', async () => {
