@@ -107,19 +107,19 @@ export function ForeverStats({ data }: { data: LicenseOldSalesStats }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid items-start gap-6 xl:grid-cols-2">
-        <section aria-labelledby="forever-overview-title" className="min-w-0 xl:self-center">
-          <h2 id="forever-overview-title" className="text-xl font-semibold tracking-tight sm:text-2xl">
-            {t('stats.legacy.overviewTitle')}
-          </h2>
-          {updatedAt ? (
-            <p className="mt-1 text-xs text-fg-subtle sm:text-sm">
-              {t('stats.updated', { time: format.dateTime(updatedAt) })}
-            </p>
-          ) : null}
-          <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-4">
+      <section aria-labelledby="forever-overview-title" className="min-w-0">
+        <h2 id="forever-overview-title" className="text-xl font-semibold tracking-tight sm:text-2xl">
+          {t('stats.legacy.overviewTitle')}
+        </h2>
+        {updatedAt ? (
+          <p className="mt-1 text-xs text-fg-subtle sm:text-sm">
+            {t('stats.updated', { time: format.dateTime(updatedAt) })}
+          </p>
+        ) : null}
+        <div className="mt-4 grid items-start gap-6 xl:grid-cols-2 xl:items-stretch">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 xl:grid-cols-1 xl:grid-rows-3">
             {metrics.map(({ label, value, icon: Icon }) => (
-              <Card key={label} className="min-w-0 p-3 text-center sm:p-6">
+              <Card key={label} className="min-w-0 p-3 text-center sm:p-6 xl:flex xl:flex-col xl:justify-center">
                 <div className="flex items-center justify-center gap-1.5 text-xs text-fg-muted sm:text-sm">
                   <Icon aria-hidden className="hidden size-4 shrink-0 text-accent-300 sm:block" />
                   <p>{label}</p>
@@ -128,10 +128,10 @@ export function ForeverStats({ data }: { data: LicenseOldSalesStats }) {
               </Card>
             ))}
           </div>
-        </section>
-        <PaymentsChart payments={forever.by_method} title={t('stats.legacy.payments')}
-          layout="inline" donutSize="large" />
-      </div>
+          <PaymentsChart payments={forever.by_method} title={t('stats.legacy.payments')}
+            layout="inline" donutSize="large" />
+        </div>
+      </section>
       <ForeverPricesChart prices={forever.by_price} />
     </div>
   )
