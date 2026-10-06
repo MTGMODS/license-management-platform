@@ -22,8 +22,16 @@ function ForeverPricesChart({ prices }: { prices: LicensePriceStat[] }) {
       <h2 className="text-lg font-semibold tracking-tight">{t('stats.legacy.byPrice.title')}</h2>
       <p className="mt-1 text-sm text-fg-muted">{t('stats.legacy.priceHistory.subtitle')}</p>
       <div className="mt-6 overflow-x-auto">
-        <table className="w-full min-w-[56rem] text-left text-sm">
+        <table className="w-full min-w-[56rem] text-left text-sm xl:table-fixed">
           <caption className="sr-only">{t('stats.legacy.byPrice.title')}</caption>
+          <colgroup>
+            <col className="xl:w-[8%]" />
+            <col className="xl:w-[12%]" />
+            <col className="xl:w-[13%]" />
+            <col className="xl:w-[14%]" />
+            <col className="xl:w-[14%]" />
+            <col className="xl:w-[39%]" />
+          </colgroup>
           <thead>
             <tr className="border-b border-white/10 text-xs text-fg-subtle">
               <th scope="col" className="pb-3 pr-4 font-medium">{t('stats.salesList.amount')}</th>
