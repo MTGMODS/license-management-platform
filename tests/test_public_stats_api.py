@@ -29,7 +29,8 @@ if service == "license":
     main.check_expired_licenses_task = idle_worker
 
 server = fakeredis.FakeServer()
-key = f"mtgmods:{service}:public_stats:v1"
+version = "v2" if service == "license" else "v1"
+key = f"mtgmods:{service}:public_stats:{version}"
 loader = AsyncMock(wraps=stats_class._load_stats)
 with patch.object(stats_class, "_load_stats", loader):
     for boot in range(2):
@@ -44,7 +45,7 @@ with patch.object(stats_class, "_load_stats", loader):
             assert "updated_at" in body
             assert "status" not in body and "data" not in body
             if service == "license":
-                assert "subscriptions" in body and "forever" in body
+                assert "subscriptions" in body and "forever" not in body
             else:
                 assert "overview" in body and "analytics" in body
             if boot == 0:

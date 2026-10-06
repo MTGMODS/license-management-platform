@@ -379,6 +379,11 @@ class LicenseStatsService:
         return await self.cache.get(self._load_stats, background_tasks)
 
     @staticmethod
+    async def get_old_stats():
+        async with AsyncSessionLocal() as db:
+            return await LicenseRepository(db).get_old_stats()
+
+    @staticmethod
     async def _load_stats():
         # A refresh owns its DB session, including when it runs after the response.
         async with AsyncSessionLocal() as db:

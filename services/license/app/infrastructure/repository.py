@@ -153,7 +153,6 @@ class LicenseRepository:
 
     async def get_heavy_public_stats(self):
         timed = LicenseModel.duration_days.isnot(None)
-        forever = LicenseModel.duration_days.is_(None)
         paid = TransactionModel.amount > 0
         completed = TransactionModel.status == "COMPLETED"
         owned = LicenseModel.user_id.isnot(None)
@@ -333,11 +332,40 @@ class LicenseRepository:
             "by_purchases": by_purchases,
         }
 
-        paid_forever = and_(forever, paid, completed)
+        return {
+            "updated_at": format_utc(datetime.now(timezone.utc)),
+            "subscriptions": {
+                "overview": {
+                    "total_sold": total_sold,
+                    "total_money": total_money,
+                    "active": overview.active or 0,
+                    "first_activated_at": format_utc(sale_range.first_activated_at),
+                    "last_activated_at": format_utc(sale_range.last_activated_at),
+                    "avg_check": retention["avg_check"],
+                    "avg_subscriptions_per_buyer": retention["avg_subscriptions_per_buyer"],
+                    "avg_revenue_per_buyer": retention["avg_revenue_per_buyer"],
+                },
+                "by_duration": by_duration,
+                "by_method": by_method,
+                "retention": retention,
+                "timeline": {
+                    "daily": timeline_daily,
+                    "monthly": timeline_monthly,
+                },
+                "sales": sales,
+            },
+        }
+
+    async def get_old_stats(self):
+        forever = LicenseModel.duration_days.is_(None)
+        paid_forever = and_(
+            forever,
+            TransactionModel.amount > 0,
+            TransactionModel.status == "COMPLETED",
+        )
 
         forever_overview_stmt = select(
             func.count(distinct(case((paid_forever, LicenseModel.id)))).label("paid_sold"),
-            func.count(distinct(case((and_(paid_forever, active), LicenseModel.id)))).label("active"),
             func.sum(case((paid_forever, TransactionModel.amount), else_=0)).label("total_money"),
         ).select_from(LicenseModel).outerjoin(
             TransactionModel, LicenseModel.id == TransactionModel.license_id
@@ -386,32 +414,10 @@ class LicenseRepository:
         ]
 
         return {
-            "updated_at": format_utc(datetime.now(timezone.utc)),
-            "subscriptions": {
-                "overview": {
-                    "total_sold": total_sold,
-                    "total_money": total_money,
-                    "active": overview.active or 0,
-                    "first_activated_at": format_utc(sale_range.first_activated_at),
-                    "last_activated_at": format_utc(sale_range.last_activated_at),
-                    "avg_check": retention["avg_check"],
-                    "avg_subscriptions_per_buyer": retention["avg_subscriptions_per_buyer"],
-                    "avg_revenue_per_buyer": retention["avg_revenue_per_buyer"],
-                },
-                "by_duration": by_duration,
-                "by_method": by_method,
-                "retention": retention,
-                "timeline": {
-                    "daily": timeline_daily,
-                    "monthly": timeline_monthly,
-                },
-                "sales": sales,
-            },
             "forever": {
                 "overview": {
                     "paid_sold": forever_paid_sold,
                     "total_money": forever_money,
-                    "active": forever_overview.active or 0,
                     "avg_check": round(forever_money / forever_paid_sold, 2) if forever_paid_sold else 0,
                 },
                 "by_method": forever_by_method,

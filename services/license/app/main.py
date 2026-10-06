@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
     task = asyncio.create_task(check_expired_licenses_task())
     app.state.public_stats_cache = PublicStatsCache.from_url(
-        settings.REDIS_URL, "mtgmods:license:public_stats:v1",
+        settings.REDIS_URL, "mtgmods:license:public_stats:v2",
     )
     try:
         yield

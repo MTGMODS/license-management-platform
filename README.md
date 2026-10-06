@@ -87,11 +87,17 @@ Ports: **8001 / 8002 / 8003 / 8005**. Vite for the SPA: `cd web && npm ci && npm
 
 License and Usage share Redis with separate keys:
 
-- `mtgmods:license:public_stats:v1`
+- `mtgmods:license:public_stats:v2`
 - `mtgmods:usage:public_stats:v1`
 
 Both public endpoints return their statistics directly. Redis stores an internal
 JSON envelope with `data` and `fresh_until`; this envelope is not exposed by the API.
+`GET /api/v1/license/stats/public` contains only `updated_at` and `subscriptions`.
+Legacy lifetime statistics are available separately at `GET /api/v1/license/stats/old`
+as `{ "forever": { "overview": ..., "by_method": ..., "by_price": ... } }`.
+The legacy endpoint reads the database on every request without Redis caching.
+It reports paid, completed purchases for lifetime licenses still in the database;
+deleting a license removes its purchase from these figures immediately.
 Results are fresh for 5 minutes and retained for up to 24 hours. A request for
 stale statistics returns the previous result immediately and schedules a refresh
 in the serving FastAPI process, with a separate database session.
@@ -113,7 +119,8 @@ the endpoint usable but can increase DB load during a Redis outage.
 Redis has no published host port or configured persistence; restarting it clears
 this rebuildable cache. API container restarts keep using the existing Redis data.
 Health endpoints do not require Redis. There is no timer: refreshes are driven by
-requests. The heavy SQL and the public response shapes are unchanged.
+requests. Lifetime aggregates are excluded from the cached subscription query.
+The license key is versioned as `v2` so previous combined responses are not reused.
 
 Existing production deployment (PostgreSQL and the other services already running):
 
@@ -123,7 +130,7 @@ docker compose up -d --build --no-deps license-service usage-service
 docker compose exec -T redis redis-cli ping
 curl -fsS http://127.0.0.1:8002/api/v1/license/stats/public
 curl -fsS http://127.0.0.1:8003/api/v1/usage/stats/public
-docker compose exec -T redis redis-cli --scan --pattern 'mtgmods:*:public_stats:v1*'
+docker compose exec -T redis redis-cli --scan --pattern 'mtgmods:*:public_stats:v*'
 ```
 
 The default Redis URL works with existing service `.env` files; set `REDIS_URL`

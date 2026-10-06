@@ -183,8 +183,53 @@ async def test_sales_stats_exclude_pending_free_and_unowned_keys(component, db, 
     stats = await service.license_repo.get_heavy_public_stats()
     assert stats["subscriptions"]["overview"]["total_sold"] == 1
     assert stats["subscriptions"]["overview"]["total_money"] == 5
-    assert stats["forever"]["overview"]["paid_sold"] == 1
-    assert stats["forever"]["overview"]["total_money"] == 20
+    assert "forever" not in stats
+    old_stats = await service.license_repo.get_old_stats()
+    assert set(old_stats) == {"forever"}
+    assert old_stats["forever"]["overview"] == {
+        "paid_sold": 1, "total_money": 20, "avg_check": 20,
+    }
+
+
+async def test_old_stats_are_public_uncached_and_update_after_deletion(api, component, service):
+    # The API fixture does not initialize a Redis cache: this route needs only the DB.
+    forever_ids = []
+    for user_id, overrides in [
+        (1, {"duration_days": None, "amount": 20, "method": "Steam"}),
+        (2, {"duration_days": None, "amount": 10, "method": "Card"}),
+        (3, {"duration_days": None, "amount": 0}),
+        (4, {"duration_days": None, "amount": 999, "status": "PENDING"}),
+        (5, {"duration_days": 30, "amount": 500}),
+    ]:
+        keys, _ = await purchase(component, service, **overrides)
+        forever_ids.append(await activate(component, service, keys[0], user_id))
+
+    response = await api.get("/api/v1/license/stats/old")
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
+    assert set(response.json()) == {"forever"}
+    forever = response.json()["forever"]
+    assert forever["overview"] == {"paid_sold": 2, "total_money": 30, "avg_check": 15}
+    assert forever["by_method"] == [
+        {"method": "Steam", "count": 1, "sum": 20, "money_share": 66.7},
+        {"method": "Card", "count": 1, "sum": 10, "money_share": 33.3},
+    ]
+    assert forever["by_price"] == [
+        {"price": 10, "count": 1, "sum": 10, "count_share": 50, "money_share": 33.3},
+        {"price": 20, "count": 1, "sum": 20, "count_share": 50, "money_share": 66.7},
+    ]
+
+    await service.admin_delete_license(forever_ids[0])
+    response = await api.get("/api/v1/license/stats/old")
+    assert response.json()["forever"]["overview"] == {
+        "paid_sold": 1, "total_money": 10, "avg_check": 10,
+    }
+    await service.admin_delete_license(forever_ids[1])
+    empty = (await api.get("/api/v1/license/stats/old")).json()["forever"]
+    assert empty == {
+        "overview": {"paid_sold": 0, "total_money": 0, "avg_check": 0},
+        "by_method": [], "by_price": [],
+    }
 
 
 async def test_admin_duration_update_and_ban(component, service):
