@@ -550,9 +550,9 @@ export function SalesStats() {
           <DurationsChart durations={subs.by_duration} />
         </div>
 
-        <RetentionBlock retention={subs.retention} />
-
         <SalesTable sales={subs.sales} />
+
+        <RetentionBlock retention={subs.retention} />
       </div>
     </section>
   )
