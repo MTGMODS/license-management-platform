@@ -7,6 +7,7 @@ import type {
   LicenseDurationStat,
   LicenseForeverStats,
   LicenseInfo,
+  LicenseOldSalesStats,
   LicensePaymentStat,
   LicensePriceStat,
   LicensePurchaseBucket,
@@ -36,6 +37,9 @@ export function getLicenseHistory(signal?: AbortSignal): Promise<LicenseInfo[]> 
 interface SalesStatsWire {
   updated_at: string
   subscriptions?: Record<string, unknown>
+}
+
+interface OldSalesStatsWire {
   forever?: Record<string, unknown>
 }
 
@@ -183,19 +187,6 @@ function emptySubscriptions(): LicenseSubscriptionsStats {
   }
 }
 
-function emptyForever(): LicenseForeverStats {
-  return {
-    overview: {
-      paid_sold: 0,
-      total_money: 0,
-      active: 0,
-      avg_check: 0,
-    },
-    by_price: [],
-    by_method: [],
-  }
-}
-
 function normalizeSubscriptions(raw: unknown): LicenseSubscriptionsStats {
   const root = asRecord(raw)
   const overview = asRecord(root.overview)
@@ -233,7 +224,6 @@ function normalizeForever(raw: unknown): LicenseForeverStats {
       /** New wire uses `paid_sold`; tolerate legacy `total_sold`. */
       paid_sold: asFinite(overview.paid_sold ?? overview.total_sold),
       total_money: asFinite(overview.total_money),
-      active: asFinite(overview.active),
       avg_check: asFinite(overview.avg_check),
     },
     by_price: asArray(root.by_price).map(normalizePrice),
@@ -247,7 +237,6 @@ function normalizeSalesStats(raw: SalesStatsWire): LicenseSalesStats {
     subscriptions: raw.subscriptions
       ? normalizeSubscriptions(raw.subscriptions)
       : emptySubscriptions(),
-    forever: raw.forever ? normalizeForever(raw.forever) : emptyForever(),
   }
 }
 
@@ -261,6 +250,18 @@ export async function getLicenseSalesStats(signal?: AbortSignal): Promise<Licens
   })
 
   return normalizeSalesStats(response)
+}
+
+/** Lifetime statistics are fetched separately, without a server-side cache. */
+export async function getLicenseOldSalesStats(signal?: AbortSignal): Promise<LicenseOldSalesStats> {
+  const response = await request<OldSalesStatsWire>({
+    service: 'license',
+    path: '/stats/old',
+    signal,
+    timeoutMs: STATS_REQUEST_TIMEOUT_MS,
+  })
+
+  return { forever: normalizeForever(response.forever) }
 }
 
 export async function getTariffs(signal?: AbortSignal): Promise<TariffsCatalog> {
@@ -318,6 +319,7 @@ export type {
   LicenseDurationStat,
   LicenseForeverStats,
   LicenseInfo,
+  LicenseOldSalesStats,
   LicensePaymentStat,
   LicensePriceStat,
   LicensePurchaseBucket,

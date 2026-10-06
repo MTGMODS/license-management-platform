@@ -9,6 +9,7 @@ type TabKey =
   | 'tab.helper'
   | 'tab.helperDownload'
   | 'tab.vip'
+  | 'tab.oldVip'
   | 'tab.promo'
   | 'tab.promoLeaders'
   | 'tab.promoSmart'
@@ -22,6 +23,7 @@ type DescriptionKey =
   | 'meta.description.helper'
   | 'meta.description.helperDownload'
   | 'meta.description.vip'
+  | 'meta.description.oldVip'
   | 'meta.description.promo'
   | 'meta.description.promoLeaders'
   | 'meta.description.promoSmart'
@@ -60,6 +62,14 @@ function resolveRoute(pathname: string): {
       descriptionKey: 'meta.description.helper',
       index: true,
       canonicalPath: pathname,
+    }
+  }
+  if (pathname === '/old_vip' || pathname === '/old_vip/') {
+    return {
+      titleKey: 'tab.oldVip',
+      descriptionKey: 'meta.description.oldVip',
+      index: false,
+      canonicalPath: '/old_vip',
     }
   }
   if (pathname.startsWith('/vip')) {

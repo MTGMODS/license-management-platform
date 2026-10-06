@@ -1,16 +1,31 @@
 import { expect, it, vi } from 'vitest'
 import { request } from '../src/shared/api/http'
-import { activateKey, getLicenseSalesStats, getTariffs, LICENSE_KEY_PATTERN, requestPremiumDownload, resetDevice } from '../src/shared/api/license'
+import { activateKey, getLicenseOldSalesStats, getLicenseSalesStats, getTariffs, LICENSE_KEY_PATTERN, requestPremiumDownload, resetDevice } from '../src/shared/api/license'
 import { getUsagePublicStats } from '../src/shared/api/usage'
 
 vi.mock('../src/shared/api/http', () => ({ request: vi.fn() }))
 
-it('reads direct license stats without status/data wrapper', async () => {
-  vi.mocked(request).mockResolvedValue({ updated_at: '2026-01-01T00:00:00Z', subscriptions: { overview: { total_sold: 3 } }, forever: {} })
+it('reads subscription stats without status/data wrapper or legacy lifetime stats', async () => {
+  vi.mocked(request).mockResolvedValue({ updated_at: '2026-01-01T00:00:00Z', subscriptions: { overview: { total_sold: 3 } } })
   const stats = await getLicenseSalesStats()
   expect(stats.updated_at).toBe('2026-01-01T00:00:00Z')
   expect(stats.subscriptions.overview.total_sold).toBe(3)
+  expect(stats).not.toHaveProperty('forever')
   expect(request).toHaveBeenLastCalledWith(expect.objectContaining({ path: '/stats/public', service: 'license' }))
+})
+
+it('reads lifetime stats separately from the public old endpoint', async () => {
+  vi.mocked(request).mockResolvedValue({ forever: {
+    overview: { paid_sold: 2, total_money: 30, avg_check: 15 },
+    by_method: [{ method: 'Steam', count: 2, sum: 30, money_share: 100 }],
+    by_price: [{ price: 15, count: 2, sum: 30, count_share: 100, money_share: 100 }],
+  } })
+  const stats = await getLicenseOldSalesStats()
+  expect(stats.forever.overview).toEqual({ paid_sold: 2, total_money: 30, avg_check: 15 })
+  expect(stats.forever.by_method[0]?.method).toBe('Steam')
+  expect(stats.forever.by_price[0]?.price).toBe(15)
+  expect(request).toHaveBeenLastCalledWith(expect.objectContaining({ path: '/stats/old', service: 'license' }))
+  expect(vi.mocked(request).mock.lastCall?.[0]).not.toHaveProperty('auth')
 })
 
 it('tariffs still use their separate envelope', async () => {

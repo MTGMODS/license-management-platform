@@ -147,7 +147,6 @@ export interface LicenseForeverStats {
   overview: {
     paid_sold: number
     total_money: number
-    active: number
     avg_check: number
   }
   by_price: LicensePriceStat[]
@@ -157,6 +156,9 @@ export interface LicenseForeverStats {
 export interface LicenseSalesStats {
   updated_at: ApiDateTime
   subscriptions: LicenseSubscriptionsStats
+}
+
+export interface LicenseOldSalesStats {
   forever: LicenseForeverStats
 }
 

@@ -40,6 +40,9 @@ const PromoSmartPage = lazy(() =>
 const TermsPage = lazy(() =>
   import('@/pages/terms/TermsPage').then((module) => ({ default: module.TermsPage })),
 )
+const OldVipPage = lazy(() =>
+  import('@/pages/vip/OldVipPage').then((module) => ({ default: module.OldVipPage })),
+)
 
 function RouteFallback() {
   return (
@@ -59,6 +62,7 @@ export function AppRoutes() {
           <Route path="helper" element={<HelperPage />} />
           <Route path="helper/download" element={<DownloadPage />} />
           <Route path="vip" element={<VipPage />} />
+          <Route path="old_vip" element={<OldVipPage />} />
           <Route path="promo" element={<PromoPage />} />
           <Route path="promo/leaders" element={<PromoLeadersPage />} />
           <Route path="promo/smart" element={<PromoSmartPage />} />
