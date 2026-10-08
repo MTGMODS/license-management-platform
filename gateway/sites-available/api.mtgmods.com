@@ -77,6 +77,11 @@ server {
         return 429 '{"valid":false,"error":"RATE_LIMIT","retry":60}';
     }
 
+    location = / {
+        default_type application/json;
+        return 200 '{"status":"ok","message":"Connection to MTG MODS server is working"}';
+    }
+
     location / {
         return 404;
     }
