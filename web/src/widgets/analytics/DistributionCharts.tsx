@@ -114,7 +114,7 @@ export function FactionsChart({
  * builds ("1337", "1.8.9 Vip fix"), each with a couple of users. Showing every
  * one would bury the real releases, so the long tail is collapsed.
  */
-const VERSION_TAIL_THRESHOLD = 0.5
+const VERSION_TAIL_THRESHOLD = 0.1
 
 export function VersionsChart({
   versions,
