@@ -41,6 +41,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 overflow-x-clip border-b border-white/5 glass">
       <div className="shell grid h-16 min-w-0 grid-cols-[auto_1fr_auto] items-center gap-3">
+        <div className="flex items-center gap-1">
         <NavLink
           to="/"
           end
@@ -54,6 +55,19 @@ export function Header() {
           <img src={logo} alt="" width={24} height={24} className="size-6 rounded-sm" aria-hidden />
           MTG MODS
         </NavLink>
+          <div className="hidden items-center gap-1 border-l border-white/10 pl-2 md:flex">
+            <a href={TELEGRAM_CHANNEL_URL} target="_blank" rel="noreferrer noopener"
+              aria-label="Telegram" title="Telegram"
+              className="grid size-9 place-items-center rounded-lg text-[#38bdf8] transition-colors hover:bg-white/5">
+              <TelegramIcon aria-hidden className="size-4" />
+            </a>
+            <a href={DISCORD_SERVER_URL} target="_blank" rel="noreferrer noopener"
+              aria-label="Discord" title="Discord"
+              className="grid size-9 place-items-center rounded-lg text-[#a5b4fc] transition-colors hover:bg-white/5">
+              <DiscordIcon aria-hidden className="size-4" />
+            </a>
+          </div>
+        </div>
 
         <nav className="hidden justify-center gap-1 md:flex" aria-label={t('nav.label')}>
           {NAV_ITEMS.map((item) => (
@@ -78,20 +92,6 @@ export function Header() {
         </div>
       </div>
 
-      <div className="border-t border-white/5 bg-ink-950/30">
-        <div className="shell flex min-h-10 flex-wrap items-center justify-center gap-x-5 gap-y-1 py-1.5 text-xs sm:justify-end">
-          <span className="hidden text-fg-subtle sm:inline">{t('community.label')}</span>
-          <a href={TELEGRAM_CHANNEL_URL} target="_blank" rel="noreferrer noopener"
-            className="inline-flex items-center gap-2 rounded-md px-2 py-1.5 font-medium text-[#38bdf8] transition-colors hover:bg-white/5">
-            <TelegramIcon aria-hidden className="size-4" /> Telegram
-          </a>
-          <a href={DISCORD_SERVER_URL} target="_blank" rel="noreferrer noopener"
-            className="inline-flex items-center gap-2 rounded-md px-2 py-1.5 font-medium text-[#a5b4fc] transition-colors hover:bg-white/5">
-            <DiscordIcon aria-hidden className="size-4" /> Discord
-          </a>
-        </div>
-      </div>
-
       {menuOpen ? (
         <div id="header-mobile-nav" className="border-t border-white/5 md:hidden">
           <nav className="shell flex flex-col gap-1 py-3" aria-label={t('nav.label')}>
@@ -110,6 +110,16 @@ export function Header() {
               </NavLink>
             ))}
           </nav>
+          <div className="shell flex gap-2 border-t border-white/5 py-3">
+            <a href={TELEGRAM_CHANNEL_URL} target="_blank" rel="noreferrer noopener"
+              className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[#38bdf8] hover:bg-white/5">
+              <TelegramIcon aria-hidden className="size-4" /> Telegram
+            </a>
+            <a href={DISCORD_SERVER_URL} target="_blank" rel="noreferrer noopener"
+              className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[#a5b4fc] hover:bg-white/5">
+              <DiscordIcon aria-hidden className="size-4" /> Discord
+            </a>
+          </div>
         </div>
       ) : null}
     </header>
