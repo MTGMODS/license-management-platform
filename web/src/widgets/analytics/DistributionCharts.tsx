@@ -8,6 +8,7 @@ import { CategoryBarChart } from './CategoryBarChart'
 import { type ChartMetric, chartColor } from './chartTheme'
 import { ChartTooltip } from './ChartTooltip'
 import { statsTooltipRows } from './statsTooltip'
+import { DistributionDonut } from './DistributionDonut'
 
 /**
  * Faction codes the payload can return. Anything outside this list falls back
@@ -125,8 +126,6 @@ export function VersionsChart({
   metric: ChartMetric
 }) {
   const { t } = useTranslation('helper')
-  const format = useFormatters()
-  const color = chartColor(metric)
 
   const main = versions.filter((item) => item.user_share[period] >= VERSION_TAIL_THRESHOLD)
   const tail = versions.filter((item) => item.user_share[period] < VERSION_TAIL_THRESHOLD)
@@ -160,22 +159,15 @@ export function VersionsChart({
     .sort((a, b) => b[metric] - a[metric])
 
   return (
-    <Card className="p-4 text-left sm:p-6">
+    <div className="min-w-0 text-left">
       <h3 className="text-lg font-semibold tracking-tight">{t('analytics.versions.title')}</h3>
       <p className="mt-1 text-sm text-fg-muted">{t('analytics.versions.subtitle')}</p>
 
       {rows.length === 0 ? (
         <p className="mt-8 text-sm text-fg-subtle">{t('analytics.empty')}</p>
       ) : (
-        <CategoryBarChart
-          data={rows}
-          dataKey={metric}
-          color={color}
-          renderTooltip={(point) => (
-            <ChartTooltip title={point.label} rows={statsTooltipRows(t, format, point)} />
-          )}
-        />
+        <DistributionDonut rows={rows} metric={metric} />
       )}
-    </Card>
+    </div>
   )
 }
