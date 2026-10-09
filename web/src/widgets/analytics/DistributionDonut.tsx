@@ -1,5 +1,4 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
-import { useTranslation } from 'react-i18next'
 
 import { useFormatters } from '@/shared/lib/format'
 
@@ -12,14 +11,13 @@ export function DistributionDonut({ rows, metric }: {
   metric: ChartMetric
 }) {
   const format = useFormatters()
-  const { t } = useTranslation('helper')
   const total = rows.reduce((sum, row) => sum + row[metric], 0)
 
   return (
     <div className="mt-5 grid items-center gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <div className="relative mx-auto h-64 w-full max-w-sm">
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm font-semibold text-fg-muted">
-          {t(`analytics.metric.${metric}`)}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-2xl font-semibold tabular text-fg">
+          {format.number(total)}
         </div>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
