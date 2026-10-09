@@ -12,6 +12,7 @@ interface StatItem {
   label: string
   value: string
   icon: ComponentType<{ className?: string }>
+  tone: string
 }
 
 /** Four metrics: 2×2 on narrower screens, one row on wide desktops. */
@@ -84,24 +85,28 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
       label: t('stats.buyers'),
       value: format.number(subs.retention.buyers),
       icon: Users,
+      tone: 'text-accent-300',
     },
     {
       id: 'sales',
       label: t('stats.sales'),
       value: format.number(o.total_sold),
       icon: ShoppingCart,
+      tone: 'text-violet-300',
     },
     {
       id: 'active',
       label: t('stats.active'),
       value: format.number(o.active),
       icon: Crown,
+      tone: 'text-amber-300',
     },
     {
       id: 'revenue',
       label: t('stats.revenue'),
       value: `$${format.number(o.total_money)}`,
       icon: CircleDollarSign,
+      tone: 'text-emerald-300',
     },
 
   ]
@@ -153,7 +158,7 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
               <div className="flex items-center justify-center gap-1.5 sm:gap-2">
                 <Icon
                   aria-hidden
-                  className={cn('shrink-0 text-accent-300', compact ? 'size-3.5' : 'size-3.5 sm:size-4')}
+                  className={cn('shrink-0', item.tone, compact ? 'size-3.5' : 'size-3.5 sm:size-4')}
                 />
                 <p
                   className={cn(
@@ -169,6 +174,7 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
               <p
                 className={cn(
                   'tabular font-semibold tracking-tight',
+                  item.tone,
                   compact
                     ? cn(
                         'mt-1 text-[clamp(1rem,1.9vh,1.35rem)]',

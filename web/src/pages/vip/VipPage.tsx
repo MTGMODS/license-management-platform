@@ -17,10 +17,10 @@ import { SalesOverview } from '@/widgets/vip/SalesOverview'
 const PAYMENT_SECTION_ID = 'vip-payment'
 
 const BENEFITS = [
-  { icon: Sparkles, titleKey: 'benefits.goldTitle', textKey: 'benefits.gold', withGuide: true },
-  { icon: InfinityIcon, titleKey: 'benefits.limitsTitle', textKey: 'benefits.limits' },
-  { icon: MessageSquareText, titleKey: 'benefits.chatTitle', textKey: 'benefits.chat' },
-  { icon: Users, titleKey: 'benefits.communityTitle', textKey: 'benefits.community' },
+  { icon: Sparkles, titleKey: 'benefits.goldTitle', textKey: 'benefits.gold', withGuide: true, tone: 'bg-amber-400/10 text-amber-300' },
+  { icon: InfinityIcon, titleKey: 'benefits.limitsTitle', textKey: 'benefits.limits', tone: 'bg-teal-400/10 text-teal-300' },
+  { icon: MessageSquareText, titleKey: 'benefits.chatTitle', textKey: 'benefits.chat', tone: 'bg-accent-500/10 text-accent-300' },
+  { icon: Users, titleKey: 'benefits.communityTitle', textKey: 'benefits.community', tone: 'bg-violet-400/10 text-violet-300' },
 ] as const
 
 /** Shares the charting chunk with the helper analytics; loaded on approach. */
@@ -105,7 +105,7 @@ function VipBenefits() {
         const Icon = item.icon
         return (
           <li key={item.titleKey} className="flex min-w-0 items-center gap-4 py-2">
-              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent-500/10 text-accent-300">
+              <span className={cn('grid size-8 shrink-0 place-items-center rounded-lg', item.tone)}>
                 <Icon aria-hidden className="size-4" />
               </span>
               <div className="min-w-0">
