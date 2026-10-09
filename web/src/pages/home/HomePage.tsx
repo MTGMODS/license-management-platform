@@ -29,14 +29,13 @@ function OpenStats() {
           { key: 'sales', to: '/vip', icon: CircleDollarSign },
         ] as const).map(({ key, to, icon: Icon }) => (
           <Link key={key} to={to} className="group min-w-0 rounded-2xl">
-            <Card interactive className="flex h-full flex-col border-emerald-400/10 p-6">
-              <div className="flex items-center justify-between">
-                <span className="grid size-11 place-items-center rounded-xl bg-emerald-400/10 text-emerald-400"><Icon aria-hidden className="size-5" /></span>
-                <ArrowUpRight aria-hidden className="size-5 text-fg-subtle group-hover:text-emerald-400" />
+            <Card interactive className="flex h-full items-start gap-3 border-emerald-400/10 p-4">
+              <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-emerald-400/10 text-emerald-400"><Icon aria-hidden className="size-4" /></span>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm font-semibold">{t(`openData.${key}.title`)}</h3>
+                <p className="mt-1 text-xs leading-relaxed text-fg-muted">{t(`openData.${key}.description`)}</p>
               </div>
-              <h3 className="mt-5 text-lg font-semibold">{t(`openData.${key}.title`)}</h3>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-fg-muted">{t(`openData.${key}.description`)}</p>
-              <span className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-emerald-400">{t('openData.explore')} <ArrowRight aria-hidden className="size-4" /></span>
+              <ArrowUpRight aria-hidden className="mt-1 size-4 shrink-0 text-fg-subtle group-hover:text-emerald-400" />
             </Card>
           </Link>
         ))}
@@ -56,7 +55,7 @@ export function HomePage() {
           <p className="mt-6 text-xl leading-relaxed text-fg/90 sm:text-2xl">
             <Trans ns="home" i18nKey="hero.tagline" components={{ product: <Link to="/helper" className="text-accent-300 underline decoration-accent-500/40 underline-offset-4 hover:text-accent-200" /> }} />
           </p>
-          <p className="mt-4 max-w-xl leading-relaxed text-fg-muted">{t('hero.bio')}</p>
+          <p className="mt-4 max-w-xl whitespace-pre-line leading-relaxed text-fg-muted">{t('hero.bio')}</p>
           <p className="mt-5 text-sm text-fg-subtle">{t('hero.author')} <a href={CONTACT_URL} target="_blank" rel="noreferrer noopener" className="text-fg-muted underline decoration-white/20 underline-offset-4 hover:text-accent-300">{t('hero.name')}</a></p>
         </div>
         <Link to="/helper" className="group min-w-0 rounded-2xl">
