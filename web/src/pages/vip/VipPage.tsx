@@ -254,8 +254,7 @@ export function VipPage() {
                 ref={contentRef}
                 className={cn(
                   'flex shrink-0 flex-col gap-5',
-                  'lg:gap-[clamp(0.45rem,1.15vh,0.85rem)]',
-                  `${SHORT_DESKTOP}:gap-2`,
+                  'lg:gap-6',
                 )}
               >
                 <div className="lg:hidden">
