@@ -51,7 +51,7 @@ export function HomePage() {
     <div className="shell space-y-14 py-10 sm:space-y-20 sm:py-16">
       <section className="grid items-center gap-8 lg:grid-cols-[1.05fr_1fr] lg:gap-12">
         <div className="animate-fade-up">
-          <h1 className="text-5xl font-semibold tracking-tight sm:text-7xl"><span className="text-gradient">mtgmods</span></h1>
+          <h1 className="text-5xl font-semibold tracking-tight sm:text-7xl"><span className="text-gradient">MTG MODS</span></h1>
           <p className="mt-6 text-xl leading-relaxed text-fg/90 sm:text-2xl">
             <Trans ns="home" i18nKey="hero.tagline" components={{ product: <Link to="/helper" className="text-accent-300 underline decoration-accent-500/40 underline-offset-4 hover:text-accent-200" /> }} />
           </p>
