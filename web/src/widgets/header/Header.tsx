@@ -40,7 +40,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 overflow-x-clip border-b border-white/5 glass">
-      <div className="shell grid h-16 min-w-0 grid-cols-[auto_1fr_auto] items-center gap-3">
+      <div className="shell grid h-16 min-w-0 grid-cols-[auto_1fr_auto] items-center gap-3 md:grid-cols-[1fr_auto_1fr]">
         <div className="flex items-center gap-1">
         <NavLink
           to="/"
