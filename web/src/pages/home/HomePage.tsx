@@ -1,13 +1,10 @@
-import { ArrowRight, ArrowUpRight, BarChart3, CircleDollarSign, Code2, Download, Gamepad2, Globe, KeyRound, Monitor, Package, Rocket, Send, Server, ShieldCheck, Smartphone, Users } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, BarChart3, CircleDollarSign, Code2, Download, Gamepad2, Globe, KeyRound, Monitor, Package, Send, Server, ShieldCheck, Smartphone, Users } from 'lucide-react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
 import screenshot from '@/assets/screenshots/pc/1.png'
-import { useSalesStats } from '@/features/license/useSalesStats'
-import { usePublicStats } from '@/features/usage/usePublicStats'
 import { REPO_GROUPS } from '@/shared/config/profile'
 import { CONTACT_URL } from '@/shared/config/payment'
-import { useFormatters } from '@/shared/lib/format'
 import { Card, GithubIcon, buttonStyles } from '@/shared/ui'
 
 const REPO_ICONS = {
@@ -16,17 +13,8 @@ const REPO_ICONS = {
   telegram: Send, discord: Users,
 }
 
-function PublicNumbers() {
+function OpenStats() {
   const { t } = useTranslation('home')
-  const usage = usePublicStats()
-  const sales = useSalesStats()
-  const format = useFormatters()
-  const metrics = [
-    { key: 'users', value: usage.data?.overview.users.total['30d'], query: usage, to: '/helper', icon: Users },
-    { key: 'launches', value: usage.data?.overview.launches['30d'], query: usage, to: '/helper', icon: Rocket },
-    { key: 'sales', value: sales.data?.subscriptions.overview.total_sold, query: sales, to: '/vip', icon: KeyRound },
-    { key: 'revenue', value: sales.data?.subscriptions.overview.total_money, query: sales, to: '/vip', icon: CircleDollarSign },
-  ] as const
 
   return (
     <section aria-labelledby="open-data-title">
@@ -35,24 +23,23 @@ function PublicNumbers() {
         <h2 id="open-data-title" className="text-2xl font-semibold tracking-tight sm:text-3xl">{t('openData.title')}</h2>
         <p className="mt-3 text-sm leading-relaxed text-fg-muted sm:text-base">{t('openData.description')}</p>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {metrics.map(({ key, value, query, to, icon: Icon }) => (
+      <div className="grid gap-4 sm:grid-cols-2">
+        {([
+          { key: 'usage', to: '/helper', icon: BarChart3 },
+          { key: 'sales', to: '/vip', icon: CircleDollarSign },
+        ] as const).map(({ key, to, icon: Icon }) => (
           <Link key={key} to={to} className="group min-w-0 rounded-2xl">
-            <Card interactive className="h-full p-5 sm:p-6">
+            <Card interactive className="flex h-full flex-col border-emerald-400/10 p-6">
               <div className="flex items-center justify-between">
-                <Icon aria-hidden className="size-5 text-emerald-400" />
-                <ArrowUpRight aria-hidden className="size-4 text-fg-subtle group-hover:text-emerald-400" />
+                <span className="grid size-11 place-items-center rounded-xl bg-emerald-400/10 text-emerald-400"><Icon aria-hidden className="size-5" /></span>
+                <ArrowUpRight aria-hidden className="size-5 text-fg-subtle group-hover:text-emerald-400" />
               </div>
-              <p className="tabular mt-6 text-3xl font-semibold tracking-tight">{value !== undefined ? (key === 'revenue' ? '$' + format.number(value) : format.number(value)) : '—'}</p>
-              <h3 className="mt-2 text-sm font-medium">{t(`metrics.${key}`)}</h3>
-              <p className="mt-1 text-xs text-fg-subtle">{query.isPending ? t('metrics.loading') : value === undefined ? t('metrics.unavailable') : t(key === 'users' || key === 'launches' ? 'metrics.month' : 'metrics.all')}</p>
+              <h3 className="mt-5 text-lg font-semibold">{t(`openData.${key}.title`)}</h3>
+              <p className="mt-2 flex-1 text-sm leading-relaxed text-fg-muted">{t(`openData.${key}.description`)}</p>
+              <span className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-emerald-400">{t('openData.explore')} <ArrowRight aria-hidden className="size-4" /></span>
             </Card>
           </Link>
         ))}
-      </div>
-      <div className="mt-4 flex flex-col gap-2 text-xs text-fg-subtle sm:flex-row sm:gap-6">
-        {usage.data?.updated_at && <p>{t('metrics.usageUpdated')} {format.dateTime(usage.data.updated_at)}</p>}
-        {sales.data?.updated_at && <p>{t('metrics.salesUpdated')} {format.dateTime(sales.data.updated_at)}</p>}
       </div>
     </section>
   )
@@ -88,7 +75,7 @@ export function HomePage() {
         </Link>
       </section>
 
-      <PublicNumbers />
+      <OpenStats />
 
       <section aria-labelledby="repositories-title">
         <div className="mb-8 max-w-3xl">
