@@ -1,4 +1,4 @@
-import { Crown, Download, Eye, EyeOff, KeyRound, Link2, Loader2, LogIn, Monitor, Plus, Trash2, TriangleAlert, Unlink, UserRound } from 'lucide-react'
+import { Crown, Download, Eye, EyeOff, KeyRound, Link2, Loader2, LogIn, Monitor, Plus, Smartphone, Trash2, TriangleAlert, Unlink, UserRound } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -209,7 +209,9 @@ function DeviceSlot({
     <div className="rounded-xl bg-ink-800/70 px-4 py-3.5">
       <div className="flex items-center gap-3">
         <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent-500/10 text-accent-300">
-          <Monitor aria-hidden className="size-4" />
+          {/[A-Z]/.test(device.hwid)
+            ? <Monitor aria-hidden className="size-4" />
+            : <Smartphone aria-hidden className="size-4" />}
         </span>
         <p className="min-w-0 flex-1 text-sm font-medium">{t('vip.slotOccupied', { index })}</p>
         {canReset ? (
