@@ -1,4 +1,4 @@
-import { CreditCard, Infinity as InfinityIcon, MessageSquareText, Sparkles, Users } from 'lucide-react'
+import { BanknoteX, CreditCard, Infinity as InfinityIcon, MessageSquareText, Sparkles, Users } from 'lucide-react'
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -9,7 +9,7 @@ import { useSalesStats } from '@/features/license/useSalesStats'
 import { useTariffs } from '@/features/license/useTariffs'
 import { cn } from '@/shared/lib/cn'
 import { useFormatters } from '@/shared/lib/format'
-import { Button, Card, DeferredMount, Skeleton } from '@/shared/ui'
+import { Button, Card, DeferredMount, Skeleton, buttonStyles } from '@/shared/ui'
 import { PaymentSection } from '@/widgets/vip/PaymentSection'
 import { PricingGrid } from '@/widgets/vip/PricingGrid'
 import { SalesOverview } from '@/widgets/vip/SalesOverview'
@@ -265,7 +265,7 @@ export function VipPage() {
                 {tariffsReady ? (
                   <>
                     {selectedPlan ? (
-                      <div className="flex shrink-0 justify-center">
+                      <div className="flex shrink-0 flex-col items-center justify-center gap-3 lg:flex-row">
                         <Button size="lg" onClick={scrollToPayment}
                           className="max-w-full whitespace-normal text-center">
                           <CreditCard aria-hidden className="size-4 shrink-0" />
@@ -274,6 +274,10 @@ export function VipPage() {
                             price: Number.isInteger(selectedPlan.price) ? String(selectedPlan.price) : format.money(selectedPlan.price),
                           })}
                         </Button>
+                        <Link to="/helper" className={buttonStyles({ size: 'lg', variant: 'secondary' })}>
+                          <BanknoteX aria-hidden className="size-4" />
+                          {t('hero.backToFree')}
+                        </Link>
                       </div>
                     ) : null}
                     <VipBenefits />
