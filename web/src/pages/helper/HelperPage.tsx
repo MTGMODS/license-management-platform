@@ -53,7 +53,7 @@ function Hero() {
         <Link to="/vip" className={buttonStyles({
           size: 'lg',
           variant: 'secondary',
-          className: 'border-amber-400/25 bg-amber-400/5 text-amber-200 hover:border-amber-400/40 hover:bg-amber-400/10',
+          className: 'border-amber-400/40 bg-amber-400/10 text-amber-200 hover:border-amber-400/55 hover:bg-amber-400/15',
         })}>
           <Crown aria-hidden className="size-4" />
           {t('hero.vip')}
