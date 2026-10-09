@@ -8,33 +8,30 @@
  * githubusercontent, which sends `Access-Control-Allow-Origin: *`, so the
  * browser may read it directly.
  */
-export const RELEASE_MANIFEST_URL =
-  'https://raw.githubusercontent.com/MTGMODS/arizona-helper/main/Update.json'
+export const RELEASE_MANIFEST_URL = 'https://raw.githubusercontent.com/MTGMODS/arizona-helper/main/Update.json'
 
 /**
  * Used only if the manifest is unreachable or omits `update_url`. The manifest
  * carries the same link, which keeps the download in step with the version.
  */
-export const FREE_LUA_FALLBACK_URL =
-  'https://github.com/MTGMODS/arizona-helper/raw/refs/heads/main/Arizona%20Helper.lua'
+export const FREE_LUA_FALLBACK_URL = 'https://github.com/MTGMODS/arizona-helper/raw/refs/heads/main/Arizona%20Helper.lua'
 
 /** GitHub release of the PC installer. */
-export const PC_INSTALLER_URL =
-  'https://github.com/MTGMODS/arizona-helper/releases/download/windows-installer/Arizona.Rodina.Helper.exe'
+export const PC_INSTALLER_URL = 'https://github.com/MTGMODS/arizona-helper/releases/download/windows-installer/Arizona.Rodina.Helper.exe'
 
 /** NeomLoader launcher for mobile automatic installation. */
-export const NEOMLOADER_URL =
-  'https://github.com/MTGMODS/arz_lua_launcher/releases/latest'
+export const NEOMLOADER_URL = 'https://github.com/MTGMODS/arz_lua_launcher/releases/latest'
 
 /** Install walkthroughs (YouTube). */
-export const PC_MANUAL_GUIDE_URL = 'https://youtu.be/6RGwkuaK_Bg'
-export const MOBILE_MTG_GUIDE_URL = 'https://youtu.be/mlX6ZzP35mw'
+export const PC_MANUAL_GUIDE_URL = 'https://youtu.be/6RGwkuaK_Bg?t=20'
+export const MOBILE_MTG_GUIDE_URL = 'https://youtu.be/mlX6ZzP35mw?t=95'
 export const MOBILE_STORE_GUIDE_URL = 'https://www.youtube.com/watch?v=qh5s5JJrLX8'
 export const MOBILE_MANUAL_GUIDE_URL = 'https://www.youtube.com/shorts/cuD9swqlJt4'
 
-export const TELEGRAM_VIP_CHAT_URL = 'https://t.me/+bi-SlBWfG7o3NDgy'
-export const DISCORD_SERVER_URL = 'https://discord.gg/qBPEYjfNhv'
+/** Community links. */
 export const TELEGRAM_CHANNEL_URL = 'https://t.me/mtgmods'
+export const TELEGRAM_CHAT_URL = 'https://t.me/+bi-SlBWfG7o3NDgy'
+export const DISCORD_SERVER_URL = 'https://discord.gg/qBPEYjfNhv'
 
 /** Accepts a bare 11-char id or a youtu.be / watch / embed URL. */
 export function parseYoutubeId(raw: string): string | null {

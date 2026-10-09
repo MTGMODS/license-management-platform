@@ -27,7 +27,7 @@ import {
   type LicenseInfo,
 } from '@/shared/api/license'
 import { unlinkSocialAccount, type OAuthProvider, type User } from '@/shared/api/user'
-import { DISCORD_SERVER_URL, TELEGRAM_VIP_CHAT_URL } from '@/shared/config/product'
+import { DISCORD_SERVER_URL, TELEGRAM_CHAT_URL } from '@/shared/config/product'
 import { cn } from '@/shared/lib/cn'
 import { millisecondsUntil, remainingTickMs, remainingTimeParts } from '@/shared/lib/datetime'
 import { triggerFileDownload } from '@/shared/lib/download'
@@ -721,7 +721,7 @@ function AccountPanel({ user }: { user: User }) {
             <CommunityInvite
               title={t('account.telegramChatTitle')}
               text={t('account.telegramChatText')}
-              href={TELEGRAM_VIP_CHAT_URL}
+              href={TELEGRAM_CHAT_URL}
               action={t('account.telegramChatAction')}
               enabled={telegramLinked}
               icon={TelegramIcon}
