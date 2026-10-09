@@ -1,4 +1,4 @@
-import { Copy, Search, Trash2, UserRound } from 'lucide-react'
+import { Copy, Monitor, Search, Smartphone, Trash2, UserRound } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -369,6 +369,7 @@ function LicenseCard({
   onOpenUser: (userId: number) => void
 }) {
   const { t } = useTranslation(['admin', 'common'])
+  const { t: td } = useTranslation('dashboard')
   const { t: te } = useTranslation('errors')
   const format = useFormatters()
   const updateLicense = useUpdateAdminLicense()
@@ -458,10 +459,10 @@ function LicenseCard({
   }
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 sm:p-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="tabular font-mono text-sm tracking-wider">{license.key}</p>
+          <p className="tabular break-all font-mono text-base font-semibold tracking-wider text-accent-300">{license.key}</p>
           <p className="mt-1 text-xs text-fg-subtle">#{license.id}</p>
           {license.user_id != null ? (
             <Button
@@ -495,7 +496,7 @@ function LicenseCard({
         </div>
       </div>
 
-      <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+      <dl className="mt-5 grid gap-4 rounded-xl bg-ink-800/40 p-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
         <div>
           <dt className="text-fg-subtle">{t('licenses.activated')}</dt>
           <dd className="mt-0.5">
@@ -592,26 +593,23 @@ function LicenseCard({
       </div>
 
       <div className="mt-6 border-t border-white/5 pt-5">
-        <p className="text-sm font-medium">
-          {t('licenses.devices')} · {license.devices.length}/{license.max_devices}
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="font-semibold">{t('licenses.devices')}</p>
+          <span className="text-sm text-fg-subtle">{td('vip.devicesCount', { used: license.devices.length, max: license.max_devices })}</span>
+        </div>
         {license.devices.length === 0 ? (
           <p className="mt-2 text-sm text-fg-subtle">—</p>
         ) : (
-          <ul className="mt-3 space-y-2">
-            {license.devices.map((device) => (
-              <li key={device.id} className="rounded-xl bg-ink-800/70 px-4 py-3 text-sm">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="break-all font-mono text-fg-muted">{device.device}</p>
-                    <p className="mt-1 text-fg-subtle">
-                      {device.ip_address ?? '—'}
-                      {device.last_used_at ? ` · ${format.dateTimeWithUtc(device.last_used_at)}` : null}
-                    </p>
-                    {device.user_agent ? (
-                      <p className="mt-1 truncate text-xs text-fg-subtle">{device.user_agent}</p>
-                    ) : null}
-                  </div>
+          <ul className="mt-3 space-y-3">
+            {license.devices.map((device, index) => (
+              <li key={device.id} className="rounded-xl bg-ink-800/70 px-4 py-3.5 text-sm">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent-500/10 text-accent-300">
+                    {/[A-Z]/.test(device.device)
+                      ? <Monitor aria-hidden className="size-4" />
+                      : <Smartphone aria-hidden className="size-4" />}
+                  </span>
+                  <p className="min-w-0 flex-1 font-medium">{td('vip.slotOccupied', { index: index + 1 })}</p>
                   {confirmDeviceId === device.id ? (
                     <div className="flex flex-wrap gap-2">
                       <Button
@@ -632,6 +630,25 @@ function LicenseCard({
                     </Button>
                   )}
                 </div>
+                <dl className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+                  <div className="flex flex-wrap items-baseline gap-x-2">
+                    <dt className="text-fg-subtle">{td('vip.hwid')}</dt>
+                    <dd className="tabular min-w-0 break-all font-mono text-fg-muted">{device.device}</dd>
+                  </div>
+                  <div className="flex flex-wrap items-baseline gap-x-2">
+                    <dt className="text-fg-subtle">{td('vip.ip')}</dt>
+                    <dd className="tabular text-fg-muted">{device.ip_address ?? '—'}</dd>
+                  </div>
+                  {device.first_used_at ? <div className="flex flex-wrap items-baseline gap-x-2">
+                    <dt className="text-fg-subtle">{td('vip.firstUsed')}</dt>
+                    <dd className="text-fg-muted">{format.dateTimeWithUtc(device.first_used_at)}</dd>
+                  </div> : null}
+                  {device.last_used_at ? <div className="flex flex-wrap items-baseline gap-x-2">
+                    <dt className="text-fg-subtle">{td('vip.lastUsed')}</dt>
+                    <dd className="text-fg-muted">{format.dateTimeWithUtc(device.last_used_at)}</dd>
+                  </div> : null}
+                </dl>
+                {device.user_agent ? <p className="mt-2 break-words text-xs text-fg-subtle">{device.user_agent}</p> : null}
               </li>
             ))}
           </ul>
