@@ -460,13 +460,14 @@ function LicenseCard({
 
   return (
     <Card className="p-6 sm:p-8">
-      <div className="grid items-center gap-3 lg:grid-cols-[1fr_auto_1fr]">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <span className="tabular text-sm text-fg-subtle">#{license.id}</span>
-          <p className="tabular break-all font-mono text-base font-semibold tracking-wider text-accent-300">{license.key}</p>
+      <div className="grid grid-cols-[auto_auto_auto] items-center justify-between gap-2 overflow-x-auto pb-1 lg:grid-cols-[1fr_auto_1fr] lg:gap-3">
+        <div className="flex items-center gap-1 whitespace-nowrap sm:gap-2">
+          <span className="tabular text-xs text-fg-subtle sm:text-sm">#{license.id}</span>
+          <p className="tabular font-mono text-xs font-semibold text-accent-300 sm:text-base sm:tracking-wider">{license.key}</p>
           <Button
             size="sm"
             variant="ghost"
+            className="shrink-0 px-1 sm:px-2"
             aria-label={t('licenses.copy')}
             title={t('licenses.copy')}
             onClick={() => {
@@ -479,22 +480,24 @@ function LicenseCard({
             <Copy aria-hidden className="size-3.5" />
           </Button>
         </div>
-        <div className="lg:justify-self-center">
+        <div className="justify-self-center whitespace-nowrap">
+          <Badge tone={statusTone(license.status)}>{t(`licenses.statuses.${license.status}`)}</Badge>
+        </div>
+        <div className="justify-self-end whitespace-nowrap">
           {license.user_id != null ? (
             <Button
               size="sm"
               variant="secondary"
+              className="gap-1 px-2 sm:gap-2 sm:px-3"
+              aria-label={`${t('licenses.owner')} #${license.user_id}`}
               onClick={() => onOpenUser(license.user_id!)}
             >
               <UserRound aria-hidden className="size-3.5" />
-              {t('licenses.owner')} #{license.user_id}
+              <span className="hidden sm:inline">{t('licenses.owner')}</span> #{license.user_id}
             </Button>
           ) : (
             <p className="text-sm text-fg-subtle">{t('licenses.noOwner')}</p>
           )}
-        </div>
-        <div className="lg:justify-self-end">
-          <Badge tone={statusTone(license.status)}>{t(`licenses.statuses.${license.status}`)}</Badge>
         </div>
       </div>
 
