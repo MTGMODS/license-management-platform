@@ -11,6 +11,7 @@ interface StatItem {
   label: string
   value: string
   icon: ComponentType<{ className?: string }>
+  tone: string
 }
 
 export function QuickStats() {
@@ -48,24 +49,28 @@ export function QuickStats() {
       label: t('stats.users'),
       value: format.number(data.overview.users.total.all_time),
       icon: Users,
+      tone: 'text-accent-300',
     },
     {
       id: 'vip',
       label: t('stats.vip'),
       value: `${format.number(data.overview.users.vip.all_time)} (${format.percent(data.overview.metrics.vip_conversion)})`,
       icon: Crown,
+      tone: 'text-amber-300',
     },
     {
       id: 'launches',
       label: t('stats.launches'),
       value: format.number(data.overview.launches.all_time),
       icon: Rocket,
+      tone: 'text-emerald-300',
     },
     {
       id: 'devices',
       label: t('stats.devices'),
       value: `${format.percent(data.overview.metrics.pc_ratio)} / ${format.percent(data.overview.metrics.mobile_ratio)}`,
       icon: MonitorSmartphone,
+      tone: 'text-violet-300',
     },
   ]
 
@@ -82,12 +87,12 @@ export function QuickStats() {
           return (
             <Card key={item.id} className="p-[clamp(0.65rem,1.4vh,1rem)] text-center lg:p-3">
               <div className="flex items-center justify-center gap-2">
-                <Icon aria-hidden className="size-[clamp(1rem,2.2vh,1.25rem)] shrink-0 text-accent-300" />
+                <Icon aria-hidden className={`size-[clamp(1rem,2.2vh,1.25rem)] shrink-0 ${item.tone}`} />
                 <p className="min-w-0 truncate text-[clamp(0.75rem,1.4vh,0.875rem)] text-fg-subtle">
                   {item.label}
                 </p>
               </div>
-              <p className="tabular mt-[clamp(0.35rem,1vh,0.75rem)] min-w-0 text-[clamp(1rem,2.2vh,1.5rem)] font-semibold leading-tight tracking-tight sm:whitespace-nowrap">
+              <p className={`tabular mt-[clamp(0.35rem,1vh,0.75rem)] min-w-0 text-[clamp(1rem,2.2vh,1.5rem)] font-semibold leading-tight tracking-tight sm:whitespace-nowrap ${item.tone}`}>
                 {item.value}
               </p>
             </Card>
