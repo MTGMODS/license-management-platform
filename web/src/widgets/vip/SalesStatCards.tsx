@@ -117,7 +117,7 @@ export function PaymentsChart({
                     outerRadius="88%"
                     paddingAngle={2}
                     stroke="none"
-                    isAnimationActive={false}
+                    isAnimationActive
                   >
                     {payments.map((item, index) => (
                       <Cell key={item.method} fill={paymentColor(item.method, index)} />

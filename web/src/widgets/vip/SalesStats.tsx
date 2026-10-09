@@ -202,7 +202,7 @@ function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
                     outerRadius="88%"
                     paddingAngle={2}
                     stroke="none"
-                    isAnimationActive={false}
+                    isAnimationActive
                   >
                     {rows.map((item, index) => (
                       <Cell key={item.days} fill={durationColor(item.days, index)} />
