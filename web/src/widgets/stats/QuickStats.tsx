@@ -102,7 +102,7 @@ export function QuickStats() {
 
       <div className="mt-[clamp(0.5rem,1.2vh,1rem)] flex flex-wrap items-center justify-between gap-2 text-[clamp(0.75rem,1.4vh,0.875rem)] text-fg-subtle">
         <span>{t('stats.updated', { time: format.dateTime(data.updated_at) })}</span>
-        <span className="inline-flex items-center gap-1.5">
+        <span className="inline-flex items-center gap-1.5 font-bold">
           <ArrowDown aria-hidden className="size-4" />
           {t('stats.more')}
         </span>

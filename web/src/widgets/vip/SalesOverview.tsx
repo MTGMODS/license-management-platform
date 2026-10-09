@@ -204,7 +204,7 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
         )}
       >
         <span>{t('stats.updated', { time: format.dateTime(data.updated_at) })}</span>
-        <span className="inline-flex items-center gap-1.5">
+        <span className="inline-flex items-center gap-1.5 font-bold">
           <ArrowDown aria-hidden className="size-3.5" />
           {t('stats.more')}
         </span>
