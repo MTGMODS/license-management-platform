@@ -1,4 +1,4 @@
-import { ArrowDown, BadgeDollarSign, CircleDollarSign, Crown, ShoppingCart, UserRound, Users } from 'lucide-react'
+import { ArrowDown, CircleDollarSign, Crown, ShoppingCart, Users } from 'lucide-react'
 import type { ComponentType } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -14,14 +14,8 @@ interface StatItem {
   icon: ComponentType<{ className?: string }>
 }
 
-/** Tall fold (FHD+): 2×3. Short desktop (HD): one row of six / wrap of three. */
-const COMPACT_GRID = cn(
-  'grid grid-cols-3 gap-[clamp(0.35rem,0.9vh,0.65rem)] sm:grid-cols-6',
-  '[@media(min-width:1024px)_and_(max-height:48rem)]:grid-cols-3',
-  '[@media(min-width:1024px)_and_(max-height:48rem)]:sm:grid-cols-3',
-  '[@media(min-height:56rem)]:grid-cols-3',
-  '[@media(min-height:56rem)]:gap-[clamp(0.45rem,1.1vh,0.75rem)]',
-)
+/** Four metrics: 2×2 on narrower screens, one row on wide desktops. */
+const COMPACT_GRID = 'grid grid-cols-2 gap-[clamp(0.45rem,1vh,0.75rem)] xl:grid-cols-4'
 
 const SHORT_DESKTOP = '[@media(min-width:1024px)_and_(max-height:48rem)]'
 
@@ -60,8 +54,8 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
         >
           {t('stats.subtitle')}
         </p>
-        <div className={cn(compact ? cn('mt-[clamp(0.35rem,0.9vh,0.65rem)]', COMPACT_GRID) : 'mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3')}>
-          {Array.from({ length: 6 }, (_, index) => (
+        <div className={cn(compact ? cn('mt-[clamp(0.35rem,0.9vh,0.65rem)]', COMPACT_GRID) : 'mt-4 grid grid-cols-2 gap-3 xl:grid-cols-4')}>
+          {Array.from({ length: 4 }, (_, index) => (
             <Skeleton
               key={index}
               className={
@@ -109,18 +103,7 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
       value: `$${format.number(o.total_money)}`,
       icon: CircleDollarSign,
     },
-    {
-      id: 'avgCheck',
-      label: t('stats.overview.avgCheck'),
-      value: `$${format.money(o.avg_check)}`,
-      icon: BadgeDollarSign,
-    },
-    {
-      id: 'avgRevenue',
-      label: t('stats.overview.avgRevenuePerBuyer'),
-      value: `$${format.money(o.avg_revenue_per_buyer)}`,
-      icon: UserRound,
-    },
+
   ]
 
   return (
@@ -149,7 +132,7 @@ export function SalesOverview({ compact = false }: { compact?: boolean }) {
         {t('stats.subtitle')}
       </p>
 
-      <div className={cn(compact ? cn('mt-[clamp(0.35rem,0.9vh,0.65rem)]', COMPACT_GRID) : 'mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3')}>
+      <div className={cn(compact ? cn('mt-[clamp(0.35rem,0.9vh,0.65rem)]', COMPACT_GRID) : 'mt-4 grid grid-cols-2 gap-3 xl:grid-cols-4')}>
         {items.map((item) => {
           const Icon = item.icon
           return (
