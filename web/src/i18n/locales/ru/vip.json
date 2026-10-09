@@ -24,7 +24,7 @@
     "days_many": "{{count}} дней",
     "days_other": "{{count}} дней",
     "daysWithPerDay": " (≈ ${{price}} / день)",
-    "daysWithPerDayTight": " (≈${{price}} / день)",
+    "daysWithPerDayTight": "(≈${{price}}/день)",
     "devicesLabel": "Устройств",
     "hwidResetLabel": "Сброс HWID",
     "error": "Тарифы временно недоступны",
@@ -139,7 +139,7 @@
   },
   "stats": {
     "title": "MTGVIP в цифрах",
-    "subtitle": "Прозрачная статистика сервиса. Данные обновляются в реальном времени",
+    "subtitle": "Открытая статистика продаж подписок",
     "sales": "Всего продаж",
     "revenue": "Доход USD",
     "active": "Активные VIP",
