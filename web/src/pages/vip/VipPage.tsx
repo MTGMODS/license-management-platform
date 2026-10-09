@@ -87,92 +87,38 @@ function GalleryLink({ children }: { children?: ReactNode }) {
 /** Short desktop (e.g. 1280×720): tighter 2×2. Tall desktop: four rows. Phones unchanged. */
 const SHORT_DESKTOP = '[@media(min-width:1024px)_and_(max-height:48rem)]'
 
-/** Desktop fold: fixed viewport height, stats row always fully visible at the bottom. */
+/** Use natural content height so short screens and browser zoom cannot clip it. */
 const DESKTOP_FOLD = cn(
-  'lg:grid lg:h-[calc(100dvh-4rem)] lg:grid-rows-[auto_minmax(0,1fr)_auto]',
-  'lg:overflow-hidden lg:py-[clamp(0.4rem,1.1vh,0.9rem)]',
+  'lg:flex lg:flex-col',
+  'lg:py-[clamp(0.75rem,1.5vh,1.25rem)]',
 )
 
 function VipBenefits() {
   const { t } = useTranslation('vip')
 
   return (
-    <Card
-      className={cn(
-        'w-full shrink-0 p-4 text-left sm:p-5',
-        'lg:p-[clamp(0.85rem,1.6vh,1.25rem)]',
-        `${SHORT_DESKTOP}:p-3`,
-      )}
-    >
-      <ul
-        className={cn(
-          'grid grid-cols-1 gap-3.5 sm:gap-4',
-          'lg:gap-[clamp(0.65rem,1.35vh,1rem)]',
-          `${SHORT_DESKTOP}:grid-cols-2`,
-          `${SHORT_DESKTOP}:gap-x-4`,
-          `${SHORT_DESKTOP}:gap-y-2`,
-        )}
-      >
-        {BENEFITS.map((item) => {
-          const Icon = item.icon
-          return (
-            <li
-              key={item.titleKey}
-              className={cn(
-                'flex gap-3 sm:gap-3.5',
-                'lg:gap-[clamp(0.75rem,1.4vh,1rem)]',
-                `${SHORT_DESKTOP}:gap-2.5`,
-              )}
-            >
-              <span
-                className={cn(
-                  'mt-0.5 grid size-9 shrink-0 place-items-center rounded-xl bg-accent-500/10 text-accent-300 sm:size-10',
-                  'lg:size-[clamp(2.25rem,3.6vh,2.75rem)]',
-                  `${SHORT_DESKTOP}:size-7`,
-                )}
-              >
-                <Icon
-                  aria-hidden
-                  className={cn(
-                    'size-4 sm:size-[1.15rem]',
-                    'lg:size-[clamp(1.1rem,1.8vh,1.35rem)]',
-                    `${SHORT_DESKTOP}:size-3.5`,
-                  )}
-                />
+    <ul className="grid w-full gap-3 text-left sm:grid-cols-2">
+      {BENEFITS.map((item) => {
+        const Icon = item.icon
+        return (
+          <li key={item.titleKey} className="min-w-0">
+            <Card className="flex h-full items-start gap-3 p-4 lg:p-[clamp(0.875rem,1.6vh,1.25rem)]">
+              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent-500/10 text-accent-300">
+                <Icon aria-hidden className="size-4" />
               </span>
               <div className="min-w-0">
-                <p
-                  className={cn(
-                    'text-base font-medium leading-snug text-fg sm:text-[1.05rem]',
-                    'lg:text-[clamp(1rem,1.75vh,1.15rem)]',
-                    `${SHORT_DESKTOP}:text-sm`,
-                  )}
-                >
-                  {t(item.titleKey)}
-                </p>
-                <p
-                  className={cn(
-                    'mt-1 text-sm leading-snug text-fg-muted sm:text-[0.95rem]',
-                    'lg:mt-[clamp(0.2rem,0.5vh,0.35rem)] lg:text-[clamp(0.85rem,1.45vh,0.95rem)] lg:leading-snug',
-                    `${SHORT_DESKTOP}:mt-0.5 ${SHORT_DESKTOP}:text-xs ${SHORT_DESKTOP}:leading-snug`,
-                  )}
-                >
+                <h2 className="text-sm font-semibold leading-snug lg:text-[clamp(0.875rem,1.5vh,1rem)]">{t(item.titleKey)}</h2>
+                <p className="mt-1 text-sm leading-relaxed text-fg-muted lg:text-[clamp(0.8125rem,1.35vh,0.875rem)]">
                   {'withGuide' in item && item.withGuide ? (
-                    <Trans
-                      i18nKey={item.textKey}
-                      ns="vip"
-                      components={{ gallery: <GalleryLink /> }}
-                    />
-                  ) : (
-                    t(item.textKey)
-                  )}
+                    <Trans i18nKey={item.textKey} ns="vip" components={{ gallery: <GalleryLink /> }} />
+                  ) : t(item.textKey)}
                 </p>
               </div>
-            </li>
-          )
-        })}
-      </ul>
-    </Card>
+            </Card>
+          </li>
+        )
+      })}
+    </ul>
   )
 }
 
@@ -203,7 +149,7 @@ export function VipPage() {
 
   return (
     <div className="shell flex min-h-0 flex-1 flex-col">
-      {/* Desktop fold: pack hero→CTA from the top; sales overview pins to the fold bottom. */}
+      {/* Content can grow beyond the viewport without clipping. */}
       <div
         className={cn(
           'flex flex-col py-6 sm:py-8',
@@ -239,13 +185,11 @@ export function VipPage() {
           </Card>
         ) : (
           <>
-            {/* Row 2: fixed hero→tariff gap, flex void, content + CTA pinned above stats. */}
-            <div className="mt-6 flex min-h-0 flex-col lg:mt-0 lg:h-full lg:overflow-hidden">
+            <div className="mt-6 flex min-h-0 flex-col lg:mt-0">
               <div
                 className="hidden shrink-0 lg:block lg:h-[clamp(0.75rem,2vh,1.25rem)]"
                 aria-hidden
               />
-              <div className="hidden min-h-0 flex-1 lg:block" aria-hidden />
 
               <div
                 className={cn(
@@ -263,7 +207,6 @@ export function VipPage() {
 
                 {tariffsReady ? (
                   <>
-                    <VipBenefits />
                     <div className="flex flex-wrap items-center justify-center gap-3">
                       <Button
                         size="lg"
@@ -293,6 +236,7 @@ export function VipPage() {
                         {t('hero.backToFree')}
                       </Link>
                     </div>
+                    <VipBenefits />
                   </>
                 ) : null}
               </div>
