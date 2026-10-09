@@ -1,8 +1,10 @@
 import { ArrowUpRight, BarChart3, CircleDollarSign } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
+import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
 import { REPO_GROUPS } from '@/shared/config/profile'
+import { CONTACT_URL } from '@/shared/config/payment'
+import { DISCORD_SERVER_URL, TELEGRAM_CHANNEL_URL } from '@/shared/config/product'
 import { Card, GithubIcon } from '@/shared/ui'
 
 export function HomePage() {
@@ -11,16 +13,26 @@ export function HomePage() {
   return (
     <div className="shell py-14 sm:py-20">
       <section className="max-w-3xl animate-fade-up">
-        <p className="font-mono text-xs tracking-widest text-accent-400 uppercase sm:text-sm">
-          {t('home:hero.role')}
-        </p>
-        <h1 className="mt-4 text-5xl font-semibold tracking-tight sm:text-7xl">
-          <span className="text-gradient">{t('common:brand')}</span>
+        <p className="font-mono text-sm text-accent-400">mtgmods</p>
+        <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">
+          {t('hero.greeting')} <span className="text-gradient">{t('hero.name')}</span>
         </h1>
         <p className="mt-6 text-xl leading-relaxed text-fg/90 sm:text-2xl">
-          {t('home:hero.tagline')}
+          <Trans ns="home" i18nKey="hero.tagline" components={{
+            product: <Link to="/helper" className="text-accent-300 underline decoration-accent-500/40 underline-offset-4 transition-colors hover:text-accent-200" />,
+          }} />
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-fg-muted">{t('home:hero.bio')}</p>
+      </section>
+
+      <div className="rule-fade my-10 sm:my-14" />
+
+      <section aria-labelledby="about-title" className="grid gap-6 lg:grid-cols-[1fr_2fr]">
+        <h2 id="about-title" className="text-2xl font-semibold tracking-tight">{t('about.title')}</h2>
+        <div className="max-w-3xl space-y-4 leading-relaxed text-fg-muted">
+          <p>{t('about.work')}</p>
+          <p>{t('about.study')}</p>
+        </div>
       </section>
 
       <div className="rule-fade my-10 sm:my-14" />
@@ -76,6 +88,30 @@ export function HomePage() {
                 <p className="mt-3 text-sm leading-relaxed text-fg-muted">{t(`home:openData.${key}.description`)}</p>
               </Card>
             </Link>
+          ))}
+        </div>
+      </section>
+
+      <div className="rule-fade my-10 sm:my-14" />
+
+      <section aria-labelledby="resources-title">
+        <h2 id="resources-title" className="text-2xl font-semibold tracking-tight">{t('resources.title')}</h2>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          {([
+            { name: 'Telegram', url: TELEGRAM_CHANNEL_URL, key: 'telegram' },
+            { name: 'Discord', url: DISCORD_SERVER_URL, key: 'discord' },
+            { name: 'GitHub', url: 'https://github.com/MTGMODS', key: 'github' },
+            { name: t('resources.personal'), url: CONTACT_URL, key: 'contact' },
+          ] as const).map(({ name, url, key }) => (
+            <a key={key} href={url} target="_blank" rel="noreferrer noopener" className="group rounded-2xl">
+              <Card interactive className="h-full p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="font-semibold">{name}</h3>
+                  <ArrowUpRight aria-hidden className="size-4 text-fg-subtle group-hover:text-accent-400" />
+                </div>
+                <p className="mt-2 text-sm text-fg-muted">{t(`resources.${key}`)}</p>
+              </Card>
+            </a>
           ))}
         </div>
       </section>
