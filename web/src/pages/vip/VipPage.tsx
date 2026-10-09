@@ -1,4 +1,4 @@
-import { BanknoteX, CreditCard, Infinity as InfinityIcon, MessageSquareText, Sparkles, Users } from 'lucide-react'
+import { BanknoteX, CreditCard, Crown, Infinity as InfinityIcon, MessageSquareText, Sparkles, Users } from 'lucide-react'
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -98,8 +98,11 @@ function VipBenefits() {
   const { t } = useTranslation('vip')
 
   return (
-    <Card className="flex w-full shrink-0 flex-col p-5 text-left sm:p-6">
-    <h2 className="mb-5 shrink-0 text-center text-base font-semibold sm:text-lg">{t('benefits.title')}</h2>
+    <Card className="flex w-full shrink-0 flex-col border-amber-400/20 bg-gradient-to-br from-amber-400/[0.035] via-transparent to-transparent p-5 text-left sm:p-6">
+    <h2 className="mb-5 flex shrink-0 items-center justify-center gap-2.5 text-center text-base font-semibold text-amber-200 sm:text-lg">
+      <Crown aria-hidden className="size-5 shrink-0 text-amber-300" />
+      {t('benefits.title')}
+    </h2>
     <ul className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
       {BENEFITS.map((item) => {
         const Icon = item.icon
