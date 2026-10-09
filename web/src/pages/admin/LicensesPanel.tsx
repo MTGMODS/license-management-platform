@@ -387,6 +387,7 @@ function LicenseCard({
   )
   const [confirmDeviceId, setConfirmDeviceId] = useState<number | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [editing, setEditing] = useState(false)
 
   useEffect(() => {
     setStatus(license.status)
@@ -434,6 +435,7 @@ function LicenseCard({
         },
       })
       toast.success(t('licenses.saved'))
+      setEditing(false)
     } catch (error) {
       toast.error(te(apiErrorTranslationKey(error), { defaultValue: te('unexpected') }))
     }
@@ -591,7 +593,7 @@ function LicenseCard({
         )}
       </div>
 
-      <div className="mt-6 border-t border-white/5 pt-5">
+      {editing ? <div className="mt-6 border-t border-white/5 pt-5">
         <p className="text-sm font-medium">{t('licenses.edit')}</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <label className="text-sm">
@@ -658,7 +660,7 @@ function LicenseCard({
           />
         </label>
         </div>
-      </div>
+      </div> : null}
 
       <div className="mt-5 grid grid-cols-2 gap-2">
         {confirmDelete ? (
@@ -674,11 +676,14 @@ function LicenseCard({
           <>
             <Button
               fullWidth
-              disabled={!canSave}
+              disabled={editing && !canSave}
               loading={updateLicense.isPending}
-              onClick={() => void onSave()}
+              onClick={() => {
+                if (editing) void onSave()
+                else setEditing(true)
+              }}
             >
-              {t('licenses.save')}
+              {editing ? t('licenses.save') : t('licenses.editAction')}
             </Button>
             <Button fullWidth variant="danger" onClick={() => setConfirmDelete(true)}>
               <Trash2 aria-hidden className="size-3.5" />
