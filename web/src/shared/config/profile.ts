@@ -8,13 +8,8 @@ export const REPO_GROUPS = [
     repos: [
       { name: 'Arizona & Rodina Helper', url: `${GITHUB_ORG_URL}/arizona-helper`, key: 'helper' },
       { name: 'Windows Installer', url: `${GITHUB_ORG_URL}/arizona-helper/tree/main/WindowsInstaller`, key: 'installer' },
-      { name: 'arz_lua_launcher', url: `${GITHUB_ORG_URL}/arz_lua_launcher`, key: 'launcher' },
-    ],
-  },
-  {
-    id: 'frontend',
-    repos: [
       { name: 'Front End · /web', url: `${PLATFORM}/web`, key: 'frontend' },
+      { name: 'Mobile Launcher Patcher', url: `${GITHUB_ORG_URL}/arz_lua_launcher`, key: 'launcher' },
     ],
   },
   {

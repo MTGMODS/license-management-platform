@@ -4,7 +4,6 @@ import { Link } from 'react-router'
 
 import { REPO_GROUPS } from '@/shared/config/profile'
 import { CONTACT_URL } from '@/shared/config/payment'
-import { DISCORD_SERVER_URL, TELEGRAM_CHANNEL_URL } from '@/shared/config/product'
 import { Card, GithubIcon } from '@/shared/ui'
 
 export function HomePage() {
@@ -15,7 +14,7 @@ export function HomePage() {
       <section className="max-w-3xl animate-fade-up">
         <p className="font-mono text-sm text-accent-400">mtgmods</p>
         <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">
-          {t('hero.greeting')} <span className="text-gradient">{t('hero.name')}</span>
+          {t('hero.greeting')} <a href={CONTACT_URL} target="_blank" rel="noreferrer noopener" className="text-gradient transition-opacity hover:opacity-80">{t('hero.name')}</a>
         </h1>
         <p className="mt-6 text-xl leading-relaxed text-fg/90 sm:text-2xl">
           <Trans ns="home" i18nKey="hero.tagline" components={{
@@ -29,10 +28,7 @@ export function HomePage() {
 
       <section aria-labelledby="about-title" className="grid gap-6 lg:grid-cols-[1fr_2fr]">
         <h2 id="about-title" className="text-2xl font-semibold tracking-tight">{t('about.title')}</h2>
-        <div className="max-w-3xl space-y-4 leading-relaxed text-fg-muted">
-          <p>{t('about.work')}</p>
-          <p>{t('about.study')}</p>
-        </div>
+        <p className="max-w-3xl leading-relaxed text-fg-muted">{t('about.description')}</p>
       </section>
 
       <div className="rule-fade my-10 sm:my-14" />
@@ -94,27 +90,6 @@ export function HomePage() {
 
       <div className="rule-fade my-10 sm:my-14" />
 
-      <section aria-labelledby="resources-title">
-        <h2 id="resources-title" className="text-2xl font-semibold tracking-tight">{t('resources.title')}</h2>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          {([
-            { name: 'Telegram', url: TELEGRAM_CHANNEL_URL, key: 'telegram' },
-            { name: 'Discord', url: DISCORD_SERVER_URL, key: 'discord' },
-            { name: 'GitHub', url: 'https://github.com/MTGMODS', key: 'github' },
-            { name: t('resources.personal'), url: CONTACT_URL, key: 'contact' },
-          ] as const).map(({ name, url, key }) => (
-            <a key={key} href={url} target="_blank" rel="noreferrer noopener" className="group rounded-2xl">
-              <Card interactive className="h-full p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="font-semibold">{name}</h3>
-                  <ArrowUpRight aria-hidden className="size-4 text-fg-subtle group-hover:text-accent-400" />
-                </div>
-                <p className="mt-2 text-sm text-fg-muted">{t(`resources.${key}`)}</p>
-              </Card>
-            </a>
-          ))}
-        </div>
-      </section>
     </div>
   )
 }
