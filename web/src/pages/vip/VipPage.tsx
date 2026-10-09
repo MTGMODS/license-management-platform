@@ -99,6 +99,7 @@ function VipBenefits() {
 
   return (
     <Card className="flex w-full flex-col p-5 text-left sm:p-6 lg:flex-1">
+    <h2 className="mb-5 shrink-0 text-center text-base font-semibold sm:text-lg">{t('benefits.title')}</h2>
     <ul className="grid h-full gap-x-8 gap-y-5 sm:grid-cols-2 lg:auto-rows-fr">
       {BENEFITS.map((item) => {
         const Icon = item.icon
@@ -108,7 +109,7 @@ function VipBenefits() {
                 <Icon aria-hidden className="size-4" />
               </span>
               <div className="min-w-0">
-                <h2 className="text-sm font-semibold leading-snug lg:text-[clamp(0.875rem,1.5vh,1rem)]">{t(item.titleKey)}</h2>
+                <h3 className="text-sm font-semibold leading-snug lg:text-[clamp(0.875rem,1.5vh,1rem)]">{t(item.titleKey)}</h3>
                 <p className="mt-1 text-sm leading-relaxed text-fg-muted lg:text-[clamp(0.8125rem,1.35vh,0.875rem)]">
                   {'withGuide' in item && item.withGuide ? (
                     <Trans i18nKey={item.textKey} ns="vip" components={{ gallery: <GalleryLink /> }} />
@@ -232,7 +233,7 @@ export function VipPage() {
           </Card>
         ) : (
           <>
-            <div ref={frameRef} className="mt-6 min-h-0 lg:mt-3">
+            <div ref={frameRef} className="mt-8 min-h-0 lg:mt-[clamp(1.5rem,3vh,2.5rem)]">
               <div
                 ref={contentRef}
                 className={cn(

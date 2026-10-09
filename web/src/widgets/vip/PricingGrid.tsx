@@ -205,9 +205,9 @@ export function PricingGrid({ compact = false, selectedDays, onChoose }: {
               )}
             >
               <span className="font-semibold text-fg">{daysLabel}</span>
-            </p>
-            <p className="mt-1 text-xs leading-snug text-fg-subtle">
-              {t('pricing.daysWithPerDay', perDay)}
+              <span className="ml-1 text-xs font-normal text-fg-subtle">
+                {t('pricing.daysWithPerDay', perDay)}
+              </span>
             </p>
 
             <PlanPrice
