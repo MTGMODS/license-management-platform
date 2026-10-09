@@ -98,9 +98,9 @@ function VipBenefits() {
   const { t } = useTranslation('vip')
 
   return (
-    <Card className="flex w-full flex-col p-5 text-left sm:p-6 lg:flex-1">
+    <Card className="flex w-full shrink-0 flex-col p-5 text-left sm:p-6">
     <h2 className="mb-5 shrink-0 text-center text-base font-semibold sm:text-lg">{t('benefits.title')}</h2>
-    <ul className="grid h-full gap-x-8 gap-y-5 sm:grid-cols-2 lg:auto-rows-fr">
+    <ul className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
       {BENEFITS.map((item) => {
         const Icon = item.icon
         return (
@@ -156,13 +156,24 @@ export function VipPage() {
     const fit = () => {
       content.style.zoom = '1'
       content.style.minHeight = '0'
+      content.style.gap = ''
+      content.style.paddingTop = ''
       if (!window.matchMedia('(min-width: 1024px)').matches) return
       const available = frame.clientHeight
       const needed = content.getBoundingClientRect().height
       if (available > 0 && needed > 0) {
-        const scale = Math.min(1, available / needed)
+        // Spend spare height on separation between sections, not inside benefits.
+        const currentGap = parseFloat(getComputedStyle(content).gap) || 0
+        const gapCount = 2
+        const extra = Math.max(0, available - needed)
+        const gap = Math.min(64, currentGap + extra / 3)
+        content.style.gap = `${gap}px`
+        const height = content.getBoundingClientRect().height
+        const scale = Math.min(1, available / height)
         content.style.zoom = String(scale)
         content.style.minHeight = `${available / scale}px`
+        const remaining = Math.max(0, available / scale - height)
+        content.style.paddingTop = `${remaining / (gapCount + 1)}px`
       }
     }
     const schedule = () => {
@@ -182,6 +193,8 @@ export function VipPage() {
       window.removeEventListener('resize', schedule)
       content.style.zoom = '1'
       content.style.minHeight = '0'
+      content.style.gap = ''
+      content.style.paddingTop = ''
     }
   }, [tariffsReady, tariffs, localFxReady, selectedPlan, t])
 
