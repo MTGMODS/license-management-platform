@@ -131,7 +131,7 @@ function PlanPrice({
   )
 }
 
-export function PricingGrid({ compact = false }: { compact?: boolean }) {
+export function PricingGrid({ compact = false, onChoose }: { compact?: boolean; onChoose?: () => void }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const { data, isPending, isError } = useTariffs()
@@ -176,9 +176,10 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
             )
           : 'text-xs sm:text-sm'
 
-        return (
+        const card = (
           <Card
             key={plan.duration_days}
+            interactive={Boolean(onChoose)}
             className={cn(
               'flex flex-col border border-accent-500/40 text-left',
               compact
@@ -235,8 +236,16 @@ export function PricingGrid({ compact = false }: { compact?: boolean }) {
                 </span>
               </p>
             </div>
+            {onChoose ? <span className="mt-3 text-xs font-medium text-accent-300">{t('hero.pay')} →</span> : null}
           </Card>
         )
+        return onChoose ? (
+          <a key={plan.duration_days} href="#vip-payment"
+            onClick={(event) => { event.preventDefault(); onChoose() }}
+            className="block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-400">
+            {card}
+          </a>
+        ) : card
       })}
     </div>
   )

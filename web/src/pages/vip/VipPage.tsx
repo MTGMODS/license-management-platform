@@ -1,4 +1,4 @@
-import { BanknoteX, CreditCard, Infinity as InfinityIcon, MessageSquareText, Sparkles, Users } from 'lucide-react'
+import { Infinity as InfinityIcon, MessageSquareText, Sparkles, Users } from 'lucide-react'
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -8,7 +8,7 @@ import { useLocalUsdPrice } from '@/features/geo/useLocalUsdPrice'
 import { useSalesStats } from '@/features/license/useSalesStats'
 import { useTariffs } from '@/features/license/useTariffs'
 import { cn } from '@/shared/lib/cn'
-import { Button, Card, DeferredMount, Skeleton, buttonStyles } from '@/shared/ui'
+import { Button, Card, DeferredMount, Skeleton } from '@/shared/ui'
 import { PaymentSection } from '@/widgets/vip/PaymentSection'
 import { PricingGrid } from '@/widgets/vip/PricingGrid'
 import { SalesOverview } from '@/widgets/vip/SalesOverview'
@@ -87,9 +87,9 @@ function GalleryLink({ children }: { children?: ReactNode }) {
 /** Short desktop (e.g. 1280×720): tighter 2×2. Tall desktop: four rows. Phones unchanged. */
 const SHORT_DESKTOP = '[@media(min-width:1024px)_and_(max-height:48rem)]'
 
-/** Use natural content height so short screens and browser zoom cannot clip it. */
+/** The summary footer marks the bottom of the first desktop viewport. */
 const DESKTOP_FOLD = cn(
-  'lg:flex lg:flex-col',
+  'lg:grid lg:h-[calc(100dvh-4rem)] lg:grid-rows-[auto_minmax(0,1fr)_auto]',
   'lg:py-[clamp(0.75rem,1.5vh,1.25rem)]',
 )
 
@@ -134,8 +134,45 @@ export function VipPage() {
   } = useTariffs()
   const { ready: localFxReady } = useLocalUsdPrice()
   const toasted = useRef(false)
+  const frameRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
   const tariffsReady = !tariffsPending && !tariffsError && Boolean(tariffs?.plans.length)
   const foldOk = tariffsReady && !statsError
+
+  useLayoutEffect(() => {
+    const frame = frameRef.current
+    const content = contentRef.current
+    if (!frame || !content) return
+
+    let raf = 0
+    let disposed = false
+    const fit = () => {
+      content.style.zoom = '1'
+      if (!window.matchMedia('(min-width: 1024px)').matches) return
+      const available = frame.clientHeight
+      const needed = content.getBoundingClientRect().height
+      if (available > 0 && needed > available) {
+        content.style.zoom = String(Math.min(1, available / needed))
+      }
+    }
+    const schedule = () => {
+      if (disposed) return
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(fit)
+    }
+    fit()
+    const observer = new ResizeObserver(schedule)
+    observer.observe(frame)
+    window.addEventListener('resize', schedule)
+    void document.fonts?.ready.then(schedule)
+    return () => {
+      disposed = true
+      cancelAnimationFrame(raf)
+      observer.disconnect()
+      window.removeEventListener('resize', schedule)
+      content.style.zoom = '1'
+    }
+  }, [tariffsReady, tariffs, localFxReady, t])
 
   useEffect(() => {
     if (!statsError) {
@@ -149,7 +186,7 @@ export function VipPage() {
 
   return (
     <div className="shell flex min-h-0 flex-1 flex-col">
-      {/* Content can grow beyond the viewport without clipping. */}
+      {/* Desktop ends at the overview footer; payment starts below the fold. */}
       <div
         className={cn(
           'flex flex-col py-6 sm:py-8',
@@ -185,13 +222,9 @@ export function VipPage() {
           </Card>
         ) : (
           <>
-            <div className="mt-6 flex min-h-0 flex-col lg:mt-0">
+            <div ref={frameRef} className="mt-6 min-h-0 lg:mt-3">
               <div
-                className="hidden shrink-0 lg:block lg:h-[clamp(0.75rem,2vh,1.25rem)]"
-                aria-hidden
-              />
-
-              <div
+                ref={contentRef}
                 className={cn(
                   'flex shrink-0 flex-col gap-5',
                   'lg:gap-[clamp(0.45rem,1.15vh,0.85rem)]',
@@ -199,43 +232,14 @@ export function VipPage() {
                 )}
               >
                 <div className="lg:hidden">
-                  <PricingGrid />
+                  <PricingGrid onChoose={scrollToPayment} />
                 </div>
                 <div className="hidden lg:block">
-                  <PricingGrid compact />
+                  <PricingGrid compact onChoose={scrollToPayment} />
                 </div>
 
                 {tariffsReady ? (
                   <>
-                    <div className="flex flex-wrap items-center justify-center gap-3">
-                      <Button
-                        size="lg"
-                        className={cn(
-                          `${SHORT_DESKTOP}:h-10`,
-                          `${SHORT_DESKTOP}:px-4`,
-                          `${SHORT_DESKTOP}:text-sm`,
-                        )}
-                        onClick={scrollToPayment}
-                      >
-                        <CreditCard aria-hidden className="size-4" />
-                        {t('hero.pay')}
-                      </Button>
-                      <Link
-                        to="/helper"
-                        className={buttonStyles({
-                          size: 'lg',
-                          variant: 'secondary',
-                          className: cn(
-                            `${SHORT_DESKTOP}:h-10`,
-                            `${SHORT_DESKTOP}:px-4`,
-                            `${SHORT_DESKTOP}:text-sm`,
-                          ),
-                        })}
-                      >
-                        <BanknoteX aria-hidden className="size-4" />
-                        {t('hero.backToFree')}
-                      </Link>
-                    </div>
                     <VipBenefits />
                   </>
                 ) : null}
