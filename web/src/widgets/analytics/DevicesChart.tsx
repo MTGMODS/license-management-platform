@@ -1,8 +1,13 @@
 import { useTranslation } from 'react-i18next'
 
 import type { DeviceFamilyStats, PeriodKey } from '@/shared/api/usage'
-import type { ChartMetric } from './chartTheme'
-import { DistributionDonut } from './DistributionDonut'
+import { useFormatters } from '@/shared/lib/format'
+import { Card } from '@/shared/ui'
+
+import { CategoryBarChart } from './CategoryBarChart'
+import { type ChartMetric, chartColor } from './chartTheme'
+import { ChartTooltip } from './ChartTooltip'
+import { statsTooltipRows } from './statsTooltip'
 
 interface DevicesChartProps {
   devices: {
@@ -15,6 +20,8 @@ interface DevicesChartProps {
 
 export function DevicesChart({ devices, period, metric }: DevicesChartProps) {
   const { t } = useTranslation('helper')
+  const format = useFormatters()
+  const color = chartColor(metric)
 
   const rows = [
     {
@@ -42,15 +49,22 @@ export function DevicesChart({ devices, period, metric }: DevicesChartProps) {
     .sort((a, b) => b[metric] - a[metric])
 
   return (
-    <div className="min-w-0 text-left">
+    <Card className="p-4 text-left sm:p-6">
       <h3 className="text-lg font-semibold tracking-tight">{t('analytics.devices.title')}</h3>
       <p className="mt-1 text-sm text-fg-muted">{t('analytics.devices.subtitle')}</p>
 
       {rows.length === 0 ? (
         <p className="mt-8 text-sm text-fg-subtle">{t('analytics.empty')}</p>
       ) : (
-        <DistributionDonut rows={rows} metric={metric} />
+        <CategoryBarChart
+          data={rows}
+          dataKey={metric}
+          color={color}
+          renderTooltip={(point) => (
+            <ChartTooltip title={point.label} rows={statsTooltipRows(t, format, point)} />
+          )}
+        />
       )}
-    </div>
+    </Card>
   )
 }

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import { usePublicStats } from '@/features/usage/usePublicStats'
 import type { PeriodKey } from '@/shared/api/usage'
-import { Card, Skeleton } from '@/shared/ui'
+import { Skeleton } from '@/shared/ui'
 
 import { ActivityCharts } from './ActivityCharts'
 import type { ChartMetric } from './chartTheme'
@@ -60,10 +60,8 @@ export function AnalyticsSection() {
           period={period}
           metric={metric}
         />
-        <Card className="grid gap-8 p-4 text-left sm:p-6 lg:grid-cols-2 lg:gap-10">
-          <VersionsChart versions={data.distribution.versions} period={period} metric={metric} />
-          <DevicesChart devices={data.overview.devices} period={period} metric={metric} />
-        </Card>
+        <VersionsChart versions={data.distribution.versions} period={period} metric={metric} />
+        <DevicesChart devices={data.overview.devices} period={period} metric={metric} />
       </div>
 
       <div className="mt-10">

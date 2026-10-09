@@ -159,7 +159,7 @@ export function VersionsChart({
     .sort((a, b) => b[metric] - a[metric])
 
   return (
-    <div className="min-w-0 text-left">
+    <Card className="p-4 text-left sm:p-6">
       <h3 className="text-lg font-semibold tracking-tight">{t('analytics.versions.title')}</h3>
       <p className="mt-1 text-sm text-fg-muted">{t('analytics.versions.subtitle')}</p>
 
@@ -168,6 +168,6 @@ export function VersionsChart({
       ) : (
         <DistributionDonut rows={rows} metric={metric} />
       )}
-    </div>
+    </Card>
   )
 }
