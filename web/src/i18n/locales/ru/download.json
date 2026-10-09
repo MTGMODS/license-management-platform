@@ -37,17 +37,13 @@
       "title": "Автоматическая установка",
       "badge": "Проще всего",
       "steps": {
-        "download": "Скачайте модифицированный лаунчер с MonetLoader (x32 или x64)",
-        "install": "Используйте команду /mtg (x32) или магазин модов (x64)",
-        "select": "Выберите хелпер и нажмите «Скачать»"
+        "download": "Скачайте модифицированный лаунчер с NeomLoader",
+        "install": "Используйте команду /mtg или /store"
       },
-      "x32": {
-        "action": "Скачать x32",
-        "guide": "Видеогайд x32"
-      },
-      "x64": {
-        "action": "Скачать x64",
-        "guide": "Видеогайд x64"
+      "action": "Скачать NeomLoader",
+      "guides": {
+        "mtg": "Видеогайд /mtg",
+        "store": "Видеогайд /store"
       }
     },
     "manual": {
@@ -56,11 +52,9 @@
       "action": "Скачать Lua-файл",
       "guide": "Видеогайд",
       "steps": {
-        "launcher": "Установите лаунчер с MonetLoader",
         "download": "Нажмите «Скачать Lua-файл»",
-        "open": "Откройте папку Android/media/*game*/monetloader/",
-        "place": "Положите туда скачанный Lua-файл",
-        "done": "Готово, можете заходить в игру"
+        "open": "Откройте папку Android/media/*game*/neomloader/",
+        "place": "Положите туда скачанный Lua-файл"
       }
     }
   },

@@ -22,16 +22,14 @@ export const FREE_LUA_FALLBACK_URL =
 export const PC_INSTALLER_URL =
   'https://github.com/MTGMODS/arizona-helper/releases/download/windows-installer/Arizona.Rodina.Helper.exe'
 
-/** MonetLoader launchers for mobile auto / manual install. */
-export const MONETLOADER_X32_URL =
-  'https://github.com/MTGMODS/arz_monetloader/releases/latest'
-export const MONETLOADER_X64_URL =
-  'https://github.com/idmkdev/arzmod-patcher/releases/latest'
+/** NeomLoader launcher for mobile automatic installation. */
+export const NEOMLOADER_URL =
+  'https://github.com/MTGMODS/arz_lua_launcher/releases/latest'
 
 /** Install walkthroughs (YouTube). */
 export const PC_MANUAL_GUIDE_URL = 'https://youtu.be/6RGwkuaK_Bg'
-export const MOBILE_X32_GUIDE_URL = 'https://youtu.be/mlX6ZzP35mw'
-export const MOBILE_X64_GUIDE_URL = 'https://www.youtube.com/watch?v=qh5s5JJrLX8'
+export const MOBILE_MTG_GUIDE_URL = 'https://youtu.be/mlX6ZzP35mw'
+export const MOBILE_STORE_GUIDE_URL = 'https://www.youtube.com/watch?v=qh5s5JJrLX8'
 export const MOBILE_MANUAL_GUIDE_URL = 'https://www.youtube.com/shorts/cuD9swqlJt4'
 
 export const TELEGRAM_VIP_CHAT_URL = 'https://t.me/+bi-SlBWfG7o3NDgy'

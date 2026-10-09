@@ -16,10 +16,9 @@ import { useRelease } from '@/features/release/useRelease'
 import {
   FREE_LUA_FALLBACK_URL,
   MOBILE_MANUAL_GUIDE_URL,
-  MOBILE_X32_GUIDE_URL,
-  MOBILE_X64_GUIDE_URL,
-  MONETLOADER_X32_URL,
-  MONETLOADER_X64_URL,
+  MOBILE_MTG_GUIDE_URL,
+  MOBILE_STORE_GUIDE_URL,
+  NEOMLOADER_URL,
   PC_INSTALLER_URL,
   PC_MANUAL_GUIDE_URL,
 } from '@/shared/config/product'
@@ -240,33 +239,20 @@ function MobileInstall() {
         title={t('mobile.auto.title')}
         badge={t('mobile.auto.badge')}
         actions={
-          <div className="grid min-w-0 gap-4 sm:grid-cols-2 sm:gap-5">
-            <div className="flex min-w-0 flex-col gap-2.5">
-              <a
-                href={MONETLOADER_X32_URL}
-                target="_blank"
-                rel="noreferrer"
-                className={buttonStyles({ size: 'lg', fullWidth: true })}
-              >
-                <Download aria-hidden className="size-4" />
-                {t('mobile.auto.x32.action')}
-                <ExternalLink aria-hidden className="size-3.5 opacity-70" />
-              </a>
-              <GuideLink href={MOBILE_X32_GUIDE_URL}>{t('mobile.auto.x32.guide')}</GuideLink>
-            </div>
-
-            <div className="flex min-w-0 flex-col gap-2.5 border-t border-white/8 pt-4 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-5">
-              <a
-                href={MONETLOADER_X64_URL}
-                target="_blank"
-                rel="noreferrer"
-                className={buttonStyles({ size: 'lg', fullWidth: true })}
-              >
-                <Download aria-hidden className="size-4" />
-                {t('mobile.auto.x64.action')}
-                <ExternalLink aria-hidden className="size-3.5 opacity-70" />
-              </a>
-              <GuideLink href={MOBILE_X64_GUIDE_URL}>{t('mobile.auto.x64.guide')}</GuideLink>
+          <div className="flex min-w-0 flex-col gap-2.5">
+            <a
+              href={NEOMLOADER_URL}
+              target="_blank"
+              rel="noreferrer"
+              className={buttonStyles({ size: 'lg', fullWidth: true })}
+            >
+              <Download aria-hidden className="size-4" />
+              {t('mobile.auto.action')}
+              <ExternalLink aria-hidden className="size-3.5 opacity-70" />
+            </a>
+            <div className="grid min-w-0 gap-2.5 sm:grid-cols-2">
+              <GuideLink href={MOBILE_MTG_GUIDE_URL}>{t('mobile.auto.guides.mtg')}</GuideLink>
+              <GuideLink href={MOBILE_STORE_GUIDE_URL}>{t('mobile.auto.guides.store')}</GuideLink>
             </div>
           </div>
         }
@@ -275,7 +261,6 @@ function MobileInstall() {
           items={[
             t('mobile.auto.steps.download'),
             t('mobile.auto.steps.install'),
-            t('mobile.auto.steps.select'),
           ]}
         />
       </InstallCard>
@@ -310,11 +295,9 @@ function MobileInstall() {
       >
         <Steps
           items={[
-            t('mobile.manual.steps.launcher'),
             t('mobile.manual.steps.download'),
             t('mobile.manual.steps.open'),
             t('mobile.manual.steps.place'),
-            t('mobile.manual.steps.done'),
           ]}
         />
       </InstallCard>
