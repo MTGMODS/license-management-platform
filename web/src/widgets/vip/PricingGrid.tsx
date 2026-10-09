@@ -131,7 +131,11 @@ function PlanPrice({
   )
 }
 
-export function PricingGrid({ compact = false, onChoose }: { compact?: boolean; onChoose?: () => void }) {
+export function PricingGrid({ compact = false, selectedDays, onChoose }: {
+  compact?: boolean
+  selectedDays?: number
+  onChoose?: (days: number) => void
+}) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const { data, isPending, isError } = useTariffs()
@@ -167,8 +171,6 @@ export function PricingGrid({ compact = false, onChoose }: { compact?: boolean; 
         const resetValue = String(plan.reset_limit)
         const localApprox = formatApprox(plan.price)
         const daysLabel = t('pricing.days', { count: plan.duration_days })
-        const perDayPrice = format.money(plan.price / plan.duration_days)
-        const perDay = { price: perDayPrice }
         const metaText = compact
           ? cn(
               'text-[clamp(0.65rem,1.15vh,0.8rem)]',
@@ -181,7 +183,10 @@ export function PricingGrid({ compact = false, onChoose }: { compact?: boolean; 
             key={plan.duration_days}
             interactive={Boolean(onChoose)}
             className={cn(
-              'flex flex-col border border-accent-500/40 text-left',
+              'flex h-full flex-col border text-left',
+              onChoose && selectedDays === plan.duration_days
+                ? 'border-accent-400 bg-accent-500/10 shadow-[0_0_20px_rgba(56,189,248,0.12)]'
+                : 'border-white/10',
               compact
                 ? cn('p-[clamp(0.55rem,1.1vh,0.85rem)]', `${SHORT_DESKTOP}:p-2.5`)
                 : 'p-3.5 sm:p-4',
@@ -192,17 +197,12 @@ export function PricingGrid({ compact = false, onChoose }: { compact?: boolean; 
                 'whitespace-nowrap tabular',
                 compact
                   ? cn(
-                      'text-[clamp(0.6rem,1.1vh,0.75rem)]',
-                      `${SHORT_DESKTOP}:text-[0.65rem]`,
+                      'text-[clamp(0.875rem,1.6vh,1.1rem)]',
                     )
-                  : 'text-[0.7rem] sm:text-sm',
+                  : 'text-base sm:text-lg',
               )}
             >
               <span className="font-semibold text-fg">{daysLabel}</span>
-              <span className="text-fg-muted">
-                <span className="sm:hidden">{t('pricing.daysWithPerDayTight', perDay)}</span>
-                <span className="hidden sm:inline">{t('pricing.daysWithPerDay', perDay)}</span>
-              </span>
             </p>
 
             <PlanPrice
@@ -239,11 +239,14 @@ export function PricingGrid({ compact = false, onChoose }: { compact?: boolean; 
           </Card>
         )
         return onChoose ? (
-          <a key={plan.duration_days} href="#vip-payment"
-            onClick={(event) => { event.preventDefault(); onChoose() }}
-            className="block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-400">
+          <label key={plan.duration_days} className="relative block cursor-pointer rounded-2xl">
+            <input type="radio" name={compact ? 'vip-plan-desktop' : 'vip-plan-mobile'}
+              value={plan.duration_days} checked={selectedDays === plan.duration_days}
+              onChange={() => onChoose(plan.duration_days)} aria-label={daysLabel}
+              className="peer sr-only" />
+            <span className="pointer-events-none absolute inset-0 rounded-2xl peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent-400" aria-hidden />
             {card}
-          </a>
+          </label>
         ) : card
       })}
     </div>

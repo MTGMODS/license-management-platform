@@ -1,5 +1,5 @@
-import { Infinity as InfinityIcon, MessageSquareText, Sparkles, Users } from 'lucide-react'
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
+import { CreditCard, Infinity as InfinityIcon, MessageSquareText, Sparkles, Users } from 'lucide-react'
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
@@ -8,6 +8,7 @@ import { useLocalUsdPrice } from '@/features/geo/useLocalUsdPrice'
 import { useSalesStats } from '@/features/license/useSalesStats'
 import { useTariffs } from '@/features/license/useTariffs'
 import { cn } from '@/shared/lib/cn'
+import { useFormatters } from '@/shared/lib/format'
 import { Button, Card, DeferredMount, Skeleton } from '@/shared/ui'
 import { PaymentSection } from '@/widgets/vip/PaymentSection'
 import { PricingGrid } from '@/widgets/vip/PricingGrid'
@@ -97,12 +98,12 @@ function VipBenefits() {
   const { t } = useTranslation('vip')
 
   return (
-    <ul className="grid w-full gap-3 text-left sm:grid-cols-2 lg:flex-1 lg:auto-rows-fr">
+    <Card className="flex w-full flex-col p-4 text-left sm:p-5 lg:flex-1">
+    <ul className={cn('grid h-full gap-4 sm:grid-cols-2 lg:grid-cols-1 lg:auto-rows-fr', `${SHORT_DESKTOP}:grid-cols-2`)}>
       {BENEFITS.map((item) => {
         const Icon = item.icon
         return (
-          <li key={item.titleKey} className="min-w-0">
-            <Card className="flex h-full items-start gap-3 p-4 lg:items-center lg:p-[clamp(0.875rem,1.6vh,1.25rem)]">
+          <li key={item.titleKey} className="flex min-w-0 items-center gap-3">
               <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent-500/10 text-accent-300">
                 <Icon aria-hidden className="size-4" />
               </span>
@@ -114,16 +115,18 @@ function VipBenefits() {
                   ) : t(item.textKey)}
                 </p>
               </div>
-            </Card>
           </li>
         )
       })}
     </ul>
+    </Card>
   )
 }
 
 export function VipPage() {
   const { t } = useTranslation(['vip', 'common'])
+  const format = useFormatters()
+  const [selectedDays, setSelectedDays] = useState<number | null>(null)
   const { isError: statsError } = useSalesStats()
   const {
     data: tariffs,
@@ -138,6 +141,9 @@ export function VipPage() {
   const contentRef = useRef<HTMLDivElement>(null)
   const tariffsReady = !tariffsPending && !tariffsError && Boolean(tariffs?.plans.length)
   const foldOk = tariffsReady && !statsError
+  const selectedPlan = tariffs?.plans.find((plan) => plan.duration_days === selectedDays)
+    ?? tariffs?.plans.find((plan) => plan.duration_days === 30)
+    ?? tariffs?.plans[0]
 
   useLayoutEffect(() => {
     const frame = frameRef.current
@@ -176,7 +182,7 @@ export function VipPage() {
       content.style.zoom = '1'
       content.style.minHeight = '0'
     }
-  }, [tariffsReady, tariffs, localFxReady, t])
+  }, [tariffsReady, tariffs, localFxReady, selectedPlan, t])
 
   useEffect(() => {
     if (!statsError) {
@@ -236,14 +242,26 @@ export function VipPage() {
                 )}
               >
                 <div className="lg:hidden">
-                  <PricingGrid onChoose={scrollToPayment} />
+                  <PricingGrid selectedDays={selectedPlan?.duration_days} onChoose={setSelectedDays} />
                 </div>
                 <div className="hidden lg:block">
-                  <PricingGrid compact onChoose={scrollToPayment} />
+                  <PricingGrid compact selectedDays={selectedPlan?.duration_days} onChoose={setSelectedDays} />
                 </div>
 
                 {tariffsReady ? (
                   <>
+                    {selectedPlan ? (
+                      <div className="flex shrink-0 justify-center">
+                        <Button size="lg" onClick={scrollToPayment}
+                          className="max-w-full whitespace-normal text-center">
+                          <CreditCard aria-hidden className="size-4 shrink-0" />
+                          {t('hero.checkout', {
+                            period: t('pricing.days', { count: selectedPlan.duration_days }),
+                            price: Number.isInteger(selectedPlan.price) ? String(selectedPlan.price) : format.money(selectedPlan.price),
+                          })}
+                        </Button>
+                      </div>
+                    ) : null}
                     <VipBenefits />
                   </>
                 ) : null}
