@@ -460,29 +460,15 @@ function LicenseCard({
 
   return (
     <Card className="p-6 sm:p-8">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+      <div className="grid items-center gap-3 lg:grid-cols-[1fr_auto_1fr]">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className="tabular text-sm text-fg-subtle">#{license.id}</span>
           <p className="tabular break-all font-mono text-base font-semibold tracking-wider text-accent-300">{license.key}</p>
-          <p className="mt-1 text-xs text-fg-subtle">#{license.id}</p>
-          {license.user_id != null ? (
-            <Button
-              className="mt-2"
-              size="sm"
-              variant="secondary"
-              onClick={() => onOpenUser(license.user_id!)}
-            >
-              <UserRound aria-hidden className="size-3.5" />
-              {t('licenses.owner')} #{license.user_id}
-            </Button>
-          ) : (
-            <p className="mt-2 text-sm text-fg-subtle">{t('licenses.noOwner')}</p>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge tone={statusTone(license.status)}>{t(`licenses.statuses.${license.status}`)}</Badge>
           <Button
             size="sm"
             variant="ghost"
+            aria-label={t('licenses.copy')}
+            title={t('licenses.copy')}
             onClick={() => {
               void copyText(license.key).then((ok) => {
                 if (ok) toast.success(t('licenses.copied'))
@@ -491,8 +477,24 @@ function LicenseCard({
             }}
           >
             <Copy aria-hidden className="size-3.5" />
-            {t('licenses.copy')}
           </Button>
+        </div>
+        <div className="lg:justify-self-center">
+          {license.user_id != null ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => onOpenUser(license.user_id!)}
+            >
+              <UserRound aria-hidden className="size-3.5" />
+              {t('licenses.owner')} #{license.user_id}
+            </Button>
+          ) : (
+            <p className="text-sm text-fg-subtle">{t('licenses.noOwner')}</p>
+          )}
+        </div>
+        <div className="lg:justify-self-end">
+          <Badge tone={statusTone(license.status)}>{t(`licenses.statuses.${license.status}`)}</Badge>
         </div>
       </div>
 
@@ -523,7 +525,70 @@ function LicenseCard({
         </div>
       </dl>
 
-      <div className="mt-5">
+      <div className="mt-6 border-t border-white/5 pt-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="font-semibold">{t('licenses.devices')}</p>
+          <span className="text-sm text-fg-subtle">{td('vip.devicesCount', { used: license.devices.length, max: license.max_devices })}</span>
+        </div>
+        {license.devices.length === 0 ? (
+          <p className="mt-2 text-sm text-fg-subtle">—</p>
+        ) : (
+          <ul className="mt-3 space-y-3">
+            {license.devices.map((device, index) => (
+              <li key={device.id} className="rounded-xl bg-ink-800/70 px-4 py-3.5 text-sm">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent-500/10 text-accent-300">
+                    {/[A-Z]/.test(device.device)
+                      ? <Monitor aria-hidden className="size-4" />
+                      : <Smartphone aria-hidden className="size-4" />}
+                  </span>
+                  <p className="min-w-0 flex-1 font-medium">{td('vip.slotOccupied', { index: index + 1 })}</p>
+                  {confirmDeviceId === device.id ? (
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        loading={deleteDevice.isPending}
+                        onClick={() => void onRemoveDevice(device.id)}
+                      >
+                        {t('common:actions.confirm')}
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setConfirmDeviceId(null)}>
+                        {t('common:actions.cancel')}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button size="sm" variant="ghost" onClick={() => setConfirmDeviceId(device.id)}>
+                      <Trash2 aria-hidden className="size-3.5" />
+                      {t('licenses.removeDevice')}
+                    </Button>
+                  )}
+                </div>
+                <dl className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+                  <div className="flex flex-wrap items-baseline gap-x-2">
+                    <dt className="text-fg-subtle">{td('vip.hwid')}</dt>
+                    <dd className="tabular min-w-0 break-all font-mono text-fg-muted">{device.device}</dd>
+                  </div>
+                  <div className="flex flex-wrap items-baseline gap-x-2">
+                    <dt className="text-fg-subtle">{td('vip.ip')}</dt>
+                    <dd className="tabular text-fg-muted">{device.ip_address ?? '—'}</dd>
+                  </div>
+                  {device.first_used_at ? <div className="flex flex-wrap items-baseline gap-x-2">
+                    <dt className="text-fg-subtle">{td('vip.firstUsed')}</dt>
+                    <dd className="text-fg-muted">{format.dateTimeWithUtc(device.first_used_at)}</dd>
+                  </div> : null}
+                  {device.last_used_at ? <div className="flex flex-wrap items-baseline gap-x-2">
+                    <dt className="text-fg-subtle">{td('vip.lastUsed')}</dt>
+                    <dd className="text-fg-muted">{format.dateTimeWithUtc(device.last_used_at)}</dd>
+                  </div> : null}
+                </dl>
+                {device.user_agent ? <p className="mt-2 break-words text-xs text-fg-subtle">{device.user_agent}</p> : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="mt-6 border-t border-white/5 pt-5">
         <p className="text-sm font-medium">{t('licenses.edit')}</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <label className="text-sm">
@@ -590,69 +655,6 @@ function LicenseCard({
           />
         </label>
         </div>
-      </div>
-
-      <div className="mt-6 border-t border-white/5 pt-5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="font-semibold">{t('licenses.devices')}</p>
-          <span className="text-sm text-fg-subtle">{td('vip.devicesCount', { used: license.devices.length, max: license.max_devices })}</span>
-        </div>
-        {license.devices.length === 0 ? (
-          <p className="mt-2 text-sm text-fg-subtle">—</p>
-        ) : (
-          <ul className="mt-3 space-y-3">
-            {license.devices.map((device, index) => (
-              <li key={device.id} className="rounded-xl bg-ink-800/70 px-4 py-3.5 text-sm">
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent-500/10 text-accent-300">
-                    {/[A-Z]/.test(device.device)
-                      ? <Monitor aria-hidden className="size-4" />
-                      : <Smartphone aria-hidden className="size-4" />}
-                  </span>
-                  <p className="min-w-0 flex-1 font-medium">{td('vip.slotOccupied', { index: index + 1 })}</p>
-                  {confirmDeviceId === device.id ? (
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        size="sm"
-                        loading={deleteDevice.isPending}
-                        onClick={() => void onRemoveDevice(device.id)}
-                      >
-                        {t('common:actions.confirm')}
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setConfirmDeviceId(null)}>
-                        {t('common:actions.cancel')}
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button size="sm" variant="ghost" onClick={() => setConfirmDeviceId(device.id)}>
-                      <Trash2 aria-hidden className="size-3.5" />
-                      {t('licenses.removeDevice')}
-                    </Button>
-                  )}
-                </div>
-                <dl className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
-                  <div className="flex flex-wrap items-baseline gap-x-2">
-                    <dt className="text-fg-subtle">{td('vip.hwid')}</dt>
-                    <dd className="tabular min-w-0 break-all font-mono text-fg-muted">{device.device}</dd>
-                  </div>
-                  <div className="flex flex-wrap items-baseline gap-x-2">
-                    <dt className="text-fg-subtle">{td('vip.ip')}</dt>
-                    <dd className="tabular text-fg-muted">{device.ip_address ?? '—'}</dd>
-                  </div>
-                  {device.first_used_at ? <div className="flex flex-wrap items-baseline gap-x-2">
-                    <dt className="text-fg-subtle">{td('vip.firstUsed')}</dt>
-                    <dd className="text-fg-muted">{format.dateTimeWithUtc(device.first_used_at)}</dd>
-                  </div> : null}
-                  {device.last_used_at ? <div className="flex flex-wrap items-baseline gap-x-2">
-                    <dt className="text-fg-subtle">{td('vip.lastUsed')}</dt>
-                    <dd className="text-fg-muted">{format.dateTimeWithUtc(device.last_used_at)}</dd>
-                  </div> : null}
-                </dl>
-                {device.user_agent ? <p className="mt-2 break-words text-xs text-fg-subtle">{device.user_agent}</p> : null}
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-2">
