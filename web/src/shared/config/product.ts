@@ -34,6 +34,7 @@ export const MOBILE_MANUAL_GUIDE_URL = 'https://www.youtube.com/shorts/cuD9swqlJ
 
 export const TELEGRAM_VIP_CHAT_URL = 'https://t.me/+bi-SlBWfG7o3NDgy'
 export const DISCORD_SERVER_URL = 'https://discord.gg/qBPEYjfNhv'
+export const TELEGRAM_CHANNEL_URL = 'https://t.me/mtgmods'
 
 /** Accepts a bare 11-char id or a youtu.be / watch / embed URL. */
 export function parseYoutubeId(raw: string): string | null {

@@ -4,7 +4,9 @@ import { useTranslation } from 'react-i18next'
 import { NavLink, useLocation } from 'react-router'
 
 import logo from '@/assets/logo.png'
+import { DISCORD_SERVER_URL, TELEGRAM_CHANNEL_URL } from '@/shared/config/product'
 import { cn } from '@/shared/lib/cn'
+import { DiscordIcon, TelegramIcon } from '@/shared/ui'
 
 import { AccountControl } from './AccountControl'
 
@@ -73,6 +75,20 @@ export function Header() {
           >
             {menuOpen ? <X aria-hidden className="size-5" /> : <Menu aria-hidden className="size-5" />}
           </button>
+        </div>
+      </div>
+
+      <div className="border-t border-white/5 bg-ink-950/30">
+        <div className="shell flex min-h-10 flex-wrap items-center justify-center gap-x-5 gap-y-1 py-1.5 text-xs sm:justify-end">
+          <span className="hidden text-fg-subtle sm:inline">{t('community.label')}</span>
+          <a href={TELEGRAM_CHANNEL_URL} target="_blank" rel="noreferrer noopener"
+            className="inline-flex items-center gap-2 rounded-md px-2 py-1.5 font-medium text-[#38bdf8] transition-colors hover:bg-white/5">
+            <TelegramIcon aria-hidden className="size-4" /> Telegram
+          </a>
+          <a href={DISCORD_SERVER_URL} target="_blank" rel="noreferrer noopener"
+            className="inline-flex items-center gap-2 rounded-md px-2 py-1.5 font-medium text-[#a5b4fc] transition-colors hover:bg-white/5">
+            <DiscordIcon aria-hidden className="size-4" /> Discord
+          </a>
         </div>
       </div>
 
