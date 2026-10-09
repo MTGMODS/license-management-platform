@@ -97,12 +97,12 @@ function VipBenefits() {
   const { t } = useTranslation('vip')
 
   return (
-    <ul className="grid w-full gap-3 text-left sm:grid-cols-2">
+    <ul className="grid w-full gap-3 text-left sm:grid-cols-2 lg:flex-1 lg:auto-rows-fr">
       {BENEFITS.map((item) => {
         const Icon = item.icon
         return (
           <li key={item.titleKey} className="min-w-0">
-            <Card className="flex h-full items-start gap-3 p-4 lg:p-[clamp(0.875rem,1.6vh,1.25rem)]">
+            <Card className="flex h-full items-start gap-3 p-4 lg:items-center lg:p-[clamp(0.875rem,1.6vh,1.25rem)]">
               <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent-500/10 text-accent-300">
                 <Icon aria-hidden className="size-4" />
               </span>
@@ -148,11 +148,14 @@ export function VipPage() {
     let disposed = false
     const fit = () => {
       content.style.zoom = '1'
+      content.style.minHeight = '0'
       if (!window.matchMedia('(min-width: 1024px)').matches) return
       const available = frame.clientHeight
       const needed = content.getBoundingClientRect().height
-      if (available > 0 && needed > available) {
-        content.style.zoom = String(Math.min(1, available / needed))
+      if (available > 0 && needed > 0) {
+        const scale = Math.min(1, available / needed)
+        content.style.zoom = String(scale)
+        content.style.minHeight = `${available / scale}px`
       }
     }
     const schedule = () => {
@@ -171,6 +174,7 @@ export function VipPage() {
       observer.disconnect()
       window.removeEventListener('resize', schedule)
       content.style.zoom = '1'
+      content.style.minHeight = '0'
     }
   }, [tariffsReady, tariffs, localFxReady, t])
 

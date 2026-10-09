@@ -236,7 +236,6 @@ export function PricingGrid({ compact = false, onChoose }: { compact?: boolean; 
                 </span>
               </p>
             </div>
-            {onChoose ? <span className="mt-3 text-xs font-medium text-accent-300">{t('hero.pay')} →</span> : null}
           </Card>
         )
         return onChoose ? (
