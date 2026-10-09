@@ -95,7 +95,7 @@ export function HomePage() {
                   return (
                     <a key={repo.url} href={repo.url} target="_blank" rel="noreferrer noopener" className="group min-w-0 rounded-2xl">
                       <Card interactive className="flex h-full flex-col p-5">
-                        <div className="flex items-center justify-between"><Icon aria-hidden className="size-5 text-accent-400" /><ArrowUpRight aria-hidden className="size-4 text-fg-subtle group-hover:text-accent-400" /></div>
+                        <Icon aria-hidden className="size-5 text-accent-400" />
                         <h4 className="mt-4 text-sm font-semibold">{repo.name}</h4>
                         <p className="mt-2 flex-1 text-sm leading-relaxed text-fg-muted">{t(`repositories.${repo.key}`)}</p>
                         <span className="mt-4 inline-flex items-center gap-2 text-xs text-fg-subtle group-hover:text-fg"><GithubIcon aria-hidden className="size-3.5" /> {t('repositories.viewCode')}</span>
