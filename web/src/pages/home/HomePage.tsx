@@ -12,9 +12,8 @@ export function HomePage() {
   return (
     <div className="shell py-14 sm:py-20">
       <section className="max-w-3xl animate-fade-up">
-        <p className="font-mono text-sm text-accent-400">mtgmods</p>
         <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">
-          {t('hero.greeting')} <a href={CONTACT_URL} target="_blank" rel="noreferrer noopener" className="text-gradient transition-opacity hover:opacity-80">{t('hero.name')}</a>
+          <span className="text-gradient">mtgmods</span>
         </h1>
         <p className="mt-6 text-xl leading-relaxed text-fg/90 sm:text-2xl">
           <Trans ns="home" i18nKey="hero.tagline" components={{
@@ -22,14 +21,35 @@ export function HomePage() {
           }} />
         </p>
         <p className="mt-4 max-w-2xl leading-relaxed text-fg-muted">{t('home:hero.bio')}</p>
+        <p className="mt-5 text-sm text-fg-subtle">
+          {t('hero.author')} <a href={CONTACT_URL} target="_blank" rel="noreferrer noopener" className="text-fg-muted underline decoration-white/20 underline-offset-4 transition-colors hover:text-accent-300">{t('hero.name')}</a>
+        </p>
       </section>
 
       <div className="rule-fade my-10 sm:my-14" />
 
-      <section aria-labelledby="about-title" className="grid gap-6 lg:grid-cols-[1fr_2fr]">
-        <h2 id="about-title" className="text-2xl font-semibold tracking-tight">{t('about.title')}</h2>
-        <p className="max-w-3xl leading-relaxed text-fg-muted">{t('about.description')}</p>
+      <section aria-labelledby="open-data-title">
+        <h2 id="open-data-title" className="text-2xl font-semibold tracking-tight">{t('home:openData.title')}</h2>
+        <p className="mt-2 text-sm leading-relaxed text-fg-muted">{t('home:openData.description')}</p>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          {([
+            { to: '/helper', key: 'usage', icon: BarChart3 },
+            { to: '/vip', key: 'sales', icon: CircleDollarSign },
+          ] as const).map(({ to, key, icon: Icon }) => (
+            <Link key={to} to={to} className="group rounded-2xl">
+              <Card interactive className="h-full p-5">
+                <div className="flex items-center gap-3">
+                  <Icon aria-hidden className="size-5 text-accent-400" />
+                  <h3 className="flex-1 font-semibold">{t(`home:openData.${key}.title`)}</h3>
+                  <ArrowUpRight aria-hidden className="size-4 text-fg-subtle group-hover:text-accent-400" />
+                </div>
+                <p className="mt-3 text-sm leading-relaxed text-fg-muted">{t(`home:openData.${key}.description`)}</p>
+              </Card>
+            </Link>
+          ))}
+        </div>
       </section>
+
 
       <div className="rule-fade my-10 sm:my-14" />
 
@@ -63,32 +83,6 @@ export function HomePage() {
           ))}
         </div>
       </section>
-
-      <div className="rule-fade my-10 sm:my-14" />
-
-      <section aria-labelledby="open-data-title">
-        <h2 id="open-data-title" className="text-2xl font-semibold tracking-tight">{t('home:openData.title')}</h2>
-        <p className="mt-2 text-sm leading-relaxed text-fg-muted">{t('home:openData.description')}</p>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          {([
-            { to: '/helper', key: 'usage', icon: BarChart3 },
-            { to: '/vip', key: 'sales', icon: CircleDollarSign },
-          ] as const).map(({ to, key, icon: Icon }) => (
-            <Link key={to} to={to} className="group rounded-2xl">
-              <Card interactive className="h-full p-5">
-                <div className="flex items-center gap-3">
-                  <Icon aria-hidden className="size-5 text-accent-400" />
-                  <h3 className="flex-1 font-semibold">{t(`home:openData.${key}.title`)}</h3>
-                  <ArrowUpRight aria-hidden className="size-4 text-fg-subtle group-hover:text-accent-400" />
-                </div>
-                <p className="mt-3 text-sm leading-relaxed text-fg-muted">{t(`home:openData.${key}.description`)}</p>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <div className="rule-fade my-10 sm:my-14" />
 
     </div>
   )
