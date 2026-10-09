@@ -113,7 +113,7 @@ function VipBenefits() {
               </span>
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold leading-snug lg:text-[clamp(0.875rem,1.5vh,1rem)]">{t(item.titleKey)}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-fg-muted lg:text-[clamp(0.8125rem,1.35vh,0.875rem)]">
+                <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-fg-muted lg:text-[clamp(0.8125rem,1.35vh,0.875rem)]">
                   {'withGuide' in item && item.withGuide ? (
                     <Trans i18nKey={item.textKey} ns="vip" components={{ gallery: <GalleryLink /> }} />
                   ) : t(item.textKey)}
