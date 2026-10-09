@@ -171,6 +171,7 @@ export function PricingGrid({ compact = false, selectedDays, onChoose }: {
         const resetValue = String(plan.reset_limit)
         const localApprox = formatApprox(plan.price)
         const daysLabel = t('pricing.days', { count: plan.duration_days })
+        const perDay = { price: format.money(plan.price / plan.duration_days) }
         const metaText = compact
           ? cn(
               'text-[clamp(0.65rem,1.15vh,0.8rem)]',
@@ -181,12 +182,13 @@ export function PricingGrid({ compact = false, selectedDays, onChoose }: {
         const card = (
           <Card
             key={plan.duration_days}
-            interactive={Boolean(onChoose)}
             className={cn(
               'flex h-full flex-col border text-left',
-              onChoose && selectedDays === plan.duration_days
-                ? 'border-accent-400 bg-accent-500/10 shadow-[0_0_20px_rgba(56,189,248,0.12)]'
+              'transition-colors peer-focus-visible:border-accent-400',
+              onChoose && selectedDays === Number(plan.duration_days)
+                ? 'border-accent-400/60 bg-accent-500/5'
                 : 'border-white/10',
+              onChoose && 'hover:border-accent-400/40',
               compact
                 ? cn('p-[clamp(0.55rem,1.1vh,0.85rem)]', `${SHORT_DESKTOP}:p-2.5`)
                 : 'p-3.5 sm:p-4',
@@ -203,6 +205,9 @@ export function PricingGrid({ compact = false, selectedDays, onChoose }: {
               )}
             >
               <span className="font-semibold text-fg">{daysLabel}</span>
+            </p>
+            <p className="mt-1 text-xs leading-snug text-fg-subtle">
+              {t('pricing.daysWithPerDay', perDay)}
             </p>
 
             <PlanPrice
@@ -241,8 +246,8 @@ export function PricingGrid({ compact = false, selectedDays, onChoose }: {
         return onChoose ? (
           <label key={plan.duration_days} className="relative block cursor-pointer rounded-2xl">
             <input type="radio" name={compact ? 'vip-plan-desktop' : 'vip-plan-mobile'}
-              value={plan.duration_days} checked={selectedDays === plan.duration_days}
-              onChange={() => onChoose(plan.duration_days)} aria-label={daysLabel}
+              value={plan.duration_days} checked={selectedDays === Number(plan.duration_days)}
+              onChange={() => onChoose(Number(plan.duration_days))} aria-label={daysLabel}
               className="peer sr-only" />
             <span className="pointer-events-none absolute inset-0 rounded-2xl peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent-400" aria-hidden />
             {card}

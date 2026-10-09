@@ -98,12 +98,12 @@ function VipBenefits() {
   const { t } = useTranslation('vip')
 
   return (
-    <Card className="flex w-full flex-col p-4 text-left sm:p-5 lg:flex-1">
-    <ul className={cn('grid h-full gap-4 sm:grid-cols-2 lg:grid-cols-1 lg:auto-rows-fr', `${SHORT_DESKTOP}:grid-cols-2`)}>
+    <Card className="flex w-full flex-col p-5 text-left sm:p-6 lg:flex-1">
+    <ul className="grid h-full gap-x-8 gap-y-5 sm:grid-cols-2 lg:auto-rows-fr">
       {BENEFITS.map((item) => {
         const Icon = item.icon
         return (
-          <li key={item.titleKey} className="flex min-w-0 items-center gap-3">
+          <li key={item.titleKey} className="flex min-w-0 items-center gap-4 py-2">
               <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent-500/10 text-accent-300">
                 <Icon aria-hidden className="size-4" />
               </span>
@@ -126,7 +126,7 @@ function VipBenefits() {
 export function VipPage() {
   const { t } = useTranslation(['vip', 'common'])
   const format = useFormatters()
-  const [selectedDays, setSelectedDays] = useState<number | null>(null)
+  const [selectedDays, setSelectedDays] = useState(30)
   const { isError: statsError } = useSalesStats()
   const {
     data: tariffs,
@@ -141,8 +141,8 @@ export function VipPage() {
   const contentRef = useRef<HTMLDivElement>(null)
   const tariffsReady = !tariffsPending && !tariffsError && Boolean(tariffs?.plans.length)
   const foldOk = tariffsReady && !statsError
-  const selectedPlan = tariffs?.plans.find((plan) => plan.duration_days === selectedDays)
-    ?? tariffs?.plans.find((plan) => plan.duration_days === 30)
+  const selectedPlan = tariffs?.plans.find((plan) => Number(plan.duration_days) === selectedDays)
+    ?? tariffs?.plans.find((plan) => Number(plan.duration_days) === 30)
     ?? tariffs?.plans[0]
 
   useLayoutEffect(() => {
@@ -242,10 +242,10 @@ export function VipPage() {
                 )}
               >
                 <div className="lg:hidden">
-                  <PricingGrid selectedDays={selectedPlan?.duration_days} onChoose={setSelectedDays} />
+                  <PricingGrid selectedDays={selectedPlan ? Number(selectedPlan.duration_days) : 30} onChoose={setSelectedDays} />
                 </div>
                 <div className="hidden lg:block">
-                  <PricingGrid compact selectedDays={selectedPlan?.duration_days} onChoose={setSelectedDays} />
+                  <PricingGrid compact selectedDays={selectedPlan ? Number(selectedPlan.duration_days) : 30} onChoose={setSelectedDays} />
                 </div>
 
                 {tariffsReady ? (
