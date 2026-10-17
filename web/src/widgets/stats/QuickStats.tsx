@@ -54,7 +54,7 @@ export function QuickStats() {
     {
       id: 'vip',
       label: t('stats.vip'),
-      value: `${format.number(data.overview.users.vip.all_time)} (${format.percent(data.overview.metrics.vip_conversion)})`,
+      value: `${format.number(data.overview.users.vip.all_time)} (${format.percent(data.overview.metrics.vip_conversion, 2)})`,
       icon: Crown,
       tone: 'text-amber-300',
     },

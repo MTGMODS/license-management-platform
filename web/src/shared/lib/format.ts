@@ -63,7 +63,8 @@ export function useFormatters() {
       /** Short form for axis ticks and tight cards, e.g. 1,3 млн. */
       compact: (value: number) => compact.format(value),
       /** Already on a 0-100 scale in the payload, so it is not divided again. */
-      percent: (value: number) => `${decimal.format(value)}%`,
+      percent: (value: number, fractionDigits: 1 | 2 = 1) =>
+        `${(fractionDigits === 2 ? money : decimal).format(value)}%`,
       decimal: (value: number) => decimal.format(value),
       /** Two fraction digits, for small per-day amounts. */
       money: (value: number) => money.format(value),
