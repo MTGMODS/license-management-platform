@@ -106,7 +106,7 @@ it('keeps the selected plan highlighted in FunPay after the purchase CTA scrolls
 it('preserves the selection across Telegram Stars, card-to-Stars and Fragment routes', () => {
   page()
   fireEvent.click(screen.getAllByRole('radio', { name: '90 дней' })[0]!)
-  fireEvent.click(screen.getByRole('button', { name: /^Купить ⭐ Telegram/ }))
+  fireEvent.click(screen.getByRole('button', { name: /^Картой через Telegram \(Stars\)/ }))
   expect(screen.getByText('360 ⭐').parentElement?.getAttribute('aria-current')).toBe('true')
   expect(screen.getByText('180 ⭐').parentElement?.getAttribute('aria-current')).toBeNull()
   fireEvent.click(screen.getByRole('button', { name: /^Криптовалюта/ }))
@@ -121,11 +121,11 @@ it('preserves the selection across Telegram Stars, card-to-Stars and Fragment ro
 it('puts the selected USD amount into PayPal instructions and updates it with the upper plan', () => {
   page()
   fireEvent.click(screen.getByRole('button', { name: /^PayPal/ }))
-  expect(screen.getByText(/^Переведите \$3 на счёт PayPal\./)).toBeTruthy()
+  expect(screen.getByText('$3', { selector: 'strong' }).parentElement?.textContent).toMatch(/^Переведите \$3 на счёт PayPal\./)
   fireEvent.click(screen.getAllByRole('radio', { name: '90 дней' })[0]!)
-  expect(screen.getByText(/^Переведите \$6 на счёт PayPal\./)).toBeTruthy()
+  expect(screen.getByText('$6', { selector: 'strong' }).className).toContain('font-semibold')
   fireEvent.click(screen.getAllByRole('radio', { name: '7 дней' })[0]!)
-  expect(screen.getByText(/^Переведите \$1 на счёт PayPal\./)).toBeTruthy()
+  expect(screen.getByText('$1', { selector: 'strong' }).parentElement?.textContent).toMatch(/^Переведите \$1 на счёт PayPal\./)
 })
 
 it('keeps cents and localizes the PayPal amount in Ukrainian', async () => {
@@ -134,5 +134,34 @@ it('keeps cents and localizes the PayPal amount in Ukrainian', async () => {
     <PaymentSection selectedPlan={{ ...plans[1]!, price: 2.49 }} />
   </MemoryRouter></I18nextProvider>)
   fireEvent.click(screen.getByRole('button', { name: /^PayPal/ }))
-  expect(screen.getByText(/^Перекажіть \$2,49 на рахунок PayPal\./)).toBeTruthy()
+  expect(screen.getByText('$2,49', { selector: 'strong' }).parentElement?.textContent).toMatch(/^Перекажіть \$2,49 на рахунок PayPal\./)
+})
+
+it('shows neutral informational platform fees instead of warning emoji', () => {
+  page()
+  function fee(percent: number) {
+    const badge = screen.getByText(`Комиссия площадки ≈ ${percent}%`)
+    expect(badge.className).toContain('bg-ink-800')
+    expect(badge.className).not.toContain('caution')
+    expect(badge.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true')
+    expect(badge.textContent).not.toContain('⚠')
+  }
+  fee(30)
+  fireEvent.click(screen.getByRole('button', { name: /^Картой через Telegram \(Stars\)/ }))
+  fee(40)
+  fireEvent.click(screen.getByRole('button', { name: /^Криптовалюта/ }))
+  fee(20)
+})
+
+it('marks direct crypto transfers with green no-fee badges in the picker and details', () => {
+  page()
+  fireEvent.click(screen.getByRole('button', { name: /^Криптовалюта/ }))
+  const direct = screen.getByRole('button', { name: /^Прямой перевод криптовалюты/ })
+  expect(within(direct).getByText('Без комиссии').className).toContain('text-positive')
+  fireEvent.click(direct)
+  expect(screen.getAllByText('Без комиссии')).toHaveLength(2)
+  for (const badge of screen.getAllByText('Без комиссии')) {
+    expect(badge.className).toContain('bg-positive/10')
+  }
+  expect(screen.queryByText(/Комиссия площадки/)).toBeNull()
 })

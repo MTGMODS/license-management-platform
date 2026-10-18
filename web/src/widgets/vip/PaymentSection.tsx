@@ -1,4 +1,4 @@
-import { Check, Copy, ExternalLink as ExternalLinkIcon } from 'lucide-react'
+import { Check, Copy, ExternalLink as ExternalLinkIcon, Info } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -420,14 +420,15 @@ function ContactDmButtons() {
 }
 
 function PaypalBody({ amount }: { amount: number }) {
-  const { t } = useTranslation('vip')
   const format = useFormatters()
 
   return (
     <div className="space-y-5">
-      <p className="text-sm leading-relaxed text-fg-muted">{t('payment.routes.paypal.what', {
-        amount: Number.isInteger(amount) ? String(amount) : format.money(amount),
-      })}</p>
+      <p className="text-sm leading-relaxed text-fg-muted">
+        <Trans ns="vip" i18nKey="payment.routes.paypal.what"
+          values={{ amount: Number.isInteger(amount) ? String(amount) : format.money(amount) }}
+          components={{ amount: <strong className="font-semibold text-fg" /> }} />
+      </p>
       <CopyRow label="PayPal" value={PAYPAL_EMAIL} />
       <ContactDmButtons />
     </div>
@@ -457,6 +458,7 @@ function routeBadges(route: CheckoutRouteId, labels: {
   cheapest: string
   manual: string
   inTelegram: string
+  noFee: string
 }) {
   switch (route) {
     case 'funpay':
@@ -470,7 +472,7 @@ function routeBadges(route: CheckoutRouteId, labels: {
     case 'fragment':
       return [{ tone: 'accent' as const, label: labels.auto }]
     case 'crypto':
-      return []
+      return [{ tone: 'positive' as const, label: labels.noFee }]
     case 'paypal':
       return [
         { tone: 'accent' as const, label: labels.cheapest },
@@ -498,6 +500,7 @@ export function PaymentSection({ selectedPlan }: { selectedPlan: TariffPlan }) {
     cheapest: t('payment.badges.cheapest'),
     manual: t('payment.badges.manual'),
     inTelegram: t('payment.badges.inTelegram'),
+    noFee: t('payment.badges.noFee'),
   }
 
   const activeRoute = routes.includes(route) ? route : (routes[0] ?? 'stars')
@@ -612,7 +615,7 @@ export function PaymentSection({ selectedPlan }: { selectedPlan: TariffPlan }) {
                         {badges.map((badge) => (
                           <Badge
                             key={badge.label}
-                            tone={badge.tone === 'accent' ? 'accent' : 'neutral'}
+                            tone={badge.tone}
                             className="px-2 py-0.5 text-[0.65rem]"
                           >
                             {badge.label}
@@ -639,11 +642,17 @@ export function PaymentSection({ selectedPlan }: { selectedPlan: TariffPlan }) {
             </p>
             {activeRoute === 'fragment' || activeRoute === 'tgStars' ? (
               <Badge tone="neutral" className="shrink-0 px-2 py-0.5 text-[0.7rem] font-medium normal-case tracking-normal">
+                <Info aria-hidden className="size-3.5 shrink-0" />
                 {t(`payment.routes.${activeRoute}.feeBadge`)}
               </Badge>
             ) : activeRoute === 'funpay' ? (
               <Badge tone="neutral" className="shrink-0 px-2 py-0.5 text-[0.7rem] font-medium normal-case tracking-normal">
+                <Info aria-hidden className="size-3.5 shrink-0" />
                 {t('payment.routes.funpay.feeBadge')}
+              </Badge>
+            ) : activeRoute === 'crypto' ? (
+              <Badge tone="positive" className="shrink-0 px-2 py-0.5 text-[0.7rem] font-medium normal-case tracking-normal">
+                {t('payment.badges.noFee')}
               </Badge>
             ) : activeRoute === 'stars' ? (
               <Badge tone="accent" className="shrink-0 px-2 py-0.5 text-[0.7rem] font-medium normal-case tracking-normal">
