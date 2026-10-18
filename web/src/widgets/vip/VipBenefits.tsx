@@ -3,17 +3,21 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
 import { cn } from '@/shared/lib/cn'
-import { Card, buttonStyles } from '@/shared/ui'
+import { Badge, Card, buttonStyles } from '@/shared/ui'
 
 const BENEFITS = [
-  { icon: ShieldOff, titleKey: 'benefits.adsTitle', textKey: 'benefits.ads',
-    tone: 'bg-gradient-to-br from-rose-400/20 to-pink-400/10 text-rose-300', border: 'hover:border-rose-400/30' },
   { icon: InfinityIcon, titleKey: 'benefits.limitsTitle', textKey: 'benefits.limits',
-    tone: 'bg-teal-400/10 text-teal-300', border: 'hover:border-teal-400/30' },
-  { icon: MessageSquareText, titleKey: 'benefits.chatTitle', textKey: 'benefits.chat',
-    tone: 'bg-accent-500/10 text-accent-300', border: 'hover:border-accent-400/30' },
+    tone: 'bg-teal-400/10 text-teal-300', border: 'hover:border-teal-400/30',
+    placement: 'sm:col-start-1 sm:row-start-2 lg:col-start-2 lg:row-start-1' },
+  { icon: ShieldOff, titleKey: 'benefits.adsTitle', textKey: 'benefits.ads',
+    tone: 'bg-gradient-to-br from-rose-400/20 to-pink-400/10 text-rose-300', border: 'hover:border-rose-400/30',
+    placement: 'sm:col-start-1 sm:row-start-3 lg:col-start-2 lg:row-start-2' },
   { icon: Users, titleKey: 'benefits.communityTitle', textKey: 'benefits.community',
-    tone: 'bg-violet-400/10 text-violet-300', border: 'hover:border-violet-400/30' },
+    tone: 'bg-violet-400/10 text-violet-300', border: 'hover:border-violet-400/30',
+    placement: 'sm:col-start-2 sm:row-start-2 lg:col-start-3 lg:row-start-1' },
+  { icon: MessageSquareText, titleKey: 'benefits.chatTitle', textKey: 'benefits.chat',
+    tone: 'bg-accent-500/10 text-accent-300', border: 'hover:border-accent-400/30',
+    placement: 'sm:col-start-2 sm:row-start-3 lg:col-start-3 lg:row-start-2' },
 ] as const
 
 /** One featured benefit + four supporting cards; a single column on phones. */
@@ -44,14 +48,22 @@ export function VipBenefits() {
             </div>
           </Card>
         </li>
-        {BENEFITS.map(({ icon: Icon, titleKey, textKey, tone, border }) => (
-          <li key={titleKey} className="min-w-0">
+        {BENEFITS.map(({ icon: Icon, titleKey, textKey, tone, border, placement }) => (
+          <li key={titleKey} className={cn('min-w-0', placement)}>
             <Card className={cn('flex h-full items-start gap-3 border-white/8 bg-ink-900/60 p-4 text-left transition-colors lg:p-[clamp(0.875rem,1.6vh,1.25rem)]', border)}>
               <span className={cn('grid size-10 shrink-0 place-items-center rounded-xl', tone)}>
                 <Icon aria-hidden className="size-5" />
               </span>
               <div className="min-w-0">
-                <h3 className="text-sm font-semibold leading-snug lg:text-[clamp(0.875rem,1.5vh,1rem)]">{t(titleKey)}</h3>
+                <h3 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold leading-snug lg:text-[clamp(0.875rem,1.5vh,1rem)]">
+                  <span>{t(titleKey)}</span>
+                  {titleKey === 'benefits.chatTitle' ? (
+                    <>
+                      {' '}
+                      <Badge tone="neutral" className="px-2 py-0.5 text-[0.625rem] font-semibold">{t('benefits.soon')}</Badge>
+                    </>
+                  ) : null}
+                </h3>
                 <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-fg-muted lg:text-[clamp(0.8125rem,1.35vh,0.875rem)]">{t(textKey)}</p>
               </div>
             </Card>

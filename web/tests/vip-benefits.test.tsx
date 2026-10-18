@@ -19,8 +19,8 @@ it.each([
   const items = within(section).getAllByRole('listitem')
   expect(items).toHaveLength(5)
   expect(within(section).getAllByRole('heading', { level: 3 })).toHaveLength(5)
-  expect(within(items[1]!).getByRole('heading', { name: ads })).toBeTruthy()
-  expect(within(items[1]!).getByText(lng === 'ru'
+  expect(within(items[2]!).getByRole('heading', { name: ads })).toBeTruthy()
+  expect(within(items[2]!).getByText(lng === 'ru'
     ? 'Блокировка встроенной рекламы в лаунчере'
     : 'Блокування вбудованої реклами в лаунчері')).toBeTruthy()
   const video = within(section).getByRole('link', { name: watch })
@@ -28,4 +28,16 @@ it.each([
   expect(items[0]!.contains(video)).toBe(true)
   expect(items[0]!.className).toContain('lg:row-span-2')
   expect(section.className).not.toMatch(/border|glass/)
+  const copy = (lng === 'ru' ? ru : uk).benefits
+  expect(within(section).getAllByRole('heading', { level: 3 }).map(el => el.textContent)).toEqual([
+    copy.goldTitle, copy.limitsTitle, copy.adsTitle, copy.communityTitle, `${copy.chatTitle} ${copy.soon}`,
+  ])
+  expect(items[1]!.className).toContain('lg:col-start-2 lg:row-start-1')
+  expect(items[2]!.className).toContain('lg:col-start-2 lg:row-start-2')
+  expect(items[3]!.className).toContain('lg:col-start-3 lg:row-start-1')
+  expect(items[4]!.className).toContain('lg:col-start-3 lg:row-start-2')
+  expect(within(items[4]!).getByText(copy.soon)).toBeTruthy()
+  const limitsText = within(items[1]!).getByText(copy.limits.replace('\n', ' '))
+  expect(limitsText.textContent).toBe(copy.limits)
+  expect(limitsText.className).toContain('whitespace-pre-line')
 })
