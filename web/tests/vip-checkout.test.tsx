@@ -106,7 +106,7 @@ it('keeps the selected plan highlighted in FunPay after the purchase CTA scrolls
 it('preserves the selection across Telegram Stars, card-to-Stars and Fragment routes', () => {
   page()
   fireEvent.click(screen.getAllByRole('radio', { name: '90 дней' })[0]!)
-  fireEvent.click(screen.getByRole('button', { name: /^Картой через Telegram \(Stars\)/ }))
+  fireEvent.click(screen.getByRole('button', { name: /^Через Telegram/ }))
   expect(screen.getByText('360 ⭐').parentElement?.getAttribute('aria-current')).toBe('true')
   expect(screen.getByText('180 ⭐').parentElement?.getAttribute('aria-current')).toBeNull()
   fireEvent.click(screen.getByRole('button', { name: /^Криптовалюта/ }))
@@ -147,7 +147,7 @@ it('shows neutral informational platform fees instead of warning emoji', () => {
     expect(badge.textContent).not.toContain('⚠')
   }
   fee(30)
-  fireEvent.click(screen.getByRole('button', { name: /^Картой через Telegram \(Stars\)/ }))
+  fireEvent.click(screen.getByRole('button', { name: /^Через Telegram/ }))
   fee(40)
   fireEvent.click(screen.getByRole('button', { name: /^Криптовалюта/ }))
   fee(20)

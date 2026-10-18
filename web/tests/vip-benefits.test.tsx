@@ -20,7 +20,9 @@ it.each([
   expect(items).toHaveLength(5)
   expect(within(section).getAllByRole('heading', { level: 3 })).toHaveLength(5)
   expect(within(items[1]!).getByRole('heading', { name: ads })).toBeTruthy()
-  expect(within(items[1]!).getByText(/Android/)).toBeTruthy()
+  expect(within(items[1]!).getByText(lng === 'ru'
+    ? 'Блокировка встроенной рекламы в лаунчере'
+    : 'Блокування вбудованої реклами в лаунчері')).toBeTruthy()
   const video = within(section).getByRole('link', { name: watch })
   expect(video.getAttribute('href')).toBe('/helper')
   expect(items[0]!.contains(video)).toBe(true)
