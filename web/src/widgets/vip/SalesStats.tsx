@@ -31,7 +31,7 @@ import { ChartTooltip } from '@/widgets/analytics/ChartTooltip'
 
 import { PaymentsChart } from './SalesStatCards'
 import { SalesPeriodSummary } from './SalesPeriodSummary'
-import { filterSales, previousRange, saleDate, shiftDay } from './salesAnalysis'
+import { filterSales, previousRange, saleDate } from './salesAnalysis'
 import { usdAmount, usdWhole } from './salesStatsFormat'
 
 const DURATION_COLOR: Record<number, string> = {
@@ -209,7 +209,7 @@ function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
                 </PieChart>
               </ResponsiveContainer>
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <p className="tabular text-xl font-semibold tracking-tight sm:text-2xl">
+                <p className="tabular text-xl font-semibold tracking-tight text-emerald-400 sm:text-2xl">
                   {usdWhole(format, totalMoney)}
                 </p>
                 <p className="mt-0.5 text-[0.65rem] text-fg-subtle sm:text-xs">
@@ -241,7 +241,7 @@ function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
                       </p>
                     </div>
                   </div>
-                  <span className="shrink-0 tabular text-sm font-medium">
+                  <span className="shrink-0 tabular text-sm font-medium text-emerald-400">
                     {usdWhole(format, item.sum)}
                   </span>
                   <span className="w-12 shrink-0 tabular text-right text-sm text-fg-subtle">
@@ -353,11 +353,6 @@ const DATE_INPUT =
   'rounded-lg border border-white/8 bg-ink-800 px-2.5 py-1.5 text-sm text-fg outline-none ' +
   'focus:border-accent-500/40 [color-scheme:dark]'
 
-const DATE_PRESET =
-  'rounded-lg border border-white/8 px-3 py-1.5 text-xs text-fg-muted transition-colors ' +
-  'hover:border-accent-500/40 hover:text-fg aria-pressed:border-accent-500/40 ' +
-  'aria-pressed:bg-accent-500/10 aria-pressed:text-accent-400'
-
 type SalesRangeMode = 'day' | 'range'
 
 function isSaleActive(status: string): boolean {
@@ -394,12 +389,6 @@ export function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
     () => comparison ? filterSales(sorted, comparison) : [],
     [comparison, sorted],
   )
-  const rangeLabel = range.from && range.to
-    ? range.from === range.to ? format.fullDate(range.from)
-      : `${format.fullDate(range.from)} — ${format.fullDate(range.to)}`
-    : range.from ? `${t('stats.salesList.from')} ${format.fullDate(range.from)}`
-      : range.to ? `${t('stats.salesList.to')} ${format.fullDate(range.to)}`
-        : t('stats.salesList.allTime')
 
   return (
     <Card className="p-6">
@@ -460,27 +449,6 @@ export function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label={t('stats.salesList.quickPeriod')}>
-        {[7, 30, 90].map((days) => (
-          <button key={days} type="button"
-            aria-pressed={mode === 'range' && from === shiftDay(today, -days) && to === shiftDay(today, -1)}
-            className={DATE_PRESET}
-            onClick={() => {
-              setMode('range')
-              setFrom(shiftDay(utcTodayKey(), -days))
-              setTo(shiftDay(utcTodayKey(), -1))
-            }}>
-            {t('pricing.days', { count: days })}
-          </button>
-        ))}
-        <button type="button" className={DATE_PRESET}
-          aria-pressed={mode === 'range' && !from && !to}
-          onClick={() => { setMode('range'); setFrom(''); setTo('') }}>
-          {t('stats.salesList.allTime')}
-        </button>
-        <span className="text-xs text-fg-subtle">{t('stats.salesList.fullDays')}</span>
-      </div>
-      <p className="mt-4 text-sm font-medium text-fg-muted">{rangeLabel} <span className="text-xs text-fg-subtle">(UTC)</span></p>
       {invalidRange ? <p role="alert" className="mt-3 text-sm text-negative">{t('stats.salesList.invalidRange')}</p> : (
         <SalesPeriodSummary rows={rows} previous={previous} comparison={comparison} total={sales.length} />
       )}

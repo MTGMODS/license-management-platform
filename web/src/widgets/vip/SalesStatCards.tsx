@@ -128,7 +128,7 @@ export function PaymentsChart({
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
                 <p
                   className={cn(
-                    'tabular font-semibold tracking-tight',
+                    'tabular font-semibold tracking-tight text-emerald-400',
                     inline ? 'text-base sm:text-xl' : 'text-xl sm:text-2xl',
                   )}
                 >
@@ -170,7 +170,7 @@ export function PaymentsChart({
                       </p>
                     </div>
                   </div>
-                  <span className="shrink-0 tabular text-sm font-medium">
+                  <span className="shrink-0 tabular text-sm font-medium text-emerald-400">
                     {usdWhole(format, item.sum)}
                   </span>
                   <span className="w-12 shrink-0 tabular text-right text-sm text-fg-subtle">
