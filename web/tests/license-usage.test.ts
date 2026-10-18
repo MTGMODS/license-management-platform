@@ -34,6 +34,20 @@ it('tariffs still use their separate envelope', async () => {
   await expect(getTariffs()).resolves.toEqual({ plans: [] })
 })
 
+it('normalizes purchase kinds and tariff transitions without guessing on old payloads', async () => {
+  vi.mocked(request).mockResolvedValue({ updated_at: '2026-10-18T00:00:00Z', subscriptions: {
+    sales: [{ purchase_kind: 'repeat', amount: 3 }, { amount: 1 }, { purchase_kind: 'invalid' }],
+    retention: { tariff_transitions: [{ from_days: 7, to_days: 30, count: 2, sum: 6, share: 100 }] },
+  } })
+  const { subscriptions } = await getLicenseSalesStats()
+  expect(subscriptions.sales.map((row) => row.purchase_kind)).toEqual(['repeat', null, null])
+  expect(subscriptions.retention.tariff_transitions).toEqual([
+    { from_days: 7, to_days: 30, count: 2, sum: 6, share: 100 },
+  ])
+  vi.mocked(request).mockResolvedValue({ subscriptions: {} })
+  expect((await getLicenseSalesStats()).subscriptions.retention.tariff_transitions).toEqual([])
+})
+
 it('never forces license replacement unless explicitly requested', async () => {
   vi.mocked(request).mockResolvedValue({ status: 'success' })
   await activateKey('AAAA-BBBB-CCCC-DDDD')

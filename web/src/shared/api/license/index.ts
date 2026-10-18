@@ -119,6 +119,16 @@ function normalizeRetention(raw: unknown): LicenseRetentionStats {
     avg_check: asFinite(item.avg_check),
     avg_revenue_per_buyer: asFinite(item.avg_revenue_per_buyer),
     by_purchases: asArray(item.by_purchases).map(normalizePurchaseBucket),
+    tariff_transitions: asArray(item.tariff_transitions).map((raw) => {
+      const row = asRecord(raw)
+      return {
+        from_days: asFinite(row.from_days),
+        to_days: asFinite(row.to_days),
+        count: asFinite(row.count),
+        sum: asFinite(row.sum),
+        share: asFinite(row.share),
+      }
+    }),
   }
 }
 
@@ -150,6 +160,8 @@ function normalizeSaleRow(raw: unknown): LicenseSaleRow {
   const purchased = asNullableString(item.purchased_at)
   return {
     purchased_at: purchased,
+    purchase_kind: item.purchase_kind === 'first' || item.purchase_kind === 'repeat'
+      ? item.purchase_kind : null,
     amount: asFinite(item.amount),
     method: asString(item.method, 'Unknown'),
     duration_days:
@@ -182,6 +194,7 @@ function emptySubscriptions(): LicenseSubscriptionsStats {
       avg_check: 0,
       avg_revenue_per_buyer: 0,
       by_purchases: [],
+      tariff_transitions: [],
     },
     timeline: { daily: [], monthly: [] },
     sales: [],
@@ -332,6 +345,7 @@ export type {
   LicenseSalesStats,
   LicenseStatus,
   LicenseSubscriptionsStats,
+  LicenseTariffTransition,
   LicenseTimelineDay,
   LicenseTimelineMonth,
   LicenseTransaction,

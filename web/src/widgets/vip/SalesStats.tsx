@@ -22,14 +22,16 @@ import type {
   LicenseTimelineDay,
   LicenseTimelineMonth,
 } from '@/shared/api/license'
-import { utcCalendarDayKey, utcTodayKey } from '@/shared/lib/datetime'
+import { utcTodayKey } from '@/shared/lib/datetime'
 import { useFormatters } from '@/shared/lib/format'
 import { Card, ErrorState, SegmentedControl, Skeleton } from '@/shared/ui'
 import { AXIS_PROPS, CHART, Y_AXIS_NUMERIC } from '@/widgets/analytics/chartTheme'
 import { ChartTooltip } from '@/widgets/analytics/ChartTooltip'
 
 import { PaymentsChart } from './SalesStatCards'
-import { usdWhole } from './salesStatsFormat'
+import { SalesPeriodSummary } from './SalesPeriodSummary'
+import { filterSales, previousRange, saleDate, shiftDay } from './salesAnalysis'
+import { usdAmount, usdWhole } from './salesStatsFormat'
 
 const DURATION_COLOR: Record<number, string> = {
   7: '#22c55e',
@@ -44,11 +46,6 @@ type TimelineGrain = 'daily' | 'monthly'
 
 function durationColor(days: number, index: number): string {
   return DURATION_COLOR[days] ?? DURATION_FALLBACK[index % DURATION_FALLBACK.length] ?? '#0fb0fa'
-}
-
-/** Prefer activation time as the purchase clock for display. */
-function saleDate(row: LicenseSaleRow): string | null {
-  return row.activated_at ?? row.purchased_at
 }
 
 export function RevenueTimeline({
@@ -260,7 +257,7 @@ function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
 }
 
 
-function RetentionBlock({ retention }: { retention: LicenseRetentionStats }) {
+export function RetentionBlock({ retention }: { retention: LicenseRetentionStats }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const buckets = [...retention.by_purchases].sort((a, b) => a.purchases - b.purchases)
@@ -318,6 +315,27 @@ function RetentionBlock({ retention }: { retention: LicenseRetentionStats }) {
           ))}
         </ul>
       )}
+      {retention.tariff_transitions.length > 0 ? (
+        <div className="mt-6 border-t border-white/8 pt-5">
+          <h4 className="font-semibold">{t('stats.retention.transitionsTitle')}</h4>
+          <p className="mt-1 text-sm text-fg-muted">{t('stats.retention.transitionsHint')}</p>
+          <ul className="mt-4 space-y-3">
+            {retention.tariff_transitions.slice(0, 5).map((row) => (
+              <li key={`${row.from_days}-${row.to_days}`} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-lg bg-white/[0.025] px-3 py-2.5 text-sm">
+                <span className="font-medium">
+                  {t('pricing.days', { count: row.from_days })}
+                  <span aria-hidden className="mx-2 text-violet-300">→</span>
+                  {t('pricing.days', { count: row.to_days })}
+                </span>
+                <span className="tabular text-fg-muted">
+                  {t('stats.retention.transitionCount', { count: row.count })}
+                  {' · '}{format.percent(row.share)}{' · '}{usdAmount(format, row.sum)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </Card>
   )
 }
@@ -326,19 +344,18 @@ const DATE_INPUT =
   'rounded-lg border border-white/8 bg-ink-800 px-2.5 py-1.5 text-sm text-fg outline-none ' +
   'focus:border-accent-500/40 [color-scheme:dark]'
 
-type SalesRangeMode = 'day' | 'range'
+const DATE_PRESET =
+  'rounded-lg border border-white/8 px-3 py-1.5 text-xs text-fg-muted transition-colors ' +
+  'hover:border-accent-500/40 hover:text-fg aria-pressed:border-accent-500/40 ' +
+  'aria-pressed:bg-accent-500/10 aria-pressed:text-accent-400'
 
-function saleDayKey(row: LicenseSaleRow): string | null {
-  const when = saleDate(row)
-  if (!when) return null
-  return utcCalendarDayKey(when)
-}
+type SalesRangeMode = 'day' | 'range'
 
 function isSaleActive(status: string): boolean {
   return status.toUpperCase() === 'ACTIVE'
 }
 
-function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
+export function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const [mode, setMode] = useState<SalesRangeMode>('day')
@@ -356,26 +373,24 @@ function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
     [sales],
   )
 
-  const rows = useMemo(() => {
-    if (mode === 'day') {
-      if (!day) return sorted
-      return sorted.filter((row) => saleDayKey(row) === day)
-    }
-
-    if (!from && !to) return sorted
-    return sorted.filter((row) => {
-      const key = saleDayKey(row)
-      if (!key) return false
-      if (from && key < from) return false
-      if (to && key > to) return false
-      return true
-    })
-  }, [day, from, mode, sorted, to])
-
-  const filteredSum = useMemo(
-    () => rows.reduce((sum, row) => sum + row.amount, 0),
-    [rows],
+  const range = useMemo(
+    () => mode === 'day' ? { from: day, to: day } : { from, to },
+    [day, from, mode, to],
   )
+  const invalidRange = Boolean(range.from && range.to && range.from > range.to)
+  const rows = useMemo(() => filterSales(sorted, range), [range, sorted])
+  const today = utcTodayKey()
+  const comparison = useMemo(() => previousRange(range, today), [range, today])
+  const previous = useMemo(
+    () => comparison ? filterSales(sorted, comparison) : [],
+    [comparison, sorted],
+  )
+  const rangeLabel = range.from && range.to
+    ? range.from === range.to ? format.fullDate(range.from)
+      : `${format.fullDate(range.from)} — ${format.fullDate(range.to)}`
+    : range.from ? `${t('stats.salesList.from')} ${format.fullDate(range.from)}`
+      : range.to ? `${t('stats.salesList.to')} ${format.fullDate(range.to)}`
+        : t('stats.salesList.allTime')
 
   return (
     <Card className="p-6">
@@ -436,13 +451,30 @@ function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
         </div>
       </div>
 
-      <p className="mt-4 text-xs text-fg-subtle">
-        {t('stats.salesList.summary', {
-          count: format.number(rows.length),
-          total: format.number(sales.length),
-          sum: usdWhole(format, filteredSum),
-        })}
-      </p>
+      <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label={t('stats.salesList.quickPeriod')}>
+        {[7, 30, 90].map((days) => (
+          <button key={days} type="button"
+            aria-pressed={mode === 'range' && from === shiftDay(today, -days) && to === shiftDay(today, -1)}
+            className={DATE_PRESET}
+            onClick={() => {
+              setMode('range')
+              setFrom(shiftDay(utcTodayKey(), -days))
+              setTo(shiftDay(utcTodayKey(), -1))
+            }}>
+            {t('pricing.days', { count: days })}
+          </button>
+        ))}
+        <button type="button" className={DATE_PRESET}
+          aria-pressed={mode === 'range' && !from && !to}
+          onClick={() => { setMode('range'); setFrom(''); setTo('') }}>
+          {t('stats.salesList.allTime')}
+        </button>
+        <span className="text-xs text-fg-subtle">{t('stats.salesList.fullDays')}</span>
+      </div>
+      <p className="mt-4 text-sm font-medium text-fg-muted">{rangeLabel} <span className="text-xs text-fg-subtle">(UTC)</span></p>
+      {invalidRange ? <p role="alert" className="mt-3 text-sm text-negative">{t('stats.salesList.invalidRange')}</p> : (
+        <SalesPeriodSummary rows={rows} previous={previous} comparison={comparison} total={sales.length} />
+      )}
 
       {rows.length === 0 ? (
         <p className="mt-8 text-sm text-fg-subtle">{t('stats.salesList.emptyFilter')}</p>
@@ -487,7 +519,7 @@ function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
                         : t('pricing.days', { count: row.duration_days })}
                     </td>
                     <td className="px-3 py-2.5 tabular font-medium sm:px-4">
-                      {usdWhole(format, row.amount)}
+                      {usdAmount(format, row.amount)}
                     </td>
                     <td className="px-3 py-2.5 text-fg-muted sm:px-4">{row.method}</td>
                     <td className="px-3 py-2.5 text-xs leading-snug tabular text-fg-muted sm:px-4 sm:text-sm">

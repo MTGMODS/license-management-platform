@@ -84,6 +84,17 @@ export interface LicenseRetentionStats {
   avg_check: number
   avg_revenue_per_buyer: number
   by_purchases: LicensePurchaseBucket[]
+  tariff_transitions: LicenseTariffTransition[]
+}
+
+export interface LicenseTariffTransition {
+  from_days: number
+  to_days: number
+  count: number
+  /** Revenue of the subsequent purchases, not both purchases combined. */
+  sum: number
+  /** Share of all dated repeat purchases, 0–100. */
+  share: number
 }
 
 export interface LicenseTimelineDay {
@@ -103,6 +114,8 @@ export interface LicenseTimelineMonth {
  * Prefer `activated_at` as the purchase date when displaying (see normalize).
  */
 export interface LicenseSaleRow {
+  /** Within this buyer's dated, paid subscriptions; null on legacy cache entries. */
+  purchase_kind: 'first' | 'repeat' | null
   purchased_at: ApiDateTime | null
   amount: number
   method: string
