@@ -1,5 +1,5 @@
 import { Repeat2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useDeferredValue, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Area,
@@ -25,7 +25,7 @@ import type {
 } from '@/shared/api/license'
 import { utcTodayKey } from '@/shared/lib/datetime'
 import { useFormatters } from '@/shared/lib/format'
-import { Card, ErrorState, SegmentedControl, Skeleton } from '@/shared/ui'
+import { Button, Card, ErrorState, SegmentedControl, Skeleton } from '@/shared/ui'
 import { AXIS_PROPS, CHART, Y_AXIS_NUMERIC } from '@/widgets/analytics/chartTheme'
 import { ChartTooltip } from '@/widgets/analytics/ChartTooltip'
 
@@ -354,6 +354,7 @@ const DATE_INPUT =
   'focus:border-accent-500/40 [color-scheme:dark]'
 
 type SalesRangeMode = 'day' | 'range'
+const SALES_PAGE_SIZE = 50
 
 function isSaleActive(status: string): boolean {
   return status.toUpperCase() === 'ACTIVE'
@@ -366,6 +367,7 @@ export function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
   const [day, setDay] = useState(() => utcTodayKey())
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
+  const [page, setPage] = useState(0)
 
   const sorted = useMemo(
     () =>
@@ -389,6 +391,17 @@ export function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
     () => comparison ? filterSales(sorted, comparison) : [],
     [comparison, sorted],
   )
+  const summaryInput = useMemo(
+    () => ({ rows, previous, comparison, total: sales.length, mode }),
+    [rows, previous, comparison, sales.length, mode],
+  )
+  // Commit the controls and bounded table first. Never show totals from an old filter.
+  const deferredSummary = useDeferredValue<typeof summaryInput | null>(summaryInput, null)
+  const summaryPending = deferredSummary !== summaryInput
+  const pageCount = Math.max(1, Math.ceil(rows.length / SALES_PAGE_SIZE))
+  const currentPage = Math.min(page, pageCount - 1)
+  const pageStart = currentPage * SALES_PAGE_SIZE
+  const visibleRows = rows.slice(pageStart, pageStart + SALES_PAGE_SIZE)
 
   return (
     <Card className="p-6">
@@ -403,7 +416,7 @@ export function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
             size="sm"
             label={t('stats.salesList.range')}
             value={mode}
-            onChange={setMode}
+            onChange={(value) => { setMode(value); setPage(0) }}
             options={[
               { id: 'day', label: t('stats.salesList.oneDay') },
               { id: 'range', label: t('stats.salesList.period') },
@@ -416,7 +429,7 @@ export function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
               <input
                 type="date"
                 value={day}
-                onChange={(event) => setDay(event.target.value)}
+                onChange={(event) => { setDay(event.target.value); setPage(0) }}
                 className={DATE_INPUT}
               />
             </label>
@@ -430,7 +443,7 @@ export function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
                   type="date"
                   value={from}
                   max={to || undefined}
-                  onChange={(event) => setFrom(event.target.value)}
+                  onChange={(event) => { setFrom(event.target.value); setPage(0) }}
                   className={DATE_INPUT}
                 />
               </label>
@@ -440,7 +453,7 @@ export function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
                   type="date"
                   value={to}
                   min={from || undefined}
-                  onChange={(event) => setTo(event.target.value)}
+                  onChange={(event) => { setTo(event.target.value); setPage(0) }}
                   className={DATE_INPUT}
                 />
               </label>
@@ -449,15 +462,19 @@ export function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
         </div>
       </div>
 
-      {invalidRange ? <p role="alert" className="mt-3 text-sm text-negative">{t('stats.salesList.invalidRange')}</p> : (
-        <SalesPeriodSummary rows={rows} previous={previous} comparison={comparison} total={sales.length} mode={mode} />
-      )}
+      {invalidRange ? <p role="alert" className="mt-3 text-sm text-negative">{t('stats.salesList.invalidRange')}</p>
+        : summaryPending || !deferredSummary ? (
+          <div role="status" aria-label={t('stats.salesList.summaryLoading')} aria-busy="true"
+            className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
+            {Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-28 rounded-xl" />)}
+          </div>
+        ) : <SalesPeriodSummary {...deferredSummary} />}
 
       {rows.length === 0 ? (
         <p className="mt-8 text-sm text-fg-subtle">{t('stats.salesList.emptyFilter', { context: mode })}</p>
       ) : (
-        <div className="mt-3 max-h-[36rem] overflow-auto rounded-xl border border-white/5">
-          <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
+        <div className="mt-3 max-h-[36rem] overflow-auto rounded-xl border border-white/5" key={`${mode}:${day}:${from}:${to}:${currentPage}`}>
+          <table aria-label={t('stats.salesList.title')} className="w-full min-w-[36rem] border-collapse text-left text-sm">
             <thead className="sticky top-0 z-10 bg-ink-850/95 backdrop-blur-sm">
               <tr className="border-b border-white/8 text-fg-subtle">
                 <th className="px-3 py-2.5 text-center font-medium sm:px-4">
@@ -470,7 +487,7 @@ export function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row, index) => {
+              {visibleRows.map((row, index) => {
                 const when = saleDate(row)
                 const active = isSaleActive(row.status)
                 return (
@@ -509,6 +526,22 @@ export function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
           </table>
         </div>
       )}
+      {pageCount > 1 ? (
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <p className="tabular text-xs text-fg-subtle">{t('stats.salesList.pageSummary', {
+            from: format.number(pageStart + 1), to: format.number(Math.min(pageStart + SALES_PAGE_SIZE, rows.length)),
+            total: format.number(rows.length),
+          })}</p>
+          <div role="group" aria-label={t('stats.salesList.pagination')} className="flex gap-2">
+            <Button size="sm" variant="secondary" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>
+              {t('stats.salesList.previousPage')}
+            </Button>
+            <Button size="sm" variant="secondary" disabled={currentPage === pageCount - 1} onClick={() => setPage(currentPage + 1)}>
+              {t('stats.salesList.nextPage')}
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </Card>
   )
 }

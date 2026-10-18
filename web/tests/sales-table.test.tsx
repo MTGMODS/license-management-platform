@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { createInstance } from 'i18next'
 import { I18nextProvider } from 'react-i18next'
+import { renderToString } from 'react-dom/server'
 import { beforeEach, expect, it, vi } from 'vitest'
 
 import type { LicenseSaleRow } from '../src/shared/api/license'
@@ -132,6 +133,76 @@ it.each(['ru', 'uk'])('switches summary and empty-state wording between day and 
   expect(screen.queryByText(copy.selectedSales_day)).toBeNull()
   fireEvent.click(screen.getByRole('button', { name: copy.oneDay }))
   expectDay()
+})
+
+function manySales(count: number) {
+  return Array.from({ length: count }, (_, i) => ({
+    ...row(new Date(Date.UTC(2026, 9, 17, 0, 0, i)).toISOString(), 1, i % 2 ? 'repeat' : 'first'),
+    method: `sale-${i}`,
+  }))
+}
+
+it('renders at most 50 sales while totals still include all 2664 filtered purchases', () => {
+  renderTable(manySales(2664))
+  fireEvent.click(screen.getByRole('button', { name: 'Период' }))
+  expect(screen.getAllByRole('row')).toHaveLength(51)
+  expect(metric('Продаж за период').getByText('2 664')).toBeTruthy()
+  expect(metric('Доход за период').getByText('$2 664')).toBeTruthy()
+  expect(metric('Первые покупки').getByText('1 332')).toBeTruthy()
+  expect(metric('Повторные покупки').getByText('1 332')).toBeTruthy()
+  expect(screen.getByText('sale-2663')).toBeTruthy()
+  expect(screen.queryByText('sale-2613')).toBeNull()
+  expect(screen.getByRole('button', { name: 'Назад' }).hasAttribute('disabled')).toBe(true)
+  fireEvent.click(screen.getByRole('button', { name: 'Далее' }))
+  expect(screen.getAllByRole('row')).toHaveLength(51)
+  expect(screen.getByText('sale-2613')).toBeTruthy()
+  expect(screen.queryByText('sale-2663')).toBeNull()
+  expect(screen.getByText('Показано 51–100 из 2 664 продаж')).toBeTruthy()
+  expect(metric('Продаж за период').getByText('2 664')).toBeTruthy()
+  fireEvent.click(screen.getByRole('button', { name: 'Назад' }))
+  expect(screen.getByText('sale-2663')).toBeTruthy()
+})
+
+it('handles the last partial page and resets pagination when filters change', () => {
+  renderTable(manySales(123))
+  fireEvent.click(screen.getByRole('button', { name: 'Период' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Далее' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Далее' }))
+  expect(screen.getAllByRole('row')).toHaveLength(24)
+  expect(screen.getByText('Показано 101–123 из 123 продаж')).toBeTruthy()
+  expect(screen.getByText('sale-0')).toBeTruthy()
+  expect(screen.getByRole('button', { name: 'Далее' }).hasAttribute('disabled')).toBe(true)
+  fireEvent.change(screen.getByLabelText('с'), { target: { value: '2026-10-18' } })
+  expect(screen.queryByRole('table')).toBeNull()
+  expect(screen.queryByRole('group', { name: 'Страницы списка продаж' })).toBeNull()
+  fireEvent.change(screen.getByLabelText('с'), { target: { value: '' } })
+  expect(screen.getByText('sale-122')).toBeTruthy()
+  expect(screen.getByText('Показано 1–50 из 123 продаж')).toBeTruthy()
+  fireEvent.click(screen.getByRole('button', { name: 'День' }))
+  expect(screen.getByText('За выбранный день продаж нет')).toBeTruthy()
+  expect(screen.queryByRole('group', { name: 'Страницы списка продаж' })).toBeNull()
+})
+
+it('clamps the visible page when refreshed sales data has fewer entries', () => {
+  const view = renderTable(manySales(123))
+  fireEvent.click(screen.getByRole('button', { name: 'Период' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Далее' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Далее' }))
+  view.rerender(<I18nextProvider i18n={i18n}><SalesTable sales={manySales(3)} /></I18nextProvider>)
+  expect(screen.getAllByRole('row')).toHaveLength(4)
+  expect(screen.getByText('sale-2')).toBeTruthy()
+  expect(metric('Продаж за период').getByText('3')).toBeTruthy()
+  expect(screen.queryByRole('group', { name: 'Страницы списка продаж' })).toBeNull()
+})
+
+it('can show the table immediately with four animated placeholders before summary work', () => {
+  const html = renderToString(<I18nextProvider i18n={i18n}><SalesTable sales={[
+    row('2026-10-18T01:00:00Z', 3, 'first'),
+  ]} /></I18nextProvider>)
+  expect(html).toContain('aria-label="Подсчёт итогов продаж"')
+  expect(html).toContain('<table')
+  expect(html).not.toContain('aria-label="Итоги выбранного дня"')
+  expect(html.match(/after:animate-shimmer/g)).toHaveLength(4)
 })
 
 it('shows tariff transition counts, shares and subsequent-purchase revenue', () => {

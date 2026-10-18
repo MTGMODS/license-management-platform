@@ -1,4 +1,5 @@
 import { Coins, Repeat2, ShoppingBag, UserRound } from 'lucide-react'
+import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { LicenseSaleRow } from '@/shared/api/license'
@@ -7,7 +8,7 @@ import { useFormatters } from '@/shared/lib/format'
 import { summarizeSales, type SalesRange } from './salesAnalysis'
 import { usdAmount } from './salesStatsFormat'
 
-export function SalesPeriodSummary({
+export const SalesPeriodSummary = memo(function SalesPeriodSummary({
   rows, previous, comparison, total, mode,
 }: {
   rows: LicenseSaleRow[]
@@ -78,4 +79,4 @@ export function SalesPeriodSummary({
       ) : null}
     </section>
   )
-}
+})
