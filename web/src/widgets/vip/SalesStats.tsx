@@ -262,6 +262,8 @@ export function RetentionBlock({ retention }: { retention: LicenseRetentionStats
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const buckets = [...retention.by_purchases].sort((a, b) => a.purchases - b.purchases)
+  const transitionDays = [7, 30, 90, 365]
+  const transitions = new Map(retention.tariff_transitions.map((row) => [`${row.from_days}-${row.to_days}`, row]))
 
   return (
     <Card className="border-violet-400/15 bg-gradient-to-br from-violet-400/[0.035] to-transparent p-6">
@@ -323,28 +325,45 @@ export function RetentionBlock({ retention }: { retention: LicenseRetentionStats
           ))}
         </ul>
       )}
-      {retention.tariff_transitions.length > 0 ? (
         <div className="mt-6 border-t border-violet-400/15 pt-5">
           <h4 className="font-semibold">{t('stats.retention.transitionsTitle')}</h4>
           <p className="mt-1 whitespace-pre-line text-sm text-fg-muted">{t('stats.retention.transitionsHint')}</p>
-          <ul className="mt-4 space-y-3">
-            {retention.tariff_transitions.slice(0, 5).map((row) => (
-              <li key={`${row.from_days}-${row.to_days}`} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-lg bg-white/[0.025] px-3 py-2.5 text-sm">
-                <span className="font-medium">
-                  {t('pricing.days', { count: row.from_days })}
-                  <span aria-hidden className="mx-2 text-violet-300">→</span>
-                  {t('pricing.days', { count: row.to_days })}
-                </span>
-                <span className="tabular text-fg-muted">
-                  <span className="font-medium text-accent-300">{t('stats.retention.transitionCount', { count: row.count })}</span>
-                  <span className="text-fg-subtle">{' · '}{format.percent(row.share)}{' · '}</span>
-                  <span className="font-medium text-emerald-400">{usdAmount(format, row.sum)}</span>
-                </span>
-              </li>
+          <div className="mt-5 space-y-5">
+            {transitionDays.map((from) => (
+              <section key={from} aria-label={t('stats.retention.transitionFrom', { days: t('pricing.days', { count: from }) })}>
+                <h5 className="mb-2 text-sm font-medium text-violet-200">
+                  {t('stats.retention.transitionFrom', { days: t('pricing.days', { count: from }) })}
+                </h5>
+                <ul className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+                  {transitionDays.map((to) => {
+                    const row = transitions.get(`${from}-${to}`)
+                    const count = row?.count ?? 0
+                    return (
+                      <li key={to} className={`min-w-0 rounded-xl border p-3 text-sm sm:p-4 ${count > 0
+                        ? 'border-violet-400/15 bg-violet-400/[0.04]'
+                        : 'border-white/5 bg-white/[0.015]'}`}>
+                        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
+                          <span>{t('pricing.days', { count: from })}</span>
+                          <span className="text-violet-300">→</span>
+                          <span>{t('pricing.days', { count: to })}</span>
+                        </p>
+                        <p className={`mt-3 tabular font-semibold ${count > 0 ? 'text-accent-300' : 'text-fg-subtle'}`}>
+                          {t('stats.retention.transitionCount', { count })}
+                        </p>
+                        <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 tabular">
+                          <span className="text-xs text-fg-subtle">{format.percent(row?.share ?? 0)}</span>
+                          <span className={`font-medium ${count > 0 ? 'text-emerald-400' : 'text-fg-subtle'}`}>
+                            {usdAmount(format, row?.sum ?? 0)}
+                          </span>
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </section>
             ))}
-          </ul>
+          </div>
         </div>
-      ) : null}
     </Card>
   )
 }
