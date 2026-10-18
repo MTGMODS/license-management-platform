@@ -1,6 +1,6 @@
-import { CreditCard, Crown, Infinity as InfinityIcon, MessageSquareText, Sparkles, Users } from 'lucide-react'
+import { CreditCard } from 'lucide-react'
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { Trans, useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 
@@ -13,15 +13,9 @@ import { Button, Card, DeferredMount, Skeleton } from '@/shared/ui'
 import { PaymentSection } from '@/widgets/vip/PaymentSection'
 import { PricingGrid } from '@/widgets/vip/PricingGrid'
 import { SalesOverview } from '@/widgets/vip/SalesOverview'
+import { VipBenefits } from '@/widgets/vip/VipBenefits'
 
 const PAYMENT_SECTION_ID = 'vip-payment'
-
-const BENEFITS = [
-  { icon: Sparkles, titleKey: 'benefits.goldTitle', textKey: 'benefits.gold', withGuide: true, tone: 'bg-amber-400/10 text-amber-300' },
-  { icon: InfinityIcon, titleKey: 'benefits.limitsTitle', textKey: 'benefits.limits', tone: 'bg-teal-400/10 text-teal-300' },
-  { icon: MessageSquareText, titleKey: 'benefits.chatTitle', textKey: 'benefits.chat', tone: 'bg-accent-500/10 text-accent-300' },
-  { icon: Users, titleKey: 'benefits.communityTitle', textKey: 'benefits.community', tone: 'bg-violet-400/10 text-violet-300' },
-] as const
 
 /** Shares the charting chunk with the helper analytics; loaded on approach. */
 const SalesStats = lazy(() =>
@@ -74,18 +68,7 @@ function FitLine({
   )
 }
 
-function GalleryLink({ children }: { children?: ReactNode }) {
-  return (
-    <Link
-      to="/helper"
-      className="text-accent-300 underline decoration-accent-500/40 underline-offset-2 transition-colors hover:text-accent-200"
-    >
-      {children}
-    </Link>
-  )
-}
-
-/** Short desktop (e.g. 1280×720): tighter 2×2. Tall desktop: four rows. Phones unchanged. */
+/** Tighter spacing below the fold on short desktop screens (e.g. 1280×720). */
 const SHORT_DESKTOP = '[@media(min-width:1024px)_and_(max-height:48rem)]'
 
 /** The summary footer marks the bottom of the first desktop viewport. */
@@ -93,39 +76,6 @@ const DESKTOP_FOLD = cn(
   'lg:grid lg:h-[calc(100dvh-4rem)] lg:grid-rows-[auto_minmax(0,1fr)_auto]',
   'lg:py-[clamp(0.75rem,1.5vh,1.25rem)]',
 )
-
-function VipBenefits() {
-  const { t } = useTranslation('vip')
-
-  return (
-    <Card className="flex w-full shrink-0 flex-col border-amber-400/20 bg-gradient-to-br from-amber-400/[0.035] via-transparent to-transparent p-5 text-left sm:p-6">
-    <h2 className="mb-5 flex shrink-0 items-center justify-center gap-2.5 text-center text-base font-semibold text-amber-200 sm:text-lg">
-      <Crown aria-hidden className="size-5 shrink-0 text-amber-300" />
-      {t('benefits.title')}
-    </h2>
-    <ul className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
-      {BENEFITS.map((item) => {
-        const Icon = item.icon
-        return (
-          <li key={item.titleKey} className="flex min-w-0 items-center gap-4 py-2">
-              <span className={cn('grid size-8 shrink-0 place-items-center rounded-lg', item.tone)}>
-                <Icon aria-hidden className="size-4" />
-              </span>
-              <div className="min-w-0">
-                <h3 className="text-sm font-semibold leading-snug lg:text-[clamp(0.875rem,1.5vh,1rem)]">{t(item.titleKey)}</h3>
-                <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-fg-muted lg:text-[clamp(0.8125rem,1.35vh,0.875rem)]">
-                  {'withGuide' in item && item.withGuide ? (
-                    <Trans i18nKey={item.textKey} ns="vip" components={{ gallery: <GalleryLink /> }} />
-                  ) : t(item.textKey)}
-                </p>
-              </div>
-          </li>
-        )
-      })}
-    </ul>
-    </Card>
-  )
-}
 
 export function VipPage() {
   const { t } = useTranslation(['vip', 'common'])
