@@ -274,8 +274,8 @@ export function RetentionBlock({ retention }: { retention: LicenseRetentionStats
       <p className="mt-1 text-sm text-fg-muted">{t('stats.retention.subtitle')}</p>
 
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
-          <p className="tabular text-2xl font-semibold">{format.number(retention.buyers)}</p>
+        <div className="rounded-xl border border-accent-400/15 bg-accent-400/5 p-3">
+          <p className="tabular text-2xl font-semibold text-accent-300">{format.number(retention.buyers)}</p>
           <p className="mt-1 text-sm text-fg-subtle">{t('stats.retention.buyers')}</p>
         </div>
         <div className="rounded-xl border border-violet-400/15 bg-violet-400/5 p-3">
@@ -305,9 +305,9 @@ export function RetentionBlock({ retention }: { retention: LicenseRetentionStats
                   {t('stats.retention.purchases', { count: bucket.purchases })}
                 </span>
                 <span className="tabular text-sm">
-                  <span className="font-medium text-fg">{format.number(bucket.users)}</span>
+                  <span className="font-medium text-accent-300">{format.number(bucket.users)}</span>
                   <span className="text-fg-subtle"> · </span>
-                  <span className="font-medium text-fg">{usdWhole(format, bucket.sum)}</span>
+                  <span className="font-medium text-emerald-400">{usdWhole(format, bucket.sum)}</span>
                   <span className="text-fg-subtle"> · {format.percent(bucket.share)}</span>
                 </span>
               </div>
@@ -326,7 +326,7 @@ export function RetentionBlock({ retention }: { retention: LicenseRetentionStats
       {retention.tariff_transitions.length > 0 ? (
         <div className="mt-6 border-t border-violet-400/15 pt-5">
           <h4 className="font-semibold">{t('stats.retention.transitionsTitle')}</h4>
-          <p className="mt-1 text-sm text-fg-muted">{t('stats.retention.transitionsHint')}</p>
+          <p className="mt-1 whitespace-pre-line text-sm text-fg-muted">{t('stats.retention.transitionsHint')}</p>
           <ul className="mt-4 space-y-3">
             {retention.tariff_transitions.slice(0, 5).map((row) => (
               <li key={`${row.from_days}-${row.to_days}`} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-lg bg-white/[0.025] px-3 py-2.5 text-sm">
@@ -336,8 +336,9 @@ export function RetentionBlock({ retention }: { retention: LicenseRetentionStats
                   {t('pricing.days', { count: row.to_days })}
                 </span>
                 <span className="tabular text-fg-muted">
-                  {t('stats.retention.transitionCount', { count: row.count })}
-                  {' · '}{format.percent(row.share)}{' · '}{usdAmount(format, row.sum)}
+                  <span className="font-medium text-accent-300">{t('stats.retention.transitionCount', { count: row.count })}</span>
+                  <span className="text-fg-subtle">{' · '}{format.percent(row.share)}{' · '}</span>
+                  <span className="font-medium text-emerald-400">{usdAmount(format, row.sum)}</span>
                 </span>
               </li>
             ))}

@@ -112,11 +112,21 @@ it('renders the period summary and filters in Ukrainian', async () => {
 it('shows tariff transition counts, shares and subsequent-purchase revenue', () => {
   render(<I18nextProvider i18n={i18n}><RetentionBlock retention={{
     buyers: 3, repeat_buyers: 2, repeat_rate: 66.7, avg_subscriptions_per_buyer: 2,
-    avg_check: 3, avg_revenue_per_buyer: 6, by_purchases: [],
+    avg_check: 3, avg_revenue_per_buyer: 6, by_purchases: [
+      { purchases: 1, renewals: 0, users: 1, sum: 3, share: 33.3 },
+      { purchases: 2, renewals: 1, users: 2, sum: 15, share: 66.7 },
+    ],
     tariff_transitions: [{ from_days: 7, to_days: 30, count: 2, sum: 6, share: 100 }],
   }} /></I18nextProvider>)
   expect(screen.getByText('Какие тарифы покупают после предыдущего')).toBeTruthy()
   expect(screen.getByText('7 дней30 дней')).toBeTruthy()
-  expect(screen.getByText('2 перехода · 100,0% · $6')).toBeTruthy()
+  expect(screen.getByText('2 перехода').closest('li')?.textContent).toContain('2 перехода · 100,0% · $6')
   expect(screen.getByText('66,7%').className).toContain('text-violet-200')
+  expect(screen.getByText('3', { selector: 'p' }).className).toContain('text-accent-300')
+  expect(screen.getByText('1', { selector: 'span' }).className).toContain('text-accent-300')
+  expect(screen.getByText('$15').className).toContain('text-emerald-400')
+  expect(screen.getByText('$6').className).toContain('text-emerald-400')
+  const hint = screen.getByText(ru.stats.retention.transitionsHint.replace('\n', ' '))
+  expect(hint.textContent).toContain('за всё время.\nПроцент')
+  expect(hint.className).toContain('whitespace-pre-line')
 })
