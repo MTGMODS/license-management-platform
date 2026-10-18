@@ -33,7 +33,7 @@ function renderTable(data = sales) {
   return render(<I18nextProvider i18n={i18n}><SalesTable sales={data} /></I18nextProvider>)
 }
 
-function results() { return within(screen.getByRole('region', { name: 'Итоги выбранного периода' })) }
+function results() { return within(screen.getByRole('region', { name: /^Итоги выбранного (дня|периода)$/ })) }
 
 function metric(label: string) {
   const card = results().getByText(label).closest('div')!
@@ -42,9 +42,9 @@ function metric(label: string) {
 
 it('shows conspicuous zero totals for an empty day rather than a tiny count/sum line', () => {
   renderTable()
-  expect(metric('Продаж за период').getByText('0')).toBeTruthy()
-  expect(metric('Доход за период').getByText('$0')).toBeTruthy()
-  expect(screen.getByText('За выбранный период продаж нет')).toBeTruthy()
+  expect(metric('Продаж за день').getByText('0')).toBeTruthy()
+  expect(metric('Доход за день').getByText('$0')).toBeTruthy()
+  expect(screen.getByText('За выбранный день продаж нет')).toBeTruthy()
   expect(results().queryByText(/Ранее:/)).toBeNull()
   expect(screen.queryByText('Как считаются показатели')).toBeNull()
   expect(screen.queryByRole('group', { name: 'Быстрый выбор периода' })).toBeNull()
@@ -54,8 +54,8 @@ it('shows conspicuous zero totals for an empty day rather than a tiny count/sum 
 it('shows selected-day sales, exact revenue, purchase kinds and the previous UTC day', () => {
   renderTable()
   fireEvent.change(screen.getByLabelText('День'), { target: { value: '2026-10-16' } })
-  expect(metric('Продаж за период').getByText('2')).toBeTruthy()
-  expect(metric('Доход за период').getByText('$7,50')).toBeTruthy()
+  expect(metric('Продаж за день').getByText('2')).toBeTruthy()
+  expect(metric('Доход за день').getByText('$7,50')).toBeTruthy()
   expect(metric('Первые покупки').getByText('Доход: $1,50')).toBeTruthy()
   expect(metric('Повторные покупки').getByText('Доход: $6')).toBeTruthy()
   expect(results().getByText('Ранее: 1 · +100,0%')).toBeTruthy()
@@ -98,7 +98,7 @@ it('supports custom and open-ended ranges and reports invalid ordering', () => {
 
 it('does not label rows from the older Redis payload as first purchases', () => {
   renderTable([row('2026-10-18T01:00:00Z', 3, null)])
-  expect(metric('Продаж за период').getByText('1')).toBeTruthy()
+  expect(metric('Продаж за день').getByText('1')).toBeTruthy()
   expect(results().queryByText('Первые покупки')).toBeNull()
   expect(results().getByText(/Нет данных для определения первой\/повторной покупки: 1/)).toBeTruthy()
 })
@@ -106,10 +106,32 @@ it('does not label rows from the older Redis payload as first purchases', () => 
 it('renders the period summary and filters in Ukrainian', async () => {
   await i18n.changeLanguage('uk')
   renderTable()
-  expect(screen.getByRole('region', { name: 'Підсумки обраного періоду' })).toBeTruthy()
-  expect(screen.getByText('Продажів за період')).toBeTruthy()
+  expect(screen.getByRole('region', { name: 'Підсумки обраного дня' })).toBeTruthy()
+  expect(screen.getByText('Продажів за день')).toBeTruthy()
   expect(screen.getByRole('button', { name: 'Період' })).toBeTruthy()
   expect(screen.queryByText('Як розраховуються показники')).toBeNull()
+})
+
+it.each(['ru', 'uk'])('switches summary and empty-state wording between day and period in %s', async (lng) => {
+  await i18n.changeLanguage(lng)
+  renderTable([])
+  const copy = (lng === 'ru' ? ru : uk).stats.salesList
+  function expectDay() {
+    expect(screen.getByRole('region', { name: copy.results_day })).toBeTruthy()
+    expect(screen.getByText(copy.selectedSales_day)).toBeTruthy()
+    expect(screen.getByText(copy.selectedRevenue_day)).toBeTruthy()
+    expect(screen.getByText(copy.emptyFilter_day)).toBeTruthy()
+    expect(screen.queryByText(copy.emptyFilter)).toBeNull()
+  }
+  expectDay()
+  fireEvent.click(screen.getByRole('button', { name: copy.period }))
+  expect(screen.getByRole('region', { name: copy.results })).toBeTruthy()
+  expect(screen.getByText(copy.selectedSales)).toBeTruthy()
+  expect(screen.getByText(copy.selectedRevenue)).toBeTruthy()
+  expect(screen.getByText(copy.emptyFilter)).toBeTruthy()
+  expect(screen.queryByText(copy.selectedSales_day)).toBeNull()
+  fireEvent.click(screen.getByRole('button', { name: copy.oneDay }))
+  expectDay()
 })
 
 it('shows tariff transition counts, shares and subsequent-purchase revenue', () => {

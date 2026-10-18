@@ -8,12 +8,13 @@ import { summarizeSales, type SalesRange } from './salesAnalysis'
 import { usdAmount } from './salesStatsFormat'
 
 export function SalesPeriodSummary({
-  rows, previous, comparison, total,
+  rows, previous, comparison, total, mode,
 }: {
   rows: LicenseSaleRow[]
   previous: LicenseSaleRow[]
   comparison: SalesRange | null
   total: number
+  mode: 'day' | 'range'
 }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
@@ -29,14 +30,14 @@ export function SalesPeriodSummary({
 
   const metrics = [
     {
-      label: t('stats.salesList.selectedSales'), value: format.number(summary.count),
+      label: t('stats.salesList.selectedSales', { context: mode }), value: format.number(summary.count),
       icon: ShoppingBag, color: 'text-accent-400',
       detail: comparison ? t('stats.salesList.change', {
         value: format.number(before.count), change: change(summary.count, before.count),
       }) : t('stats.salesList.ofAllSales', { total: format.number(total) }),
     },
     {
-      label: t('stats.salesList.selectedRevenue'), value: usdAmount(format, summary.sum),
+      label: t('stats.salesList.selectedRevenue', { context: mode }), value: usdAmount(format, summary.sum),
       icon: Coins, color: 'text-emerald-400',
       detail: comparison ? t('stats.salesList.change', {
         value: usdAmount(format, before.sum), change: change(summary.sum, before.sum),
@@ -51,7 +52,7 @@ export function SalesPeriodSummary({
   ]
 
   return (
-    <section aria-label={t('stats.salesList.results')} className="mt-5">
+    <section aria-label={t('stats.salesList.results', { context: mode })} className="mt-5">
       <dl className={`grid grid-cols-2 gap-3 ${showKinds ? 'xl:grid-cols-4' : ''}`}>
         {metrics.map(({ label, value, icon: Icon, color, detail }) => (
           <div key={label} className="min-w-0 rounded-xl border border-white/8 bg-white/[0.025] p-3 sm:p-4">

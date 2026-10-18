@@ -212,8 +212,11 @@
       "amount": "Ціна",
       "status": "Статус",
       "results": "Підсумки обраного періоду",
+      "results_day": "Підсумки обраного дня",
       "selectedSales": "Продажів за період",
+      "selectedSales_day": "Продажів за день",
       "selectedRevenue": "Дохід за період",
+      "selectedRevenue_day": "Дохід за день",
       "firstPurchases": "Перші покупки",
       "repeatPurchases": "Повторні покупки",
       "purchaseRevenue": "Дохід: {{sum}}",
@@ -224,7 +227,8 @@
       "comparedWith": "Порівняння з {{from}} — {{to}} (UTC).",
       "unclassified": "Немає даних для визначення першої/повторної покупки: {{count}}. Ці продажі включено в загальний підсумок.",
       "invalidRange": "Початок періоду має бути не пізніше його кінця",
-      "emptyFilter": "За обраний період продажів немає"
+      "emptyFilter": "За обраний період продажів немає",
+      "emptyFilter_day": "За обраний день продажів немає"
     },
     "legacy": {
       "title": "Безстрокові ключі",

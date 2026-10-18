@@ -212,8 +212,11 @@
       "amount": "Цена",
       "status": "Статус",
       "results": "Итоги выбранного периода",
+      "results_day": "Итоги выбранного дня",
       "selectedSales": "Продаж за период",
+      "selectedSales_day": "Продаж за день",
       "selectedRevenue": "Доход за период",
+      "selectedRevenue_day": "Доход за день",
       "firstPurchases": "Первые покупки",
       "repeatPurchases": "Повторные покупки",
       "purchaseRevenue": "Доход: {{sum}}",
@@ -224,7 +227,8 @@
       "comparedWith": "Сравнение с {{from}} — {{to}} (UTC).",
       "unclassified": "Нет данных для определения первой/повторной покупки: {{count}}. Эти продажи включены в общий итог.",
       "invalidRange": "Начало периода должно быть не позже его конца",
-      "emptyFilter": "За выбранный период продаж нет"
+      "emptyFilter": "За выбранный период продаж нет",
+      "emptyFilter_day": "За выбранный день продаж нет"
     },
     "legacy": {
       "title": "Бессрочные ключи",

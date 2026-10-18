@@ -450,11 +450,11 @@ export function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
       </div>
 
       {invalidRange ? <p role="alert" className="mt-3 text-sm text-negative">{t('stats.salesList.invalidRange')}</p> : (
-        <SalesPeriodSummary rows={rows} previous={previous} comparison={comparison} total={sales.length} />
+        <SalesPeriodSummary rows={rows} previous={previous} comparison={comparison} total={sales.length} mode={mode} />
       )}
 
       {rows.length === 0 ? (
-        <p className="mt-8 text-sm text-fg-subtle">{t('stats.salesList.emptyFilter')}</p>
+        <p className="mt-8 text-sm text-fg-subtle">{t('stats.salesList.emptyFilter', { context: mode })}</p>
       ) : (
         <div className="mt-3 max-h-[36rem] overflow-auto rounded-xl border border-white/5">
           <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
