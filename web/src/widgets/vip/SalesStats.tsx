@@ -1,3 +1,4 @@
+import { Repeat2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -263,24 +264,29 @@ export function RetentionBlock({ retention }: { retention: LicenseRetentionStats
   const buckets = [...retention.by_purchases].sort((a, b) => a.purchases - b.purchases)
 
   return (
-    <Card className="p-6">
-      <h3 className="text-lg font-semibold tracking-tight">{t('stats.retention.title')}</h3>
+    <Card className="border-violet-400/15 bg-gradient-to-br from-violet-400/[0.035] to-transparent p-6">
+      <div className="flex items-center gap-2.5">
+        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-violet-400/10 text-violet-300">
+          <Repeat2 aria-hidden className="size-4" />
+        </span>
+        <h3 className="text-lg font-semibold tracking-tight">{t('stats.retention.title')}</h3>
+      </div>
       <p className="mt-1 text-sm text-fg-muted">{t('stats.retention.subtitle')}</p>
 
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div>
+        <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
           <p className="tabular text-2xl font-semibold">{format.number(retention.buyers)}</p>
           <p className="mt-1 text-sm text-fg-subtle">{t('stats.retention.buyers')}</p>
         </div>
-        <div>
-          <p className="tabular text-2xl font-semibold">{format.number(retention.repeat_buyers)}</p>
+        <div className="rounded-xl border border-violet-400/15 bg-violet-400/5 p-3">
+          <p className="tabular text-2xl font-semibold text-violet-200">{format.number(retention.repeat_buyers)}</p>
           <p className="mt-1 text-sm text-fg-subtle">{t('stats.retention.repeatBuyers')}</p>
         </div>
-        <div>
-          <p className="tabular text-2xl font-semibold">{format.percent(retention.repeat_rate)}</p>
+        <div className="rounded-xl border border-violet-400/15 bg-violet-400/5 p-3">
+          <p className="tabular text-2xl font-semibold text-violet-200">{format.percent(retention.repeat_rate)}</p>
           <p className="mt-1 text-sm text-fg-subtle">{t('stats.retention.repeatRate')}</p>
         </div>
-        <div>
+        <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
           <p className="tabular text-2xl font-semibold">
             {format.decimal(retention.avg_subscriptions_per_buyer)}
           </p>
@@ -307,7 +313,9 @@ export function RetentionBlock({ retention }: { retention: LicenseRetentionStats
               </div>
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink-800">
                 <div
-                  className="h-full rounded-full bg-aqua-400"
+                  className={bucket.purchases > 1
+                    ? 'h-full rounded-full bg-gradient-to-r from-violet-500/70 to-violet-400/90'
+                    : 'h-full rounded-full bg-fg-subtle/50'}
                   style={{ width: `${Math.max(bucket.share, bucket.share > 0 ? 1.5 : 0)}%` }}
                 />
               </div>
@@ -316,7 +324,7 @@ export function RetentionBlock({ retention }: { retention: LicenseRetentionStats
         </ul>
       )}
       {retention.tariff_transitions.length > 0 ? (
-        <div className="mt-6 border-t border-white/8 pt-5">
+        <div className="mt-6 border-t border-violet-400/15 pt-5">
           <h4 className="font-semibold">{t('stats.retention.transitionsTitle')}</h4>
           <p className="mt-1 text-sm text-fg-muted">{t('stats.retention.transitionsHint')}</p>
           <ul className="mt-4 space-y-3">

@@ -70,11 +70,6 @@ export function SalesPeriodSummary({
           })}
         </p>
       ) : null}
-      <details className="mt-3 text-xs leading-relaxed text-fg-subtle">
-        <summary className="w-fit cursor-pointer transition-colors hover:text-fg-muted">{t('stats.salesList.howCounted')}</summary>
-        <p className="mt-2">{t('stats.salesList.closedPeriodsOnly')}</p>
-        <p className="mt-1">{t('stats.salesList.kindsHint')}</p>
-      </details>
       {summary.unknown > 0 ? (
         <p className="mt-1 text-xs text-fg-subtle">
           {t('stats.salesList.unclassified', { count: format.number(summary.unknown) })}

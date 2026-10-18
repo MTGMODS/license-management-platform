@@ -46,6 +46,7 @@ it('shows conspicuous zero totals for an empty day rather than a tiny count/sum 
   expect(metric('Доход за период').getByText('$0')).toBeTruthy()
   expect(screen.getByText('За выбранный период продаж нет')).toBeTruthy()
   expect(results().queryByText(/Ранее:/)).toBeNull()
+  expect(screen.queryByText('Как считаются показатели')).toBeNull()
 })
 
 it('shows selected-day sales, exact revenue, purchase kinds and the previous UTC day', () => {
@@ -105,6 +106,7 @@ it('renders the period summary and filters in Ukrainian', async () => {
   expect(screen.getByRole('region', { name: 'Підсумки обраного періоду' })).toBeTruthy()
   expect(screen.getByText('Продажів за період')).toBeTruthy()
   expect(screen.getByRole('button', { name: 'За весь час' })).toBeTruthy()
+  expect(screen.queryByText('Як розраховуються показники')).toBeNull()
 })
 
 it('shows tariff transition counts, shares and subsequent-purchase revenue', () => {
@@ -116,4 +118,5 @@ it('shows tariff transition counts, shares and subsequent-purchase revenue', () 
   expect(screen.getByText('Какие тарифы покупают после предыдущего')).toBeTruthy()
   expect(screen.getByText('7 дней30 дней')).toBeTruthy()
   expect(screen.getByText('2 перехода · 100,0% · $6')).toBeTruthy()
+  expect(screen.getByText('66,7%').className).toContain('text-violet-200')
 })
