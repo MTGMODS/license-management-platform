@@ -5,6 +5,7 @@ import { Link } from 'react-router'
 import { toast } from 'sonner'
 
 import { useTariffs } from '@/features/license/useTariffs'
+import type { TariffPlan } from '@/shared/api/license'
 import {
   BRAND_ASSETS,
   ROUTE_BRANDS,
@@ -29,6 +30,7 @@ import {
 } from '@/shared/config/payment'
 import { copyText } from '@/shared/lib/clipboard'
 import { cn } from '@/shared/lib/cn'
+import { useFormatters } from '@/shared/lib/format'
 import { Badge, Button, buttonStyles, Card, discordCtaClass } from '@/shared/ui'
 import { DiscordIcon, TelegramIcon } from '@/shared/ui/BrandIcons'
 
@@ -139,7 +141,7 @@ function CopyRow({
   )
 }
 
-function OfferButtons({ offers }: { offers: readonly { days: number; url: string }[] }) {
+function OfferButtons({ offers, selectedDays }: { offers: readonly { days: number; url: string }[]; selectedDays: number }) {
   const { t } = useTranslation('vip')
 
   return (
@@ -150,7 +152,13 @@ function OfferButtons({ offers }: { offers: readonly { days: number; url: string
           href={offer.url}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-1.5 rounded-xl bg-accent-500/15 px-3.5 py-2 text-sm font-medium text-accent-200 ring-1 ring-accent-400/35 transition-colors hover:bg-accent-500/25"
+          aria-current={offer.days === selectedDays ? 'true' : undefined}
+          className={cn(
+            'inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-medium ring-1 transition-colors',
+            offer.days === selectedDays
+              ? 'bg-accent-500 text-white ring-accent-400/60 shadow-[0_8px_24px_-10px_var(--color-accent-500)] hover:bg-accent-400'
+              : 'bg-ink-800 text-fg-muted ring-white/10 hover:bg-ink-750 hover:text-fg',
+          )}
         >
           {t('payment.buyDays', { count: offer.days })}
           <ExternalLinkIcon aria-hidden className="size-3.5 opacity-70" />
@@ -160,7 +168,7 @@ function OfferButtons({ offers }: { offers: readonly { days: number; url: string
   )
 }
 
-function StarsPrices() {
+function StarsPrices({ selectedDays }: { selectedDays: number }) {
   const { t } = useTranslation('vip')
   const { data } = useTariffs()
 
@@ -181,12 +189,18 @@ function StarsPrices() {
       {rows.map((row) => (
         <div
           key={row.days}
-          className="min-w-0 rounded-xl bg-ink-900/50 px-2 py-2.5 text-center ring-1 ring-white/6 sm:px-3"
+          aria-current={row.days === selectedDays ? 'true' : undefined}
+          className={cn(
+            'min-w-0 rounded-xl px-2 py-2.5 text-center ring-1 sm:px-3',
+            row.days === selectedDays
+              ? 'bg-accent-500 text-white ring-accent-400/60'
+              : 'bg-ink-900/50 ring-white/6',
+          )}
         >
-          <p className="truncate text-[0.65rem] text-fg-subtle sm:text-xs">
+          <p className={cn('truncate text-[0.65rem] sm:text-xs', row.days === selectedDays ? 'text-white/85' : 'text-fg-subtle')}>
             {t('payment.daysShort', { count: row.days })}
           </p>
-          <p className="mt-0.5 truncate text-sm font-semibold tabular-nums text-fg sm:text-lg">
+          <p className={cn('mt-0.5 truncate text-sm font-semibold tabular-nums sm:text-lg', row.days === selectedDays ? 'text-white' : 'text-fg')}>
             {row.stars} ⭐
           </p>
         </div>
@@ -195,7 +209,7 @@ function StarsPrices() {
   )
 }
 
-function FunpayBody({ wallet }: { wallet: WalletId }) {
+function FunpayBody({ wallet, selectedDays }: { wallet: WalletId; selectedDays: number }) {
   const { t } = useTranslation('vip')
   const payMethods =
     wallet === 'crypto'
@@ -226,7 +240,7 @@ function FunpayBody({ wallet }: { wallet: WalletId }) {
             <span className="min-w-0 pt-0.5">{t('payment.routes.funpay.step2')}</span>
           </div>
           <div className="ml-9 rounded-2xl bg-ink-900/50 p-3.5 ring-1 ring-white/6 sm:p-4">
-            <OfferButtons offers={FUNPAY_OFFERS} />
+            <OfferButtons offers={FUNPAY_OFFERS} selectedDays={selectedDays} />
           </div>
         </li>
 
@@ -258,14 +272,14 @@ function FunpayBody({ wallet }: { wallet: WalletId }) {
   )
 }
 
-function StarsBody() {
+function StarsBody({ selectedDays }: { selectedDays: number }) {
   const { t } = useTranslation('vip')
 
   return (
     <div className="space-y-5">
       <p className="text-sm leading-relaxed text-fg-muted">{t('payment.routes.stars.what')}</p>
 
-      <StarsPrices />
+      <StarsPrices selectedDays={selectedDays} />
 
       <p className="text-sm text-fg-muted">{t('payment.routes.stars.buyHint')}</p>
 
@@ -282,7 +296,7 @@ function StarsBody() {
   )
 }
 
-function TgStarsBody() {
+function TgStarsBody({ selectedDays }: { selectedDays: number }) {
   const { t } = useTranslation('vip')
 
   return (
@@ -293,7 +307,7 @@ function TgStarsBody() {
         <CabinetKeyStep n={3} />
       </ol>
 
-      <StarsPrices />
+      <StarsPrices selectedDays={selectedDays} />
 
       <a
         href={VIP_BOT_START.pay}
@@ -308,7 +322,7 @@ function TgStarsBody() {
   )
 }
 
-function FragmentBody() {
+function FragmentBody({ selectedDays }: { selectedDays: number }) {
   const { t } = useTranslation('vip')
 
   return (
@@ -321,7 +335,7 @@ function FragmentBody() {
         <CabinetKeyStep n={5} />
       </ol>
 
-      <StarsPrices />
+      <StarsPrices selectedDays={selectedDays} />
 
       <div className="flex flex-col gap-2.5 sm:flex-row">
         <a
@@ -405,32 +419,35 @@ function ContactDmButtons() {
   )
 }
 
-function PaypalBody() {
+function PaypalBody({ amount }: { amount: number }) {
   const { t } = useTranslation('vip')
+  const format = useFormatters()
 
   return (
     <div className="space-y-5">
-      <p className="text-sm leading-relaxed text-fg-muted">{t('payment.routes.paypal.what')}</p>
+      <p className="text-sm leading-relaxed text-fg-muted">{t('payment.routes.paypal.what', {
+        amount: Number.isInteger(amount) ? String(amount) : format.money(amount),
+      })}</p>
       <CopyRow label="PayPal" value={PAYPAL_EMAIL} />
       <ContactDmButtons />
     </div>
   )
 }
 
-function RouteBody({ route, wallet }: { route: CheckoutRouteId; wallet: WalletId }) {
+function RouteBody({ route, wallet, selectedPlan }: { route: CheckoutRouteId; wallet: WalletId; selectedPlan: TariffPlan }) {
   switch (route) {
     case 'funpay':
-      return <FunpayBody wallet={wallet} />
+      return <FunpayBody wallet={wallet} selectedDays={selectedPlan.duration_days} />
     case 'stars':
-      return <StarsBody />
+      return <StarsBody selectedDays={selectedPlan.duration_days} />
     case 'tgStars':
-      return <TgStarsBody />
+      return <TgStarsBody selectedDays={selectedPlan.duration_days} />
     case 'fragment':
-      return <FragmentBody />
+      return <FragmentBody selectedDays={selectedPlan.duration_days} />
     case 'crypto':
       return <CryptoBody />
     case 'paypal':
-      return <PaypalBody />
+      return <PaypalBody amount={selectedPlan.price} />
   }
 }
 
@@ -462,7 +479,7 @@ function routeBadges(route: CheckoutRouteId, labels: {
   }
 }
 
-export function PaymentSection() {
+export function PaymentSection({ selectedPlan }: { selectedPlan: TariffPlan }) {
   const { t } = useTranslation('vip')
   const [wallet, setWallet] = useState<WalletId>('card')
   const routes = routesForWallet(wallet)
@@ -640,7 +657,7 @@ export function PaymentSection() {
             })}
           </h3>
         </div>
-        <RouteBody route={activeRoute} wallet={wallet} />
+        <RouteBody route={activeRoute} wallet={wallet} selectedPlan={selectedPlan} />
       </Card>
     </section>
   )

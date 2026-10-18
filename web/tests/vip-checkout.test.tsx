@@ -8,6 +8,7 @@ import ru from '../src/i18n/locales/ru/vip.json'
 import uk from '../src/i18n/locales/uk/vip.json'
 import { VipPage } from '../src/pages/vip/VipPage'
 import { PricingGrid } from '../src/widgets/vip/PricingGrid'
+import { PaymentSection } from '../src/widgets/vip/PaymentSection'
 
 const plans = [
   { duration_days: 7, price: 1, max_devices: 1, reset_limit: 0, telegram_stars_price: 60 },
@@ -83,4 +84,55 @@ it('shows Free as a quiet text link beneath the purchase button', () => {
   expect(buy.parentElement?.className).toContain('flex-col')
   expect(buy.parentElement?.className).not.toContain('lg:flex-row')
   expect(within(buy.parentElement!).getByRole('link')).toBe(free)
+})
+
+it('keeps the selected plan highlighted in FunPay after the purchase CTA scrolls', () => {
+  page()
+  expect(screen.getByRole('link', { name: '30 дней' }).getAttribute('aria-current')).toBe('true')
+  fireEvent.click(screen.getAllByRole('radio', { name: '90 дней' })[0]!)
+  const selected = screen.getByRole('link', { name: '90 дней' })
+  expect(selected.getAttribute('aria-current')).toBe('true')
+  expect(selected.className).toContain('bg-accent-500 text-white')
+  expect(selected.getAttribute('href')).toBe('https://funpay.com/lots/offer?id=53392702')
+  expect(screen.getByRole('link', { name: '30 дней' }).getAttribute('aria-current')).toBeNull()
+  const payment = document.getElementById('vip-payment')!
+  const scroll = vi.fn()
+  payment.scrollIntoView = scroll
+  fireEvent.click(screen.getByRole('button', { name: 'Приобрести на 90 дней за $6' }))
+  expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' })
+  expect(selected.getAttribute('aria-current')).toBe('true')
+})
+
+it('preserves the selection across Telegram Stars, card-to-Stars and Fragment routes', () => {
+  page()
+  fireEvent.click(screen.getAllByRole('radio', { name: '90 дней' })[0]!)
+  fireEvent.click(screen.getByRole('button', { name: /^Купить ⭐ Telegram/ }))
+  expect(screen.getByText('360 ⭐').parentElement?.getAttribute('aria-current')).toBe('true')
+  expect(screen.getByText('180 ⭐').parentElement?.getAttribute('aria-current')).toBeNull()
+  fireEvent.click(screen.getByRole('button', { name: /^Криптовалюта/ }))
+  expect(screen.getByText('360 ⭐').parentElement?.getAttribute('aria-current')).toBe('true')
+  fireEvent.click(screen.getByRole('button', { name: /^Звёзды Telegram/ }))
+  expect(screen.getByText('360 ⭐').parentElement?.getAttribute('aria-current')).toBe('true')
+  fireEvent.click(screen.getAllByRole('radio', { name: '365 дней' })[0]!)
+  expect(screen.getByText('900 ⭐').parentElement?.getAttribute('aria-current')).toBe('true')
+  expect(screen.getByText('360 ⭐').parentElement?.getAttribute('aria-current')).toBeNull()
+})
+
+it('puts the selected USD amount into PayPal instructions and updates it with the upper plan', () => {
+  page()
+  fireEvent.click(screen.getByRole('button', { name: /^PayPal/ }))
+  expect(screen.getByText(/^Переведите \$3 на счёт PayPal\./)).toBeTruthy()
+  fireEvent.click(screen.getAllByRole('radio', { name: '90 дней' })[0]!)
+  expect(screen.getByText(/^Переведите \$6 на счёт PayPal\./)).toBeTruthy()
+  fireEvent.click(screen.getAllByRole('radio', { name: '7 дней' })[0]!)
+  expect(screen.getByText(/^Переведите \$1 на счёт PayPal\./)).toBeTruthy()
+})
+
+it('keeps cents and localizes the PayPal amount in Ukrainian', async () => {
+  await i18n.changeLanguage('uk')
+  render(<I18nextProvider i18n={i18n}><MemoryRouter>
+    <PaymentSection selectedPlan={{ ...plans[1]!, price: 2.49 }} />
+  </MemoryRouter></I18nextProvider>)
+  fireEvent.click(screen.getByRole('button', { name: /^PayPal/ }))
+  expect(screen.getByText(/^Перекажіть \$2,49 на рахунок PayPal\./)).toBeTruthy()
 })

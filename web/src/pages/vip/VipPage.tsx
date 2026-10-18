@@ -309,14 +309,14 @@ export function VipPage() {
           </div>
         ) : null}
 
-        {tariffsReady ? (
+        {tariffsReady && selectedPlan ? (
           <div
             className={cn(
               'border-t border-white/8 pt-8 sm:pt-10',
               `${SHORT_DESKTOP}:pt-6`,
             )}
           >
-            <PaymentSection />
+            <PaymentSection selectedPlan={selectedPlan} />
           </div>
         ) : null}
 
