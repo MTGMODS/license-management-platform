@@ -34,7 +34,7 @@ function Footer() {
   return (
     <footer className="shrink-0 border-t border-white/5 py-[clamp(0.75rem,1.5vh,1.5rem)]">
       <div className="shell flex flex-col items-center justify-between gap-3 text-sm text-fg-subtle sm:flex-row">
-        <Link to="/" className="transition-colors hover:text-fg-muted">© 2022–{new Date().getFullYear()} {t('brand')}</Link>
+        <Link to="/" className="transition-colors hover:text-fg-muted">© 2023–{new Date().getFullYear()} {t('brand')}</Link>
         <div className="flex flex-wrap items-center justify-center gap-4">
           <Link to="/terms" className="transition-colors hover:text-fg-muted">
             {t('footer.terms')}
