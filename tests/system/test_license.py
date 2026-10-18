@@ -204,6 +204,57 @@ async def test_sales_stats_exclude_pending_free_and_unowned_keys(component, db, 
     }
 
 
+async def test_sales_purchase_sequence_and_tariff_transitions(component, db):
+    repo = component("app.infrastructure.repository")
+    start = datetime(2026, 10, 1, tzinfo=timezone.utc)
+
+    async def add(user, days, amount, offset, *, status="COMPLETED"):
+        row = repo.LicenseModel(
+            key=f"synthetic-{len(db.new)}-{user}-{offset}-{days}-{amount}",
+            user_id=user, duration_days=days, status="EXPIRED",
+            activated_at=start + timedelta(days=offset) if offset is not None else None,
+        )
+        db.add(row)
+        await db.flush()
+        db.add(repo.TransactionModel(
+            license_id=row.id, user_id=user, amount=amount,
+            payment_method="Stars", status=status,
+        ))
+        await db.flush()
+
+    # Lifetime, promo, pending and unowned keys must not affect the sequence.
+    await add(42, None, 20, -3)
+    await add(42, 365, 0, -2)
+    await add(42, 90, 9, -1, status="PENDING")
+    await add(None, 7, 999, -1)
+    await add(42, 7, 1, 0)
+    await add(42, 30, 3, 1)
+    await add(42, 90, 6, 1)  # Equal timestamps are ordered by license ID.
+    await add(43, 30, 3, 1)
+    await add(43, 90, 6, 2)
+    await add(42, 365, 15, None)  # No reliable date: not classified or chained.
+    await db.commit()
+
+    stats = await repo.LicenseRepository(db).get_heavy_public_stats()
+    subs = stats["subscriptions"]
+    assert subs["overview"]["total_sold"] == 6
+    assert [sale["purchase_kind"] for sale in subs["sales"]] == [
+        "repeat", "first", "repeat", "repeat", "first", None,
+    ]
+    assert subs["retention"]["tariff_transitions"] == [
+        {"from_days": 30, "to_days": 90, "count": 2, "sum": 12, "share": 66.7},
+        {"from_days": 7, "to_days": 30, "count": 1, "sum": 3, "share": 33.3},
+    ]
+    for sale in subs["sales"]:
+        assert not {"id", "user_id", "key", "previous_duration", "purchase_number"} & sale.keys()
+
+
+async def test_empty_sales_have_no_tariff_transitions(component, db):
+    stats = await component("app.infrastructure.repository").LicenseRepository(db).get_heavy_public_stats()
+    assert stats["subscriptions"]["sales"] == []
+    assert stats["subscriptions"]["retention"]["tariff_transitions"] == []
+
+
 async def test_old_stats_cache_reuses_data_and_refreshes_after_deletion(
     api, component, service, old_stats_cache, monkeypatch,
 ):

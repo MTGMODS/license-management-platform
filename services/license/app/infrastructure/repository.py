@@ -269,21 +269,50 @@ class LicenseRepository:
             LicenseModel.status,
             LicenseModel.activated_at,
             LicenseModel.expires_at,
+            func.row_number().over(
+                partition_by=LicenseModel.user_id,
+                order_by=(LicenseModel.activated_at.asc().nullslast(), LicenseModel.id),
+            ).label("purchase_number"),
+            func.lag(LicenseModel.duration_days).over(
+                partition_by=LicenseModel.user_id,
+                order_by=(LicenseModel.activated_at.asc().nullslast(), LicenseModel.id),
+            ).label("previous_duration"),
         ).select_from(TransactionModel).join(
             LicenseModel, TransactionModel.license_id == LicenseModel.id
-        ).where(paid_subs).order_by(LicenseModel.activated_at.desc())
+        ).where(paid_subs).order_by(LicenseModel.activated_at.desc().nullslast(), LicenseModel.id.desc())
 
-        sales = [
-            {
+        sales = []
+        transitions = {}
+        for r in (await self.db.execute(sales_stmt)).all():
+            # Only dated, paid subscriptions participate in the purchase sequence.
+            # IDs break timestamp ties internally; no buyer/key/ID is published.
+            purchase_kind = None
+            if r.activated_at is not None:
+                purchase_kind = "first" if r.purchase_number == 1 else "repeat"
+                if r.previous_duration is not None:
+                    pair = (r.previous_duration, r.duration_days)
+                    bucket = transitions.setdefault(pair, {
+                        "from_days": pair[0], "to_days": pair[1], "count": 0, "sum": 0,
+                    })
+                    bucket["count"] += 1
+                    bucket["sum"] += r.amount or 0
+            sales.append({
                 "amount": round(r.amount or 0, 2),
                 "method": r.payment_method,
                 "duration_days": r.duration_days,
                 "status": r.status.value if hasattr(r.status, "value") else r.status,
                 "activated_at": format_utc(r.activated_at),
                 "expires_at": format_utc(r.expires_at),
-            }
-            for r in (await self.db.execute(sales_stmt)).all()
-        ]
+                "purchase_kind": purchase_kind,
+            })
+
+        transition_count = sum(row["count"] for row in transitions.values())
+        tariff_transitions = sorted(
+            ({**row, "sum": round(row["sum"], 2),
+              "share": self._money_share(row["count"], transition_count)}
+             for row in transitions.values()),
+            key=lambda row: (-row["count"], -row["sum"], row["from_days"], row["to_days"]),
+        )
 
         buyer_stats = (
             select(
@@ -330,6 +359,7 @@ class LicenseRepository:
             "avg_check": round(total_money / total_sold, 2) if total_sold else 0,
             "avg_revenue_per_buyer": round(total_money / buyers, 2) if buyers else 0,
             "by_purchases": by_purchases,
+            "tariff_transitions": tariff_transitions,
         }
 
         return {
