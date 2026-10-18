@@ -1,5 +1,5 @@
-import { MonitorSmartphone, Unlink } from 'lucide-react'
-import { useLayoutEffect, useRef, useState } from 'react'
+import { CircleHelp, MonitorSmartphone, Unlink } from 'lucide-react'
+import { useId, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useLocalUsdPrice } from '@/features/geo/useLocalUsdPrice'
@@ -36,12 +36,13 @@ function PlanPrice({
   const measureRef = useRef<HTMLDivElement>(null)
   const [fit, setFit] = useState<PriceFit>('spaced')
   const usdClass = cn('tabular font-semibold tracking-tight', priceTypeClass(compact))
-  const stackedLocalClass = cn(
-    'tabular font-semibold tracking-tight text-fg-muted',
+  const localClass = cn(
+    'whitespace-nowrap tabular font-medium tracking-tight text-fg-subtle',
     compact
-      ? cn('text-[clamp(1rem,2.2vh,1.35rem)]', `${SHORT_DESKTOP}:text-lg`)
-      : 'text-xl sm:text-2xl',
+      ? cn('text-[clamp(0.875rem,1.8vh,1.125rem)]', `${SHORT_DESKTOP}:text-sm`)
+      : 'text-base sm:text-lg',
   )
+  const localText = local?.text.replace(/(\d)(\p{Sc})$/u, '$1\u00a0$2')
   const spacedGapPx = compact ? 6 : 8
 
   useLayoutEffect(() => {
@@ -60,7 +61,7 @@ function PlanPrice({
       }
       const avail = box.clientWidth
       let next: PriceFit
-      if (content + spacedGapPx * 2 <= avail + 1) next = 'spaced'
+      if (content + spacedGapPx <= avail + 1) next = 'spaced'
       else if (content <= avail + 1) next = 'tight'
       else next = 'stacked'
       setFit((prev) => (prev === next ? prev : next))
@@ -96,8 +97,7 @@ function PlanPrice({
           className="pointer-events-none invisible absolute flex flex-nowrap items-baseline gap-0"
         >
           <span className={usdClass}>${usd}</span>
-          <span className={usdClass}>≈</span>
-          <span className={usdClass}>{local.text}</span>
+          <span className={localClass}>≈ {localText}</span>
         </div>
       ) : null}
       <div
@@ -111,23 +111,33 @@ function PlanPrice({
         }
       >
         <p className={usdClass}>${usd}</p>
-        {local ? (
-          fit === 'stacked' ? (
-            <p className={stackedLocalClass}>
-              <span className="text-fg-subtle">≈</span>
-              {local.text}
-            </p>
-          ) : (
-            <>
-              <span className={cn(usdClass, 'text-fg-subtle')} aria-hidden>
-                ≈
-              </span>
-              <p className={usdClass}>{local.text}</p>
-            </>
-          )
-        ) : null}
+        {local ? <p className={localClass}>≈ {localText}</p> : null}
       </div>
     </div>
+  )
+}
+
+function HwidResetHelp() {
+  const { t } = useTranslation('vip')
+  const id = useId()
+  const [open, setOpen] = useState(false)
+
+  return (
+    <span className="inline-flex shrink-0" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      <button type="button" aria-label={t('pricing.hwidResetHelp')}
+        aria-describedby={open ? id : undefined}
+        onFocus={() => setOpen(true)} onBlur={() => setOpen(false)}
+        onClick={() => setOpen(true)}
+        onKeyDown={(event) => { if (event.key === 'Escape') setOpen(false) }}
+        className="relative z-20 inline-flex rounded-full p-1 text-fg-subtle transition-colors hover:text-accent-300 focus-visible:outline-2 focus-visible:outline-accent-400">
+        <CircleHelp aria-hidden className="size-3.5" />
+      </button>
+      {open ? (
+        <span id={id} role="tooltip" className="pointer-events-none absolute inset-x-2 bottom-10 z-30 rounded-lg border border-white/15 bg-ink-850 p-3 text-left text-xs font-normal leading-relaxed text-fg shadow-xl">
+          {t('pricing.hwidResetHint')}
+        </span>
+      ) : null}
+    </span>
   )
 }
 
@@ -183,8 +193,8 @@ export function PricingGrid({ compact = false, selectedDays, onChoose }: {
           <Card
             key={plan.duration_days}
             className={cn(
-              'flex h-full flex-col border text-left',
-              'transition-colors peer-focus-visible:border-accent-400',
+              'relative flex h-full flex-col border text-left',
+              'transition-colors',
               onChoose && selectedDays === Number(plan.duration_days)
                 ? 'border-accent-400/60 bg-accent-500/5'
                 : 'border-white/10',
@@ -194,6 +204,15 @@ export function PricingGrid({ compact = false, selectedDays, onChoose }: {
                 : 'p-3.5 sm:p-4',
             )}
           >
+            {onChoose ? (
+              <>
+                <input type="radio" name={compact ? 'vip-plan-desktop' : 'vip-plan-mobile'}
+                  value={plan.duration_days} checked={selectedDays === Number(plan.duration_days)}
+                  onChange={() => onChoose(Number(plan.duration_days))} aria-label={daysLabel}
+                  className="peer absolute inset-0 z-10 m-0 h-full w-full cursor-pointer opacity-0" />
+                <span className="pointer-events-none absolute inset-0 rounded-2xl peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent-400" aria-hidden />
+              </>
+            ) : null}
             <p
               className={cn(
                 'whitespace-nowrap tabular',
@@ -240,20 +259,12 @@ export function PricingGrid({ compact = false, selectedDays, onChoose }: {
                 <span className="min-w-0 leading-snug">
                   {t('pricing.hwidResetLabel')}: <span className="tabular">{resetValue}</span>
                 </span>
+                <HwidResetHelp />
               </p>
             </div>
           </Card>
         )
-        return onChoose ? (
-          <label key={plan.duration_days} className="relative block cursor-pointer rounded-2xl">
-            <input type="radio" name={compact ? 'vip-plan-desktop' : 'vip-plan-mobile'}
-              value={plan.duration_days} checked={selectedDays === Number(plan.duration_days)}
-              onChange={() => onChoose(Number(plan.duration_days))} aria-label={daysLabel}
-              className="peer sr-only" />
-            <span className="pointer-events-none absolute inset-0 rounded-2xl peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent-400" aria-hidden />
-            {card}
-          </label>
-        ) : card
+        return card
       })}
     </div>
   )
