@@ -119,8 +119,8 @@ class LaunchRepository:
 
         vip_conversion = round((res.vip_all / g_u_all) * 100, 2) if g_u_all > 0 else 0
         total_devices = res.pc_all + res.mob_all
-        pc_ratio = round((res.pc_all / total_devices) * 100, 1) if total_devices > 0 else 0
-        mob_ratio = round(100 - pc_ratio, 1) if total_devices > 0 else 0
+        pc_ratio = round((res.pc_all / total_devices) * 100, 2) if total_devices > 0 else 0
+        mob_ratio = round((res.mob_all / total_devices) * 100, 2) if total_devices > 0 else 0
 
         global_data = {
             "metrics": {

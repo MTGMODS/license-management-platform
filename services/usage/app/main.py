@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     app.state.public_stats_cache = PublicStatsCache.from_url(
-        settings.REDIS_URL, "mtgmods:usage:public_stats:v1",
+        settings.REDIS_URL, "mtgmods:usage:public_stats:v2",
     )
     try:
         yield

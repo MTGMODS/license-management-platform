@@ -56,3 +56,16 @@ async def test_empty_stats_no_division_by_zero(component, db):
     stats = await component("app.infrastructure.repository").LaunchRepository(db).get_heavy_public_stats()
     assert stats["overview"]["launches"] == {"all_time": 0, "30d": 0, "24h": 0, "1h": 0}
     assert stats["analytics"]["timeline"]["daily"] == []
+    assert stats["overview"]["metrics"]["pc_ratio"] == 0
+    assert stats["overview"]["metrics"]["mobile_ratio"] == 0
+
+
+async def test_device_ratios_keep_two_decimal_places_and_count_unique_devices(component, db):
+    repo = component("app.infrastructure.repository")
+    for device, hwid in [("PC", "desktop"), ("PC", "desktop"),
+                         ("MOBILE", "phone-one"), ("MOBILE", "phone-two")]:
+        db.add(repo.LaunchModel(**{**PAYLOAD, "device": device, "hwid": hwid}))
+    await db.commit()
+    stats = await repo.LaunchRepository(db).get_heavy_public_stats()
+    assert stats["overview"]["metrics"]["pc_ratio"] == 33.33
+    assert stats["overview"]["metrics"]["mobile_ratio"] == 66.67

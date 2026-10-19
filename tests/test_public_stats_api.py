@@ -31,7 +31,7 @@ if service == "license":
     main.check_expired_licenses_task = idle_worker
 
 server = fakeredis.FakeServer()
-version = "v2" if service == "license" else "v1"
+version = "v2"
 key = "mtgmods:license:old_stats:v3" if is_old else f"mtgmods:{service}:public_stats:{version}"
 cache_attr = "old_stats_cache" if is_old else "public_stats_cache"
 loader_method = "_load_old_stats" if is_old else "_load_stats"
