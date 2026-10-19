@@ -68,7 +68,7 @@ export function QuickStats() {
     {
       id: 'devices',
       label: t('stats.devices'),
-      value: `${format.percent(data.overview.metrics.pc_ratio)} / ${format.percent(data.overview.metrics.mobile_ratio)}`,
+      value: `${format.percent(data.overview.metrics.pc_ratio, 2)} / ${format.percent(data.overview.metrics.mobile_ratio, 2)}`,
       icon: MonitorSmartphone,
       tone: 'text-violet-300',
     },
