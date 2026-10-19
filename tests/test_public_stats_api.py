@@ -40,6 +40,9 @@ with patch.object(stats_class, loader_method, loader):
     for boot in range(2):
         with TestClient(main.app) as client:
             assert getattr(main.app.state, cache_attr).key == key
+            configured = getattr(main.app.state, cache_attr)
+            assert configured.GENERATION_TIMEOUT_SECONDS == (300 if service == "usage" else 90)
+            assert configured.LOCK_SECONDS == (330 if service == "usage" else 120)
             cache = PublicStatsCache(
                 fakeredis.aioredis.FakeRedis(server=server), key,
             )

@@ -14,13 +14,17 @@ from redis.exceptions import ConnectionError
 ROOT = Path(__file__).resolve().parents[1]
 
 
-@pytest.fixture(params=["license", "usage"])
-def cache_class(request):
-    path = ROOT / "services" / request.param / "app/infrastructure/stats_cache.py"
-    spec = importlib.util.spec_from_file_location(f"{request.param}_stats_cache", path)
+def load_cache_class(service):
+    path = ROOT / "services" / service / "app/infrastructure/stats_cache.py"
+    spec = importlib.util.spec_from_file_location(f"{service}_stats_cache", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module.PublicStatsCache
+
+
+@pytest.fixture(params=["license", "usage"])
+def cache_class(request):
+    return load_cache_class(request.param)
 
 
 def run(scenario):
@@ -32,6 +36,64 @@ async def seed(redis, key, data, fresh=True):
         "fresh_until": time.time() + (300 if fresh else -1),
         "data": data,
     }), ex=86400)
+
+
+def test_generation_budgets_are_service_specific(cache_class):
+    expected = (300, 330) if cache_class.__module__ == "usage_stats_cache" else (90, 120)
+    assert (cache_class.GENERATION_TIMEOUT_SECONDS, cache_class.LOCK_SECONDS) == expected
+    assert cache_class.LOCK_SECONDS > cache_class.GENERATION_TIMEOUT_SECONDS
+    assert cache_class.FRESH_SECONDS == 300
+    assert cache_class.RETENTION_SECONDS == 86400
+
+
+def test_lease_uses_configured_budget_but_releases_immediately_on_completion(cache_class):
+    async def scenario():
+        async with fakeredis.aioredis.FakeRedis() as redis:
+            cache = cache_class(redis, "stats")
+            entered, finish = asyncio.Event(), asyncio.Event()
+
+            async def load():
+                entered.set()
+                await finish.wait()
+                return {"total": 7}
+
+            task = asyncio.create_task(cache.get(load, BackgroundTasks()))
+            try:
+                await asyncio.wait_for(entered.wait(), 1)
+                assert cache.LOCK_SECONDS - 2 <= await redis.ttl(cache.lock_key) <= cache.LOCK_SECONDS
+            finally:
+                finish.set()
+                await task
+            assert not await redis.exists(cache.lock_key)
+            entry = json.loads(await redis.get(cache.key))
+            assert entry["data"] == {"total": 7}
+            assert 298 < entry["fresh_until"] - time.time() <= 300
+    run(scenario)
+
+
+def test_usage_logs_start_completion_and_generation_timeout(caplog):
+    caplog.set_level("INFO", logger="uvicorn.error.usage_stats")
+
+    async def scenario():
+        async with fakeredis.aioredis.FakeRedis() as redis:
+            cache = load_cache_class("usage")(redis, "usage-stats")
+            assert await cache.get(AsyncMock(return_value={"total": 3}), BackgroundTasks()) == {"total": 3}
+            await redis.delete(cache.key)
+            cache.GENERATION_TIMEOUT_SECONDS = 0.01
+
+            async def slow_load():
+                await asyncio.sleep(10)
+
+            with pytest.raises(HTTPException) as error:
+                await cache.get(slow_load, BackgroundTasks())
+            assert error.value.status_code == 503
+            assert error.value.detail == "Statistics generation timed out. Please retry shortly."
+            assert not await redis.exists(cache.lock_key)
+
+    run(scenario)
+    assert "Stats refresh started: usage-stats (generation timeout=300s, lock=330s)" in caplog.text
+    assert "Stats refreshed: usage-stats," in caplog.text
+    assert "Stats generation timed out: usage-stats after" in caplog.text
 
 
 def test_fresh_shared_cache_avoids_database(cache_class):

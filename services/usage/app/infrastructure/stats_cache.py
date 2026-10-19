@@ -17,7 +17,8 @@ from redis.asyncio.retry import Retry
 from redis.backoff import NoBackoff
 from redis.exceptions import RedisError
 
-logger = logging.getLogger(__name__)
+# Inherit Uvicorn's configured handler/level so INFO timings appear in Compose logs.
+logger = logging.getLogger("uvicorn.error.usage_stats")
 StatsLoader = Callable[[], Awaitable[dict]]
 
 _RELEASE = """
@@ -39,8 +40,8 @@ return 0
 class PublicStatsCache:
     FRESH_SECONDS = 300
     RETENTION_SECONDS = 86400
-    LOCK_SECONDS = 120
-    GENERATION_TIMEOUT_SECONDS = 90
+    LOCK_SECONDS = 330
+    GENERATION_TIMEOUT_SECONDS = 300
     COLD_WAIT_SECONDS = 4
     POLL_SECONDS = 0.1
 
@@ -120,10 +121,15 @@ class PublicStatsCache:
             return await self._compute(loader)
 
     async def _compute(self, loader: StatsLoader) -> dict:
+        started = time.monotonic()
         try:
             async with asyncio.timeout(self.GENERATION_TIMEOUT_SECONDS):
                 return await loader()
         except TimeoutError as exc:
+            logger.warning(
+                "Stats generation timed out: %s after %.2fs (limit=%ss)",
+                self.key, time.monotonic() - started, self.GENERATION_TIMEOUT_SECONDS,
+            )
             raise HTTPException(
                 status_code=503,
                 detail="Statistics generation timed out. Please retry shortly.",
@@ -141,6 +147,10 @@ class PublicStatsCache:
             except RedisError:
                 pass
 
+            logger.info(
+                "Stats refresh started: %s (generation timeout=%ss, lock=%ss)",
+                self.key, self.GENERATION_TIMEOUT_SECONDS, self.LOCK_SECONDS,
+            )
             stats = await self._compute(loader)
             encoded = json.dumps({
                 "fresh_until": time.time() + self.FRESH_SECONDS,
