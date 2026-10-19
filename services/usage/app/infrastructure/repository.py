@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, select, func, distinct, case, and_, desc
+from sqlalchemy import BigInteger, Column, Integer, String, DateTime, select, func, distinct, case, and_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timedelta, timezone
 from app.shared.database import Base
@@ -61,52 +61,48 @@ class LaunchRepository:
     # ---- Analytics Methods ----
 
     async def _get_global(self, d30, d1, d1h):
-        stmt = select(
-            func.count(distinct(LaunchModel.hwid)).label("u_all"),
-            func.count(distinct(case((LaunchModel.launched_at >= d30, LaunchModel.hwid)))).label("u_30d"),
-            func.count(distinct(case((LaunchModel.launched_at >= d1, LaunchModel.hwid)))).label("u_24h"),
-            func.count(distinct(case((LaunchModel.launched_at >= d1h, LaunchModel.hwid)))).label("u_1h"),
-            
-            func.count(distinct(case((LaunchModel.version.ilike('%VIP%'), LaunchModel.hwid)))).label("vip_all"),
-            func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label("vip_30d"),
-            func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label("vip_24h"),
-            func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label("vip_1h"),
-
-            func.count(LaunchModel.id).label("l_all"),
-            func.count(case((LaunchModel.launched_at >= d30, LaunchModel.id))).label("l_30d"),
-            func.count(case((LaunchModel.launched_at >= d1, LaunchModel.id))).label("l_24h"),
-            func.count(case((LaunchModel.launched_at >= d1h, LaunchModel.id))).label("l_1h"),
-
-            func.count(distinct(case((LaunchModel.device == 'PC', LaunchModel.hwid)))).label("pc_all"),
-            func.count(distinct(case((and_(LaunchModel.device == 'PC', LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label("pc_30d"),
-            func.count(distinct(case((and_(LaunchModel.device == 'PC', LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label("pc_24h"),
-            func.count(distinct(case((and_(LaunchModel.device == 'PC', LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label("pc_1h"),
-
-            func.count(case((LaunchModel.device == 'PC', LaunchModel.id))).label("pc_l_all"),
-            func.count(case((and_(LaunchModel.device == 'PC', LaunchModel.launched_at >= d30), LaunchModel.id))).label("pc_l_30d"),
-            func.count(case((and_(LaunchModel.device == 'PC', LaunchModel.launched_at >= d1), LaunchModel.id))).label("pc_l_24h"),
-            func.count(case((and_(LaunchModel.device == 'PC', LaunchModel.launched_at >= d1h), LaunchModel.id))).label("pc_l_1h"),
-
-            func.count(distinct(case((LaunchModel.device == 'MOBILE', LaunchModel.hwid)))).label("mob_all"),
-            func.count(distinct(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label("mob_30d"),
-            func.count(distinct(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label("mob_24h"),
-            func.count(distinct(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label("mob_1h"),
-
-            func.count(case((LaunchModel.device == 'MOBILE', LaunchModel.id))).label("mob_l_all"),
-            func.count(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.launched_at >= d30), LaunchModel.id))).label("mob_l_30d"),
-            func.count(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.launched_at >= d1), LaunchModel.id))).label("mob_l_24h"),
-            func.count(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.launched_at >= d1h), LaunchModel.id))).label("mob_l_1h"),
-
-            func.count(distinct(case((and_(LaunchModel.device == 'PC', LaunchModel.version.ilike('%VIP%')), LaunchModel.hwid)))).label("pc_vip_all"),
-            func.count(distinct(case((and_(LaunchModel.device == 'PC', LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label("pc_vip_30d"),
-            func.count(distinct(case((and_(LaunchModel.device == 'PC', LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label("pc_vip_24h"),
-            func.count(distinct(case((and_(LaunchModel.device == 'PC', LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label("pc_vip_1h"),
-
-            func.count(distinct(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.version.ilike('%VIP%')), LaunchModel.hwid)))).label("mob_vip_all"),
-            func.count(distinct(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label("mob_vip_30d"),
-            func.count(distinct(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label("mob_vip_24h"),
-            func.count(distinct(case((and_(LaunchModel.device == 'MOBILE', LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label("mob_vip_1h"),
+        periods = (("30d", d30), ("24h", d1), ("1h", d1h))
+        is_vip = LaunchModel.version.ilike('%VIP%')
+        scopes = (
+            ("u", "l", None),
+            ("vip", None, is_vip),
+            ("pc", "pc_l", LaunchModel.device == 'PC'),
+            ("mob", "mob_l", LaunchModel.device == 'MOBILE'),
+            ("pc_vip", None, and_(LaunchModel.device == 'PC', is_vip)),
+            ("mob_vip", None, and_(LaunchModel.device == 'MOBILE', is_vip)),
         )
+        # A user belongs to a rolling period iff their latest matching event does.
+        # Group once by HWID instead of sorting 24 different DISTINCT sets.
+        # Keep event counts separately: summing unique daily/device users is wrong.
+        per_user_columns = []
+        for users_prefix, launches_prefix, condition in scopes:
+            timestamp = LaunchModel.launched_at if condition is None else case((condition, LaunchModel.launched_at))
+            events = func.count() if condition is None else func.count(case((condition, 1)))
+            per_user_columns.extend([
+                events.label(f"{users_prefix}_events"),
+                func.max(timestamp).label(f"{users_prefix}_last"),
+            ])
+            if launches_prefix:
+                for period, since in periods:
+                    matches = LaunchModel.launched_at >= since
+                    if condition is not None:
+                        matches = and_(condition, matches)
+                    per_user_columns.append(func.count(case((matches, 1))).label(f"{launches_prefix}_{period}"))
+
+        per_user = select(*per_user_columns).group_by(LaunchModel.hwid).subquery()
+        # PostgreSQL SUM(bigint) returns numeric; cast back to preserve integer counters.
+        totals = []
+        for users_prefix, launches_prefix, _ in scopes:
+            events = per_user.c[f"{users_prefix}_events"]
+            last = per_user.c[f"{users_prefix}_last"]
+            totals.append(func.count(case((events > 0, 1))).label(f"{users_prefix}_all"))
+            totals.extend(func.count(case((last >= since, 1))).label(f"{users_prefix}_{period}")
+                          for period, since in periods)
+            if launches_prefix:
+                totals.append(func.coalesce(func.sum(events), 0).cast(BigInteger).label(f"{launches_prefix}_all"))
+                totals.extend(func.coalesce(func.sum(per_user.c[f"{launches_prefix}_{period}"]), 0).cast(BigInteger)
+                              .label(f"{launches_prefix}_{period}") for period, _ in periods)
+        stmt = select(*totals)
         res = (await self.db.execute(stmt)).first()
         
         g_u_all = res.u_all if res and res.u_all > 0 else 0
@@ -281,43 +277,46 @@ class LaunchRepository:
             ("rodina_mobile", LaunchModel.server.between(401, 403)),
         ]
 
-        select_cols = []
-        for name, cond in families:
-            select_cols.extend([
-                func.count(distinct(case((cond, LaunchModel.hwid)))).label(f"{name}_u_all"),
-                func.count(distinct(case((and_(cond, LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label(f"{name}_u_30d"),
-                func.count(distinct(case((and_(cond, LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label(f"{name}_u_24h"),
-                func.count(distinct(case((and_(cond, LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label(f"{name}_u_1h"),
-                func.count(distinct(case((and_(cond, LaunchModel.version.ilike('%VIP%')), LaunchModel.hwid)))).label(f"{name}_vip_all"),
-                func.count(distinct(case((and_(cond, LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label(f"{name}_vip_30d"),
-                func.count(distinct(case((and_(cond, LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label(f"{name}_vip_24h"),
-                func.count(distinct(case((and_(cond, LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label(f"{name}_vip_1h"),
-                func.count(case((cond, LaunchModel.id))).label(f"{name}_l_all"),
-                func.count(case((and_(cond, LaunchModel.launched_at >= d30), LaunchModel.id))).label(f"{name}_l_30d"),
-                func.count(case((and_(cond, LaunchModel.launched_at >= d1), LaunchModel.id))).label(f"{name}_l_24h"),
-                func.count(case((and_(cond, LaunchModel.launched_at >= d1h), LaunchModel.id))).label(f"{name}_l_1h"),
-            ])
-
-        res = (await self.db.execute(select(*select_cols))).first()
+        periods = (("30d", d30), ("24h", d1), ("1h", d1h))
+        product = case(*((condition, name) for name, condition in families))
+        is_vip = LaunchModel.version.ilike('%VIP%')
+        # Product ranges do not overlap. De-duplicate HWIDs inside each product,
+        # preserving users who played on multiple servers of the same product.
+        per_user = select(
+            product.label("product"),
+            func.max(LaunchModel.launched_at).label("last_seen"),
+            func.count(case((is_vip, 1))).label("vip_events"),
+            func.max(case((is_vip, LaunchModel.launched_at))).label("vip_last"),
+            func.count().label("l_all"),
+            *(func.count(case((LaunchModel.launched_at >= since, 1))).label(f"l_{period}")
+              for period, since in periods),
+        ).where(product.is_not(None)).group_by(product, LaunchModel.hwid).subquery()
+        stmt = select(
+            per_user.c.product,
+            func.count().label("u_all"),
+            *(func.count(case((per_user.c.last_seen >= since, 1))).label(f"u_{period}")
+              for period, since in periods),
+            func.count(case((per_user.c.vip_events > 0, 1))).label("vip_all"),
+            *(func.count(case((per_user.c.vip_last >= since, 1))).label(f"vip_{period}")
+              for period, since in periods),
+            *(func.sum(per_user.c[f"l_{period}"]).cast(BigInteger).label(f"l_{period}")
+              for period in ("all", "30d", "24h", "1h")),
+        ).group_by(per_user.c.product)
+        rows = {row.product: row for row in (await self.db.execute(stmt)).all()}
         products = []
         for name, _ in families:
+            row = rows.get(name)
             users = {
-                "all_time": getattr(res, f"{name}_u_all") or 0,
-                "30d": getattr(res, f"{name}_u_30d") or 0,
-                "24h": getattr(res, f"{name}_u_24h") or 0,
-                "1h": getattr(res, f"{name}_u_1h") or 0,
+                "all_time": row.u_all if row else 0,
+                **{period: getattr(row, f"u_{period}") if row else 0 for period, _ in periods},
             }
             launches = {
-                "all_time": getattr(res, f"{name}_l_all") or 0,
-                "30d": getattr(res, f"{name}_l_30d") or 0,
-                "24h": getattr(res, f"{name}_l_24h") or 0,
-                "1h": getattr(res, f"{name}_l_1h") or 0,
+                "all_time": row.l_all if row else 0,
+                **{period: getattr(row, f"l_{period}") if row else 0 for period, _ in periods},
             }
             vip_users = {
-                "all_time": getattr(res, f"{name}_vip_all") or 0,
-                "30d": getattr(res, f"{name}_vip_30d") or 0,
-                "24h": getattr(res, f"{name}_vip_24h") or 0,
-                "1h": getattr(res, f"{name}_vip_1h") or 0,
+                "all_time": row.vip_all if row else 0,
+                **{period: getattr(row, f"vip_{period}") if row else 0 for period, _ in periods},
             }
             metrics = self._period_metrics(users, launches, g_users, vip_users)
             products.append({
