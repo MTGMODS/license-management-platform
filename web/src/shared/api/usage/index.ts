@@ -1,6 +1,5 @@
-import { STATS_REQUEST_TIMEOUT_MS } from '../config'
+import { requestPublicStats } from '../publicStats'
 import { ApiError } from '../errors'
-import { request } from '../http'
 
 import type {
   DailyPoint,
@@ -204,11 +203,10 @@ function normalizePublicStats(payload: UsagePublicStats): UsagePublicStats {
  * than a refetch. The backend caches it for five minutes with stale-while-revalidate.
  */
 export async function getUsagePublicStats(signal?: AbortSignal): Promise<UsagePublicStats> {
-  const payload = await request<UsagePublicStats>({
+  const payload = await requestPublicStats<UsagePublicStats>({
     service: 'usage',
     path: '/stats/public',
     signal,
-    timeoutMs: STATS_REQUEST_TIMEOUT_MS,
   })
   try {
     return normalizePublicStats(payload)

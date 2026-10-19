@@ -1,5 +1,6 @@
-import { STATS_REQUEST_TIMEOUT_MS, VIP_DOWNLOAD_TIMEOUT_MS } from '../config'
+import { VIP_DOWNLOAD_TIMEOUT_MS } from '../config'
 import { request } from '../http'
+import { requestPublicStats } from '../publicStats'
 
 import type {
   ActivateKeyResult,
@@ -259,11 +260,10 @@ function normalizeSalesStats(raw: SalesStatsWire): LicenseSalesStats {
 
 /** Public sales figures behind the VIP page. */
 export async function getLicenseSalesStats(signal?: AbortSignal): Promise<LicenseSalesStats> {
-  const response = await request<SalesStatsWire>({
+  const response = await requestPublicStats<SalesStatsWire>({
     service: 'license',
     path: '/stats/public',
     signal,
-    timeoutMs: STATS_REQUEST_TIMEOUT_MS,
   })
 
   return normalizeSalesStats(response)
@@ -271,11 +271,10 @@ export async function getLicenseSalesStats(signal?: AbortSignal): Promise<Licens
 
 /** Lifetime statistics use a separate shared Redis cache. */
 export async function getLicenseOldSalesStats(signal?: AbortSignal): Promise<LicenseOldSalesStats> {
-  const response = await request<OldSalesStatsWire>({
+  const response = await requestPublicStats<OldSalesStatsWire>({
     service: 'license',
     path: '/stats/old',
     signal,
-    timeoutMs: STATS_REQUEST_TIMEOUT_MS,
   })
 
   return {

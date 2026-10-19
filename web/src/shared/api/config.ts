@@ -67,8 +67,9 @@ export function serviceOrigin(service: ServiceName): string {
 
 export const REQUEST_TIMEOUT_MS = 20_000
 
-/** Public statistics fail fast; their queries do not automatically retry. */
+/** Public statistics: first attempt 2s, then one immediate retry of at most 1s. */
 export const STATS_REQUEST_TIMEOUT_MS = 2_000
+export const STATS_RETRY_TIMEOUT_MS = 1_000
 
 /** Cabinet VIP file: wait for build + RabbitMQ reply. Matches license RPC (30s). */
 export const VIP_DOWNLOAD_TIMEOUT_MS = 30_000
