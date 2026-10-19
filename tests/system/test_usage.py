@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 import random
 
 import pytest
-from sqlalchemy import and_, case, distinct, func, select
+from sqlalchemy import and_, case, distinct, func, or_, select
 
 pytestmark = [pytest.mark.component("services/usage"), pytest.mark.anyio, pytest.mark.integration]
 
@@ -146,6 +146,41 @@ async def test_optimized_rollups_match_original_distinct_counts(component, db, m
         "pc_ratio": round(100 * pc["users"]["all_time"] / device_total, 2),
         "mobile_ratio": round(100 * mobile["users"]["all_time"] / device_total, 2),
     }
+    for collection, key, group, include_vip in [
+        ("servers", "server", model.server, True),
+        ("factions", "mode", model.mode, True),
+        ("versions", "version", model.version, False),
+    ]:
+        buckets = stats["distribution"][collection]
+        expected_groups = {value[key] if key != "mode" else value[key] or "none" for value in values}
+        if key == "server":
+            expected_groups -= {None, 200}
+            assert [bucket[key] for bucket in buckets] == sorted(expected_groups)
+        else:
+            populations = [bucket["users"]["all_time"] for bucket in buckets]
+            assert populations == sorted(populations, reverse=True)
+        assert {bucket[key] for bucket in buckets} == expected_groups
+        for bucket in buckets:
+            condition = or_(group.is_(None), group == "none") if key == "mode" and bucket[key] == "none" else group == bucket[key]
+            counts = await reference(condition)
+            assert set(bucket) == {key, "users", "launches", "user_share", "launches_per_user"} | (
+                {"vip_users", "vip_percent"} if include_vip else set()
+            )
+            for metric in ["users", "launches"] + (["vip_users"] if include_vip else []):
+                assert bucket[metric] == counts[metric]
+            assert bucket["user_share"] == {
+                period: round(100 * counts["users"][period] / global_counts["users"][period], 1)
+                if global_counts["users"][period] else 0 for period in cutoffs
+            }
+            assert bucket["launches_per_user"] == {
+                period: round(counts["launches"][period] / counts["users"][period], 2)
+                if counts["users"][period] else 0 for period in cutoffs
+            }
+            if include_vip:
+                assert bucket["vip_percent"] == {
+                    period: round(100 * counts["vip_users"][period] / counts["users"][period], 1)
+                    if counts["users"][period] else 0 for period in cutoffs
+                }
     products = stats["distribution"]["products"]
     assert [row["product"] for row in products] == ["arizona_pc", "arizona_mobile", "rodina_pc", "rodina_mobile"]
     for product, limits in zip(products, [(1, 33), (101, 103), (301, 307), (401, 403)]):

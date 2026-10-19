@@ -161,27 +161,45 @@ class LaunchRepository:
         }
         return global_data, g_users
 
+    @staticmethod
+    def _grouped_usage_stmt(group, d30, d1, d1h, *, include_vip=True, where=None):
+        """Exact per-bucket users via one (bucket, HWID) grouping, not DISTINCT sets."""
+        periods = (("30d", d30), ("24h", d1), ("1h", d1h))
+        columns = [
+            group.label("bucket"),
+            func.max(LaunchModel.launched_at).label("last_seen"),
+            func.count().label("l_all"),
+            *(func.count(case((LaunchModel.launched_at >= since, 1))).label(f"l_{period}")
+              for period, since in periods),
+        ]
+        if include_vip:
+            is_vip = LaunchModel.version.ilike('%VIP%')
+            columns.extend([
+                func.count(case((is_vip, 1))).label("vip_events"),
+                func.max(case((is_vip, LaunchModel.launched_at))).label("vip_last"),
+            ])
+        per_user_stmt = select(*columns).group_by(group, LaunchModel.hwid)
+        if where is not None:
+            per_user_stmt = per_user_stmt.where(where)
+        per_user = per_user_stmt.subquery()
+        totals = [
+            per_user.c.bucket.label(group.name),
+            func.count().label("u_all"),
+            *(func.count(case((per_user.c.last_seen >= since, 1))).label(f"u_{period}")
+              for period, since in periods),
+            *(func.sum(per_user.c[f"l_{period}"]).cast(BigInteger).label(f"l_{period}")
+              for period in ("all", "30d", "24h", "1h")),
+        ]
+        if include_vip:
+            totals.append(func.count(case((per_user.c.vip_events > 0, 1))).label("vip_all"))
+            totals.extend(func.count(case((per_user.c.vip_last >= since, 1))).label(f"vip_{period}")
+                          for period, since in periods)
+        return select(*totals).group_by(per_user.c.bucket)
+
     async def _get_servers(self, d30, d1, d1h, g_users):
-        stmt = (
-            select(
-                LaunchModel.server,
-                func.count(distinct(LaunchModel.hwid)).label("u_all"),
-                func.count(distinct(case((LaunchModel.launched_at >= d30, LaunchModel.hwid)))).label("u_30d"),
-                func.count(distinct(case((LaunchModel.launched_at >= d1, LaunchModel.hwid)))).label("u_24h"),
-                func.count(distinct(case((LaunchModel.launched_at >= d1h, LaunchModel.hwid)))).label("u_1h"),
-                func.count(distinct(case((LaunchModel.version.ilike('%VIP%'), LaunchModel.hwid)))).label("vip_all"),
-                func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label("vip_30d"),
-                func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label("vip_24h"),
-                func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label("vip_1h"),
-                func.count(LaunchModel.id).label("l_all"),
-                func.count(case((LaunchModel.launched_at >= d30, LaunchModel.id))).label("l_30d"),
-                func.count(case((LaunchModel.launched_at >= d1, LaunchModel.id))).label("l_24h"),
-                func.count(case((LaunchModel.launched_at >= d1h, LaunchModel.id))).label("l_1h")
-            )
-            .where(LaunchModel.server != 200)
-            .group_by(LaunchModel.server)
-            .order_by(LaunchModel.server.asc())
-        )
+        stmt = self._grouped_usage_stmt(
+            LaunchModel.server, d30, d1, d1h, where=LaunchModel.server != 200,
+        ).order_by("server")
         res = await self.db.execute(stmt)
         result = []
         for row in res.all():
@@ -201,25 +219,9 @@ class LaunchRepository:
         return result
 
     async def _get_factions(self, d30, d1, d1h, g_users):
-        stmt = (
-            select(
-                func.coalesce(LaunchModel.mode, 'none').label("m_name"),
-                func.count(distinct(LaunchModel.hwid)).label("u_all"),
-                func.count(distinct(case((LaunchModel.launched_at >= d30, LaunchModel.hwid)))).label("u_30d"),
-                func.count(distinct(case((LaunchModel.launched_at >= d1, LaunchModel.hwid)))).label("u_24h"),
-                func.count(distinct(case((LaunchModel.launched_at >= d1h, LaunchModel.hwid)))).label("u_1h"),
-                func.count(distinct(case((LaunchModel.version.ilike('%VIP%'), LaunchModel.hwid)))).label("vip_all"),
-                func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d30), LaunchModel.hwid)))).label("vip_30d"),
-                func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1), LaunchModel.hwid)))).label("vip_24h"),
-                func.count(distinct(case((and_(LaunchModel.version.ilike('%VIP%'), LaunchModel.launched_at >= d1h), LaunchModel.hwid)))).label("vip_1h"),
-                func.count(LaunchModel.id).label("l_all"),
-                func.count(case((LaunchModel.launched_at >= d30, LaunchModel.id))).label("l_30d"),
-                func.count(case((LaunchModel.launched_at >= d1, LaunchModel.id))).label("l_24h"),
-                func.count(case((LaunchModel.launched_at >= d1h, LaunchModel.id))).label("l_1h")
-            )
-            .group_by("m_name")
-            .order_by(desc("u_all"))
-        )
+        stmt = self._grouped_usage_stmt(
+            func.coalesce(LaunchModel.mode, 'none').label("m_name"), d30, d1, d1h,
+        ).order_by(desc("u_all"))
         res = await self.db.execute(stmt)
         result = []
         for row in res.all():
@@ -239,21 +241,9 @@ class LaunchRepository:
         return result
 
     async def _get_versions(self, d30, d1, d1h, g_users):
-        stmt = (
-            select(
-                LaunchModel.version,
-                func.count(distinct(LaunchModel.hwid)).label("u_all"),
-                func.count(distinct(case((LaunchModel.launched_at >= d30, LaunchModel.hwid)))).label("u_30d"),
-                func.count(distinct(case((LaunchModel.launched_at >= d1, LaunchModel.hwid)))).label("u_24h"),
-                func.count(distinct(case((LaunchModel.launched_at >= d1h, LaunchModel.hwid)))).label("u_1h"),
-                func.count(LaunchModel.id).label("l_all"),
-                func.count(case((LaunchModel.launched_at >= d30, LaunchModel.id))).label("l_30d"),
-                func.count(case((LaunchModel.launched_at >= d1, LaunchModel.id))).label("l_24h"),
-                func.count(case((LaunchModel.launched_at >= d1h, LaunchModel.id))).label("l_1h")
-            )
-            .group_by(LaunchModel.version)
-            .order_by(desc("u_all"))
-        )
+        stmt = self._grouped_usage_stmt(
+            LaunchModel.version, d30, d1, d1h, include_vip=False,
+        ).order_by(desc("u_all"))
         res = await self.db.execute(stmt)
         result = []
         for row in res.all():
