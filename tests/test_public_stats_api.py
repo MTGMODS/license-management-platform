@@ -32,7 +32,7 @@ if service == "license":
 
 server = fakeredis.FakeServer()
 version = "v2" if service == "license" else "v1"
-key = "mtgmods:license:old_stats:v2" if is_old else f"mtgmods:{service}:public_stats:{version}"
+key = "mtgmods:license:old_stats:v3" if is_old else f"mtgmods:{service}:public_stats:{version}"
 cache_attr = "old_stats_cache" if is_old else "public_stats_cache"
 loader_method = "_load_old_stats" if is_old else "_load_stats"
 loader = AsyncMock(wraps=getattr(stats_class, loader_method))

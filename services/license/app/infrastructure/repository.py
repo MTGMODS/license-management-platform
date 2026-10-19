@@ -404,6 +404,13 @@ class LicenseRepository:
         forever_paid_sold = forever_overview.paid_sold or 0
         forever_money = round(forever_overview.total_money or 0, 2)
 
+        # Count keys with recorded device usage, not the license's validity status.
+        # EXISTS avoids counting a key more than once when it has several devices.
+        activated_forever = await self.db.scalar(select(func.count(LicenseModel.id)).where(
+            forever,
+            select(DeviceModel.id).where(DeviceModel.license_id == LicenseModel.id).exists(),
+        ))
+
         forever_pay_stmt = select(
             TransactionModel.payment_method,
             func.count(TransactionModel.id).label("count"),
@@ -448,6 +455,8 @@ class LicenseRepository:
             "forever": {
                 "overview": {
                     "paid_sold": forever_paid_sold,
+                    "activated": activated_forever or 0,
+                    "activation_tracking_since": "2026-09-01",
                     "total_money": forever_money,
                     "avg_check": round(forever_money / forever_paid_sold, 2) if forever_paid_sold else 0,
                 },

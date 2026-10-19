@@ -34,7 +34,7 @@ async def old_stats_cache(component, monkeypatch):
     cache_class = component("app.infrastructure.stats_cache").PublicStatsCache
     main = component("app.main")
     async with fakeredis.aioredis.FakeRedis() as redis:
-        cache = cache_class(redis, "mtgmods:license:old_stats:v2")
+        cache = cache_class(redis, "mtgmods:license:old_stats:v3")
         monkeypatch.setattr(main.app.state, "old_stats_cache", cache, raising=False)
         yield cache
 
@@ -201,6 +201,7 @@ async def test_sales_stats_exclude_pending_free_and_unowned_keys(component, db, 
     assert datetime.fromisoformat(old_stats["updated_at"]).tzinfo == timezone.utc
     assert old_stats["forever"]["overview"] == {
         "paid_sold": 1, "total_money": 20, "avg_check": 20,
+        "activated": 0, "activation_tracking_since": "2026-09-01",
     }
 
 
@@ -294,7 +295,10 @@ async def test_old_stats_cache_reuses_data_and_refreshes_after_deletion(
     assert set(response.json()) == {"updated_at", "forever"}
     assert response.json()["updated_at"] == "2026-10-06T12:00:00Z"
     forever = response.json()["forever"]
-    assert forever["overview"] == {"paid_sold": 2, "total_money": 30, "avg_check": 15}
+    assert forever["overview"] == {
+        "paid_sold": 2, "total_money": 30, "avg_check": 15,
+        "activated": 0, "activation_tracking_since": "2026-09-01",
+    }
     assert forever["by_method"] == [
         {"method": "Steam", "count": 1, "sum": 20, "money_share": 66.7},
         {"method": "Card", "count": 1, "sum": 10, "money_share": 33.3},
@@ -323,6 +327,7 @@ async def test_old_stats_cache_reuses_data_and_refreshes_after_deletion(
     assert response.json()["updated_at"] == "2026-10-06T12:05:00Z"
     assert response.json()["forever"]["overview"] == {
         "paid_sold": 1, "total_money": 10, "avg_check": 10,
+        "activated": 0, "activation_tracking_since": "2026-09-01",
     }
     await service.admin_delete_license(forever_ids[1])
     await expire_cache()
@@ -330,10 +335,30 @@ async def test_old_stats_cache_reuses_data_and_refreshes_after_deletion(
     assert stale["overview"]["paid_sold"] == 1
     empty = (await api.get("/api/v1/license/stats/old")).json()["forever"]
     assert empty == {
-        "overview": {"paid_sold": 0, "total_money": 0, "avg_check": 0},
+        "overview": {"paid_sold": 0, "total_money": 0, "avg_check": 0,
+                     "activated": 0, "activation_tracking_since": "2026-09-01"},
         "by_method": [], "by_price": [],
     }
     assert loader.await_count == 3
+
+
+async def test_legacy_active_counts_keys_with_devices_not_validity_or_payment(component, db):
+    repo = component("app.infrastructure.repository")
+    keys = [
+        repo.LicenseModel(key="used-forever", status="BANNED"),
+        repo.LicenseModel(key="unused-forever", status="ACTIVE"),
+        repo.LicenseModel(key="used-subscription", status="ACTIVE", duration_days=30),
+        repo.LicenseModel(key="free-used-forever", status="ACTIVE"),
+    ]
+    db.add_all(keys)
+    await db.flush()
+    for key, device in [(keys[0], "pc"), (keys[0], "phone"), (keys[2], "pc"), (keys[3], "pc")]:
+        db.add(repo.DeviceModel(license_id=key.id, device=device))
+    await db.commit()
+    overview = (await repo.LicenseRepository(db).get_old_stats())["forever"]["overview"]
+    assert overview["activated"] == 2
+    assert overview["activation_tracking_since"] == "2026-09-01"
+    assert overview["paid_sold"] == 0
 
 
 async def test_admin_duration_update_and_ban(component, service):
