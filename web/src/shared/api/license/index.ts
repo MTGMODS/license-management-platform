@@ -237,6 +237,9 @@ function normalizeForever(raw: unknown): LicenseForeverStats {
     overview: {
       /** New wire uses `paid_sold`; tolerate legacy `total_sold`. */
       paid_sold: asFinite(overview.paid_sold ?? overview.total_sold),
+      activated: typeof overview.activated === 'number' && Number.isFinite(overview.activated)
+        ? overview.activated : null,
+      activation_tracking_since: asNullableString(overview.activation_tracking_since),
       total_money: asFinite(overview.total_money),
       avg_check: asFinite(overview.avg_check),
     },

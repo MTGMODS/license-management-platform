@@ -64,12 +64,12 @@ function resolveRoute(pathname: string): {
       canonicalPath: pathname,
     }
   }
-  if (pathname === '/old_vip' || pathname === '/old_vip/') {
+  if (pathname === '/vip/legacy' || pathname === '/vip/legacy/' || pathname === '/old_vip' || pathname === '/old_vip/') {
     return {
       titleKey: 'tab.oldVip',
       descriptionKey: 'meta.description.oldVip',
       index: false,
-      canonicalPath: '/old_vip',
+      canonicalPath: '/vip/legacy',
     }
   }
   if (pathname.startsWith('/vip')) {

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { Route, Routes } from 'react-router'
+import { Navigate, Route, Routes } from 'react-router'
 
 import { DownloadPage } from '@/pages/helper/DownloadPage'
 import { HelperPage } from '@/pages/helper/HelperPage'
@@ -62,7 +62,8 @@ export function AppRoutes() {
           <Route path="helper" element={<HelperPage />} />
           <Route path="helper/download" element={<DownloadPage />} />
           <Route path="vip" element={<VipPage />} />
-          <Route path="old_vip" element={<OldVipPage />} />
+          <Route path="vip/legacy" element={<OldVipPage />} />
+          <Route path="old_vip" element={<Navigate to="/vip/legacy" replace />} />
           <Route path="promo" element={<PromoPage />} />
           <Route path="promo/leaders" element={<PromoLeadersPage />} />
           <Route path="promo/smart" element={<PromoSmartPage />} />

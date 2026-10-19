@@ -159,6 +159,9 @@ export interface LicensePriceStat {
 export interface LicenseForeverStats {
   overview: {
     paid_sold: number
+    /** Keys with at least one currently recorded device; independent of validity/payment. */
+    activated: number | null
+    activation_tracking_since: string | null
     total_money: number
     avg_check: number
   }

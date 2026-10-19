@@ -24,7 +24,7 @@ vi.mock('@/app/AppLayout', () => ({
     usePageMeta()
     return <>
       <Link to="/vip">Current</Link>
-      <Link to="/old_vip">Archive</Link>
+      <Link to="/vip/legacy">Archive</Link>
       <Outlet />
     </>
   },
@@ -40,7 +40,7 @@ vi.mock('recharts', () => {
 })
 
 const archive = { updated_at: '2026-10-06T12:00:00Z', forever: {
-  overview: { paid_sold: 2, total_money: 30, avg_check: 15 },
+  overview: { paid_sold: 2, total_money: 30, avg_check: 15, activated: 1, activation_tracking_since: '2026-09-01' },
   by_method: [{ method: 'Steam', count: 2, sum: 30, money_share: 100, count_share: 100 }],
   by_price: [{ price: 15, count: 2, sum: 30, count_share: 100, money_share: 100 }],
 } }
@@ -50,13 +50,14 @@ it('opens the archive anonymously with noindex and reuses fresh data on return',
   vi.mocked(request).mockResolvedValue(archive)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(<QueryClientProvider client={client}>
-    <MemoryRouter initialEntries={['/old_vip']}><AppRoutes /></MemoryRouter>
+    <MemoryRouter initialEntries={['/vip/legacy']}><AppRoutes /></MemoryRouter>
   </QueryClientProvider>)
 
   expect(await screen.findByText('Steam')).toBeTruthy()
   expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('stats.legacy.title')
   expect(document.head.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex,nofollow')
   expect(document.title).toBe('tab.oldVip')
+  expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toMatch(/\/vip\/legacy$/)
   expect(request).toHaveBeenCalledTimes(1)
   expect(request).toHaveBeenCalledWith(expect.objectContaining({ path: '/stats/old' }))
   expect(screen.queryByText('stats.detailsTitle')).toBeNull()
@@ -105,7 +106,7 @@ it('combines known price periods with actual sales without dropping unlisted pri
   expect(priceRow?.children[4]?.textContent).toBe('66,7%')
   expect(priceRow?.children[5]?.textContent).toBe('stats.legacy.priceHistory.unknownPeriod')
   expect(container.querySelectorAll('time')).toHaveLength(14)
-  expect(container.querySelector('time')?.dateTime).toBe('2024-04-01')
+  expect(container.querySelector('time')?.dateTime).toBe('2024-01-01')
   expect(container.querySelectorAll('time')[13]?.dateTime).toBe('2026-03-01')
   expect(screen.queryByText('stats.legacy.priceHistory.boundaries')).toBeNull()
 })
@@ -113,6 +114,27 @@ it('combines known price periods with actual sales without dropping unlisted pri
 it('keeps the update label visible without inventing a date for an older API response', () => {
   render(<ForeverStats data={{ ...archive, updated_at: '' }} />)
   expect(screen.getByText('stats.updated: —')).toBeTruthy()
+})
+
+it('redirects the old archive address to the legacy page with its canonical and noindex intact', async () => {
+  vi.mocked(request).mockResolvedValue(archive)
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(<QueryClientProvider client={client}>
+    <MemoryRouter initialEntries={['/old_vip']}><AppRoutes /></MemoryRouter>
+  </QueryClientProvider>)
+  expect(await screen.findByText('Steam')).toBeTruthy()
+  expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toMatch(/\/vip\/legacy$/)
+  expect(document.head.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex,nofollow')
+})
+
+it('shows recorded activations separately from sales and highlights revenue in green', () => {
+  render(<ForeverStats data={archive} />)
+  const activeCard = screen.getByText('stats.legacy.activated').closest('article')
+    ?? screen.getByText('stats.legacy.activated').parentElement?.parentElement
+  expect(activeCard?.textContent).toContain('1')
+  expect(screen.getByText('stats.legacy.activationHint')).toBeTruthy()
+  for (const amount of screen.getAllByText('$30')) expect(amount.className).toContain('text-emerald-400')
+  expect(screen.getByRole('heading', { name: 'stats.legacy.byPrice.title' }).className).toContain('text-amber-200')
 })
 
 it('renders only subscription analytics even if an old response contains lifetime data', async () => {
