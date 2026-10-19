@@ -127,10 +127,6 @@ export function ForeverStats({ data }: { data: LicenseOldSalesStats }) {
           <PaymentsChart payments={forever.by_method} title={t('stats.legacy.payments')}
             layout="inline" donutSize="large" />
         </div>
-        <p className="mt-3 text-xs leading-relaxed text-fg-muted">
-          {t('stats.legacy.activationHint', { date: overview.activation_tracking_since
-            ? format.fullDate(overview.activation_tracking_since) : '—' })}
-        </p>
       </section>
       <ForeverPricesChart prices={forever.by_price} />
     </div>

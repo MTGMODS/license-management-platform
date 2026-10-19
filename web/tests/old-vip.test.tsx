@@ -132,7 +132,7 @@ it('shows recorded activations separately from sales and highlights revenue in g
   const activeCard = screen.getByText('stats.legacy.activated').closest('article')
     ?? screen.getByText('stats.legacy.activated').parentElement?.parentElement
   expect(activeCard?.textContent).toContain('1')
-  expect(screen.getByText('stats.legacy.activationHint')).toBeTruthy()
+  expect(screen.queryByText('stats.legacy.activationHint')).toBeNull()
   for (const amount of screen.getAllByText('$30')) expect(amount.className).toContain('text-emerald-400')
   expect(screen.getByRole('heading', { name: 'stats.legacy.byPrice.title' }).className).toContain('text-amber-200')
 })
