@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { shouldRetryPublicStats } from '@/shared/api/queryClient'
 import { getUsagePublicStats, type UsagePublicStats } from '@/shared/api/usage'
 
 export const USAGE_PUBLIC_STATS_KEY = ['usage', 'public-stats'] as const
@@ -18,7 +17,6 @@ export function usePublicStats() {
     queryFn: ({ signal }) => getUsagePublicStats(signal),
     staleTime: 5 * 60_000,
     gcTime: 15 * 60_000,
-    retry: shouldRetryPublicStats,
-    retryDelay: 0,
+    retry: false,
   })
 }
