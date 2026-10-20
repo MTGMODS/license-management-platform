@@ -104,6 +104,24 @@ it('does not label rows from the older Redis payload as first purchases', () => 
   expect(results().getByText(/Нет данных для определения первой\/повторной покупки: 1/)).toBeTruthy()
 })
 
+it.each(['ru', 'uk'])('adds purchase type after the date using existing API values in %s', async (lng) => {
+  await i18n.changeLanguage(lng)
+  renderTable([
+    row('2026-10-18T01:00:00Z', 3, 'first'),
+    row('2026-10-18T02:00:00Z', 6, 'repeat'),
+    row('2026-10-18T03:00:00Z', 1, null),
+  ])
+  const copy = (lng === 'ru' ? ru : uk).stats.salesList
+  const table = within(screen.getByRole('table', { name: copy.title }))
+  expect(table.getAllByRole('columnheader').map((header) => header.textContent))
+    .toEqual([copy.status, copy.plan, copy.amount, copy.method, copy.date, copy.purchaseType])
+  const rows = table.getAllByRole('row').slice(1)
+  expect(rows.map((row) => within(row).getAllByRole('cell')[5]?.textContent))
+    .toEqual(['—', copy.renewal, copy.newPurchase])
+  expect(table.getByText(copy.newPurchase).className).toContain('text-accent-300')
+  expect(table.getByText(copy.renewal).className).toContain('text-violet-300')
+})
+
 it('renders the period summary and filters in Ukrainian', async () => {
   await i18n.changeLanguage('uk')
   renderTable()

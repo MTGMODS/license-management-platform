@@ -493,7 +493,7 @@ export function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
         <p className="mt-8 text-sm text-fg-subtle">{t('stats.salesList.emptyFilter', { context: mode })}</p>
       ) : (
         <div className="mt-3 max-h-[36rem] overflow-auto rounded-xl border border-white/5" key={`${mode}:${day}:${from}:${to}:${currentPage}`}>
-          <table aria-label={t('stats.salesList.title')} className="w-full min-w-[36rem] border-collapse text-left text-sm">
+          <table aria-label={t('stats.salesList.title')} className="w-full min-w-[48rem] border-collapse text-left text-sm">
             <thead className="sticky top-0 z-10 bg-ink-850/95 backdrop-blur-sm">
               <tr className="border-b border-white/8 text-fg-subtle">
                 <th className="px-3 py-2.5 text-center font-medium sm:px-4">
@@ -503,6 +503,7 @@ export function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
                 <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.amount')}</th>
                 <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.method')}</th>
                 <th className="px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.date')}</th>
+                <th className="whitespace-nowrap px-3 py-2.5 font-medium sm:px-4">{t('stats.salesList.purchaseType')}</th>
               </tr>
             </thead>
             <tbody>
@@ -537,6 +538,14 @@ export function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
                     <td className="px-3 py-2.5 text-fg-muted sm:px-4">{row.method}</td>
                     <td className="px-3 py-2.5 text-xs leading-snug tabular text-fg-muted sm:px-4 sm:text-sm">
                       {when ? format.dateTimeWithUtc(when) : '—'}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2.5 sm:px-4">
+                      {row.purchase_kind ? (
+                        <span className={`inline-flex rounded-md px-2 py-1 text-xs font-medium ${row.purchase_kind === 'first'
+                          ? 'bg-accent-400/10 text-accent-300' : 'bg-violet-400/10 text-violet-300'}`}>
+                          {t(row.purchase_kind === 'first' ? 'stats.salesList.newPurchase' : 'stats.salesList.renewal')}
+                        </span>
+                      ) : <span className="text-fg-subtle">—</span>}
                     </td>
                   </tr>
                 )
