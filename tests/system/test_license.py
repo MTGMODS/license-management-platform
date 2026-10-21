@@ -216,6 +216,42 @@ async def test_http_check_contract_and_validation(api, component, service):
     assert invalid.status_code == 422 and invalid.json()["error_code"] == "VALIDATION_ERROR"
 
 
+@pytest.mark.parametrize("key", [
+    "K8V2-N4Q7-Z6M9",
+    "K8V2N4Q7Z6M9P3X5",
+    "k8v2-n4q7-z6m9-p3x5",
+    "AAAA_1234-BBBB-5678",
+    "AAAA-1234-BBBB-567!",
+    "АAAA-1234-BBBB-5678",  # Cyrillic А, not Latin A.
+    " K8V2-N4Q7-Z6M9-P3X5",
+    "K8V2-N4Q7-Z6M9-P3X5\n",
+])
+async def test_check_rejects_invalid_key_before_service_and_database(api, component, db, monkeypatch, key):
+    check = AsyncMock(side_effect=AssertionError("Invalid key reached the service"))
+    execute = AsyncMock(side_effect=AssertionError("Invalid key reached the database"))
+    monkeypatch.setattr(component("app.application.service").LicenseService, "check_for_client", check)
+    monkeypatch.setattr(db, "execute", execute)
+
+    response = await api.post("/api/v1/license/check", json={"key": key, "device": "client-device"})
+
+    assert response.status_code == 422
+    assert response.json()["error_code"] == "VALIDATION_ERROR"
+    check.assert_not_awaited()
+    execute.assert_not_awaited()
+
+
+@pytest.mark.parametrize("key", ["K8V2-N4Q7-Z6M9-P3X5", "AAAA-1234-BBBB-5678"])
+async def test_check_accepts_valid_key_format_and_looks_up_license(api, component, monkeypatch, key):
+    lookup = AsyncMock(return_value=None)
+    monkeypatch.setattr(component("app.infrastructure.repository").LicenseRepository, "get_by_key", lookup)
+
+    response = await api.post("/api/v1/license/check", json={"key": key, "device": "client-device"})
+
+    assert response.status_code == 404
+    assert response.json()["error_code"] == "LICENSE_NOT_FOUND"
+    lookup.assert_awaited_once_with(key)
+
+
 async def test_private_routes_require_access_token(api):
     response = await api.get("/api/v1/license/info", headers={"Authorization": "Bearer invalid"})
     assert response.status_code == 401

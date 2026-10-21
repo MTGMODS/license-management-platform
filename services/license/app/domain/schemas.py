@@ -3,7 +3,7 @@ from app.domain.models import LicenseStatus, PaymentMethod
 from typing import Optional, Literal
 
 class CheckRequestDTO(BaseModel):
-    key: str = Field(..., min_length=19, max_length=19, description="VIP Key")
+    key: str = Field(..., min_length=19, max_length=19, pattern=r"^[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$", description="VIP Key")
     device: str = Field(..., min_length=2, max_length=100, description="HWID")
 
 class ActivateKeyDTO(BaseModel):
