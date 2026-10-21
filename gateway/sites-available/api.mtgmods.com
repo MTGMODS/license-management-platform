@@ -74,7 +74,7 @@ server {
 
     location @ratelimit {
         default_type application/json;
-        return 429 '{"valid":false,"error":"RATE_LIMIT","retry":60}';
+        return 429 '{"valid":false,"error_code":"RATE_LIMIT","retry":60}';
     }
 
     location = / {
