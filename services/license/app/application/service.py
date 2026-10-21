@@ -1,8 +1,9 @@
 import secrets
 import string
+import logging
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import BackgroundTasks
+from fastapi import BackgroundTasks, HTTPException
 
 from app.shared.database import AsyncSessionLocal
 from app.shared.datetime_utils import format_utc, to_utc
@@ -23,41 +24,47 @@ class LicenseService:
     async def check_for_client(self, key: str, device: str, ip_address: str, user_agent: str) -> tuple[int, dict]:
         license_row = await self.license_repo.get_by_key(key)
         if not license_row:
-            return 404, {"detail": "Key not found"}
+            return 404, {
+                "valid": False,
+                "error_code": "LICENSE_NOT_FOUND",
+                "message": "License key not found.",
+            }
 
-        if license_row.status == LicenseStatus.NOT_ACTIVATED or license_row.user_id is None:
-            return 200, {"valid": False, "expires": False, "error": "NOT_ACTIVATED"}
+        if license_row.status == LicenseStatus.BANNED:
+            return 403, {
+                "valid": False,
+                "error_code": "LICENSE_BANNED",
+                "message": "License is blocked.",
+            }
 
-        now = datetime.now(timezone.utc)
-        expired = (
-            license_row.status in (LicenseStatus.EXPIRED, LicenseStatus.BANNED)
-            or (
-                license_row.expires_at is not None
-                and to_utc(license_row.expires_at) < now
-            )
-        )
-        if expired or license_row.status != LicenseStatus.ACTIVE:
-            return 200, {"valid": False, "expires": True}
+        if license_row.status == LicenseStatus.EXPIRED:
+            return 403, {
+                "valid": False,
+                "error_code": "LICENSE_EXPIRED",
+                "message": "License has expired.",
+            }
+
+        if license_row.status == LicenseStatus.NOT_ACTIVATED:
+            return 403, {
+                "valid": False,
+                "error_code": "LICENSE_NOT_ACTIVATED",
+                "message": "Activate the license in your account.",
+            }
 
         known_devices = [d.device for d in license_row.devices]
         if device not in known_devices and len(known_devices) >= license_row.max_devices:
             return 403, {
-                "error": "HWID_LIMIT_REACHED",
-                "message": f"Device limit reached (Max {license_row.max_devices}). Reset HWID in profile.",
+                "valid": False,
+                "error_code": "HWID_LIMIT_REACHED",
+                "message": "Device limit reached. Reset a device in your account.",
             }
 
-        await self.license_repo.log_device(
-            license_row.id, device, ip_address, user_agent
-        )
+        await self.license_repo.log_device(license_row.id, device, ip_address, user_agent)
 
         profile = await self.user_client.get_user_profile(license_row.user_id)
-        if not profile:
-            return 400, {"valid": False, "error": "Internal server error"}
-
         return 200, {
             "valid": True,
-            "user": profile["nickname"],
-            "id": license_row.user_id,
+            "user": {"id": license_row.user_id, "nickname": profile["nickname"] or "MTGVIP"},
         }
 
     def _serialize_dashboard_license(self, db_sub: LicenseModel) -> dict:
