@@ -46,7 +46,7 @@ async def test_purchase_activation_check_and_dashboard(component, db, service):
     license_id = await activate(component, service, keys[0])
     await service.complete_purchase(license_id, 42)
     assert await service.check_for_client(keys[0], "device-123", "127.0.0.1", "test") == (
-        200, {"valid": True, "user": "Tester", "id": 42},
+        200, {"valid": True, "user": {"id": 42, "nickname": "Tester"}},
     )
     db.expire_all()  # Re-query relationships as a new HTTP request would.
     info = await service.get_license_info(42)
@@ -57,26 +57,55 @@ async def test_purchase_activation_check_and_dashboard(component, db, service):
     assert info["license"]["expires_at"].endswith("Z")
 
 
-@pytest.mark.parametrize("status,owned,elapsed,expected", [
-    ("NOT_ACTIVATED", False, False, {"valid": False, "expires": False, "error": "NOT_ACTIVATED"}),
-    ("ACTIVE", True, True, {"valid": False, "expires": True}),
-    ("EXPIRED", True, False, {"valid": False, "expires": True}),
-    ("BANNED", True, False, {"valid": False, "expires": True}),
+@pytest.mark.parametrize("status,owned,expected", [
+    ("NOT_ACTIVATED", False, {
+        "valid": False, "error_code": "LICENSE_NOT_ACTIVATED", "message": "Activate the license in your account.",
+    }),
+    ("EXPIRED", True, {
+        "valid": False, "error_code": "LICENSE_EXPIRED", "message": "License has expired.",
+    }),
+    ("BANNED", True, {
+        "valid": False, "error_code": "LICENSE_BANNED", "message": "License is blocked.",
+    }),
 ])
-async def test_invalid_license_cannot_register_device(component, db, service, status, owned, elapsed, expected):
+async def test_invalid_license_cannot_register_device(component, db, service, status, owned, expected):
     repo = component("app.infrastructure.repository")
-    row = repo.LicenseModel(key="AAAA-BBBB-CCCC-DDDD", status=status, user_id=42 if owned else None,
-                            expires_at=datetime.now(timezone.utc) - timedelta(days=1) if elapsed else None)
+    row = repo.LicenseModel(key="AAAA-BBBB-CCCC-DDDD", status=status, user_id=42 if owned else None)
     db.add(row)
     await db.commit()
     code, body = await service.check_for_client(row.key, "device-123", "127.0.0.1", "test")
-    assert code == 200 and body == expected
+    assert code == 403 and body == expected
     assert await db.scalar(select(func.count()).select_from(repo.DeviceModel)) == 0
     service.user_client.get_user_profile.assert_not_awaited()
 
 
 async def test_missing_key(service):
-    assert await service.check_for_client("AAAA-BBBB-CCCC-DDDD", "device", "ip", "ua") == (404, {"detail": "Key not found"})
+    assert await service.check_for_client("AAAA-BBBB-CCCC-DDDD", "device", "ip", "ua") == (
+        404, {"valid": False, "error_code": "LICENSE_NOT_FOUND", "message": "License key not found."},
+    )
+    service.user_client.get_user_profile.assert_not_awaited()
+
+
+async def test_check_uses_status_until_expiry_worker_updates_it(component, db, service):
+    repo = component("app.infrastructure.repository")
+    row = repo.LicenseModel(key="AAAA-BBBB-CCCC-DDDD", status="ACTIVE", user_id=42,
+                            expires_at=datetime.now(timezone.utc) - timedelta(days=1))
+    db.add(row)
+    await db.commit()
+    # This implementation relies on the expiry worker, not expires_at, during checks.
+    assert await service.check_for_client(row.key, "device", "ip", "ua") == (
+        200, {"valid": True, "user": {"id": 42, "nickname": "Tester"}},
+    )
+
+
+@pytest.mark.parametrize("nickname", [None, ""])
+async def test_check_falls_back_to_mtgvip_nickname(component, service, nickname):
+    service.user_client.get_user_profile.return_value = {"nickname": nickname}
+    keys, _ = await purchase(component, service)
+    await activate(component, service, keys[0])
+    assert await service.check_for_client(keys[0], "device", "ip", "ua") == (
+        200, {"valid": True, "user": {"id": 42, "nickname": "MTGVIP"}},
+    )
 
 
 async def test_device_limit_reuse_and_reset(component, db, service):
@@ -86,7 +115,13 @@ async def test_device_limit_reuse_and_reset(component, db, service):
     db.expire_all()
     assert (await service.check_for_client(keys[0], "device-one", "ip2", "ua"))[0] == 200
     db.expire_all()
-    assert (await service.check_for_client(keys[0], "device-two", "ip", "ua"))[0] == 403
+    assert await service.check_for_client(keys[0], "device-two", "ip", "ua") == (
+        403, {
+            "valid": False,
+            "error_code": "HWID_LIMIT_REACHED",
+            "message": "Device limit reached. Reset a device in your account.",
+        },
+    )
     info = await service.get_license_info(42)
     assert len(info["devices"]) == 1 and info["devices"][0]["ip"] == "ip2"
     await service.reset_device(42, info["devices"][0]["id"])
@@ -175,7 +210,8 @@ async def test_http_check_contract_and_validation(api, component, service):
     keys, _ = await purchase(component, service)
     await activate(component, service, keys[0])
     response = await api.post("/api/v1/license/check", json={"key": keys[0], "device": "client-device"})
-    assert response.status_code == 200 and response.json()["valid"] is True
+    assert response.status_code == 200
+    assert response.json() == {"valid": True, "user": {"id": 42, "nickname": "Tester"}}
     invalid = await api.post("/api/v1/license/check", json={"key": "short", "device": "x"})
     assert invalid.status_code == 422 and invalid.json()["error_code"] == "VALIDATION_ERROR"
 
