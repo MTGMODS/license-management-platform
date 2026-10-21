@@ -1,4 +1,5 @@
 import jwt, hmac, hashlib, secrets, time
+import httpx
 from jwt import PyJWKClient
 from urllib.parse import parse_qsl
 from datetime import datetime, timedelta, timezone
@@ -53,9 +54,20 @@ def verify_refresh_token(token: str) -> int:
 
 # Telegram verification
 
+class _TelegramJWKClient(PyJWKClient):
+    def fetch_data(self) -> dict:
+        # HTTPX decompresses gzip responses before JSON parsing; urllib does not.
+        response = httpx.get(self.uri, headers=self.headers, timeout=self.timeout)
+        response.raise_for_status()
+        jwk_set = response.json()
+        if self.jwk_set_cache is not None:
+            self.jwk_set_cache.put(jwk_set)
+        return jwk_set
+
+
 def verify_telegram_oidc(id_token: str) -> dict | None:
     try:
-        signing_key = PyJWKClient("https://oauth.telegram.org/.well-known/jwks.json").get_signing_key_from_jwt(id_token)
+        signing_key = _TelegramJWKClient("https://oauth.telegram.org/.well-known/jwks.json").get_signing_key_from_jwt(id_token)
         payload = jwt.decode(
             id_token,
             signing_key.key,

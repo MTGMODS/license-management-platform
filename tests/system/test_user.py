@@ -1,10 +1,14 @@
 from datetime import datetime, timedelta, timezone
+import gzip
 import hashlib
 import hmac
+import json
 from urllib.parse import urlencode
 
+from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
+import httpx
 import jwt
 import pytest
 from sqlalchemy import select
@@ -141,6 +145,79 @@ async def test_telegram_signature_and_freshness(component, monkeypatch, age, tam
     if tamper:
         data["user"] = '{"id":999}'
     assert tokens.verify_telegram_webapp_hash(urlencode(data), "test-token") is expected
+
+
+@pytest.fixture(scope="module")
+def telegram_oidc_keys():
+    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    other_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    public_jwk = json.loads(jwt.algorithms.RSAAlgorithm.to_jwk(private_key.public_key()))
+    public_jwk.update(kid="test-telegram-key", use="sig", alg="RS256")
+    return private_key, other_key, {"keys": [public_jwk]}
+
+
+@pytest.mark.parametrize("compressed", [False, True], ids=["json", "gzip"])
+@pytest.mark.parametrize("case", ["valid", "wrong-signature", "wrong-audience", "wrong-issuer", "expired", "unknown-kid", "wrong-algorithm"])
+def test_telegram_oidc_verification(component, monkeypatch, telegram_oidc_keys, compressed, case):
+    tokens = component("app.application.jwt_utils")
+    private_key, other_key, jwks = telegram_oidc_keys
+    claims = {
+        "iss": "https://oauth.telegram.org",
+        "aud": str(tokens.settings.TELEGRAM_CLIENT_ID),
+        "sub": "123456789", "id": 123456789,
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=5),
+    }
+    if case == "wrong-audience":
+        claims["aud"] = "another-client"
+    if case == "wrong-issuer":
+        claims["iss"] = "https://invalid.example"
+    if case == "expired":
+        claims["exp"] = datetime.now(timezone.utc) - timedelta(minutes=5)
+    algorithm = "HS256" if case == "wrong-algorithm" else "RS256"
+    key = other_key if case == "wrong-signature" else private_key
+    if algorithm == "HS256":
+        key = "test-only-invalid-signing-secret-at-least-32-characters"
+    kid = "unknown-key" if case == "unknown-kid" else "test-telegram-key"
+    encoded = jwt.encode(claims, key, algorithm=algorithm, headers={"kid": kid})
+    body = json.dumps(jwks).encode()
+    headers = {"Content-Type": "application/json"}
+    if compressed:
+        body = gzip.compress(body)
+        headers["Content-Encoding"] = "gzip"
+
+    def respond(request):
+        assert str(request.url) == "https://oauth.telegram.org/.well-known/jwks.json"
+        return httpx.Response(200, headers=headers, content=body)
+
+    # Keep real HTTPX content decoding and real PyJWT signature verification.
+    with httpx.Client(transport=httpx.MockTransport(respond)) as client:
+        monkeypatch.setattr(tokens.httpx, "get", client.get)
+        result = tokens.verify_telegram_oidc(encoded)
+    if case == "valid":
+        assert result["id"] == claims["id"]
+        assert result["aud"] == claims["aud"]
+    else:
+        assert result is None
+
+
+@pytest.mark.parametrize("failure", ["http-error", "invalid-json", "invalid-gzip", "timeout"])
+def test_telegram_oidc_jwks_failure_rejects_login(component, monkeypatch, telegram_oidc_keys, failure):
+    tokens = component("app.application.jwt_utils")
+    private_key, _, _ = telegram_oidc_keys
+    encoded = jwt.encode({"id": 123456789}, private_key, algorithm="RS256", headers={"kid": "test-telegram-key"})
+
+    def respond(request):
+        if failure == "timeout":
+            raise httpx.ReadTimeout("JWKS request timed out", request=request)
+        if failure == "http-error":
+            return httpx.Response(503, json={"keys": []})
+        if failure == "invalid-gzip":
+            return httpx.Response(200, headers={"Content-Encoding": "gzip"}, content=b"not gzip")
+        return httpx.Response(200, content=b"not JSON")
+
+    with httpx.Client(transport=httpx.MockTransport(respond)) as client:
+        monkeypatch.setattr(tokens.httpx, "get", client.get)
+        assert tokens.verify_telegram_oidc(encoded) is None
 
 
 async def test_http_profile_and_s2s_auth(api, component, auth):
