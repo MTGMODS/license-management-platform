@@ -64,7 +64,8 @@ class LicenseService:
         profile = await self.user_client.get_user_profile(license_row.user_id)
         return 200, {
             "valid": True,
-            "user": {"id": license_row.user_id, "nickname": profile["nickname"] or "MTGVIP"},
+            "user": profile["nickname"] or "MTGVIP",
+            "id": license_row.id,
         }
 
     def _serialize_dashboard_license(self, db_sub: LicenseModel) -> dict:

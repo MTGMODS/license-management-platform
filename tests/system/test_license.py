@@ -46,7 +46,7 @@ async def test_purchase_activation_check_and_dashboard(component, db, service):
     license_id = await activate(component, service, keys[0])
     await service.complete_purchase(license_id, 42)
     assert await service.check_for_client(keys[0], "device-123", "127.0.0.1", "test") == (
-        200, {"valid": True, "user": {"id": 42, "nickname": "Tester"}},
+        200, {"valid": True, "user": "Tester", "id": license_id},
     )
     db.expire_all()  # Re-query relationships as a new HTTP request would.
     info = await service.get_license_info(42)
@@ -94,7 +94,7 @@ async def test_check_uses_status_until_expiry_worker_updates_it(component, db, s
     await db.commit()
     # This implementation relies on the expiry worker, not expires_at, during checks.
     assert await service.check_for_client(row.key, "device", "ip", "ua") == (
-        200, {"valid": True, "user": {"id": 42, "nickname": "Tester"}},
+        200, {"valid": True, "user": "Tester", "id": row.id},
     )
 
 
@@ -102,9 +102,9 @@ async def test_check_uses_status_until_expiry_worker_updates_it(component, db, s
 async def test_check_falls_back_to_mtgvip_nickname(component, service, nickname):
     service.user_client.get_user_profile.return_value = {"nickname": nickname}
     keys, _ = await purchase(component, service)
-    await activate(component, service, keys[0])
+    license_id = await activate(component, service, keys[0])
     assert await service.check_for_client(keys[0], "device", "ip", "ua") == (
-        200, {"valid": True, "user": {"id": 42, "nickname": "MTGVIP"}},
+        200, {"valid": True, "user": "MTGVIP", "id": license_id},
     )
 
 
@@ -208,10 +208,10 @@ async def test_purchase_input_validation(component, field, value):
 
 async def test_http_check_contract_and_validation(api, component, service):
     keys, _ = await purchase(component, service)
-    await activate(component, service, keys[0])
+    license_id = await activate(component, service, keys[0])
     response = await api.post("/api/v1/license/check", json={"key": keys[0], "device": "client-device"})
     assert response.status_code == 200
-    assert response.json() == {"valid": True, "user": {"id": 42, "nickname": "Tester"}}
+    assert response.json() == {"valid": True, "user": "Tester", "id": license_id}
     invalid = await api.post("/api/v1/license/check", json={"key": "short", "device": "x"})
     assert invalid.status_code == 422 and invalid.json()["error_code"] == "VALIDATION_ERROR"
 
