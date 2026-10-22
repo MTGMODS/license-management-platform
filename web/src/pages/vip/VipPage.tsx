@@ -162,7 +162,7 @@ export function VipPage() {
   }, [statsError, t])
 
   return (
-    <div className="shell flex min-h-0 flex-1 flex-col">
+    <div className="vip-page shell flex min-h-0 flex-1 flex-col">
       {/* Desktop ends at the overview footer; payment starts below the fold. */}
       <div
         className={cn(

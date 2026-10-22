@@ -35,7 +35,7 @@ function PlanPrice({
   const boxRef = useRef<HTMLDivElement>(null)
   const measureRef = useRef<HTMLDivElement>(null)
   const [fit, setFit] = useState<PriceFit>('spaced')
-  const usdClass = cn('tabular font-semibold tracking-tight', priceTypeClass(compact))
+  const usdClass = cn('vip-plan-usd tabular font-semibold tracking-tight', priceTypeClass(compact))
   const localClass = cn(
     'whitespace-nowrap tabular font-medium tracking-tight text-fg-subtle',
     compact
@@ -153,7 +153,7 @@ export function PricingGrid({ compact = false, selectedDays, onChoose }: {
   const gridClass = cn(
     'grid w-full grid-cols-2 items-stretch lg:grid-cols-4',
     compact
-      ? cn('gap-[clamp(0.4rem,1vh,0.75rem)]', `${SHORT_DESKTOP}:gap-2`)
+      ? cn('vip-pricing-compact gap-[clamp(0.4rem,1vh,0.75rem)]', `${SHORT_DESKTOP}:gap-2`)
       : 'gap-3 lg:gap-4',
   )
 
@@ -193,7 +193,7 @@ export function PricingGrid({ compact = false, selectedDays, onChoose }: {
           <Card
             key={plan.duration_days}
             className={cn(
-              'relative flex h-full flex-col border text-left',
+              'vip-plan-card relative flex h-full flex-col border text-left',
               'transition-colors',
               onChoose && selectedDays === Number(plan.duration_days)
                 ? 'border-accent-400/60 bg-accent-500/5'
@@ -215,7 +215,7 @@ export function PricingGrid({ compact = false, selectedDays, onChoose }: {
             ) : null}
             <p
               className={cn(
-                'whitespace-nowrap tabular',
+                'vip-plan-duration whitespace-nowrap tabular',
                 compact
                   ? cn(
                       'text-[clamp(0.875rem,1.6vh,1.1rem)]',
@@ -238,7 +238,7 @@ export function PricingGrid({ compact = false, selectedDays, onChoose }: {
 
             <div
               className={cn(
-                'space-y-1 border-t border-white/8 text-fg-muted',
+                'vip-plan-meta space-y-1 border-t border-white/8 text-fg-muted',
                 compact
                   ? cn(
                       'mt-[clamp(0.4rem,1vh,0.7rem)] pt-[clamp(0.35rem,0.9vh,0.6rem)]',

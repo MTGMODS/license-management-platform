@@ -3,6 +3,31 @@
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/jetbrains-mono';
 
+/* Target the display ratio, not the browser viewport: browser chrome and
+   Windows scaling can make a 16:10 laptop's viewport look like 16:9.
+   Desktop 16:9 displays and mobile layouts retain their existing rules. */
+@media (min-width: 64rem) and (min-device-aspect-ratio: 31/20) and (max-device-aspect-ratio: 33/20) {
+  .vip-page .vip-overview-compact {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .vip-page .vip-pricing-compact .vip-plan-card {
+    padding: clamp(0.875rem, 1.8vh, 1.25rem);
+  }
+
+  .vip-page .vip-pricing-compact .vip-plan-duration {
+    font-size: clamp(1rem, 1.8vh, 1.125rem);
+  }
+
+  .vip-page .vip-pricing-compact .vip-plan-usd {
+    font-size: clamp(1.5rem, 3vh, 2rem);
+  }
+
+  .vip-page .vip-pricing-compact .vip-plan-meta {
+    font-size: clamp(0.75rem, 1.35vh, 0.875rem);
+  }
+}
+
 /* ---------------------------------------------------------------------------
    Design tokens
    --------------------------------------------------------------------------- */

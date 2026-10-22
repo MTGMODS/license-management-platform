@@ -16,7 +16,7 @@ interface StatItem {
 }
 
 /** Four metrics: 2×2 on narrower screens, one row on wide desktops. */
-const COMPACT_GRID = 'grid grid-cols-2 gap-[clamp(0.45rem,1vh,0.75rem)] xl:grid-cols-4'
+const COMPACT_GRID = 'vip-overview-compact grid grid-cols-2 gap-[clamp(0.45rem,1vh,0.75rem)] xl:grid-cols-4'
 
 const SHORT_DESKTOP = '[@media(min-width:1024px)_and_(max-height:48rem)]'
 
