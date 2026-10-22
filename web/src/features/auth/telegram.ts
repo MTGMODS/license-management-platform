@@ -9,6 +9,7 @@ interface TelegramWebApp {
   version?: string
   ready: () => void
   expand: () => void
+  openLink?: (url: string) => void
   colorScheme?: 'light' | 'dark'
   setHeaderColor?: (color: string) => void
   setBackgroundColor?: (color: string) => void
