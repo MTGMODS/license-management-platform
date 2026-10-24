@@ -12,7 +12,9 @@ async def cleanup_old_files_task():
             if DOWNLOADS_DIR.exists():
                 now = time.time()
 
-                for filepath in DOWNLOADS_DIR.glob("*.lua"):
+                for filepath in DOWNLOADS_DIR.iterdir():
+                    if filepath.suffix not in (".lua", ".exe", ".tmp"):
+                        continue
                     if not filepath.is_file():
                         continue
 

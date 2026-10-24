@@ -16,8 +16,8 @@ export const RELEASE_MANIFEST_URL = 'https://raw.githubusercontent.com/MTGMODS/a
  */
 export const FREE_LUA_FALLBACK_URL = 'https://github.com/MTGMODS/arizona-helper/raw/refs/heads/main/Arizona%20Helper.lua'
 
-/** GitHub release of the PC installer. */
-export const PC_INSTALLER_URL = 'https://github.com/MTGMODS/arizona-helper/releases/download/windows-installer/Arizona.Rodina.Helper.exe'
+/** Free Windows template served by the Distribution Service. */
+export const PC_INSTALLER_URL = 'https://api.mtgmods.com/v1/files/downloads/installer'
 
 /** NeomLoader launcher for mobile automatic installation. */
 export const NEOMLOADER_URL = 'https://github.com/MTGMODS/arz_lua_launcher/releases/latest'

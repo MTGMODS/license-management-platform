@@ -45,6 +45,29 @@ VIP template and obfuscator are **not** in git. On the server, overlay:
 
 then rebuild `distribution-service`.
 
+### Windows installer template
+
+The free installer is served by Distribution at `/v1/files/downloads/installer`.
+Place its already-built template in the existing builds volume (not Git):
+
+```bash
+mkdir -p services/distribution/app/builds/installer
+curl -fL 'https://github.com/MTGMODS/arizona-helper/releases/download/windows-installer/Arizona.Rodina.Helper.exe' -o 'services/distribution/app/builds/installer/Arizona&Rodina Helper.exe'
+docker compose up --build -d distribution-service web
+```
+
+Download the template **before** deploying the web change. No nginx changes are
+needed: the existing `/v1/files/` proxy handles both downloads. Update the template
+only when the installer changes; it must support the `MTGPAY01` URL overlay.
+
+After VIP Lua generation, Windows users choose manual Lua or an automatic EXE.
+`/v1/files/downloads/vip/<token>.exe` stamps a copy with the existing Lua URL;
+the template is never overwritten. Downloading EXE deletes only that EXE: Lua must
+remain until the installer requests it. Downloading Lua deletes both token files.
+Unused Lua/EXE/temp files are removed by the hourly one-hour-age cleanup; template
+subdirectories are excluded. Keep the installer online and run it before the
+temporary Lua link expires. A downloaded installer is not an offline backup.
+
 ```bash
 docker compose up --build
 ```

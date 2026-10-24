@@ -1,4 +1,4 @@
-import { Crown, Download, Eye, EyeOff, KeyRound, Link2, Loader2, LogIn, Monitor, Plus, Smartphone, Trash2, TriangleAlert, Unlink, UserRound } from 'lucide-react'
+import { Crown, Eye, EyeOff, KeyRound, Link2, Loader2, LogIn, Monitor, Plus, Smartphone, Trash2, Unlink, UserRound } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -15,10 +15,8 @@ import {
   useActivateKey,
   useLicenseHistory,
   useLicenseInfo,
-  usePremiumDownload,
   useResetDevice,
 } from '@/features/license/useLicense'
-import { useRelease } from '@/features/release/useRelease'
 import { ApiError, apiErrorTranslationKey } from '@/shared/api'
 import {
   LICENSE_KEY_LENGTH,
@@ -30,7 +28,6 @@ import { unlinkSocialAccount, type OAuthProvider, type User } from '@/shared/api
 import { DISCORD_SERVER_URL, TELEGRAM_CHAT_URL } from '@/shared/config/product'
 import { cn } from '@/shared/lib/cn'
 import { millisecondsUntil, remainingTickMs, remainingTimeParts } from '@/shared/lib/datetime'
-import { triggerFileDownload } from '@/shared/lib/download'
 import { useFormatters } from '@/shared/lib/format'
 import {
   Avatar,
@@ -47,6 +44,7 @@ import {
   ActivateSuccessOverlay,
   type ActivateSuccessMode,
 } from '@/widgets/dashboard/ActivateSuccessOverlay'
+import { PremiumDownloadButton } from '@/widgets/dashboard/PremiumDownloadButton'
 
 type DashboardTab = 'vip' | 'account'
 
@@ -286,40 +284,6 @@ function LicenseKeyReveal({ value }: { value: string }) {
       >
         {visible ? <EyeOff aria-hidden className="size-4" /> : <Eye aria-hidden className="size-4" />}
       </button>
-    </div>
-  )
-}
-
-function PremiumDownloadButton() {
-  const { t } = useTranslation('dashboard')
-  const { t: te } = useTranslation(['errors'])
-  const download = usePremiumDownload()
-  const { data: release } = useRelease()
-  const vipLabel = release?.vip?.rawVersion ?? release?.vip?.version
-  const actionLabel = vipLabel
-    ? t('download.actionVersion', { version: vipLabel })
-    : t('download.action')
-
-  const onClick = async () => {
-    try {
-      const result = await download.mutateAsync()
-      triggerFileDownload(result.download_url)
-      toast.success(t('download.success'), { description: t('download.started') })
-    } catch (error) {
-      toast.error(te(apiErrorTranslationKey(error), { defaultValue: te('errors:unexpected') }))
-    }
-  }
-
-  return (
-    <div className="flex w-full flex-col items-center sm:w-auto">
-      <Button size="lg" loading={download.isPending} onClick={() => void onClick()}>
-        <Download aria-hidden className="size-4" />
-        {actionLabel}
-      </Button>
-      <p className="mt-2 inline-flex items-center justify-center gap-1.5 text-center text-xs leading-relaxed text-fg-subtle">
-        <TriangleAlert aria-hidden className="size-3.5 shrink-0 text-caution" />
-        {t('download.subtitle')}
-      </p>
     </div>
   )
 }
