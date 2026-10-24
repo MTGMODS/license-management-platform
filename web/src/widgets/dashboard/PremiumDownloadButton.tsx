@@ -40,11 +40,13 @@ function DownloadChoice({ onChoose, onDismiss }: {
         <p className="mt-2 text-sm leading-relaxed text-fg-muted">{t('download.chooseHint')}</p>
         <div className="mt-6 grid gap-3">
           {([
-            { installer: false, Icon: FileCode2, title: 'download.luaTitle', hint: 'download.luaHint' },
             { installer: true, Icon: MonitorDown, title: 'download.installerTitle', hint: 'download.installerHint' },
+            { installer: false, Icon: FileCode2, title: 'download.luaTitle', hint: 'download.luaHint' },
           ] as const).map(({ installer, Icon, title, hint }) => (
             <button key={title} type="button" onClick={() => onChoose(installer)}
-              className="flex items-start gap-4 rounded-xl border border-white/10 bg-ink-850 p-4 text-left transition-colors hover:border-accent-400/50 hover:bg-accent-500/5">
+              className={`flex items-start gap-4 rounded-xl border p-4 text-left transition-colors ${installer
+                ? 'border-accent-400/40 bg-accent-500/10 hover:border-accent-400/70 hover:bg-accent-500/15'
+                : 'border-white/10 bg-ink-850 hover:border-white/20 hover:bg-ink-800'}`}>
               <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-accent-500/10 text-accent-300"><Icon aria-hidden className="size-5" /></span>
               <span className="min-w-0"><span className="block font-semibold">{t(title)}</span><span className="mt-1 block text-sm leading-relaxed text-fg-muted">{t(hint)}</span></span>
             </button>

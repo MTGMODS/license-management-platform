@@ -67,12 +67,12 @@
     "actionVersion": "Скачать версию {{version}}",
     "success": "Файл готов",
     "started": "Загрузка началась",
-    "chooseTitle": "Как вы хотите установить VIP?",
-    "chooseHint": "Персональный файл готов. Выберите способ установки на Windows.",
-    "luaTitle": "Lua-файл — ручная установка",
-    "luaHint": "Скачайте Arizona Helper.lua и поместите его в папку moonloader игры.",
-    "installerTitle": "EXE-установщик — автоматически",
-    "installerHint": "Установщик найдёт игру, установит MoonLoader и загрузит ваш VIP-файл. Для запуска нужен интернет.",
+    "chooseTitle": "Выберите способ установки",
+    "chooseHint": "Хелпер готов к загрузке на Windows.",
+    "luaTitle": "Ручная установка",
+    "luaHint": "Для самостоятельной установки Lua-файла в папку moonloader.",
+    "installerTitle": "Автоматическая установка",
+    "installerHint": "Установщик сам найдёт папку с игрой, установит MoonLoader и платный хелпер.",
     "close": "Закрыть"
   },
   "account": {

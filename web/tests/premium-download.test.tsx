@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { createInstance } from 'i18next'
 import { I18nextProvider } from 'react-i18next'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
@@ -35,7 +35,12 @@ async function openChoice() {
 
 it.each([false, true])('offers a Windows choice after generation and downloads installer=%s with the same token', async installer => {
   renderButton()
-  await openChoice()
+  const dialog = await openChoice()
+  const options = within(dialog).getAllByRole('button').filter(button => button.getAttribute('aria-label') !== ru.download.close)
+  expect(options[0]?.textContent).toContain(ru.download.installerTitle)
+  expect(options[0]?.className).toContain('border-accent-400/40')
+  expect(options[1]?.textContent).toContain(ru.download.luaTitle)
+  expect(within(dialog).getByText(ru.download.chooseHint)).toBeTruthy()
   expect(mocks.generate).toHaveBeenCalledTimes(1)
   expect(mocks.download).not.toHaveBeenCalled()
   fireEvent.click(screen.getByRole('button', { name: new RegExp(installer ? ru.download.installerTitle : ru.download.luaTitle) }))
@@ -78,7 +83,7 @@ it('keeps the choice open if handing the URL to Telegram fails', async () => {
   mocks.download.mockImplementationOnce(() => { throw new Error('Telegram bridge') })
   renderButton()
   await openChoice()
-  fireEvent.click(screen.getByRole('button', { name: /EXE-установщик/ }))
+  fireEvent.click(screen.getByRole('button', { name: /Автоматическая установка/ }))
   expect(screen.getByRole('dialog')).toBeTruthy()
   expect(mocks.error).toHaveBeenCalledTimes(1)
   expect(mocks.success).not.toHaveBeenCalled()
