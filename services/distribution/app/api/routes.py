@@ -21,13 +21,26 @@ async def download_vip_installer(background_tasks: BackgroundTasks, token: str =
     lua_file = BUILDS_DIR_PATH / f"{token}.lua"
     if not lua_file.is_file():
         raise DomainException("File not found or download link has expired.", 404, "FILE_NOT_FOUND")
+    # Atomic, persistent claim: a second request must not stamp another EXE.
+    # Keep this marker until Lua is consumed (or the old-build cleanup runs).
+    used = BUILDS_DIR_PATH / f"{token}.exe.used"
     try:
-        executable = await DistributionService().build_vip_installer(token)
-    except (FileNotFoundError, ValueError) as exc:
-        raise DomainException("Windows installer is not available. Use the Lua download instead.", 503, "INSTALLER_UNAVAILABLE") from exc
-    if not lua_file.is_file():
-        DistributionService.remove_file(executable)
-        raise DomainException("File not found or download link has expired.", 404, "FILE_NOT_FOUND")
+        used.touch(exist_ok=False)
+    except FileExistsError:
+        raise DomainException("Installer link has already been used.", 404, "FILE_NOT_FOUND") from None
+
+    try:
+        try:
+            executable = await DistributionService().build_vip_installer(token)
+        except (FileNotFoundError, ValueError) as exc:
+            raise DomainException("Windows installer is not available. Use the Lua download instead.", 503, "INSTALLER_UNAVAILABLE") from exc
+        if not lua_file.is_file():
+            DistributionService.remove_file(executable)
+            raise DomainException("File not found or download link has expired.", 404, "FILE_NOT_FOUND")
+    except BaseException:
+        # A preparation failure/cancellation must not consume the download.
+        used.unlink(missing_ok=True)
+        raise
 
     # The installer still needs the Lua URL after the EXE has been downloaded.
     background_tasks.add_task(DistributionService.remove_file, executable)
@@ -54,6 +67,7 @@ async def download_vip(background_tasks: BackgroundTasks, token: str = Path(...,
     
     background_tasks.add_task(DistributionService.remove_file, str(filepath))
     background_tasks.add_task(DistributionService.remove_file, str(filepath.with_suffix(".exe")))
+    background_tasks.add_task(DistributionService.remove_file, str(filepath.with_suffix(".exe.used")))
     for executable in BUILDS_DIR_PATH.glob(f"{token}.*.exe"):
         background_tasks.add_task(DistributionService.remove_file, str(executable))
     

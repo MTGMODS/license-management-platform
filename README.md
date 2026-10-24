@@ -64,7 +64,11 @@ After VIP Lua generation, Windows users choose manual Lua or an automatic EXE.
 `/v1/files/downloads/vip/<token>.exe` stamps a copy with the existing Lua URL;
 the template is never overwritten. Downloading EXE deletes only that EXE: Lua must
 remain until the installer requests it. Downloading Lua deletes both token files.
-Unused Lua/EXE/temp files are removed by the hourly one-hour-age cleanup; template
+An atomic `<token>.exe.used` marker makes the EXE URL single-use, including
+parallel requests and service restarts. Repeated EXE requests return 404 even
+while Lua remains available to the installer. Preparation errors release the
+claim; the user can retry or choose Lua. Lua delivery also removes the marker.
+Unused Lua/EXE/temp/marker files are removed by the hourly one-hour-age cleanup; template
 subdirectories are excluded. Keep the installer online and run it before the
 temporary Lua link expires. A downloaded installer is not an offline backup.
 

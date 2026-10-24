@@ -118,10 +118,16 @@ async def test_installer_download_then_lua_preserves_template_and_finishes_clean
         assert lua.read_bytes() == b"personal VIP file"
         assert not (output / "abcdef1234.exe").exists()
         assert template.read_bytes() == original
+        marker = output / "abcdef1234.exe.used"
+        assert marker.is_file()
+        repeated = await client.get("/api/v1/files/downloads/vip/abcdef1234.exe")
+        assert repeated.status_code == 404
+        assert lua.read_bytes() == b"personal VIP file"
 
         installed = await client.get("/api/v1/files/downloads/vip/abcdef1234")
         assert installed.status_code == 200 and installed.content == b"personal VIP file"
         assert not lua.exists()
+        assert not marker.exists()
         assert (await client.get("/api/v1/files/downloads/vip/abcdef1234.exe")).status_code == 404
         assert (await client.get("/api/v1/files/downloads/vip/abcdef1234")).status_code == 404
         assert template.read_bytes() == original
@@ -139,7 +145,7 @@ async def test_free_installer_does_not_consume_template(installer_api):
         assert (await client.get("/api/v1/files/downloads/vip/abcdef1234.exe")).status_code == 404
 
 
-async def test_parallel_installer_downloads_do_not_delete_each_others_response(installer_api):
+async def test_parallel_installer_requests_only_allow_one_download(installer_api):
     app, template, original, output = installer_api
     lua = output / "abcdef1234.lua"
     lua.write_bytes(b"VIP")
@@ -147,10 +153,36 @@ async def test_parallel_installer_downloads_do_not_delete_each_others_response(i
         responses = await asyncio.gather(*[
             client.get("/api/v1/files/downloads/vip/abcdef1234.exe") for _ in range(3)
         ])
-    assert all(response.status_code == 200 for response in responses)
-    assert all(response.content == responses[0].content for response in responses)
+    assert sorted(response.status_code for response in responses) == [200, 404, 404]
     assert lua.exists() and template.read_bytes() == original
     assert not list(output.glob("*.exe")) and not list(output.glob("*.tmp"))
+    assert (output / "abcdef1234.exe.used").is_file()
+
+
+async def test_used_installer_marker_survives_a_new_app_instance(installer_api, component):
+    _, _, _, output = installer_api
+    lua = output / "abcdef1234.lua"
+    lua.write_bytes(b"VIP")
+    (output / "abcdef1234.exe.used").touch()
+    routes = component("app.api.routes")
+    errors = component("app.shared.exceptions")
+    restarted = FastAPI()
+    restarted.include_router(routes.router)
+    restarted.add_exception_handler(errors.DomainException, errors.global_exception_handler)
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=restarted), base_url="http://test") as client:
+        assert (await client.get("/api/v1/files/downloads/vip/abcdef1234.exe")).status_code == 404
+        assert lua.exists()
+
+
+async def test_cancelled_installer_preparation_releases_claim(installer_api, component, monkeypatch):
+    app, _, _, output = installer_api
+    (output / "abcdef1234.lua").write_bytes(b"VIP")
+    service = component("app.application.service")
+    monkeypatch.setattr(service.DistributionService, "build_vip_installer", AsyncMock(side_effect=asyncio.CancelledError))
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+        with pytest.raises(asyncio.CancelledError):
+            await client.get("/api/v1/files/downloads/vip/abcdef1234.exe")
+    assert not (output / "abcdef1234.exe.used").exists()
 
 
 @pytest.mark.parametrize("invalid", [None, b"MZ unsupported format", b"MZMTGPAY01\xff\xff\xff\xff"])
@@ -167,6 +199,7 @@ async def test_missing_or_invalid_installer_keeps_manual_download_working(instal
         assert response.status_code == 503
         assert response.json()["error_code"] == "INSTALLER_UNAVAILABLE"
         assert lua.exists()
+        assert not (output / "abcdef1234.exe.used").exists()
         assert not list(output.glob("*.exe")) and not list(output.glob("*.tmp"))
         assert (await client.get("/api/v1/files/downloads/vip/abcdef1234")).content == b"VIP"
 
@@ -182,14 +215,16 @@ async def test_cleanup_removes_only_expired_builds(component, monkeypatch, tmp_p
     old_tmp = tmp_path / "abcdef1234.deadbeef.tmp"
     fresh_exe = tmp_path / "fresh.exe"
     installer = nested / "template.exe"
-    for path in (old_exe, old_tmp, fresh_exe, installer):
+    old_marker = tmp_path / "abcdef1234.exe.used"
+    fresh_marker = tmp_path / "fresh.exe.used"
+    for path in (old_exe, old_tmp, fresh_exe, installer, old_marker, fresh_marker):
         path.write_bytes(b"MZ")
     for path in (old, fresh, template):
         path.write_text("test", encoding="utf-8")
     now = datetime.now(timezone.utc).timestamp()
     os.utime(old, (now-7200, now-7200))
     os.utime(template, (now-7200, now-7200))
-    for path in (old_exe, old_tmp, installer):
+    for path in (old_exe, old_tmp, installer, old_marker):
         os.utime(path, (now-7200, now-7200))
     monkeypatch.setattr(worker, "DOWNLOADS_DIR", tmp_path)
     monkeypatch.setattr(worker.asyncio, "sleep", AsyncMock(side_effect=asyncio.CancelledError))
@@ -198,3 +233,4 @@ async def test_cleanup_removes_only_expired_builds(component, monkeypatch, tmp_p
     assert not old.exists() and fresh.exists() and template.exists()
     assert not old_exe.exists() and not old_tmp.exists()
     assert fresh_exe.exists() and installer.exists()
+    assert not old_marker.exists() and fresh_marker.exists()
