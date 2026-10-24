@@ -47,8 +47,10 @@ then rebuild `distribution-service`.
 
 ### Windows installer template
 
-The free installer is served by Distribution at `/v1/files/downloads/installer`.
-Place its already-built template in the existing builds volume (not Git):
+The free installer is served directly by the web container's nginx at
+`https://mtgmods.com/helper/download/installer`, with the download name
+`Arizona&Rodina Helper.exe`. Python, RabbitMQ and VIP generation are not involved.
+Place its already-built template in the existing builds directory (not Git):
 
 ```bash
 mkdir -p services/distribution/app/builds/installer
@@ -56,9 +58,25 @@ curl -fL 'https://github.com/MTGMODS/arizona-helper/releases/download/windows-in
 docker compose up --build -d distribution-service web
 ```
 
-Download the template **before** deploying the web change. No nginx changes are
-needed: the existing `/v1/files/` proxy handles both downloads. Update the template
-only when the installer changes; it must support the `MTGPAY01` URL overlay.
+Download the template **before** deploying the web change. Compose mounts only
+the `installer/` subdirectory read-only into web; VIP builds are not exposed.
+The existing host nginx configuration needs no changes: it proxies the website
+to the web container, where an exact static location handles the download.
+Missing templates return 404, not the SPA page. Byte-range downloads and ETag /
+Last-Modified validation are handled by nginx; browser cache lifetime is one hour.
+The old API download URL redirects to the new website address for compatibility.
+Update the template only when the installer changes; it must support the
+`MTGPAY01` URL overlay. The same template is used for VIP stamping.
+
+After deployment, verify with:
+
+```bash
+curl -sSI https://mtgmods.com/helper/download/installer
+curl -sS -D - -H 'Range: bytes=0-1' https://mtgmods.com/helper/download/installer -o /dev/null
+```
+
+Expect 200 with `Content-Disposition: attachment` for HEAD, and 206 for the
+range request. Neither request should appear in the Distribution Service logs.
 
 After VIP Lua generation, Windows users choose manual Lua or an automatic EXE.
 `/v1/files/downloads/vip/<token>.exe` stamps a copy with the existing Lua URL;

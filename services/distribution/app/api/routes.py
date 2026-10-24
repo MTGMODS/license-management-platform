@@ -1,7 +1,7 @@
 from pathlib import Path as FilePath
 from fastapi import APIRouter, BackgroundTasks, Path
-from fastapi.responses import FileResponse
-from app.application.service import DistributionService, BUILDS_DIR, INSTALLER_TEMPLATE_PATH
+from fastapi.responses import FileResponse, RedirectResponse
+from app.application.service import DistributionService, BUILDS_DIR
 from app.shared.exceptions import DomainException
 
 BUILDS_DIR_PATH = FilePath(BUILDS_DIR).resolve()
@@ -10,10 +10,8 @@ router = APIRouter(prefix="/api/v1/files", tags=["Downloads"])
 
 @router.get("/downloads/installer")
 async def download_free_installer():
-    template = FilePath(INSTALLER_TEMPLATE_PATH)
-    if not template.is_file():
-        raise DomainException("Windows installer is not available.", 503, "INSTALLER_UNAVAILABLE")
-    return FileResponse(template, filename="Arizona&Rodina Helper.exe", media_type="application/octet-stream")
+    # Compatibility for older web bundles/links; file bytes bypass Python.
+    return RedirectResponse("https://mtgmods.com/helper/download/installer", status_code=307)
 
 
 @router.get("/downloads/vip/{token}.exe")

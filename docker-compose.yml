@@ -182,6 +182,9 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
+    volumes:
+      # Public template only; web has no access to personalized Lua/EXE builds.
+      - ./services/distribution/app/builds/installer:/usr/share/nginx/installer:ro
 
   telegram-bot:
     build:

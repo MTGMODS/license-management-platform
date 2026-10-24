@@ -88,7 +88,6 @@ def installer_api(component, builds, monkeypatch, tmp_path):
     monkeypatch.setattr(module, "INSTALLER_TEMPLATE_PATH", str(template))
     routes = component("app.api.routes")
     monkeypatch.setattr(routes, "BUILDS_DIR_PATH", output)
-    monkeypatch.setattr(routes, "INSTALLER_TEMPLATE_PATH", str(template))
     errors = component("app.shared.exceptions")
     app = FastAPI()
     app.include_router(routes.router)
@@ -133,12 +132,14 @@ async def test_installer_download_then_lua_preserves_template_and_finishes_clean
         assert template.read_bytes() == original
 
 
-async def test_free_installer_does_not_consume_template(installer_api):
+async def test_legacy_free_installer_redirects_without_serving_template(installer_api):
     app, template, original, output = installer_api
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
         for _ in range(2):
             response = await client.get("/api/v1/files/downloads/installer")
-            assert response.status_code == 200 and response.content == original
+            assert response.status_code == 307
+            assert response.headers["location"] == "https://mtgmods.com/helper/download/installer"
+            assert response.content == b""
         assert template.read_bytes() == original
         assert list(output.iterdir()) == []
         assert (await client.get("/api/v1/files/downloads/vip/not-a-token.exe")).status_code == 422
