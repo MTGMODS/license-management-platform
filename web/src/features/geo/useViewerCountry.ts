@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { resolveViewerCountry } from '@/shared/lib/viewerCountry'
 
-export const VIEWER_COUNTRY_KEY = ['viewer-country'] as const
+const VIEWER_COUNTRY_KEY = ['viewer-country'] as const
 
 export function useViewerCountry() {
   return useQuery({

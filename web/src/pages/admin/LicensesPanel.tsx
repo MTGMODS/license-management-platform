@@ -16,6 +16,7 @@ import { useTariffs } from '@/features/license/useTariffs'
 import { apiErrorTranslationKey } from '@/shared/api'
 import type { AdminLicense } from '@/shared/api/admin'
 import {
+  formatLicenseKey,
   LICENSE_KEY_LENGTH,
   LICENSE_KEY_PATTERN,
   type LicenseStatus,
@@ -31,12 +32,6 @@ const STATUSES: LicenseStatus[] = ['NOT_ACTIVATED', 'ACTIVE', 'EXPIRED', 'BANNED
 
 const inputClass =
   'rounded-xl border border-white/8 bg-ink-800 px-4 py-3 text-sm text-fg outline-none placeholder:text-fg-subtle focus:border-accent-500/40'
-
-function formatLicenseKey(raw: string): string {
-  const cleaned = raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16)
-  const parts = cleaned.match(/.{1,4}/g)
-  return parts ? parts.join('-') : ''
-}
 
 function statusTone(status: LicenseStatus): 'positive' | 'caution' | 'negative' | 'neutral' {
   if (status === 'ACTIVE') return 'positive'
@@ -62,6 +57,7 @@ export function LicensesPanel({
   const [idDraft, setIdDraft] = useState('')
   const [query, setQuery] = useState<AdminLicenseLookup | null>(null)
   const licenses = useAdminLicenseSearch(query)
+  const setNumericDraft = mode === 'id' ? setIdDraft : setUserDraft
 
   useEffect(() => {
     if (initialUserId == null) return
@@ -115,19 +111,11 @@ export function LicensesPanel({
               spellCheck={false}
               className={`${inputClass} tabular min-w-0 w-full flex-1 tracking-wider`}
             />
-          ) : mode === 'id' ? (
-            <input
-              value={idDraft}
-              onChange={(event) => setIdDraft(event.target.value.replace(/\D/g, ''))}
-              placeholder={t('licenses.placeholderId')}
-              inputMode="numeric"
-              className={`${inputClass} tabular min-w-0 w-full flex-1`}
-            />
           ) : (
             <input
-              value={userDraft}
-              onChange={(event) => setUserDraft(event.target.value.replace(/\D/g, ''))}
-              placeholder={t('licenses.placeholderUser')}
+              value={mode === 'id' ? idDraft : userDraft}
+              onChange={(event) => setNumericDraft(event.target.value.replace(/\D/g, ''))}
+              placeholder={t(mode === 'id' ? 'licenses.placeholderId' : 'licenses.placeholderUser')}
               inputMode="numeric"
               className={`${inputClass} tabular min-w-0 w-full flex-1`}
             />

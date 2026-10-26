@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { getTariffs, type TariffsCatalog } from '@/shared/api/license'
 
-export const TARIFFS_KEY = ['license', 'tariffs'] as const
+const TARIFFS_KEY = ['license', 'tariffs'] as const
 
 export function useTariffs() {
   return useQuery<TariffsCatalog>({

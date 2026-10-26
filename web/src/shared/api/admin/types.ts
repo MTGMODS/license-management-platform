@@ -1,8 +1,8 @@
 import type { ApiDateTime } from '@/shared/lib/datetime'
 import type { LicenseStatus, PaymentMethod } from '@/shared/api/license'
-import type { User, UserRole, UserStatus } from '@/shared/api/user'
+import type { UserRole, UserStatus } from '@/shared/api/user'
 
-export interface AdminLicenseDevice {
+interface AdminLicenseDevice {
   id: number
   /** Full HWID — admin find does not mask it. */
   device: string
@@ -12,7 +12,7 @@ export interface AdminLicenseDevice {
   last_used_at: ApiDateTime | null
 }
 
-export interface AdminLicenseTransaction {
+interface AdminLicenseTransaction {
   id: number
   amount: number
   method: string
@@ -65,5 +65,3 @@ export interface UpdateLicensePayload {
   duration_days?: number | null
   amount?: number
 }
-
-export type { User }

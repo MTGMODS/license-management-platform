@@ -1,7 +1,5 @@
 import { NARROW_CHART_WIDTH } from './chartTheme'
 
-export { NARROW_CHART_WIDTH } from './chartTheme'
-
 /** Rough half-width before the tooltip is measured (ChartTooltip ≈ 260px). */
 const TOOLTIP_HALF_WIDTH = 132
 

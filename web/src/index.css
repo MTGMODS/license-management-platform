@@ -207,18 +207,6 @@
   color: transparent;
 }
 
-/* Horizontal rule that fades out at both ends. */
-@utility rule-fade {
-  height: 1px;
-  background-image: linear-gradient(
-    90deg,
-    transparent,
-    --alpha(var(--color-fg) / 12%) 20%,
-    --alpha(var(--color-fg) / 12%) 80%,
-    transparent
-  );
-}
-
 /* Page-width container tuned so wide analytics charts still breathe. */
 @utility shell {
   margin-inline: auto;

@@ -8,7 +8,7 @@ export const PERIOD_KEYS: readonly PeriodKey[] = ['all_time', '30d', '24h', '1h'
 /** A metric broken down by all four precomputed windows. */
 export type PeriodCounts = Record<PeriodKey, number>
 
-export interface UsageOverviewMetrics {
+interface UsageOverviewMetrics {
   /** Percentage on a 0-100 scale. */
   vip_conversion: number
   pc_ratio: number
@@ -26,7 +26,7 @@ export interface DeviceFamilyStats {
   vip_percent: PeriodCounts
 }
 
-export interface UsageOverview {
+interface UsageOverview {
   metrics: UsageOverviewMetrics
   users: {
     total: PeriodCounts

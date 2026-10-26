@@ -53,5 +53,3 @@ function syncDocumentLanguage(language: string): void {
 
 syncDocumentLanguage(i18n.resolvedLanguage ?? DEFAULT_LOCALE)
 i18n.on('languageChanged', syncDocumentLanguage)
-
-export { i18n }

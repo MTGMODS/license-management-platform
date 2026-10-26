@@ -135,8 +135,6 @@ export function deleteAdminLicense(licenseId: number): Promise<{ status: string;
 
 export type {
   AdminLicense,
-  AdminLicenseDevice,
-  AdminLicenseTransaction,
   GenerateKeysPayload,
   GenerateOneResult,
   UpdateLicensePayload,

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { fetchReleaseManifest, type ReleaseManifest } from '@/shared/api/release'
 
-export const RELEASE_QUERY_KEY = ['release-manifest'] as const
+const RELEASE_QUERY_KEY = ['release-manifest'] as const
 
 /**
  * Current helper version and free download link, read from the manifest

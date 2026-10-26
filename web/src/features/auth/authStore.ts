@@ -4,7 +4,7 @@ import { clearLocalSession, clearTokens, getTokens, NetworkError, setTokens, Tim
 import { clearUserQueries } from '@/shared/api/queryClient'
 import { getCurrentUser, logoutSession, type TokenResponse, type User } from '@/shared/api/user'
 
-export type AuthStatus = 'initialising' | 'authenticated' | 'anonymous'
+type AuthStatus = 'initialising' | 'authenticated' | 'anonymous'
 
 interface AuthState {
   status: AuthStatus

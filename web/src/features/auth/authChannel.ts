@@ -9,12 +9,12 @@ export const AUTH_BROADCAST_CHANNEL = 'mtg_auth'
 export const AUTH_SUCCESS_TYPE = 'mtg_auth_success'
 export const AUTH_ERROR_TYPE = 'mtg_auth_error'
 
-export type AuthBroadcastSuccess = {
+type AuthBroadcastSuccess = {
   type: typeof AUTH_SUCCESS_TYPE
   payload: unknown
 }
 
-export type AuthBroadcastError = {
+type AuthBroadcastError = {
   type: typeof AUTH_ERROR_TYPE
   error_code?: string | null
   message?: string | null

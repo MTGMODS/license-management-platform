@@ -26,6 +26,11 @@ export const LICENSE_KEY_LENGTH = 19
 
 export const LICENSE_KEY_PATTERN = /^[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$/
 
+/** Normalize typed/pasted keys for both the account and admin forms. */
+export function formatLicenseKey(raw: string): string {
+  return (raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16).match(/.{1,4}/g) ?? []).join('-')
+}
+
 export function getLicenseInfo(signal?: AbortSignal): Promise<LicenseInfo> {
   return request<LicenseInfo>({ service: 'license', path: '/info', auth: true, signal })
 }
@@ -173,40 +178,10 @@ function normalizeSaleRow(raw: unknown): LicenseSaleRow {
   }
 }
 
-function emptySubscriptions(): LicenseSubscriptionsStats {
-  return {
-    overview: {
-      total_sold: 0,
-      total_money: 0,
-      active: 0,
-      first_activated_at: null,
-      last_activated_at: null,
-      avg_check: 0,
-      avg_subscriptions_per_buyer: 0,
-      avg_revenue_per_buyer: 0,
-    },
-    by_duration: [],
-    by_method: [],
-    retention: {
-      buyers: 0,
-      repeat_buyers: 0,
-      repeat_rate: 0,
-      avg_subscriptions_per_buyer: 0,
-      avg_check: 0,
-      avg_revenue_per_buyer: 0,
-      by_purchases: [],
-      tariff_transitions: [],
-    },
-    timeline: { daily: [], monthly: [] },
-    sales: [],
-  }
-}
-
 function normalizeSubscriptions(raw: unknown): LicenseSubscriptionsStats {
   const root = asRecord(raw)
   const overview = asRecord(root.overview)
   const timeline = asRecord(root.timeline)
-  const empty = emptySubscriptions()
 
   return {
     overview: {
@@ -221,7 +196,7 @@ function normalizeSubscriptions(raw: unknown): LicenseSubscriptionsStats {
     },
     by_duration: asArray(root.by_duration).map(normalizeDuration),
     by_method: asArray(root.by_method).map(normalizePayment),
-    retention: root.retention ? normalizeRetention(root.retention) : empty.retention,
+    retention: normalizeRetention(root.retention),
     timeline: {
       daily: asArray(timeline.daily).map(normalizeTimelineDay),
       monthly: asArray(timeline.monthly).map(normalizeTimelineMonth),
@@ -252,9 +227,7 @@ function normalizeForever(raw: unknown): LicenseForeverStats {
 function normalizeSalesStats(raw: SalesStatsWire): LicenseSalesStats {
   return {
     updated_at: raw.updated_at,
-    subscriptions: raw.subscriptions
-      ? normalizeSubscriptions(raw.subscriptions)
-      : emptySubscriptions(),
+    subscriptions: normalizeSubscriptions(raw.subscriptions),
   }
 }
 
@@ -333,10 +306,8 @@ export function resetDevice(deviceId: number): Promise<{ status: string; message
 export type {
   ActivateKeyResult,
   DownloadRequestResult,
-  LicenseDetails,
   LicenseDevice,
   LicenseDurationStat,
-  LicenseForeverStats,
   LicenseInfo,
   LicenseOldSalesStats,
   LicensePaymentStat,
@@ -346,11 +317,8 @@ export type {
   LicenseSaleRow,
   LicenseSalesStats,
   LicenseStatus,
-  LicenseSubscriptionsStats,
-  LicenseTariffTransition,
   LicenseTimelineDay,
   LicenseTimelineMonth,
-  LicenseTransaction,
   PaymentMethod,
   TariffPlan,
   TariffsCatalog,

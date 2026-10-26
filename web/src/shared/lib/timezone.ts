@@ -1,7 +1,7 @@
 import type { HourActivityPoint } from '@/shared/api/usage'
 
 /** Browser offset from UTC in whole hours (positive east of Greenwich). */
-export function browserUtcOffsetHours(date: Date = new Date()): number {
+function browserUtcOffsetHours(date: Date = new Date()): number {
   return -date.getTimezoneOffset() / 60
 }
 

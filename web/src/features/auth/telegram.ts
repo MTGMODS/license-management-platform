@@ -25,7 +25,7 @@ const INIT_DATA_STORAGE_KEY = 'mtg_tg_init_data'
 const TELEGRAM_SDK_URL = 'https://telegram.org/js/telegram-web-app.js'
 const TELEGRAM_SDK_ATTR = 'data-mtg-telegram-sdk'
 
-export function getTelegramWebApp(): TelegramWebApp | null {
+function getTelegramWebApp(): TelegramWebApp | null {
   return window.Telegram?.WebApp ?? null
 }
 

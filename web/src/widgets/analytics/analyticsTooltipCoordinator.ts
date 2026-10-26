@@ -33,7 +33,7 @@ export function registerAnalyticsTooltipSurface(id: string, element: HTMLElement
   surfaces.delete(id)
 }
 
-export function isPointerInsideAnalyticsSurface(target: Node | null): boolean {
+function isPointerInsideAnalyticsSurface(target: Node | null): boolean {
   if (target == null) return false
 
   for (const element of surfaces.values()) {
@@ -58,7 +58,7 @@ export function releaseAnalyticsTooltip(id: string) {
 }
 
 /** Tap/click outside every analytics chart and the map. */
-export function dismissAnalyticsTooltip() {
+function dismissAnalyticsTooltip() {
   if (activeId == null) return
   activeId = null
   emit()

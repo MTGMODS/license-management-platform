@@ -19,6 +19,7 @@ import {
 } from '@/features/license/useLicense'
 import { ApiError, apiErrorTranslationKey } from '@/shared/api'
 import {
+  formatLicenseKey,
   LICENSE_KEY_LENGTH,
   LICENSE_KEY_PATTERN,
   type LicenseDevice,
@@ -47,13 +48,6 @@ import {
 import { PremiumDownloadButton } from '@/widgets/dashboard/PremiumDownloadButton'
 
 type DashboardTab = 'vip' | 'account'
-
-/** Formats the raw input into the backend's `XXXX-XXXX-XXXX-XXXX` shape. */
-function formatLicenseKey(raw: string): string {
-  const cleaned = raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16)
-  const parts = cleaned.match(/.{1,4}/g)
-  return parts ? parts.join('-') : ''
-}
 
 function headlineKey(
   status: LicenseInfo['license']['status'],
@@ -524,6 +518,7 @@ function SocialStatus({
 }) {
   const { t } = useTranslation('dashboard')
   const linked = Boolean(value)
+  const ActionIcon = linked ? Unlink : Link2
 
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl bg-ink-800/70 px-4 py-3.5">
@@ -534,33 +529,19 @@ function SocialStatus({
           <p className="truncate text-xs text-fg-subtle">{value ?? t('account.notLinked')}</p>
         </div>
       </div>
-      {linked ? (
-        canUnlink ? (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="shrink-0"
-            loading={unlinking}
-            disabled={disabled}
-            onClick={onUnlink}
-          >
-            <Unlink aria-hidden className="size-3.5" />
-            {t('account.unlinkAction')}
-          </Button>
-        ) : (
-          <Badge tone="positive">{t('account.linked')}</Badge>
-        )
+      {linked && !canUnlink ? (
+        <Badge tone="positive">{t('account.linked')}</Badge>
       ) : (
         <Button
           size="sm"
-          variant="secondary"
+          variant={linked ? 'ghost' : 'secondary'}
           className="shrink-0"
-          loading={linking}
+          loading={linked ? unlinking : linking}
           disabled={disabled}
-          onClick={onLink}
+          onClick={linked ? onUnlink : onLink}
         >
-          <Link2 aria-hidden className="size-3.5" />
-          {t('account.linkAction')}
+          <ActionIcon aria-hidden className="size-3.5" />
+          {t(linked ? 'account.unlinkAction' : 'account.linkAction')}
         </Button>
       )}
     </div>

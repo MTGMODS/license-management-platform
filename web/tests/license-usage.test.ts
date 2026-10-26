@@ -1,9 +1,33 @@
 import { expect, it, vi } from 'vitest'
 import { request } from '../src/shared/api/http'
-import { activateKey, getLicenseOldSalesStats, getLicenseSalesStats, getTariffs, LICENSE_KEY_PATTERN, requestPremiumDownload, resetDevice } from '../src/shared/api/license'
+import { activateKey, formatLicenseKey, getLicenseOldSalesStats, getLicenseSalesStats, getTariffs, LICENSE_KEY_PATTERN, requestPremiumDownload, resetDevice } from '../src/shared/api/license'
 import { getUsagePublicStats } from '../src/shared/api/usage'
 
 vi.mock('../src/shared/api/http', () => ({ request: vi.fn() }))
+
+it.each([
+  ['a1b2-c3d4-e5f6-g7h8', 'A1B2-C3D4-E5F6-G7H8'],
+  ['  a1b2 c3d4_e5f6/g7h8-extra', 'A1B2-C3D4-E5F6-G7H8'],
+  ['abcde', 'ABCD-E'],
+  ['!@#', ''],
+  ['', ''],
+])('formats account and admin key input consistently: %s', (input, expected) => {
+  expect(formatLicenseKey(input)).toBe(expected)
+})
+
+it('uses the same empty stats defaults for missing sections and missing retention', async () => {
+  vi.mocked(request).mockResolvedValue({})
+  const empty = await getLicenseSalesStats()
+  expect(empty.subscriptions.overview.total_sold).toBe(0)
+  expect(empty.subscriptions.sales).toEqual([])
+  expect(empty.subscriptions.retention.buyers).toBe(0)
+
+  vi.mocked(request).mockResolvedValue({ subscriptions: { overview: { total_sold: 2 }, retention: null } })
+  const partial = await getLicenseSalesStats()
+  expect(partial.subscriptions.overview.total_sold).toBe(2)
+  expect(partial.subscriptions.retention).toEqual(empty.subscriptions.retention)
+  expect(partial.subscriptions.retention).not.toBe(empty.subscriptions.retention)
+})
 
 it('reads subscription stats without status/data wrapper or legacy lifetime stats', async () => {
   vi.mocked(request).mockResolvedValue({ updated_at: '2026-01-01T00:00:00Z', subscriptions: { overview: { total_sold: 3 } } })

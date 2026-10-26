@@ -2,9 +2,9 @@ import { REQUEST_TIMEOUT_MS, serviceUrl, type ServiceName } from './config'
 import { ApiError, NetworkError, TimeoutError, parseErrorPayload } from './errors'
 import { clearTokens, getTokens, setTokens } from './tokens'
 
-export type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE'
+type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE'
 
-export type QueryValue = string | number | boolean | null | undefined
+type QueryValue = string | number | boolean | null | undefined
 
 export interface RequestConfig {
   service: ServiceName

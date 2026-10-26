@@ -219,18 +219,10 @@ function FunpayBody({ wallet, selectedDays }: { wallet: WalletId; selectedDays: 
   return (
     <div className="space-y-5">
       <ol className="space-y-3">
-        <li className="flex gap-3 text-sm text-fg-muted">
-          <span className="grid size-6 shrink-0 place-items-center rounded-full bg-accent-500/15 text-xs font-semibold text-accent-200">
-            1
-          </span>
-          <span className="min-w-0 pt-0.5">
-            <Trans
-              i18nKey="payment.routes.funpay.step1"
-              ns="vip"
-              components={{ site: <ExternalLink href={FUNPAY_URL} /> }}
-            />
-          </span>
-        </li>
+        <CheckoutStep n={1}>
+          <Trans i18nKey="payment.routes.funpay.step1" ns="vip"
+            components={{ site: <ExternalLink href={FUNPAY_URL} /> }} />
+        </CheckoutStep>
 
         <li className="space-y-3">
           <div className="flex gap-3 text-sm text-fg-muted">
@@ -244,27 +236,12 @@ function FunpayBody({ wallet, selectedDays }: { wallet: WalletId; selectedDays: 
           </div>
         </li>
 
-        <li className="flex gap-3 text-sm text-fg-muted">
-          <span className="grid size-6 shrink-0 place-items-center rounded-full bg-accent-500/15 text-xs font-semibold text-accent-200">
-            3
-          </span>
-          <span className="min-w-0 pt-0.5">
-            {t('payment.routes.funpay.step3')}, {payMethods}
-          </span>
-        </li>
+        <CheckoutStep n={3}>{t('payment.routes.funpay.step3')}, {payMethods}</CheckoutStep>
 
-        <li className="flex gap-3 text-sm text-fg-muted">
-          <span className="grid size-6 shrink-0 place-items-center rounded-full bg-accent-500/15 text-xs font-semibold text-accent-200">
-            4
-          </span>
-          <span className="min-w-0 pt-0.5">
-            <Trans
-              i18nKey="payment.routes.funpay.step4"
-              ns="vip"
-              components={{ orders: <ExternalLink href={FUNPAY_ORDERS_URL} /> }}
-            />
-          </span>
-        </li>
+        <CheckoutStep n={4}>
+          <Trans i18nKey="payment.routes.funpay.step4" ns="vip"
+            components={{ orders: <ExternalLink href={FUNPAY_ORDERS_URL} /> }} />
+        </CheckoutStep>
 
         <CabinetKeyStep n={5} />
       </ol>

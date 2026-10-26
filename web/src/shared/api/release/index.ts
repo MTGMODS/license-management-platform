@@ -10,7 +10,7 @@ interface ReleaseManifestPayload {
   vip_update_info?: string
 }
 
-export interface ReleaseInfo {
+interface ReleaseInfo {
   /** Numeric part only, e.g. `1.8.9`. */
   version: string
   /** Full string as published, e.g. `1.8.9 Free`. */

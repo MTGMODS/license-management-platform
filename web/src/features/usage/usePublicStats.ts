@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { getUsagePublicStats, type UsagePublicStats } from '@/shared/api/usage'
 
-export const USAGE_PUBLIC_STATS_KEY = ['usage', 'public-stats'] as const
+const USAGE_PUBLIC_STATS_KEY = ['usage', 'public-stats'] as const
 
 /**
  * Backs the entire analytics section from a single request. All four period

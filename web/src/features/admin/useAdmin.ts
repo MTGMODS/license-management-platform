@@ -23,8 +23,8 @@ export type AdminUserLookup =
   | { telegram_id: string }
   | { discord_id: string }
 
-export const ADMIN_USERS_KEY = ['admin', 'users'] as const
-export const ADMIN_LICENSES_KEY = ['admin', 'licenses'] as const
+const ADMIN_USERS_KEY = ['admin', 'users'] as const
+const ADMIN_LICENSES_KEY = ['admin', 'licenses'] as const
 
 export function useAdminUserSearch(query: AdminUserLookup | null) {
   return useQuery({

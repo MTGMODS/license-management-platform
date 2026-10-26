@@ -16,7 +16,7 @@ export interface LicenseDevice {
   last_used_at: ApiDateTime | null
 }
 
-export interface LicenseDetails {
+interface LicenseDetails {
   id: number
   user_id: number | null
   key: string
@@ -29,7 +29,7 @@ export interface LicenseDetails {
   expires_at: ApiDateTime | null
 }
 
-export interface LicenseTransaction {
+interface LicenseTransaction {
   amount: number
   /** Free-form string column; matches `PaymentMethod` in practice. */
   method: string
@@ -87,7 +87,7 @@ export interface LicenseRetentionStats {
   tariff_transitions: LicenseTariffTransition[]
 }
 
-export interface LicenseTariffTransition {
+interface LicenseTariffTransition {
   from_days: number
   to_days: number
   count: number
@@ -192,7 +192,7 @@ export interface DownloadRequestResult {
 }
 
 /** Catalog limits from `GET /license/tariffs`. Generate stores whatever the caller sends. */
-export interface TariffLimits {
+interface TariffLimits {
   max_devices: number
   reset_limit: number
 }

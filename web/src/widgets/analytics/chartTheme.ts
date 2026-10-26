@@ -42,13 +42,13 @@ export const Y_AXIS_NUMERIC = {
  * Horizontal-bar charts (factions, servers, products, devices, versions)
  * share one label gutter and one row pitch so the coloured bars line up.
  */
-export const CATEGORY_Y_WIDTH = 160
+const CATEGORY_Y_WIDTH = 160
 /** Narrower label gutter on phones so bars get more horizontal room. */
-export const CATEGORY_Y_WIDTH_MOBILE = 70
+const CATEGORY_Y_WIDTH_MOBILE = 70
 export const CATEGORY_BAR_SIZE = 24
-export const CATEGORY_ROW_HEIGHT = 48
-export const CATEGORY_X_AXIS_HEIGHT = 36
-export const CATEGORY_CHART_MARGIN = { top: 4, right: 12, bottom: 0, left: 8 } as const
+const CATEGORY_ROW_HEIGHT = 48
+const CATEGORY_X_AXIS_HEIGHT = 36
+const CATEGORY_CHART_MARGIN = { top: 4, right: 12, bottom: 0, left: 8 } as const
 
 /** Matches chartTooltipPosition — container below this uses compact category bars. */
 export const NARROW_CHART_WIDTH = 520
@@ -92,7 +92,7 @@ export function categoryChartHeight(rowCount: number) {
 }
 
 /** Shared hover outline for chart bars. */
-export const HOVER_OUTLINE = {
+const HOVER_OUTLINE = {
   stroke: 'rgba(245, 246, 249, 0.55)',
   strokeWidth: 1.5,
 } as const

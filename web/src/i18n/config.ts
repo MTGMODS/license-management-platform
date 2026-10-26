@@ -11,7 +11,7 @@ export const DEFAULT_LOCALE: Locale = 'ru'
 export const LOCALE_STORAGE_KEY = 'mtg.locale'
 
 /** Cookie name for a manual locale override (`mtg.locale=uk`). */
-export const LOCALE_COOKIE_KEY = 'mtg.locale'
+const LOCALE_COOKIE_KEY = 'mtg.locale'
 
 export function isSupportedLocale(value: unknown): value is Locale {
   return typeof value === 'string' && SUPPORTED_LOCALES.includes(value as Locale)
@@ -34,7 +34,7 @@ export function readStoredLocale(): Locale | null {
 }
 
 /** True for any BCP-47 Ukrainian tag: `uk`, `uk-UA`, `uk-UA-u-nu-latn`, … */
-export function isUkrainianLanguageTag(tag: string): boolean {
+function isUkrainianLanguageTag(tag: string): boolean {
   const normalized = tag.trim().toLowerCase()
   return normalized === 'uk' || normalized.startsWith('uk-')
 }

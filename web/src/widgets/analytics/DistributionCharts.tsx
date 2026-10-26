@@ -93,14 +93,7 @@ export function FactionsChart({
           renderTooltip={(point) => (
             <ChartTooltip
               title={point.label}
-              rows={statsTooltipRows(t, format, {
-                users: point.users,
-                launches: point.launches,
-                vip_users: point.vip_users,
-                user_share: point.user_share,
-                launches_per_user: point.launches_per_user,
-                vip_percent: point.vip_percent,
-              })}
+              rows={statsTooltipRows(t, format, point)}
             />
           )}
         />

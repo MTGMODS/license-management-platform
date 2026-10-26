@@ -34,7 +34,7 @@ export const TELEGRAM_CHAT_URL = 'https://t.me/+bi-SlBWfG7o3NDgy'
 export const DISCORD_SERVER_URL = 'https://discord.gg/qBPEYjfNhv'
 
 /** Accepts a bare 11-char id or a youtu.be / watch / embed URL. */
-export function parseYoutubeId(raw: string): string | null {
+function parseYoutubeId(raw: string): string | null {
   const value = raw.trim()
   if (!value) return null
   if (/^[\w-]{11}$/.test(value)) return value
@@ -58,7 +58,7 @@ export function parseYoutubeId(raw: string): string | null {
  * Helper overview on `/helper`. Empty until the video exists — the gallery
  * then shows screenshots only. Watch / youtu.be / embed / shorts / bare id.
  */
-export const HELPER_VIDEO_URL = ''
+const HELPER_VIDEO_URL = ''
 
 export const HELPER_VIDEO_ID: string | null = parseYoutubeId(HELPER_VIDEO_URL)
 

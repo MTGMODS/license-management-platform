@@ -2,7 +2,7 @@ import type { ComponentType } from 'react'
 
 import { cn } from '@/shared/lib/cn'
 
-export interface SegmentedOption<T extends string | number> {
+interface SegmentedOption<T extends string | number> {
   id: T
   label: string
   icon?: ComponentType<{ className?: string }>

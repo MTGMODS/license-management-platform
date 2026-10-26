@@ -132,21 +132,12 @@ const CURRENCY_ABBREVS: Readonly<Record<string, string>> = {
   UZS: 'сум',
 }
 
-export function hasEstablishedCurrencySymbol(currency: string): boolean {
-  return Object.hasOwn(CURRENCY_MARKS, currency)
-}
-
 function currencyLabel(currency: string): { text: string; glued: boolean } {
   const mark = CURRENCY_MARKS[currency]
   if (mark) return { text: mark, glued: true }
   const abbrev = CURRENCY_ABBREVS[currency]
   if (abbrev) return { text: abbrev, glued: false }
   return { text: currency, glued: false }
-}
-
-/** ₴ / € / zł / ISO code. */
-export function currencySymbol(currency: string): string {
-  return currencyLabel(currency).text
 }
 
 /**
@@ -159,14 +150,13 @@ export function localApproxFromRate(rate: number): {
   unitRate: number
   fractionDigits: number
 } {
-  if (rate <= NEAR_USD_RATE_MAX) {
-    return { unitRate: rate, fractionDigits: 2 }
-  }
-  return { unitRate: Math.ceil(rate), fractionDigits: 0 }
+  return rate <= NEAR_USD_RATE_MAX
+    ? { unitRate: rate, fractionDigits: 2 }
+    : { unitRate: Math.ceil(rate), fractionDigits: 0 }
 }
 
 /** `123₴` / `13,80€` / `60 zł` / `80 BRL`. No thousands grouping. */
-export function formatLocalMoney(
+function formatLocalMoney(
   amount: number,
   currency: string,
   fractionDigits = 0,
@@ -177,8 +167,7 @@ export function formatLocalMoney(
     minimumFractionDigits: fractionDigits,
   }).format(amount)
   const label = currencyLabel(currency)
-  if (label.glued) return `${number}${label.text}`
-  return `${number}\u00a0${label.text}`
+  return `${number}${label.glued ? '' : '\u00a0'}${label.text}`
 }
 
 export interface LocalApproxDisplay {

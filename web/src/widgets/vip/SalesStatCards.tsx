@@ -11,48 +11,18 @@ import { usdAmount, usdWhole } from './salesStatsFormat'
 const PAYMENT_FALLBACK = ['#0fb0fa', '#34d399', '#f59e0b', '#fb7185', '#38bdf8', '#a78bfa']
 
 const PAYMENT_COLOR: Record<string, string> = {
-  FunPay: '#0fb0fa',
-  Stars: '#ffb800',
-  Card: '#ef4444',
-  Crypto: '#22c55e',
-  PayPal: '#1e40af',
-  Promo: '#a78bfa',
-  Steam: '#a855f7',
-  Gift: '#f472b6',
+  funpay: '#0fb0fa',
+  stars: '#ffb800',
+  card: '#ef4444',
+  crypto: '#22c55e',
+  paypal: '#1e40af',
+  promo: '#a78bfa',
+  steam: '#a855f7',
+  gift: '#f472b6',
 }
 
 function paymentColor(method: string, index: number): string {
-  const known = Object.entries(PAYMENT_COLOR).find(
-    ([key]) => key.toLowerCase() === method.toLowerCase(),
-  )
-  return known?.[1] ?? PAYMENT_FALLBACK[index % PAYMENT_FALLBACK.length] ?? '#0fb0fa'
-}
-
-export function MetricCard({
-  label,
-  value,
-  hint,
-  dense = false,
-}: {
-  label: string
-  value: string
-  hint?: string
-  dense?: boolean
-}) {
-  return (
-    <Card className={cn('p-4 sm:p-5', dense && 'p-3 sm:p-4')}>
-      <p
-        className={cn(
-          'tabular text-xl font-semibold tracking-tight sm:text-2xl',
-          dense && 'text-base sm:text-xl',
-        )}
-      >
-        {value}
-      </p>
-      <p className={cn('mt-1 text-sm text-fg-muted', dense && 'text-xs sm:text-sm')}>{label}</p>
-      {hint ? <p className="mt-0.5 text-xs text-fg-subtle">{hint}</p> : null}
-    </Card>
-  )
+  return PAYMENT_COLOR[method.toLowerCase()] ?? PAYMENT_FALLBACK[index % PAYMENT_FALLBACK.length] ?? '#0fb0fa'
 }
 
 export function PaymentsChart({

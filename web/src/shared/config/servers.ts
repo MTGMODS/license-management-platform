@@ -7,7 +7,7 @@
  * server is added.
  */
 
-export type ServerProject = 'arizona' | 'arizonaMobile' | 'arizonaVc' | 'rodina' | 'rodinaMobile'
+type ServerProject = 'arizona' | 'arizonaMobile' | 'arizonaVc' | 'rodina' | 'rodinaMobile'
 
 interface ServerInfo {
   name: string

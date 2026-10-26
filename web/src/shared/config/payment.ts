@@ -3,7 +3,7 @@
  * Copy/UI strings live in i18n.
  */
 
-export const VIP_BOT_URL = 'https://t.me/mtgmods_vip_bot'
+const VIP_BOT_URL = 'https://t.me/mtgmods_vip_bot'
 export const CONTACT_URL = 'https://t.me/mtg_mods'
 export const CONTACT_DISCORD_URL = 'https://discord.com/users/514135796685602827'
 export const FRAGMENT_STARS_URL = 'https://fragment.com/stars/buy'
@@ -87,7 +87,7 @@ export const WALLETS: readonly WalletId[] = ['card', 'crypto', 'stars', 'paypal'
 const CARD_ROUTES_BASE = ['funpay', 'tgStars'] as const satisfies readonly CheckoutRouteId[]
 
 /** Routes shown for each starting wallet. */
-export const WALLET_ROUTES: Readonly<Record<WalletId, readonly CheckoutRouteId[]>> = {
+const WALLET_ROUTES: Readonly<Record<WalletId, readonly CheckoutRouteId[]>> = {
   card: CARD_ROUTES_BASE,
   /** Fragment + FunPay side by side; direct crypto full-width under. */
   crypto: ['fragment', 'funpay', 'crypto'],

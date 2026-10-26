@@ -6,7 +6,6 @@ export {
   NetworkError,
   TimeoutError,
 } from './errors'
-export { request } from './http'
 export {
   AUTH_STORAGE_KEYS,
   clearLocalSession,
