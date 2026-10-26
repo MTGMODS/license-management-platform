@@ -6,7 +6,7 @@ import { cn } from '@/shared/lib/cn'
 import { useFormatters } from '@/shared/lib/format'
 import { Card } from '@/shared/ui'
 
-import { usdWhole } from './salesStatsFormat'
+import { usdAmount, usdWhole } from './salesStatsFormat'
 
 const PAYMENT_FALLBACK = ['#0fb0fa', '#34d399', '#f59e0b', '#fb7185', '#38bdf8', '#a78bfa']
 
@@ -61,17 +61,24 @@ export function PaymentsChart({
   subtitle,
   layout = 'default',
   donutSize = 'default',
+  emptyMessage,
+  preciseMoney = false,
 }: {
   payments: LicensePaymentStat[]
   title: string
   subtitle?: string
   layout?: 'default' | 'inline'
   donutSize?: 'default' | 'large'
+  emptyMessage?: string
+  preciseMoney?: boolean
 }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const totalMoney = payments.reduce((sum, item) => sum + item.sum, 0)
+  const slices = payments.filter(item => item.sum > 0)
+  const colors = new Map(payments.map((item, index) => [item.method, paymentColor(item.method, index)]))
   const inline = layout === 'inline'
+  const money = (value: number) => preciseMoney ? usdAmount(format, value) : usdWhole(format, value)
 
   return (
     <Card className="flex h-full flex-col p-6">
@@ -79,7 +86,7 @@ export function PaymentsChart({
       {subtitle ? <p className="mt-1 text-sm text-fg-muted">{subtitle}</p> : null}
 
       {payments.length === 0 ? (
-        <p className="mt-8 text-sm text-fg-subtle">{t('stats.empty')}</p>
+        <p className="mt-8 text-sm text-fg-subtle">{emptyMessage ?? t('stats.empty')}</p>
       ) : (
         <div
           className={cn(
@@ -104,23 +111,24 @@ export function PaymentsChart({
                   ? donutSize === 'large'
                     ? 'h-60 w-60 sm:h-64 sm:w-64'
                     : 'h-52 w-52 sm:h-55 sm:w-55'
-                  : 'h-52 w-52 sm:h-full sm:w-auto sm:max-h-full sm:max-w-full sm:scale-[0.9025]',
+                  : 'w-52 max-w-full',
               )}
             >
+              {slices.length === 0 ? <div aria-hidden className="absolute inset-[6%] rounded-full border-[1.65rem] border-ink-700/60" /> : null}
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={payments}
+                    data={slices}
                     dataKey="sum"
                     nameKey="method"
                     innerRadius="62%"
                     outerRadius="88%"
-                    paddingAngle={2}
+                    paddingAngle={slices.length > 1 ? 2 : 0}
                     stroke="none"
                     isAnimationActive
                   >
-                    {payments.map((item, index) => (
-                      <Cell key={item.method} fill={paymentColor(item.method, index)} />
+                    {slices.map((item) => (
+                      <Cell key={item.method} fill={colors.get(item.method)} />
                     ))}
                   </Pie>
                 </PieChart>
@@ -132,7 +140,7 @@ export function PaymentsChart({
                     inline ? 'text-base sm:text-xl' : 'text-xl sm:text-2xl',
                   )}
                 >
-                  {usdWhole(format, totalMoney)}
+                  {money(totalMoney)}
                 </p>
                 <p
                   className={cn(
@@ -171,7 +179,7 @@ export function PaymentsChart({
                     </div>
                   </div>
                   <span className="shrink-0 tabular text-sm font-medium text-emerald-400">
-                    {usdWhole(format, item.sum)}
+                    {money(item.sum)}
                   </span>
                   <span className="w-12 shrink-0 tabular text-right text-sm text-fg-subtle">
                     {format.percent(moneyShare)}

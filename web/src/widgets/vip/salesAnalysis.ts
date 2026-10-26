@@ -1,15 +1,14 @@
-import type { LicenseSaleRow } from '@/shared/api/license'
+import type { LicenseDurationStat, LicensePaymentStat, LicenseSaleRow } from '@/shared/api/license'
 import { utcCalendarDayKey } from '@/shared/lib/datetime'
 
 export type SalesRange = { from: string; to: string }
-const DAY_MS = 86_400_000
+export type SalesRangeMode = 'all' | 'day' | 'range'
+export type SalesDurationBucket = Omit<LicenseDurationStat, 'active'>
+const PAYMENT_METHODS = ['FunPay', 'Stars', 'Card', 'Crypto', 'PayPal']
+const TARIFF_DAYS = [7, 30, 90, 365]
 
 export function saleDate(row: LicenseSaleRow): string | null {
   return row.activated_at ?? row.purchased_at
-}
-
-export function shiftDay(day: string, offset: number): string {
-  return new Date(Date.parse(`${day}T00:00:00Z`) + offset * DAY_MS).toISOString().slice(0, 10)
 }
 
 export function filterSales(sales: LicenseSaleRow[], range: SalesRange): LicenseSaleRow[] {
@@ -20,13 +19,6 @@ export function filterSales(sales: LicenseSaleRow[], range: SalesRange): License
     const key = utcCalendarDayKey(when)
     return (!range.from || key >= range.from) && (!range.to || key <= range.to)
   })
-}
-
-/** Compare only closed, bounded UTC periods; a partial day is not a full day. */
-export function previousRange(range: SalesRange, today: string): SalesRange | null {
-  if (!range.from || !range.to || range.from > range.to || range.to >= today) return null
-  const days = (Date.parse(range.to) - Date.parse(range.from)) / DAY_MS + 1
-  return { from: shiftDay(range.from, -days), to: shiftDay(range.from, -1) }
 }
 
 export function summarizeSales(rows: LicenseSaleRow[]) {
@@ -47,4 +39,41 @@ export function summarizeSales(rows: LicenseSaleRow[]) {
   summary.first.sum = Math.round(summary.first.sum * 100) / 100
   summary.repeat.sum = Math.round(summary.repeat.sum * 100) / 100
   return summary
+}
+
+/** Both charts use the same selected rows, not the unfiltered API aggregates. */
+export function groupSales(rows: LicenseSaleRow[]): {
+  payments: LicensePaymentStat[]
+  durations: SalesDurationBucket[]
+} {
+  const methods = new Map<string, { method: string; count: number; cents: number }>()
+  const tariffs = new Map<number, { days: number; count: number; cents: number }>()
+  PAYMENT_METHODS.forEach(method => methods.set(method, { method, count: 0, cents: 0 }))
+  TARIFF_DAYS.forEach(days => tariffs.set(days, { days, count: 0, cents: 0 }))
+  let totalCents = 0
+  for (const row of rows) {
+    const cents = Math.round(row.amount * 100)
+    totalCents += cents
+    const method = methods.get(row.method) ?? { method: row.method, count: 0, cents: 0 }
+    method.count += 1
+    method.cents += cents
+    methods.set(row.method, method)
+    if (row.duration_days != null) {
+      const tariff = tariffs.get(row.duration_days) ?? { days: row.duration_days, count: 0, cents: 0 }
+      tariff.count += 1
+      tariff.cents += cents
+      tariffs.set(row.duration_days, tariff)
+    }
+  }
+  const share = (value: number, total: number) => total > 0 ? Math.round(value / total * 1000) / 10 : 0
+  const bucket = ({ count, cents }: { count: number; cents: number }) => ({
+    count, sum: cents / 100,
+    count_share: share(count, rows.length), money_share: share(cents, totalCents),
+  })
+  return {
+    payments: [...methods.values()]
+      .map(item => ({ method: item.method, ...bucket(item) })),
+    durations: [...tariffs.values()].sort((a, b) => a.days - b.days)
+      .map(item => ({ days: item.days, ...bucket(item) })),
+  }
 }

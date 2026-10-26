@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest'
 
 import type { LicenseSaleRow } from '../src/shared/api/license'
-import { filterSales, previousRange, shiftDay, summarizeSales } from '../src/widgets/vip/salesAnalysis'
+import { filterSales, groupSales, summarizeSales } from '../src/widgets/vip/salesAnalysis'
 
 function sale(overrides: Partial<LicenseSaleRow> = {}): LicenseSaleRow {
   return {
@@ -22,22 +22,6 @@ it('filters inclusively by UTC rather than the local purchase date', () => {
   expect(filterSales(rows, { from: '2026-10-17', to: '2026-10-16' })).toEqual([])
 })
 
-it('compares exactly equal closed periods across year and leap-day boundaries', () => {
-  expect(previousRange({ from: '2026-01-01', to: '2026-01-07' }, '2026-10-18'))
-    .toEqual({ from: '2025-12-25', to: '2025-12-31' })
-  expect(previousRange({ from: '2024-03-01', to: '2024-03-01' }, '2026-10-18'))
-    .toEqual({ from: '2024-02-29', to: '2024-02-29' })
-  expect(shiftDay('2026-03-29', 1)).toBe('2026-03-30') // UTC days, unaffected by DST.
-})
-
-it.each([
-  { from: '', to: '' }, { from: '2026-10-01', to: '' },
-  { from: '', to: '2026-10-01' }, { from: '2026-10-19', to: '2026-10-18' },
-  { from: '2026-10-18', to: '2026-10-18' }, { from: '2026-10-18', to: '2026-10-19' },
-])('does not compare unbounded, reversed, ongoing or future periods: %j', (range) => {
-  expect(previousRange(range, '2026-10-18')).toBeNull()
-})
-
 it('keeps cents, separates purchase kinds, and does not classify old cache rows as first', () => {
   expect(summarizeSales([
     sale({ amount: 0.1 }), sale({ amount: 0.2 }),
@@ -46,4 +30,32 @@ it('keeps cents, separates purchase kinds, and does not classify old cache rows 
   ])).toEqual({ count: 4, sum: 7.75, first: { count: 2, sum: 0.3 },
     repeat: { count: 1, sum: 2.45 }, unknown: 1 })
   expect(summarizeSales([]).sum).toBe(0)
+})
+
+it('groups the same selected sales by payment method and tariff, preserving cents and period shares', () => {
+  const data = [sale({ amount: 0.1 }), sale({ amount: 0.2 }),
+    sale({ amount: 2.45, method: 'FunPay', duration_days: 30 }),
+    sale({ amount: 100, method: 'PayPal', duration_days: 365, activated_at: '2026-10-17T00:00:00Z' })]
+  const result = groupSales(filterSales(data, { from: '2026-10-16', to: '2026-10-16' }))
+  expect(result.payments.filter(item => item.count > 0)).toEqual([
+    { method: 'FunPay', count: 1, sum: 2.45, count_share: 33.3, money_share: 89.1 },
+    { method: 'Stars', count: 2, sum: 0.3, count_share: 66.7, money_share: 10.9 },
+  ])
+  expect(result.durations.filter(item => item.count > 0)).toEqual([
+    { days: 7, count: 2, sum: 0.3, count_share: 66.7, money_share: 10.9 },
+    { days: 30, count: 1, sum: 2.45, count_share: 33.3, money_share: 89.1 },
+  ])
+  expect(data).toHaveLength(4)
+})
+
+it('keeps every standard legend bucket at zero for an empty period without NaN or Infinity', () => {
+  const empty = groupSales([])
+  expect(empty.payments.map(item => item.method)).toEqual(['FunPay', 'Stars', 'Card', 'Crypto', 'PayPal'])
+  expect(empty.durations.map(item => item.days)).toEqual([7, 30, 90, 365])
+  for (const item of [...empty.payments, ...empty.durations]) {
+    expect(item).toMatchObject({ count: 0, sum: 0, count_share: 0, money_share: 0 })
+  }
+  const result = groupSales([sale({ amount: 0 })])
+  expect(result.payments[0]?.money_share).toBe(0)
+  expect(result.durations[0]?.money_share).toBe(0)
 })

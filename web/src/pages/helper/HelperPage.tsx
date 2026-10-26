@@ -37,9 +37,6 @@ function Hero() {
       <p className="mx-auto mt-[clamp(0.3rem,0.85vh,0.65rem)] max-w-2xl shrink-0 text-[clamp(0.8125rem,1.4vh,1.0625rem)] leading-snug text-fg-muted">
         {t('hero.subtitle')}
       </p>
-      <p className="mx-auto mt-[clamp(0.2rem,0.55vh,0.4rem)] max-w-2xl shrink-0 text-[clamp(0.6875rem,1.1vh,0.8125rem)] leading-snug text-fg-subtle">
-        {t('hero.lead')}
-      </p>
 
       <div className="mx-auto mt-[clamp(0.4rem,1.15vh,0.85rem)] flex min-h-0 w-full min-w-0 flex-1 basis-0 flex-col">
         <MediaGallery compact />
@@ -98,11 +95,13 @@ export function HelperPage() {
           <div className="lg:hidden pt-2">
             <QuickStats />
           </div>
-          <DeferredMount fallback={<Skeleton className="mt-8 h-96" />}>
-            <Suspense fallback={<Skeleton className="mt-8 h-96" />}>
-              <AnalyticsSection />
-            </Suspense>
-          </DeferredMount>
+          <div className="mt-8 border-t border-white/8 pt-8 sm:pt-10 lg:mt-0">
+            <DeferredMount fallback={<Skeleton className="h-96" />}>
+              <Suspense fallback={<Skeleton className="h-96" />}>
+                <AnalyticsSection />
+              </Suspense>
+            </DeferredMount>
+          </div>
         </div>
       )}
     </div>

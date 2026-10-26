@@ -17,6 +17,12 @@ const API_DATETIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/
 
 const API_DATE = /^\d{4}-\d{2}-\d{2}$/
 
+export function isCalendarDate(value: string): boolean {
+  if (!API_DATE.test(value)) return false
+  const date = new Date(`${value}T00:00:00Z`)
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value
+}
+
 function warnDev(message: string): void {
   if (import.meta.env.DEV) console.warn(`[datetime] ${message}`)
 }

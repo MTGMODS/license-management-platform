@@ -7,7 +7,15 @@ import { beforeEach, expect, it, vi } from 'vitest'
 import type { LicenseSaleRow } from '../src/shared/api/license'
 import ru from '../src/i18n/locales/ru/vip.json'
 import uk from '../src/i18n/locales/uk/vip.json'
-import { RetentionBlock, SalesTable } from '../src/widgets/vip/SalesStats'
+import { RetentionBlock, SalesPeriodBlock } from '../src/widgets/vip/SalesStats'
+
+// Chart data/filter integration has its own suite; keep pagination tests bounded.
+vi.mock('@/widgets/vip/SalesStatCards', () => ({ PaymentsChart: () => null }))
+vi.mock('recharts', () => {
+  const empty = () => null
+  return { Area: empty, AreaChart: empty, CartesianGrid: empty, Cell: empty,
+    Pie: empty, PieChart: empty, ResponsiveContainer: empty, Tooltip: empty, XAxis: empty, YAxis: empty }
+})
 
 const i18n = createInstance()
 await i18n.init({ lng: 'ru', fallbackLng: 'ru', defaultNS: 'vip',
@@ -30,11 +38,13 @@ const sales = [
   row('2026-10-17T00:00:00Z', 1, 'repeat'),
 ]
 
-function renderTable(data = sales) {
-  return render(<I18nextProvider i18n={i18n}><SalesTable sales={data} /></I18nextProvider>)
+function renderTable(data = sales, mode: 'day' | 'all' = 'day') {
+  const view = render(<I18nextProvider i18n={i18n}><SalesPeriodBlock sales={data} /></I18nextProvider>)
+  if (mode === 'day') fireEvent.change(screen.getByRole('combobox', { name: i18n.t('vip:stats.salesList.range') }), { target: { value: 'day' } })
+  return view
 }
 
-function results() { return within(screen.getByRole('region', { name: /^Итоги выбранного (дня|периода)$/ })) }
+function results() { return within(screen.getByRole('region', { name: /^Итоги (выбранного (дня|периода)|за всё время)$/ })) }
 
 function metric(label: string) {
   const card = results().getByText(label).closest('div')!
@@ -52,31 +62,32 @@ it('shows conspicuous zero totals for an empty day rather than a tiny count/sum 
   expect(screen.queryByText('18 октября 2026 г.')).toBeNull()
 })
 
-it('shows selected-day sales, exact revenue, purchase kinds and the previous UTC day', () => {
+it('shows selected-day sales, exact revenue and purchase kinds without period comparison', () => {
   renderTable()
   fireEvent.change(screen.getByLabelText('День'), { target: { value: '2026-10-16' } })
   expect(metric('Продаж за день').getByText('2')).toBeTruthy()
   expect(metric('Доход за день').getByText('$7,50')).toBeTruthy()
   expect(metric('Первые покупки').getByText('Доход: $1,50')).toBeTruthy()
   expect(metric('Повторные покупки').getByText('Доход: $6')).toBeTruthy()
-  expect(results().getByText('Ранее: 1 · +100,0%')).toBeTruthy()
-  expect(results().getByText('Ранее: $3 · +150,0%')).toBeTruthy()
+  expect(results().getByText('Из 4 платных продаж за всё время')).toBeTruthy()
+  expect(results().getByText('Только завершённые платные подписки')).toBeTruthy()
+  expect(screen.queryByText(/Ранее:|Сравнение с/)).toBeNull()
   expect(screen.getAllByRole('row')).toHaveLength(3)
 })
 
-it('keeps custom periods and all-time results through the date inputs without preset buttons', () => {
+it('offers explicit all-time results and custom date inputs without quick-range presets', () => {
   renderTable()
   expect(screen.queryByRole('button', { name: '7 дней' })).toBeNull()
   expect(screen.queryByRole('button', { name: '30 дней' })).toBeNull()
   expect(screen.queryByRole('button', { name: '90 дней' })).toBeNull()
-  expect(screen.queryByRole('button', { name: 'За всё время' })).toBeNull()
-  fireEvent.click(screen.getByRole('button', { name: 'Период' }))
+  expect(screen.getByRole('option', { name: 'За всё время' })).toBeTruthy()
+  fireEvent.change(screen.getByRole('combobox', { name: 'Период' }), { target: { value: 'range' } })
   fireEvent.change(screen.getByLabelText('с'), { target: { value: '2026-10-11' } })
   fireEvent.change(screen.getByLabelText('по'), { target: { value: '2026-10-17' } })
   expect(metric('Продаж за период').getByText('4')).toBeTruthy()
   expect(metric('Первые покупки').getByText('2')).toBeTruthy()
   expect(metric('Повторные покупки').getByText('2')).toBeTruthy()
-  expect(results().getAllByText(/нет базы для сравнения/)).toHaveLength(2)
+  expect(screen.queryByText(/Ранее:|Сравнение с|нет базы для сравнения/)).toBeNull()
   expect(screen.queryByText(/Infinity|NaN/)).toBeNull()
   fireEvent.change(screen.getByLabelText('с'), { target: { value: '' } })
   fireEvent.change(screen.getByLabelText('по'), { target: { value: '' } })
@@ -86,12 +97,12 @@ it('keeps custom periods and all-time results through the date inputs without pr
 
 it('supports custom and open-ended ranges and reports invalid ordering', () => {
   renderTable()
-  fireEvent.click(screen.getByRole('button', { name: 'Период' }))
+  fireEvent.change(screen.getByRole('combobox', { name: 'Период' }), { target: { value: 'range' } })
   fireEvent.change(screen.getByLabelText('с'), { target: { value: '2026-10-16' } })
   expect(metric('Продаж за период').getByText('3')).toBeTruthy()
   expect(results().queryByText(/Ранее:/)).toBeNull()
   fireEvent.change(screen.getByLabelText('по'), { target: { value: '2026-10-17' } })
-  expect(results().getByText(/Сравнение с 14 октября 2026 г. — 15 октября 2026 г./)).toBeTruthy()
+  expect(screen.queryByText(/Сравнение с/)).toBeNull()
   fireEvent.change(screen.getByLabelText('по'), { target: { value: '2026-10-15' } })
   expect(screen.getByRole('alert').textContent).toContain('Начало периода')
   expect(screen.queryByRole('region', { name: 'Итоги выбранного периода' })).toBeNull()
@@ -112,7 +123,7 @@ it.each(['ru', 'uk'])('adds purchase type after the date using existing API valu
     row('2026-10-18T03:00:00Z', 1, null),
   ])
   const copy = (lng === 'ru' ? ru : uk).stats.salesList
-  const table = within(screen.getByRole('table', { name: copy.title }))
+  const table = within(screen.getByRole('table', { name: copy.title_day }))
   expect(table.getAllByRole('columnheader').map((header) => header.textContent))
     .toEqual([copy.status, copy.plan, copy.amount, copy.method, copy.date, copy.purchaseType])
   const rows = table.getAllByRole('row').slice(1)
@@ -127,7 +138,7 @@ it('renders the period summary and filters in Ukrainian', async () => {
   renderTable()
   expect(screen.getByRole('region', { name: 'Підсумки обраного дня' })).toBeTruthy()
   expect(screen.getByText('Продажів за день')).toBeTruthy()
-  expect(screen.getByRole('button', { name: 'Період' })).toBeTruthy()
+  expect(screen.getByRole('combobox', { name: 'Період' })).toBeTruthy()
   expect(screen.queryByText('Як розраховуються показники')).toBeNull()
 })
 
@@ -143,13 +154,13 @@ it.each(['ru', 'uk'])('switches summary and empty-state wording between day and 
     expect(screen.queryByText(copy.emptyFilter)).toBeNull()
   }
   expectDay()
-  fireEvent.click(screen.getByRole('button', { name: copy.period }))
+  fireEvent.change(screen.getByRole('combobox', { name: copy.range }), { target: { value: 'range' } })
   expect(screen.getByRole('region', { name: copy.results })).toBeTruthy()
   expect(screen.getByText(copy.selectedSales)).toBeTruthy()
   expect(screen.getByText(copy.selectedRevenue)).toBeTruthy()
   expect(screen.getByText(copy.emptyFilter)).toBeTruthy()
   expect(screen.queryByText(copy.selectedSales_day)).toBeNull()
-  fireEvent.click(screen.getByRole('button', { name: copy.oneDay }))
+  fireEvent.change(screen.getByRole('combobox', { name: copy.range }), { target: { value: 'day' } })
   expectDay()
 })
 
@@ -160,53 +171,53 @@ function manySales(count: number) {
   }))
 }
 
-it('renders at most 50 sales while totals still include all 2664 filtered purchases', () => {
+it('renders at most 10 sales while totals still include all 2664 filtered purchases', () => {
   renderTable(manySales(2664))
-  fireEvent.click(screen.getByRole('button', { name: 'Период' }))
-  expect(screen.getAllByRole('row')).toHaveLength(51)
+  fireEvent.change(screen.getByRole('combobox', { name: 'Период' }), { target: { value: 'range' } })
+  expect(screen.getAllByRole('row')).toHaveLength(11)
   expect(metric('Продаж за период').getByText('2 664')).toBeTruthy()
   expect(metric('Доход за период').getByText('$2 664')).toBeTruthy()
   expect(metric('Первые покупки').getByText('1 332')).toBeTruthy()
   expect(metric('Повторные покупки').getByText('1 332')).toBeTruthy()
   expect(screen.getByText('sale-2663')).toBeTruthy()
-  expect(screen.queryByText('sale-2613')).toBeNull()
+  expect(screen.queryByText('sale-2653')).toBeNull()
   expect(screen.getByRole('button', { name: 'Назад' }).hasAttribute('disabled')).toBe(true)
   fireEvent.click(screen.getByRole('button', { name: 'Далее' }))
-  expect(screen.getAllByRole('row')).toHaveLength(51)
-  expect(screen.getByText('sale-2613')).toBeTruthy()
+  expect(screen.getAllByRole('row')).toHaveLength(11)
+  expect(screen.getByText('sale-2653')).toBeTruthy()
   expect(screen.queryByText('sale-2663')).toBeNull()
-  expect(screen.getByText('Показано 51–100 из 2 664 продаж')).toBeTruthy()
+  expect(screen.getByText('Показано 11–20 из 2 664 продаж')).toBeTruthy()
   expect(metric('Продаж за период').getByText('2 664')).toBeTruthy()
   fireEvent.click(screen.getByRole('button', { name: 'Назад' }))
   expect(screen.getByText('sale-2663')).toBeTruthy()
 })
 
 it('handles the last partial page and resets pagination when filters change', () => {
-  renderTable(manySales(123))
-  fireEvent.click(screen.getByRole('button', { name: 'Период' }))
+  renderTable(manySales(23))
+  fireEvent.change(screen.getByRole('combobox', { name: 'Период' }), { target: { value: 'range' } })
   fireEvent.click(screen.getByRole('button', { name: 'Далее' }))
   fireEvent.click(screen.getByRole('button', { name: 'Далее' }))
-  expect(screen.getAllByRole('row')).toHaveLength(24)
-  expect(screen.getByText('Показано 101–123 из 123 продаж')).toBeTruthy()
+  expect(screen.getAllByRole('row')).toHaveLength(4)
+  expect(screen.getByText('Показано 21–23 из 23 продаж')).toBeTruthy()
   expect(screen.getByText('sale-0')).toBeTruthy()
   expect(screen.getByRole('button', { name: 'Далее' }).hasAttribute('disabled')).toBe(true)
   fireEvent.change(screen.getByLabelText('с'), { target: { value: '2026-10-18' } })
   expect(screen.queryByRole('table')).toBeNull()
   expect(screen.queryByRole('group', { name: 'Страницы списка продаж' })).toBeNull()
   fireEvent.change(screen.getByLabelText('с'), { target: { value: '' } })
-  expect(screen.getByText('sale-122')).toBeTruthy()
-  expect(screen.getByText('Показано 1–50 из 123 продаж')).toBeTruthy()
-  fireEvent.click(screen.getByRole('button', { name: 'День' }))
+  expect(screen.getByText('sale-22')).toBeTruthy()
+  expect(screen.getByText('Показано 1–10 из 23 продаж')).toBeTruthy()
+  fireEvent.change(screen.getByRole('combobox', { name: 'Период' }), { target: { value: 'day' } })
   expect(screen.getByText('За выбранный день продаж нет')).toBeTruthy()
   expect(screen.queryByRole('group', { name: 'Страницы списка продаж' })).toBeNull()
 })
 
 it('clamps the visible page when refreshed sales data has fewer entries', () => {
   const view = renderTable(manySales(123))
-  fireEvent.click(screen.getByRole('button', { name: 'Период' }))
+  fireEvent.change(screen.getByRole('combobox', { name: 'Период' }), { target: { value: 'range' } })
   fireEvent.click(screen.getByRole('button', { name: 'Далее' }))
   fireEvent.click(screen.getByRole('button', { name: 'Далее' }))
-  view.rerender(<I18nextProvider i18n={i18n}><SalesTable sales={manySales(3)} /></I18nextProvider>)
+  view.rerender(<I18nextProvider i18n={i18n}><SalesPeriodBlock sales={manySales(3)} /></I18nextProvider>)
   expect(screen.getAllByRole('row')).toHaveLength(4)
   expect(screen.getByText('sale-2')).toBeTruthy()
   expect(metric('Продаж за период').getByText('3')).toBeTruthy()
@@ -214,13 +225,13 @@ it('clamps the visible page when refreshed sales data has fewer entries', () => 
 })
 
 it('can show the table immediately with four animated placeholders before summary work', () => {
-  const html = renderToString(<I18nextProvider i18n={i18n}><SalesTable sales={[
+  const html = renderToString(<I18nextProvider i18n={i18n}><SalesPeriodBlock sales={[
     row('2026-10-18T01:00:00Z', 3, 'first'),
   ]} /></I18nextProvider>)
   expect(html).toContain('aria-label="Подсчёт итогов продаж"')
   expect(html).toContain('<table')
   expect(html).not.toContain('aria-label="Итоги выбранного дня"')
-  expect(html.match(/after:animate-shimmer/g)).toHaveLength(4)
+  expect(html.match(/after:animate-shimmer/g)).toHaveLength(6)
 })
 
 it('shows tariff transition counts, shares and subsequent-purchase revenue', () => {

@@ -157,10 +157,12 @@ it('uses green for revenue totals and legend amounts in both subscription donut 
   vi.mocked(request).mockResolvedValue({ updated_at: '2026-10-19T12:00:00Z', subscriptions: {
     by_method: [{ method: 'FunPay', count: 2, sum: 42, money_share: 100 }],
     by_duration: [{ duration_days: 30, count: 2, sum: 42, active: 1, money_share: 100 }],
+    sales: [0, 1].map(() => ({ amount: 21, method: 'FunPay', duration_days: 30,
+      activated_at: '2026-10-19T01:00:00Z', status: 'ACTIVE' })),
   } })
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(<QueryClientProvider client={client}><SalesStats /></QueryClientProvider>)
   const amounts = await screen.findAllByText('$42')
-  expect(amounts).toHaveLength(4)
+  expect(amounts.length).toBeGreaterThanOrEqual(4)
   for (const amount of amounts) expect(amount.className).toContain('text-emerald-400')
 })

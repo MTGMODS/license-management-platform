@@ -1,4 +1,4 @@
-import { Repeat2 } from 'lucide-react'
+import { CalendarDays, CalendarRange, ChevronDown, Infinity as InfinityIcon, Repeat2 } from 'lucide-react'
 import { useDeferredValue, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -16,22 +16,22 @@ import {
 
 import { useSalesStats } from '@/features/license/useSalesStats'
 import type {
-  LicenseDurationStat,
   LicensePurchaseBucket,
   LicenseRetentionStats,
   LicenseSaleRow,
   LicenseTimelineDay,
   LicenseTimelineMonth,
 } from '@/shared/api/license'
-import { utcTodayKey } from '@/shared/lib/datetime'
+import { isCalendarDate, utcTodayKey } from '@/shared/lib/datetime'
 import { useFormatters } from '@/shared/lib/format'
 import { Button, Card, ErrorState, SegmentedControl, Skeleton } from '@/shared/ui'
+import { CalendarDateInput } from '@/shared/ui/CalendarDateInput'
 import { AXIS_PROPS, CHART, Y_AXIS_NUMERIC } from '@/widgets/analytics/chartTheme'
 import { ChartTooltip } from '@/widgets/analytics/ChartTooltip'
 
 import { PaymentsChart } from './SalesStatCards'
 import { SalesPeriodSummary } from './SalesPeriodSummary'
-import { filterSales, previousRange, saleDate } from './salesAnalysis'
+import { filterSales, groupSales, saleDate, type SalesDurationBucket, type SalesRangeMode } from './salesAnalysis'
 import { usdAmount, usdWhole } from './salesStatsFormat'
 
 const DURATION_COLOR: Record<number, string> = {
@@ -174,43 +174,46 @@ export function RevenueTimeline({
   )
 }
 
-function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
+function DurationsChart({ durations }: { durations: SalesDurationBucket[] }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const rows = [...durations].sort((a, b) => a.days - b.days)
   const totalMoney = rows.reduce((sum, item) => sum + item.sum, 0)
+  const slices = rows.filter(item => item.sum > 0)
+  const colors = new Map(rows.map((item, index) => [item.days, durationColor(item.days, index)]))
 
   return (
     <Card className="flex h-full flex-col p-6">
       <h3 className="text-lg font-semibold tracking-tight">{t('stats.durations.title')}</h3>
 
       {rows.length === 0 ? (
-        <p className="mt-8 text-sm text-fg-subtle">{t('stats.empty')}</p>
+        <p className="mt-8 text-sm text-fg-subtle">{t('stats.periodEmpty')}</p>
       ) : (
         <div className="mt-5 flex min-h-0 flex-1 flex-col gap-6 sm:flex-row sm:items-stretch">
           <div className="flex min-h-[12rem] shrink-0 items-center justify-center sm:min-h-0 sm:basis-[44%] lg:basis-[46%]">
-            <div className="relative aspect-square h-52 w-52 sm:h-full sm:w-auto sm:max-h-full sm:max-w-full sm:scale-[0.9025]">
+            <div className="relative aspect-square w-52 max-w-full">
+              {slices.length === 0 ? <div aria-hidden className="absolute inset-[6%] rounded-full border-[1.65rem] border-ink-700/60" /> : null}
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={rows}
+                    data={slices}
                     dataKey="sum"
                     nameKey="days"
                     innerRadius="62%"
                     outerRadius="88%"
-                    paddingAngle={2}
+                    paddingAngle={slices.length > 1 ? 2 : 0}
                     stroke="none"
                     isAnimationActive
                   >
-                    {rows.map((item, index) => (
-                      <Cell key={item.days} fill={durationColor(item.days, index)} />
+                    {slices.map((item) => (
+                      <Cell key={item.days} fill={colors.get(item.days)} />
                     ))}
                   </Pie>
                 </PieChart>
               </ResponsiveContainer>
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
                 <p className="tabular text-xl font-semibold tracking-tight text-emerald-400 sm:text-2xl">
-                  {usdWhole(format, totalMoney)}
+                  {usdAmount(format, totalMoney)}
                 </p>
                 <p className="mt-0.5 text-[0.65rem] text-fg-subtle sm:text-xs">
                   {t('stats.payments.total')}
@@ -236,13 +239,12 @@ function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
                         {t('pricing.days', { count: item.days })}
                       </p>
                       <p className="tabular text-xs text-fg-subtle">
-                        {format.number(item.count)} · {t('stats.durations.active')}:{' '}
-                        {format.number(item.active)}
+                        {format.number(item.count)}
                       </p>
                     </div>
                   </div>
                   <span className="shrink-0 tabular text-sm font-medium text-emerald-400">
-                    {usdWhole(format, item.sum)}
+                    {usdAmount(format, item.sum)}
                   </span>
                   <span className="w-12 shrink-0 tabular text-right text-sm text-fg-subtle">
                     {format.percent(moneyShare)}
@@ -368,25 +370,18 @@ export function RetentionBlock({ retention }: { retention: LicenseRetentionStats
   )
 }
 
-const DATE_INPUT =
-  'rounded-lg border border-white/8 bg-ink-800 px-2.5 py-1.5 text-sm text-fg outline-none ' +
-  'focus:border-accent-500/40 [color-scheme:dark]'
-
-type SalesRangeMode = 'day' | 'range'
-const SALES_PAGE_SIZE = 50
+const SALES_PAGE_SIZE = 10
 
 function isSaleActive(status: string): boolean {
   return status.toUpperCase() === 'ACTIVE'
 }
 
-export function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
+export function SalesPeriodBlock({ sales }: { sales: LicenseSaleRow[] }) {
   const { t } = useTranslation('vip')
-  const format = useFormatters()
-  const [mode, setMode] = useState<SalesRangeMode>('day')
+  const [mode, setMode] = useState<SalesRangeMode>('all')
   const [day, setDay] = useState(() => utcTodayKey())
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
-  const [page, setPage] = useState(0)
 
   const sorted = useMemo(
     () =>
@@ -399,101 +394,132 @@ export function SalesTable({ sales }: { sales: LicenseSaleRow[] }) {
   )
 
   const range = useMemo(
-    () => mode === 'day' ? { from: day, to: day } : { from, to },
+    () => mode === 'all' ? { from: '', to: '' } : mode === 'day' ? { from: day, to: day } : { from, to },
     [day, from, mode, to],
   )
   const invalidRange = Boolean(range.from && range.to && range.from > range.to)
-  const rows = useMemo(() => filterSales(sorted, range), [range, sorted])
-  const today = utcTodayKey()
-  const comparison = useMemo(() => previousRange(range, today), [range, today])
-  const previous = useMemo(
-    () => comparison ? filterSales(sorted, comparison) : [],
-    [comparison, sorted],
-  )
+  const missingDay = mode === 'day' && !day
+  const invalidDate = Boolean((range.from && !isCalendarDate(range.from)) || (range.to && !isCalendarDate(range.to)))
+  const rows = useMemo(() => invalidDate ? [] : filterSales(sorted, range), [invalidDate, range, sorted])
   const summaryInput = useMemo(
-    () => ({ rows, previous, comparison, total: sales.length, mode }),
-    [rows, previous, comparison, sales.length, mode],
+    () => ({ rows, total: sales.length, mode }),
+    [rows, sales.length, mode],
   )
   // Commit the controls and bounded table first. Never show totals from an old filter.
   const deferredSummary = useDeferredValue<typeof summaryInput | null>(summaryInput, null)
   const summaryPending = deferredSummary !== summaryInput
+  const breakdown = useMemo(() => deferredSummary ? groupSales(deferredSummary.rows) : null, [deferredSummary])
+  const RangeIcon = mode === 'all' ? InfinityIcon : mode === 'day' ? CalendarDays : CalendarRange
+
+  return (
+    <section aria-labelledby="sales-period-title" className="space-y-4">
+      <Card className="p-4 sm:p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h3 id="sales-period-title" className="text-lg font-semibold tracking-tight">{t('stats.periodTitle')}</h3>
+            <p className="mt-1 text-xs text-fg-subtle">{t('stats.periodSubtitle')}</p>
+          </div>
+
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+            <div className="relative w-full sm:w-auto">
+              <RangeIcon aria-hidden className="pointer-events-none absolute left-3 top-2.5 size-4 text-accent-300" />
+              <select aria-label={t('stats.salesList.range')} value={mode}
+                onChange={event => setMode(event.target.value as SalesRangeMode)}
+                className="w-full appearance-none rounded-lg border border-white/10 bg-ink-800 py-2 pl-10 pr-10 text-sm text-fg outline-none focus-visible:border-accent-400/50 focus-visible:ring-2 focus-visible:ring-accent-400/15 sm:w-48 [color-scheme:dark]">
+                <option value="all">{t('stats.salesList.allTime')}</option>
+                <option value="day">{t('stats.salesList.oneDay')}</option>
+                <option value="range">{t('stats.salesList.period')}</option>
+              </select>
+              <ChevronDown aria-hidden className="pointer-events-none absolute right-3 top-3 size-3.5 text-fg-subtle" />
+            </div>
+
+            {mode === 'day' ? (
+              <CalendarDateInput
+                label={t('stats.salesList.oneDay')}
+                calendarLabel={t('stats.salesList.calendar', { field: t('stats.salesList.oneDay') })}
+                value={day}
+                onChange={setDay}
+              />
+            ) : null}
+
+            {mode === 'range' ? (
+              <div className="grid w-full grid-cols-2 gap-2 text-xs text-fg-subtle sm:flex sm:w-auto sm:items-center sm:gap-3">
+                <span className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+                  <span>{t('stats.salesList.from')}</span>
+                  <CalendarDateInput
+                    label={t('stats.salesList.from')}
+                    calendarLabel={t('stats.salesList.calendar', { field: t('stats.salesList.from') })}
+                    value={from}
+                    max={to || undefined}
+                    onChange={setFrom}
+                  />
+                </span>
+                <span className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+                  <span>{t('stats.salesList.to')}</span>
+                  <CalendarDateInput
+                    label={t('stats.salesList.to')}
+                    calendarLabel={t('stats.salesList.calendar', { field: t('stats.salesList.to') })}
+                    value={to}
+                    min={from || undefined}
+                    onChange={setTo}
+                  />
+                </span>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </Card>
+
+      {invalidRange || missingDay || invalidDate ? (
+        <p role="alert" className="text-sm text-negative">
+          {t(invalidDate ? 'stats.salesList.invalidDate' : missingDay ? 'stats.salesList.chooseDay' : 'stats.salesList.invalidRange')}
+        </p>
+      ) : (
+        <>
+          {summaryPending || !deferredSummary ? (
+              <div role="status" aria-label={t('stats.salesList.summaryLoading')} aria-busy="true"
+                className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+                {Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-28 rounded-xl" />)}
+              </div>
+            ) : <SalesPeriodSummary {...deferredSummary} />}
+
+          {summaryPending || !breakdown ? (
+            <div role="status" aria-label={t('stats.salesList.chartsLoading')} aria-busy="true" className="grid gap-4 lg:grid-cols-2">
+              <Skeleton className="h-72 rounded-2xl" />
+              <Skeleton className="h-72 rounded-2xl" />
+            </div>
+          ) : (
+            <div className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
+              <PaymentsChart payments={breakdown.payments} title={t('stats.payments.title')} emptyMessage={t('stats.periodEmpty')} preciseMoney />
+              <DurationsChart durations={breakdown.durations} />
+            </div>
+          )}
+
+          <SalesTable key={`${mode}:${day}:${from}:${to}`} rows={rows} mode={mode} />
+        </>
+      )}
+    </section>
+  )
+}
+
+export function SalesTable({ rows, mode }: { rows: LicenseSaleRow[]; mode: SalesRangeMode }) {
+  const { t } = useTranslation('vip')
+  const format = useFormatters()
+  const [page, setPage] = useState(0)
   const pageCount = Math.max(1, Math.ceil(rows.length / SALES_PAGE_SIZE))
   const currentPage = Math.min(page, pageCount - 1)
   const pageStart = currentPage * SALES_PAGE_SIZE
   const visibleRows = rows.slice(pageStart, pageStart + SALES_PAGE_SIZE)
 
   return (
-    <Card className="p-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0">
-          <h3 className="text-lg font-semibold tracking-tight">{t('stats.salesList.title')}</h3>
-          <p className="mt-1 text-sm text-fg-muted">{t('stats.salesList.subtitle')}</p>
-        </div>
-
-        <div className="flex flex-col items-stretch gap-2 sm:items-end">
-          <SegmentedControl
-            size="sm"
-            label={t('stats.salesList.range')}
-            value={mode}
-            onChange={(value) => { setMode(value); setPage(0) }}
-            options={[
-              { id: 'day', label: t('stats.salesList.oneDay') },
-              { id: 'range', label: t('stats.salesList.period') },
-            ]}
-          />
-
-          {mode === 'day' ? (
-            <label className="flex items-center gap-2 text-xs text-fg-subtle">
-              <span className="sr-only">{t('stats.salesList.oneDay')}</span>
-              <input
-                type="date"
-                value={day}
-                onChange={(event) => { setDay(event.target.value); setPage(0) }}
-                className={DATE_INPUT}
-              />
-            </label>
-          ) : null}
-
-          {mode === 'range' ? (
-            <div className="flex flex-wrap items-center gap-2 text-xs text-fg-subtle">
-              <label className="flex items-center gap-1.5">
-                <span>{t('stats.salesList.from')}</span>
-                <input
-                  type="date"
-                  value={from}
-                  max={to || undefined}
-                  onChange={(event) => { setFrom(event.target.value); setPage(0) }}
-                  className={DATE_INPUT}
-                />
-              </label>
-              <label className="flex items-center gap-1.5">
-                <span>{t('stats.salesList.to')}</span>
-                <input
-                  type="date"
-                  value={to}
-                  min={from || undefined}
-                  onChange={(event) => { setTo(event.target.value); setPage(0) }}
-                  className={DATE_INPUT}
-                />
-              </label>
-            </div>
-          ) : null}
-        </div>
-      </div>
-
-      {invalidRange ? <p role="alert" className="mt-3 text-sm text-negative">{t('stats.salesList.invalidRange')}</p>
-        : summaryPending || !deferredSummary ? (
-          <div role="status" aria-label={t('stats.salesList.summaryLoading')} aria-busy="true"
-            className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
-            {Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-28 rounded-xl" />)}
-          </div>
-        ) : <SalesPeriodSummary {...deferredSummary} />}
-
+    <Card className="p-4 sm:p-6">
+      <h4 className="text-lg font-semibold tracking-tight">{t('stats.salesList.title', { context: mode })}</h4>
+      <p className="mt-1 text-sm text-fg-muted">{t('stats.salesList.subtitle')}</p>
       {rows.length === 0 ? (
         <p className="mt-8 text-sm text-fg-subtle">{t('stats.salesList.emptyFilter', { context: mode })}</p>
       ) : (
-        <div className="mt-3 max-h-[36rem] overflow-auto rounded-xl border border-white/5" key={`${mode}:${day}:${from}:${to}:${currentPage}`}>
-          <table aria-label={t('stats.salesList.title')} className="w-full min-w-[48rem] border-collapse text-left text-sm">
+        <div className="mt-3 max-h-[36rem] overflow-auto rounded-xl border border-white/5" key={currentPage}>
+          <table aria-label={t('stats.salesList.title', { context: mode })} className="w-full min-w-[48rem] border-collapse text-left text-sm">
             <thead className="sticky top-0 z-10 bg-ink-850/95 backdrop-blur-sm">
               <tr className="border-b border-white/8 text-fg-subtle">
                 <th className="px-3 py-2.5 text-center font-medium sm:px-4">
@@ -613,16 +639,15 @@ export function SalesStats() {
       <p className="mt-2 text-fg-muted">{t('stats.detailsSubtitle')}</p>
 
       <div className="mt-8 space-y-4">
-        <RevenueTimeline daily={subs.timeline.daily} monthly={subs.timeline.monthly} />
-
-        <div className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
-          <PaymentsChart payments={subs.by_method} title={t('stats.payments.title')} />
-          <DurationsChart durations={subs.by_duration} />
-        </div>
-
-        <SalesTable sales={subs.sales} />
-
-        <RetentionBlock retention={subs.retention} />
+        <SalesPeriodBlock sales={subs.sales} />
+        <section aria-labelledby="sales-history-title" className="space-y-4 border-t border-white/8 pt-8 sm:pt-10">
+          <div>
+            <h3 id="sales-history-title" className="text-xl font-semibold tracking-tight sm:text-2xl">{t('stats.historyTitle')}</h3>
+            <p className="mt-2 text-sm text-fg-muted">{t('stats.historySubtitle')}</p>
+          </div>
+          <RevenueTimeline daily={subs.timeline.daily} monthly={subs.timeline.monthly} />
+          <RetentionBlock retention={subs.retention} />
+        </section>
       </div>
     </section>
   )
