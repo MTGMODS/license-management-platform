@@ -1,18 +1,38 @@
-# MTG MODS Platform
+<h1 align="center">MTG MODS Platform</h1>
 
-**Micro-SaaS around a freemium digital product.**
+<p align="center">
+  <strong>Micro-SaaS around a freemium digital product.</strong><br>
+  Website, Python APIs and bots for Arizona&amp;Rodina Helper.<br>
+  Free downloads · Public analytics · Subscriptions · Account management
+</p>
 
-Python APIs, a React website and Telegram/Discord bots for **Arizona&Rodina Helper**: accounts, paid subscriptions, file delivery and public analytics.
+<p align="center">
+  <code>Python / FastAPI</code> &nbsp; <code>React / TypeScript</code> &nbsp; <code>PostgreSQL</code><br>
+  <code>Redis</code> &nbsp; <code>RabbitMQ</code> &nbsp; <code>Docker Compose</code>
+</p>
 
-[Website](https://mtgmods.com) · [Product](https://mtgmods.com/helper) · [Public sales analytics](https://mtgmods.com/vip) · [Product source](https://github.com/MTGMODS/arizona-helper)
+<p align="center">
+  <a href="https://mtgmods.com">🌐 Website</a> &nbsp;·&nbsp;
+  <a href="https://mtgmods.com/helper">🎮 Helper</a> &nbsp;·&nbsp;
+  <a href="https://mtgmods.com/vip">📊 Sales analytics</a> &nbsp;·&nbsp;
+  <a href="https://github.com/MTGMODS/arizona-helper">📂 Product source</a>
+</p>
 
-This platform runs in production and supports an existing product. It replaces an earlier bot-based Python monolith with separate APIs and a website; it is not the source code of the helper itself.
+---
 
-**Bohdan ([MTGMODS](https://github.com/MTGMODS))** is the sole owner and maintainer of both projects. The Lua modification and Windows installer live in [arizona-helper](https://github.com/MTGMODS/arizona-helper); this repository contains the infrastructure around them.
+This is the **production platform around Arizona&Rodina Helper**. It serves free users and subscribers: discover the product, download it, view public statistics, compare plans and payment options, then manage purchased keys, personal devices and VIP downloads in an account.
 
-**Explore:** [Background](#from-monolith-to-platform) · [Features](#features) · [Diagrams](#diagrams) · [Request flows](#request-flows) · [Public statistics](#public-statistics) · [Docker setup](#run-with-docker) · [Operations](#operations) · [Tests](#tests-and-checks)
+> [!NOTE]
+> **Platform infrastructure, not the game modification itself.**
+> The Lua helper and Windows installer are developed in [arizona-helper](https://github.com/MTGMODS/arizona-helper). This repository contains the website, backend services and bot integrations that support them.
 
-## Related projects
+**Explore**<br>
+[Features](#features) · [Background](#from-monolith-to-platform) · [Architecture](#architecture) · [Diagrams](#diagrams) · [Public statistics](#public-statistics)<br>
+[Request flows](#request-flows) · [Docker setup](#run-with-docker) · [Operations](#operations) · [Tests](#tests-and-checks) · [Repository guide](#repository-guide)
+
+<a id="related-projects"></a>
+
+## 🧩 Related projects
 
 | Project | Responsibility | Source |
 | --- | --- | --- |
@@ -22,7 +42,9 @@ This platform runs in production and supports an existing product. It replaces a
 
 Usage and sales statistics are public. Personal subscriptions require sign-in; administration requires an admin role.
 
-## From monolith to platform
+<a id="from-monolith-to-platform"></a>
+
+## 🔄 From monolith to platform
 
 The original **Python monolith** handled accounts and licenses through the bots, which also accessed the database directly.
 
@@ -39,13 +61,29 @@ The previous implementation is preserved in the [v0.0.0 release](https://github.
 
 The **website in a regular browser is the main interface**. The Mini App is another way to access it from Telegram.
 
-## Features
+---
+
+<a id="features"></a>
+
+## ✨ What the platform offers
+
+### One website for free users and subscribers
+
+| | What visitors can do |
+| --- | --- |
+| **🎮 Discover & download** | Read about the helper, download the free version, follow PC/mobile installation guides and explore usage statistics. |
+| **💳 Compare & buy** | Check VIP features and prices, see public sales figures, choose a payment method and follow purchase instructions or payment details. |
+| **🔑 Manage a subscription** | Sign in, activate a purchased key, view licenses and personal devices, use available device resets and download the personalized paid version. |
+
+The product pages, free download instructions, payment information and public analytics are available **without an account**. The dashboard handles personal subscriptions after sign-in.
+
+### Behind the website
 
 | Area | What it does |
 | --- | --- |
 | **Accounts** | Telegram and Discord sign-in, linked social accounts, profiles, roles, JWT access tokens, refresh sessions, logout and Mini App sign-in |
 | **Licensing** | Key generation and activation, subscription expiry, legacy lifetime licenses, device binding, per-plan device limits and reset quotas, game-client license checks |
-| **Downloads** | Builds a personal VIP Lua file, returns a temporary link, optionally prepares a Windows installer and cleans up old files |
+| **Downloads** | Public free-download links and a static Windows installer; personalized VIP Lua files and installers with temporary links and cleanup |
 | **Usage analytics** | Launch counts, unique device identifiers, free/VIP usage, PC/mobile split, versions, servers, factions and activity over time |
 | **Sales analytics** | Completed paid purchases, revenue, payment methods, tariffs, first/repeat purchases, buyer retention and transitions between subscription plans |
 | **Web application** | Product and download pages, public analytics, customer dashboard, administration, responsive layouts and Russian/Ukrainian/English translations |
@@ -53,9 +91,15 @@ The **website in a regular browser is the main interface**. The Mini App is anot
 
 Telegram Stars payments are handled in the bot. The website also links to external marketplaces and gives instructions for manual payments.
 
-## Architecture
+---
+
+<a id="architecture"></a>
+
+## 🏗️ Architecture
 
 The backend has **four Python/FastAPI services**. User, License and Usage each have their own PostgreSQL database. Distribution works with files in a mounted directory.
+
+<a id="diagrams"></a>
 
 ### Diagrams
 
@@ -97,7 +141,7 @@ flowchart TB
 - The **web container's nginx** serves the compiled SPA and the public Windows installer.
 
 <details>
-<summary><strong>Database overview</strong> — tables and foreign keys</summary>
+<summary>🗃️ <strong>Database overview</strong> — expand tables and foreign keys</summary>
 
 User Service stores users, refresh sessions and OAuth handoffs. License Service stores licenses, device activations and purchases. Usage Service stores launches. The full [DBML model](docs/er-model.dbml) includes every column and index.
 
@@ -188,7 +232,19 @@ Each Python service keeps routes in `app/api`, business logic in `app/applicatio
 | Runtime | Docker Compose, nginx; Node.js 22 for the web image build |
 | Verification | pytest, fakeredis, Vitest, Testing Library, TypeScript checks and Oxlint |
 
-## Request flows
+---
+
+<a id="request-flows"></a>
+
+## 🔀 Request flows
+
+### Browse and download the free version
+
+1. A visitor opens the public product page, installation guides or statistics without signing in.
+2. The web app reads usage and sales figures from the public APIs. Product descriptions and installation instructions are part of the frontend.
+3. Download links lead to the appropriate product files or releases. The free Windows installer is served directly by the web container's nginx.
+
+Subscription features, prices, available payment methods and payment details are also public. Buying a key and managing it in the dashboard are separate steps.
 
 ### Sign in and manage a subscription
 
@@ -213,7 +269,11 @@ The HTTP request waits up to **30 seconds** for the RabbitMQ reply with the down
 
 The expiry worker checks subscriptions every **60 seconds**, commits status changes, resolves linked social IDs and publishes Telegram/Discord commands. The bots perform the corresponding chat/role actions.
 
-## Public statistics
+---
+
+<a id="public-statistics"></a>
+
+## 📊 Public statistics
 
 Usage and sales figures are open to everyone. The maintainer uses these same pages rather than a separate private analytics dashboard.
 
@@ -223,7 +283,8 @@ Usage and sales figures are open to everyone. The maintainer uses these same pag
 | [`/vip`](https://mtgmods.com/vip) | Paid subscriptions, revenue and buyer analytics | [`/v1/license/stats/public`](https://api.mtgmods.com/v1/license/stats/public) |
 | [`/vip/legacy`](https://mtgmods.com/vip/legacy) | Legacy lifetime-license totals, payment/price breakdowns and activation counts | [`/v1/license/stats/old`](https://api.mtgmods.com/v1/license/stats/old) |
 
-Usage “users” are **distinct device identifiers (HWIDs)**, not verified individual people. Public sales rows omit buyer identities, license keys and device identifiers.
+> [!NOTE]
+> **Open figures, private account data.** Usage “users” are distinct device identifiers (HWIDs), not verified individual people. Public sales rows omit buyer identities, license keys and device identifiers.
 
 Time-limited subscriptions and lifetime licenses are calculated separately. Legacy totals describe records still present in the database, not a complete history of deleted licenses.
 
@@ -234,7 +295,7 @@ Statistics use **stale-while-revalidate**: a cached result is fresh for **5 minu
 `updated_at` reports when the statistics were calculated. A cold cache can take longer to populate, so the page may initially report that statistics are unavailable.
 
 <details>
-<summary>Cache keys, timeouts and failure handling</summary>
+<summary>⚙️ <strong>Cache details</strong> — keys, timeouts and failure handling</summary>
 
 | Dataset | Redis key | Generation timeout | Lock timeout |
 | --- | --- | --- | --- |
@@ -250,7 +311,11 @@ Redis's internal `{data, fresh_until}` wrapper is not exposed by the APIs. If Re
 
 </details>
 
-## Run with Docker
+---
+
+<a id="run-with-docker"></a>
+
+## 🐳 Run with Docker
 
 Run the application with **Docker Compose**. You need Docker with Linux containers and Compose v2; Python and Node.js run inside the containers.
 
@@ -264,7 +329,7 @@ cd license-management-platform
 On a fresh clone, copy the examples below and edit the resulting `.env` files. Create all six files even when starting only the core APIs: Compose reads the configuration for the whole project.
 
 <details>
-<summary>Linux / macOS shell</summary>
+<summary><strong>Linux / macOS</strong> — copy environment templates</summary>
 
 ```sh
 cp services/user/.env.example services/user/.env
@@ -278,7 +343,7 @@ cp bots/discord/.env.example bots/discord/.env
 </details>
 
 <details>
-<summary>Windows PowerShell</summary>
+<summary><strong>Windows PowerShell</strong> — copy environment templates</summary>
 
 ```powershell
 Copy-Item services/user/.env.example services/user/.env
@@ -330,7 +395,9 @@ PostgreSQL and Redis have no published host ports. PostgreSQL data lives in thre
 
 ### 3. Connect the website to the API
 
-**The compiled web image defaults to `https://api.mtgmods.com`. Starting it locally does not automatically connect it to your local APIs.**
+> [!IMPORTANT]
+> The compiled web image defaults to `https://api.mtgmods.com`.
+> **Starting it locally does not automatically connect it to your local APIs.** Set your own gateway address before building.
 
 For an independent deployment, create a root `.env` containing your gateway address before building:
 
@@ -370,17 +437,31 @@ docker compose ps
 
 Use separate bot credentials for development; only one polling process should run with a given Telegram bot token.
 
-## File-delivery lifecycle
+<a id="file-delivery-lifecycle"></a>
 
-**Free installer:** [`/helper/download/installer`](https://mtgmods.com/helper/download/installer) is served by the web container's nginx. Compose mounts only the public `installer/` subdirectory read-only into web. Free downloads bypass Python, RabbitMQ and personalized-build processing. The old API installer route redirects to this URL.
+## 📦 File-delivery lifecycle
 
-**VIP Lua:** `/v1/files/downloads/vip/<token>` serves a temporary personalized file. Response cleanup removes the Lua file, associated EXE files and installer-use marker.
+### Free installer · static download
 
-**VIP installer:** `/v1/files/downloads/vip/<token>.exe` stamps a copy of the base installer with the Lua URL. An atomic `.exe.used` marker prevents repeated installer generation for that token. Response cleanup removes the generated EXE, while the Lua file remains available for the installer to fetch. The base installer is never overwritten.
+[`/helper/download/installer`](https://mtgmods.com/helper/download/installer) is served by the web container's nginx. Compose mounts only the public `installer/` subdirectory read-only into web. Free installer downloads bypass Python, RabbitMQ and personalized-build processing. The old API installer route redirects to this URL.
+
+### VIP Lua · personalized file
+
+`/v1/files/downloads/vip/<token>` serves a temporary personalized file. Response cleanup removes the Lua file, associated EXE files and installer-use marker.
+
+### VIP installer · personalized download URL
+
+`/v1/files/downloads/vip/<token>.exe` stamps a copy of the base installer with the Lua URL. An atomic `.exe.used` marker prevents repeated installer generation for that token. Response cleanup removes the generated EXE, while the Lua file remains available for the installer to fetch. The base installer is never overwritten.
+
+### Cleanup
 
 The cleanup worker runs **hourly** and removes top-level generated Lua/EXE/temp/marker files older than **one hour**. It leaves template subdirectories untouched. This is not an exact one-hour expiry: a file becomes eligible after one hour and is removed on a later sweep. A personalized installer must run while its Lua link is still available.
 
-## Operations
+---
+
+<a id="operations"></a>
+
+## 🛠️ Operations
 
 Run from the repository root:
 
@@ -405,7 +486,9 @@ docker compose down
 
 Container health checks confirm basic availability, not a complete payment or download flow. OAuth, bot permissions, queue delivery and VIP generation need integration checks. Reload host nginx separately after changing its configuration.
 
-## Tests and checks
+<a id="tests-and-checks"></a>
+
+## 🧪 Tests and checks
 
 Tests cover business rules and error handling without production credentials. Python tests use temporary SQLite databases, files, fakeredis and mocked external services. Web tests cover API responses, sign-in/session handling, protected routes, checkout, translations and analytics controls.
 
@@ -430,7 +513,11 @@ docker run --rm --mount "type=bind,source=.,target=/workspace,readonly" --mount 
 
 The suites do not cover every production integration. PostgreSQL concurrency, live RabbitMQ delivery, Telegram/Discord APIs, the private obfuscator and real-browser behavior need separate checks. See [`tests/README.md`](tests/README.md) for details.
 
-## Repository guide
+---
+
+<a id="repository-guide"></a>
+
+## 🗂️ Repository guide
 
 ```text
 ├── services/
@@ -450,7 +537,9 @@ The suites do not cover every production integration. PostgreSQL concurrency, li
 └── docker-compose.yml     # Services, databases, Redis and RabbitMQ
 ```
 
-## Author and development approach
+<a id="author-and-development-approach"></a>
+
+## 👤 Development approach
 
 This is a solo-maintained project. **Bohdan / MTGMODS** designs the backend, defines product behavior and operates the production system. AI tools were used differently across the codebase:
 
@@ -464,6 +553,10 @@ This is a solo-maintained project. **Bohdan / MTGMODS** designs the backend, def
 
 Source-code contributions are recorded in the [GitHub contributors graph](https://github.com/MTGMODS/license-management-platform/graphs/contributors).
 
-## License
+---
+
+<a id="license"></a>
+
+## 📄 License
 
 Source code in this repository is available under the [MIT License](LICENSE). The external product has its own repository; private deployment assets are not included in this checkout.
