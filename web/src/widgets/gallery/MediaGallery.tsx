@@ -142,15 +142,11 @@ export function MediaGallery({ compact = false }: { compact?: boolean }) {
     return (
       <section
         aria-label={t('gallery.title')}
-        className="flex min-h-0 w-full min-w-0 flex-1 basis-0 flex-col [container-type:size]"
+        className="flex min-h-0 w-full min-w-0 flex-col lg:flex-1 lg:basis-0 lg:[container-type:size]"
       >
-        <div className="my-auto flex w-full min-w-0 flex-col">
+        <div className="flex w-full min-w-0 flex-col lg:my-auto">
           <div
-            className="mx-auto aspect-video overflow-hidden rounded-card border border-white/5 bg-ink-850"
-            style={{
-              width:
-                'min(100cqw, calc((100cqh - 0.6rem - clamp(2rem, 4.4vh, 2.9rem)) * 16 / 9 * 0.94))',
-            }}
+            className="mx-auto aspect-video w-full overflow-hidden rounded-card border border-white/5 bg-ink-850 lg:w-[min(100cqw,calc((100cqh_-_0.6rem_-_clamp(2rem,4.4vh,2.9rem))*16/9*0.94))]"
           >
             <Viewer item={active} />
           </div>

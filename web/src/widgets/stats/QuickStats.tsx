@@ -92,7 +92,7 @@ export function QuickStats() {
                   {item.label}
                 </p>
               </div>
-              <p className={`tabular mt-[clamp(0.35rem,1vh,0.75rem)] min-w-0 text-[clamp(1rem,2.2vh,1.5rem)] font-semibold leading-tight tracking-tight sm:whitespace-nowrap ${item.tone}`}>
+              <p className={`tabular mt-[clamp(0.35rem,1vh,0.75rem)] min-w-0 text-[clamp(1rem,2.2vh,1.5rem)] font-semibold leading-tight tracking-tight ${item.id === 'devices' ? 'whitespace-nowrap' : 'sm:whitespace-nowrap'} ${item.tone}`}>
                 {item.value}
               </p>
             </Card>
