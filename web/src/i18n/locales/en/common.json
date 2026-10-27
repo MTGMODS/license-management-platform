@@ -1,0 +1,64 @@
+{
+  "brand": "MTG MODS",
+  "tab": {
+    "home": "MTG MODS",
+    "helper": "Arizona&Rodina Helper",
+    "helperDownload": "Download Arizona&Rodina Helper",
+    "vip": "MTG VIP subscription for the helper",
+    "oldVip": "MTG VIP lifetime key statistics",
+    "promo": "Promotions",
+    "promoLeaders": "Partnership for faction leaders and deputies",
+    "promoSmart": "Smart configuration editor",
+    "login": "Sign in to your account",
+    "dashboard": "My account",
+    "admin": "Admin panel",
+    "terms": "Terms and privacy"
+  },
+  "footer": {
+    "terms": "Terms and privacy"
+  },
+  "meta": {
+    "description": {
+      "home": "MTG MODS — Arizona & Rodina Helper for SA-MP: public statistics, a free version and a VIP subscription.",
+      "helper": "Arizona & Rodina Helper — a free assistant for any faction on Arizona and Rodina. Statistics, downloads and VIP.",
+      "helperDownload": "Download Arizona & Rodina Helper for PC and mobile: installer and step-by-step instructions.",
+      "vip": "MTG VIP subscription: unlimited features, premium assistant tools and a VIP community. Payment and activation at mtgmods.com.",
+      "oldVip": "Statistics for legacy MTG VIP lifetime keys: sales counts, revenue and payment methods.",
+      "promo": "MTG MODS promotions: faction leader partnership and the Smart editor program.",
+      "promoLeaders": "Partnership for leaders and deputies: 30 days of MTGVIP when 10 faction members use the helper.",
+      "promoSmart": "Helper Smart configuration editor: a 7-day subscription for each completed server.",
+      "terms": "MTG MODS terms of use and privacy policy.",
+      "login": "Sign in to your MTG MODS account with Discord or Telegram.",
+      "dashboard": "Your MTG MODS account: licenses, devices and VIP downloads.",
+      "admin": "MTG MODS admin panel.",
+      "notFound": "The requested page could not be found on mtgmods.com."
+    }
+  },
+  "actions": {
+    "retry": "Try again",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyFailed": "Could not copy",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "state": {
+    "error": "Could not load data",
+    "errorHint": "Check your connection and try again"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "The link may be outdated or the address may contain a typo.",
+    "action": "Go to home page"
+  },
+  "units": {
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "hours_one": "{{count}} hour",
+    "hours_other": "{{count}} hours",
+    "minutes_one": "{{count}} minute",
+    "minutes_other": "{{count}} minutes",
+    "seconds_one": "{{count}} second",
+    "seconds_other": "{{count}} seconds"
+  }
+}

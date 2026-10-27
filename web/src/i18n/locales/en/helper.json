@@ -1,0 +1,115 @@
+{
+  "hero": {
+    "title": "Arizona&Rodina Helper",
+    "subtitle": "A free* all-purpose assistant for any faction",
+    "download": "Download version",
+    "downloadVersion": "Download version {{version}}",
+    "vip": "Buy a VIP subscription"
+  },
+  "stats": {
+    "title": "Helper in numbers",
+    "subtitle": "Public usage statistics",
+    "users": "Users",
+    "vip": "VIP users",
+    "launches": "Total launches",
+    "devices": "PC / MOBILE",
+    "updated": "Updated {{time}}",
+    "more": "Detailed analytics below",
+    "error": "Statistics temporarily unavailable",
+    "loading": "Loading statistics"
+  },
+  "analytics": {
+    "title": "Usage analytics",
+    "subtitle": "A closer look at the audience: platforms, servers and popular factions",
+    "loading": "Loading analytics",
+    "empty": "No data for the selected period. Try a different period.",
+    "period": {
+      "label": "Period",
+      "all_time": "All time",
+      "30d": "30 days",
+      "24h": "24 hours",
+      "1h": "60 minutes"
+    },
+    "allTimeSection": {
+      "title": "Overall activity trends",
+      "subtitle": "Historical charts for all time. Not affected by the period filter above"
+    },
+    "metric": {
+      "label": "Metric",
+      "users": "Users",
+      "vipUsers": "VIP users",
+      "launches": "Launches",
+      "share": "Share",
+      "perUser": "Launches per user",
+      "vipShare": "Including VIP users"
+    },
+    "servers": {
+      "title": "Game servers",
+      "subtitle": "Audience distribution across Arizona and Rodina RP servers",
+      "name": "Server {{id}}",
+      "unknown": "Unknown server",
+      "top": "Top {{count}}",
+      "all": "All",
+      "project": {
+        "arizona": "Arizona RP",
+        "arizonaMobile": "Arizona Mobile",
+        "arizonaVc": "Arizona Vice City",
+        "rodina": "Rodina RP",
+        "rodinaMobile": "Rodina Mobile"
+      },
+      "products": {
+        "name": {
+          "arizona_pc": "Arizona Online",
+          "arizona_mobile": "Arizona Mobile",
+          "rodina_pc": "Rodina Online",
+          "rodina_mobile": "Rodina Mobile"
+        }
+      }
+    },
+    "daily": {
+      "title": "Daily activity",
+      "subtitle": "Overall launch trends. Today's statistics are finalized at midnight"
+    },
+    "factions": {
+      "title": "Factions",
+      "subtitle": "Player distribution across organizations. One user may belong to multiple factions"
+    },
+    "factionName": {
+      "none": "Unemployed",
+      "police": "Police",
+      "gov": "Government",
+      "army": "Army",
+      "hospital": "Hospital",
+      "mafia": "Mafia",
+      "ghetto": "Ghetto",
+      "smi": "Media",
+      "prison": "Prison",
+      "fbi": "FBI",
+      "fd": "Fire department",
+      "judge": "Judges",
+      "lc": "Driving school",
+      "ins": "Insurance"
+    },
+    "versions": {
+      "title": "Versions",
+      "subtitle": "Distribution by helper version",
+      "other": "Other"
+    },
+    "devices": {
+      "title": "Devices",
+      "subtitle": "The share of players on PC and smartphones",
+      "pc": "PC",
+      "mobile": "Mobile"
+    },
+    "activity": {
+      "hours": "Activity throughout the day",
+      "localTime": "Shown in your local time"
+    }
+  },
+  "gallery": {
+    "title": "What it looks like",
+    "subtitle": "In-game screenshots",
+    "screenshotSoon": "Screenshot {{index}}",
+    "screenshotAlt": "Helper screenshot {{index}}"
+  }
+}

@@ -1,0 +1,263 @@
+{
+  "hero": {
+    "title": "MTGVIP subscription for the paid helper",
+    "subtitle": "Choose a duration, buy a key and activate it in your account",
+    "currency": "Prices are in USD · Pay in any currency at the dollar exchange rate",
+    "backToFree": "Back to the free version",
+    "checkout": "Buy {{period}} for ${{price}}"
+  },
+  "benefits": {
+    "title": "Benefits of the paid version",
+    "goldTitle": "Premium assistant features",
+    "gold": "Each faction has its own set of features. See how they work in the detailed video overview.",
+    "watchVideo": "Watch the video overview",
+    "adsTitle": "Ad blocking on mobile",
+    "ads": "Block built-in launcher ads",
+    "limitsTitle": "Unlimited features",
+    "limits": "Remove the free version's limits\n(5 custom binds, 5 notes, 5 buttons)",
+    "chatTitle": "In-game chat highlight",
+    "soon": "COMING SOON",
+    "chat": "All helper users will see your nickname highlighted as a VIP user",
+    "communityTitle": "VIP community",
+    "community": "Subscriber chat on Telegram/Discord\nA role on our Discord server"
+  },
+  "pricing": {
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "daysWithPerDay": "≈ ${{price}} / day",
+    "daysWithPerDayTight": "≈${{price}}/day",
+    "devicesLabel": "Devices",
+    "hwidResetLabel": "HWID resets",
+    "hwidResetHelp": "What is an HWID reset?",
+    "hwidResetHint": "The number of free device resets. When you switch your PC or phone, remove the old device from your account and use the freed slot for the new one.",
+    "error": "Plans temporarily unavailable",
+    "errorHint": "Try again in a minute.",
+    "loading": "Loading plans"
+  },
+  "payment": {
+    "title": "Payment",
+    "subtitle": "Choose what you want to pay with — we will show the available payment options",
+    "step1": {
+      "title": "What would you like to pay with?",
+      "hint": "Bank cards, cryptocurrency, FunPay, Telegram Stars or PayPal"
+    },
+    "step2": {
+      "title": "Choose a payment option",
+      "hint": "Compare the available methods and choose what works for you",
+      "hintCrypto": "Automatic key delivery 24/7 or a direct transfer with no additional fee"
+    },
+    "wallets": {
+      "card": {
+        "title": "Bank card",
+        "hint": "In any currency"
+      },
+      "crypto": {
+        "title": "Cryptocurrency",
+        "hint": "USDT, USDC, TON and more"
+      },
+      "stars": {
+        "title": "Telegram Stars",
+        "hint": "You already have ⭐ in your account"
+      },
+      "paypal": {
+        "title": "PayPal",
+        "hint": "USD / EUR, worldwide"
+      }
+    },
+    "badges": {
+      "instant": "Instant",
+      "auto": "⚡ 24/7",
+      "cheapest": "Lower cost",
+      "noFee": "No additional fee",
+      "manual": "Via direct message",
+      "inTelegram": "In Telegram"
+    },
+    "detailsLabel": "How to pay",
+    "activateKey": "Enter the key you receive in <cabinet>your account</cabinet>",
+    "payStarsInBot": "Pay with ⭐ through our VIP bot to receive your key",
+    "daysShort_one": "{{count}} day",
+    "daysShort_other": "{{count}} days",
+    "buyDays_one": "{{count}} day",
+    "buyDays_other": "{{count}} days",
+    "contact": {
+      "telegram": "Message on Telegram",
+      "discord": "Message on Discord"
+    },
+    "routes": {
+      "funpay": {
+        "title": "FunPay",
+        "detailsTitle": "FunPay (automatic)",
+        "blurb": "A convenient marketplace with automatic delivery",
+        "feeBadge": "Platform fee ≈ 30%",
+        "step1": "Sign up at <site>funpay.com</site>",
+        "step2": "Open the listing for your chosen plan",
+        "step3": "Pay for the selected plan",
+        "payCrypto": "using USDT or Litecoin",
+        "payCard": "using your bank card",
+        "step4": "Your key will be delivered automatically in the <orders>order chat</orders>"
+      },
+      "stars": {
+        "title": "Telegram Stars",
+        "detailsTitle": "Telegram Stars (automatic)",
+        "blurb": "Pay directly in Telegram using your ⭐ balance",
+        "what": "Automatic payments 24/7 with Telegram's virtual currency through our VIP bot",
+        "buyHint": "Need Stars? Buy them in Telegram with a card or through Fragment with TON",
+        "cta": "Pay with ⭐ in the VIP bot"
+      },
+      "tgStars": {
+        "title": "Via Telegram",
+        "detailsTitle": "Payment via Telegram",
+        "blurb": "Telegram's virtual currency — Stars ⭐",
+        "feeBadge": "Platform fee ≈ 40%",
+        "step1": "Buy ⭐ for your Telegram account using your bank card",
+        "openBot": "Pay with ⭐ in the VIP bot"
+      },
+      "fragment": {
+        "title": "Fragment",
+        "detailsTitle": "Fragment (automatic)",
+        "blurb": "The official platform for Telegram ⭐",
+        "feeBadge": "Platform fee ≈ 20%",
+        "step1": "Convert your cryptocurrency to GRAM (TON)",
+        "step2": "Open Telegram's official Fragment platform",
+        "step3": "Buy Telegram ⭐ Stars using GRAM",
+        "openFragment": "Buy ⭐ through Fragment",
+        "openBot": "Pay with ⭐ in the VIP bot"
+      },
+      "crypto": {
+        "title": "Direct cryptocurrency transfer",
+        "blurb": "No additional fees",
+        "what": "Transfer the price of your chosen plan to an account below. After paying, send a direct message to receive your key",
+        "exchanges": "Crypto exchanges",
+        "networks": "Networks and addresses"
+      },
+      "paypal": {
+        "title": "PayPal",
+        "blurb": "Worldwide: use any card supported by PayPal",
+        "what": "Transfer <amount>${{amount}}</amount> to the PayPal account. After paying, send a direct message to receive your key"
+      }
+    }
+  },
+  "stats": {
+    "periodTitle": "Statistics period",
+    "periodSubtitle": "For totals, charts and the sales list",
+    "periodEmpty": "No sales during the selected time",
+    "historyTitle": "Sales history and buyers",
+    "historySubtitle": "All-time figures. Not affected by the selected period above.",
+    "title": "MTGVIP in numbers",
+    "subtitle": "Public subscription sales statistics",
+    "sales": "Total sales",
+    "revenue": "Revenue USD",
+    "active": "Active VIP",
+    "buyers": "Buyers",
+    "updated": "Updated {{time}}",
+    "more": "Detailed analytics below",
+    "detailsTitle": "Sales analytics",
+    "detailsSubtitle": "Detailed subscription statistics: revenue trends, popular plans, payment methods and buyer retention",
+    "error": "Sales statistics are currently unavailable",
+    "loading": "Loading sales statistics",
+    "empty": "No sales yet",
+    "overview": {
+      "avgCheck": "Average purchase",
+      "avgPerBuyer": "Subscriptions per buyer"
+    },
+    "timeline": {
+      "title": "Revenue trends",
+      "subtitle": "Completed sales by day and month (UTC)",
+      "grain": "Time grouping",
+      "daily": "Days",
+      "monthly": "Months",
+      "revenue": "Revenue",
+      "count": "Sales"
+    },
+    "durations": {
+      "title": "Sales by plan",
+      "moneyShare": "Revenue share"
+    },
+    "payments": {
+      "title": "Payment methods",
+      "total": "Total"
+    },
+    "retention": {
+      "title": "Buyer retention",
+      "subtitle": "How many people bought once and how many came back to renew",
+      "buyers": "Buyers",
+      "repeatBuyers": "Returning buyers",
+      "repeatRate": "Returning buyer share",
+      "transitionsTitle": "Which plans buyers choose next",
+      "transitionsHint": "All combinations of consecutive paid subscriptions by the same buyer, for all time.\nThe percentage is the share of all transitions; the amount is revenue from the subsequent purchases. Choosing the same plan again also counts.",
+      "transitionFrom": "Previous plan: {{days}}",
+      "transitionCount_one": "{{count}} transition",
+      "transitionCount_other": "{{count}} transitions",
+      "purchases_one": "{{count}} purchase",
+      "purchases_other": "{{count}} purchases"
+    },
+    "salesList": {
+      "title": "Detailed list of all sales",
+      "title_all": "Detailed sales list for all time",
+      "title_day": "Detailed sales list for the day",
+      "title_range": "Detailed sales list for the period",
+      "calendar": "Open calendar: {{field}}",
+      "invalidDate": "Enter a valid date in dd/mm/yyyy format",
+      "subtitle": "Completed paid subscriptions during the selected time, without personal data. Dates are in UTC.",
+      "allTime": "All time",
+      "chooseDay": "Choose a day to view sales",
+      "chartsLoading": "Calculating sales charts",
+      "range": "Period",
+      "oneDay": "Day",
+      "period": "Period",
+      "from": "From",
+      "to": "To",
+      "date": "Purchase date",
+      "purchaseType": "Purchase type",
+      "newPurchase": "New",
+      "renewal": "Renewal",
+      "plan": "Plan",
+      "method": "Method",
+      "amount": "Price",
+      "status": "Status",
+      "results": "Selected period totals",
+      "results_day": "Selected day totals",
+      "results_all": "All-time totals",
+      "selectedSales": "Sales during the period",
+      "selectedSales_day": "Sales for the day",
+      "selectedSales_all": "All-time sales",
+      "selectedRevenue": "Revenue during the period",
+      "selectedRevenue_day": "Revenue for the day",
+      "selectedRevenue_all": "All-time revenue",
+      "summaryLoading": "Calculating sales totals",
+      "pagination": "Sales list pages",
+      "pageSummary": "Showing {{from}}–{{to}} of {{total}} sales",
+      "previousPage": "Previous",
+      "nextPage": "Next",
+      "firstPurchases": "First purchases",
+      "repeatPurchases": "Repeat purchases",
+      "purchaseRevenue": "Revenue: {{sum}}",
+      "ofAllSales": "Out of {{total}} paid sales for all time",
+      "paidOnly": "Completed paid subscriptions only",
+      "unclassified": "First/repeat purchase data is unavailable for {{count}} sales. These sales are included in the total.",
+      "invalidRange": "The start date must not be later than the end date",
+      "emptyFilter": "No sales during the selected period",
+      "emptyFilter_day": "No sales on the selected day",
+      "emptyFilter_all": "No sales yet"
+    },
+    "legacy": {
+      "title": "Lifetime keys",
+      "subtitle": "Sold in the past. Exact purchase dates are unavailable after migration",
+      "loading": "Loading lifetime key statistics",
+      "error": "Lifetime key statistics are currently unavailable",
+      "sold": "Sold",
+      "overviewTitle": "FOREVER in numbers",
+      "activated": "Activations since 01.09.2026",
+      "payments": "Payment methods",
+      "priceHistory": {
+        "subtitle": "The periods when each lifetime key price applied. This is the price change history, not the exact dates of individual purchases.",
+        "unknownPeriod": "The period for this price is unknown"
+      },
+      "byPrice": {
+        "title": "Prices and sales history",
+        "period": "Price validity period",
+        "salesShare": "Sales share"
+      }
+    }
+  }
+}

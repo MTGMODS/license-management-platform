@@ -1,0 +1,101 @@
+{
+  "title": "My account",
+  "subtitle": "Your subscription, downloads and devices in one place.",
+  "sections": {
+    "vip": "MTGVIP",
+    "account": "Account"
+  },
+  "activate": {
+    "title": "Activate a new key",
+    "subtitle": "Enter the key you purchased",
+    "placeholder": "XXXX-XXXX-XXXX-XXXX",
+    "action": "Activate",
+    "forceTitle": "You already have an active MTGVIP subscription",
+    "forceBody": "The new key will replace your current subscription. Remaining time will not carry over.",
+    "forceConfirm": "Replace",
+    "forceCancel": "Cancel",
+    "successSlide": {
+      "close": "Close",
+      "firstTitle": "Your subscription is now active!",
+      "renewalTitle": "Your subscription has been renewed!",
+      "subtitle": "Download the paid helper file from your account",
+      "warningTitle": "A quick reminder",
+      "warningBody1": "Your key and the helper's paid features are for your personal use only.",
+      "warningBody2": "Sharing access with others may result in a suspended subscription under the <terms>terms of use</terms>.",
+      "cta": "OK"
+    }
+  },
+  "vip": {
+    "headlineActive": "Your MTGVIP subscription is active",
+    "headlineExpired": "Your MTGVIP subscription has expired",
+    "headlineBanned": "Your MTGVIP subscription is blocked",
+    "headlinePast": "Past subscription",
+    "remaining": "Time remaining",
+    "inactive": "No active MTGVIP subscription",
+    "inactiveHint": "Activate a key below or choose a plan — your paid download will appear here.",
+    "unavailable": "Service temporarily unavailable",
+    "unavailableHint": "Your subscription is safe. Try again in a minute.",
+    "until": "Valid until",
+    "activated": "Activated",
+    "paid": "Purchased via {{method}} for ${{amount}}",
+    "key": "Your key",
+    "showKey": "Show key",
+    "hideKey": "Hide key",
+    "devices": "Your personal devices",
+    "devicesCount": "{{used}} of {{max}} used",
+    "resetsCount": "Resets remaining: {{count}}",
+    "slotFreeTitle": "Available slot",
+    "slotFreeHint": "You can install the helper on a new personal device",
+    "slotOccupied": "Device {{index}}",
+    "hwid": "HWID",
+    "ip": "Last IP",
+    "firstUsed": "First used",
+    "lastUsed": "Last used",
+    "resetDevice": "Reset",
+    "resetConfirm": "Unlink this device?",
+    "resetConfirmAction": "Yes, reset",
+    "resetCancel": "Cancel",
+    "resetSuccess": "Device unlinked",
+    "goVip": "Choose a plan"
+  },
+  "past": {
+    "title": "Past subscriptions"
+  },
+  "download": {
+    "subtitle": "A personalized file just for you.",
+    "action": "Download version",
+    "actionVersion": "Download version {{version}}",
+    "success": "File ready",
+    "started": "Download started",
+    "chooseTitle": "Choose an installation method",
+    "chooseHint": "The helper is ready to download for Windows.",
+    "luaTitle": "Manual installation",
+    "luaHint": "Install the Lua file in your moonloader folder yourself.",
+    "installerTitle": "Automatic installation",
+    "installerHint": "The installer will find your game folder and install MoonLoader and the paid helper.",
+    "close": "Close"
+  },
+  "account": {
+    "registered": "Registered: {{date}}",
+    "roleWithId": "{{role}} #{{id}}",
+    "roles": {
+      "USER": "User",
+      "SMART": "Smart",
+      "ADMIN": "Admin"
+    },
+    "telegram": "Telegram",
+    "discord": "Discord",
+    "linked": "Linked",
+    "notLinked": "Not linked",
+    "linkAction": "Link",
+    "linkSuccess": "Social account linked",
+    "unlinkAction": "Unlink",
+    "unlinkSuccess": "Social account unlinked",
+    "telegramChatTitle": "Our Telegram chat",
+    "telegramChatText": "VIP subscriber chat",
+    "telegramChatAction": "Join",
+    "discordServerTitle": "Our Discord server",
+    "discordServerText": "VIP role (/role command) and subscriber chat",
+    "discordServerAction": "Join"
+  }
+}

@@ -48,8 +48,8 @@ export function applyPageMeta({
 
   const url = `${siteOrigin()}${pathname}`
   const image = `${siteOrigin()}${DEFAULT_OG_IMAGE_PATH}`
-  const ogLocale = locale === 'uk' ? 'uk_UA' : 'ru_RU'
-  const ogLocaleAlternate = locale === 'uk' ? 'ru_RU' : 'uk_UA'
+  const ogLocales = ['ru_RU', 'uk_UA', 'en_US']
+  const ogLocale = locale === 'en' ? 'en_US' : locale === 'uk' ? 'uk_UA' : 'ru_RU'
 
   upsertMeta('property', 'og:title', title)
   upsertMeta('property', 'og:description', description)
@@ -57,7 +57,13 @@ export function applyPageMeta({
   upsertMeta('property', 'og:type', 'website')
   upsertMeta('property', 'og:site_name', SITE_NAME)
   upsertMeta('property', 'og:locale', ogLocale)
-  upsertMeta('property', 'og:locale:alternate', ogLocaleAlternate)
+  document.head.querySelectorAll('meta[property="og:locale:alternate"]').forEach(element => element.remove())
+  for (const alternate of ogLocales.filter(value => value !== ogLocale)) {
+    const element = document.createElement('meta')
+    element.setAttribute('property', 'og:locale:alternate')
+    element.content = alternate
+    document.head.appendChild(element)
+  }
   upsertMeta('property', 'og:image', image)
 
   upsertMeta('name', 'twitter:card', 'summary')

@@ -1,0 +1,365 @@
+{
+  "title": "Terms of use and privacy policy",
+  "updated": "Last updated: August 30, 2026",
+  "intro": [
+    "By using mtgmods.com or the Arizona&Rodina Helper script (the ‘Helper’), you agree to the terms below.",
+    "If you do not agree, please leave the website and delete the script."
+  ],
+  "tocLabel": "Contents",
+  "rich": {
+    "freeLicenseLink": "Full license text: <license>PolyForm Noncommercial License</license> in the <github>MTGMODS/arizona-helper</github> repository.",
+    "contactTelegram": "Telegram: <telegram>@mtg_mods</telegram>",
+    "contactEmail": "Email: <email>bogdan.mtg@gmail.com</email>",
+    "liabilitySite": "The current version is always available at <site>mtgmods.com/terms</site>."
+  },
+  "sections": {
+    "general": {
+      "title": "General provisions",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "MTG MODS is an independent project run by a single enthusiast developer."
+        },
+        {
+          "type": "p",
+          "text": "The project is not a commercial organization or legal entity."
+        },
+        {
+          "type": "p",
+          "text": "The project is not associated with or affiliated with Rockstar Games, GTA San Andreas, SA-MP, Arizona Games, MoonLoader or MonetLoader."
+        },
+        {
+          "type": "p",
+          "text": "You use the Helper at your own risk."
+        },
+        {
+          "type": "p",
+          "text": "You are responsible for ensuring that use of the script complies with the rules of the server you play on."
+        }
+      ]
+    },
+    "eula": {
+      "title": "Software license",
+      "blocks": [
+        {
+          "type": "h3",
+          "text": "Free version"
+        },
+        {
+          "type": "p",
+          "text": "Provided for personal, non-commercial use."
+        },
+        {
+          "type": "p",
+          "text": "You may study and modify the source code of the free version solely for your own needs."
+        },
+        {
+          "type": "p",
+          "text": "Any commercial use, including selling, monetization or inclusion in paid bundles, is prohibited."
+        },
+        {
+          "type": "rich",
+          "key": "rich.freeLicenseLink"
+        },
+        {
+          "type": "h3",
+          "text": "VIP version"
+        },
+        {
+          "type": "p",
+          "text": "The VIP version is proprietary, closed-source software."
+        },
+        {
+          "type": "p",
+          "text": "The license grants only the right to use the script."
+        },
+        {
+          "type": "p",
+          "text": "Decompiling, reverse engineering, modifying the paid file or attempting to bypass the licensing system is prohibited."
+        }
+      ]
+    },
+    "privacy": {
+      "title": "Data collection and processing",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "The service only collects data needed to operate, protect against piracy and produce aggregate statistics."
+        },
+        {
+          "type": "h3",
+          "text": "Account and website data"
+        },
+        {
+          "type": "p",
+          "text": "The website does not use advertising trackers."
+        },
+        {
+          "type": "p",
+          "text": "Only access and refresh tokens are stored in your browser to maintain your session."
+        },
+        {
+          "type": "p",
+          "text": "Authentication uses official OAuth protocols (Telegram, Discord). We do not see, receive or store your passwords."
+        },
+        {
+          "type": "p",
+          "text": "Your profile stores your Telegram ID / Discord ID, nickname, avatar URL, role, account status, registration date and last sign-in date."
+        },
+        {
+          "type": "h3",
+          "text": "Localized prices and payment methods"
+        },
+        {
+          "type": "p",
+          "text": "For your convenience, mtgmods.com automatically hides payment methods unavailable in your region and shows the approximate subscription price in your local currency."
+        },
+        {
+          "type": "p",
+          "text": "Your browser sends direct requests to public third-party services (geojs.io, ipwho.is, open.er-api.com) to obtain your country code and current exchange rates."
+        },
+        {
+          "type": "p",
+          "text": "We do not send your profile data to these services. They only see your IP address, just as they would when you visit any website."
+        },
+        {
+          "type": "p",
+          "text": "If your browser or ad blocker blocks these requests, the website continues to work in its basic mode: USD prices and the full set of payment methods."
+        },
+        {
+          "type": "h3",
+          "text": "Anonymous analytics (Free and VIP)"
+        },
+        {
+          "type": "p",
+          "text": "When the Helper launches, the following may be sent for public statistics:"
+        },
+        {
+          "type": "ul",
+          "items": [
+            "a unique hardware identifier (HWID), used to count unique users and never displayed publicly;",
+            "script version, device type (PC / Mobile), game server number and operating mode (faction)."
+          ]
+        },
+        {
+          "type": "callout",
+          "lines": [
+            "To disable analytics, open Settings.json in the script folder.",
+            "Change \"analytics\": true to \"analytics\": false."
+          ]
+        },
+        {
+          "type": "h3",
+          "text": "License data (VIP only)"
+        },
+        {
+          "type": "p",
+          "text": "To protect against piracy, the VIP Helper contacts the license server and records:"
+        },
+        {
+          "type": "ul",
+          "items": [
+            "the license key, IP address and User-Agent;",
+            "device HWID and usage dates."
+          ]
+        },
+        {
+          "type": "p",
+          "text": "IP addresses and HWIDs are partially masked in your account dashboard."
+        },
+        {
+          "type": "p",
+          "text": "They are stored in full in the database."
+        },
+        {
+          "type": "p",
+          "text": "This feature is required for the VIP version to work and cannot be disabled."
+        }
+      ]
+    },
+    "deletion": {
+      "title": "Data and account deletion",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Users have the right to request deletion of their personal information."
+        },
+        {
+          "type": "p",
+          "text": "The procedure depends on the type of data."
+        },
+        {
+          "type": "h3",
+          "text": "Deleting usage statistics (analytics)"
+        },
+        {
+          "type": "p",
+          "text": "To delete your public Helper launch statistics, send a request to bogdan.mtg@gmail.com or message the developer, providing your HWID."
+        },
+        {
+          "type": "p",
+          "text": "The analytics records will be removed from the database."
+        },
+        {
+          "type": "h3",
+          "text": "Deleting your website profile (account)"
+        },
+        {
+          "type": "p",
+          "text": "You cannot delete your account yourself through the dashboard."
+        },
+        {
+          "type": "p",
+          "text": "Send a direct message to the developer on Telegram or Discord from the account linked to your profile on mtgmods.com."
+        },
+        {
+          "type": "p",
+          "text": "Account deletion requests are not accepted by email."
+        },
+        {
+          "type": "p",
+          "text": "Deleting your account deactivates all active VIP subscriptions."
+        },
+        {
+          "type": "h3",
+          "text": "Data that is not deleted"
+        },
+        {
+          "type": "ul",
+          "items": [
+            "VIP history: records of the devices (HWIDs) used to run the paid VIP version are retained to prevent subscription limit abuse, even after the profile is deleted;",
+            "blocklist: when an account is blocked for rule violations such as leaking files or hacking, its Telegram ID, Discord ID and HWIDs remain on a global blocklist to prevent re-registration;",
+            "transaction records are retained for financial accounting."
+          ]
+        }
+      ]
+    },
+    "vipRules": {
+      "title": "VIP version usage rules",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "A VIP subscription is a digital product for personal use only."
+        },
+        {
+          "type": "p",
+          "text": "A key is activated on an account and grants access for a limited duration (7 / 30 / 90 / 365 days), or for a lifetime under certain legacy plans."
+        },
+        {
+          "type": "p",
+          "text": "VIP is bound to devices (HWIDs) within the plan's device limit."
+        },
+        {
+          "type": "p",
+          "text": "Devices can be reset through your account within the number of resets available."
+        },
+        {
+          "type": "p",
+          "text": "The VIP file is personalized. Its download link is single-use."
+        },
+        {
+          "type": "p",
+          "text": "Each time it launches in the game, the VIP Helper contacts license/check. The script will not load without a successful response."
+        },
+        {
+          "type": "h3",
+          "text": "Prohibited actions"
+        },
+        {
+          "type": "ul",
+          "items": [
+            "sharing your license key, paid Helper file or account access (Telegram / Discord) with third parties;",
+            "decompiling, modifying or hacking the paid file;",
+            "bypassing the licensing system."
+          ]
+        },
+        {
+          "type": "h3",
+          "text": "Consequences of violations"
+        },
+        {
+          "type": "ul",
+          "items": [
+            "leaking a file or key, or sharing an account, results in cancellation of the subscription without a refund;",
+            "a deliberate hacking attempt results in permanent blocklisting of the account, social IDs and HWIDs."
+          ]
+        }
+      ]
+    },
+    "payment": {
+      "title": "Payments and refunds",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "A refund is only possible before the key is activated on an account."
+        },
+        {
+          "type": "p",
+          "text": "The payment is refunded and the key is permanently deleted."
+        },
+        {
+          "type": "p",
+          "text": "No refunds are available after key activation."
+        },
+        {
+          "type": "p",
+          "text": "Activating the key counts as delivery of the service, whether or not you have downloaded the VIP file."
+        },
+        {
+          "type": "p",
+          "text": "Your internet provider blocking the website (mtgmods.com) or API (api.mtgmods.com) is not grounds for a refund."
+        },
+        {
+          "type": "p",
+          "text": "For users affected by regional blocks: a browser VPN may let you pay for a subscription and download the VIP file, but the script runs inside the game and contacts api.mtgmods.com directly from your PC. If your provider blocks the API, use a system-wide VPN such as WARP or TunnelBear; otherwise, the purchased script will not load."
+        }
+      ]
+    },
+    "liability": {
+      "title": "Disclaimer of liability",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "The software is provided ‘as is’."
+        },
+        {
+          "type": "p",
+          "text": "The developer does not guarantee full compatibility with every server."
+        },
+        {
+          "type": "p",
+          "text": "The developer is not responsible for game account bans, loss of in-game assets, game crashes, software damage or any other loss."
+        },
+        {
+          "type": "p",
+          "text": "Data is not sold to third parties. Browser requests to public country and exchange rate services are described under ‘Localized prices and payment methods’."
+        },
+        {
+          "type": "p",
+          "text": "This document may be updated."
+        },
+        {
+          "type": "rich",
+          "key": "rich.liabilitySite"
+        }
+      ]
+    },
+    "contact": {
+      "title": "Contact",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "For questions about these terms, purchases or data deletion:"
+        },
+        {
+          "type": "rich",
+          "key": "rich.contactEmail"
+        },
+        {
+          "type": "rich",
+          "key": "rich.contactTelegram"
+        }
+      ]
+    }
+  }
+}

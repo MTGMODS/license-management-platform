@@ -1,3 +1,15 @@
+import enAdmin from './locales/en/admin.json'
+import enCommon from './locales/en/common.json'
+import enDashboard from './locales/en/dashboard.json'
+import enDownload from './locales/en/download.json'
+import enErrors from './locales/en/errors.json'
+import enHeader from './locales/en/header.json'
+import enHelper from './locales/en/helper.json'
+import enHome from './locales/en/home.json'
+import enLogin from './locales/en/login.json'
+import enPromo from './locales/en/promo.json'
+import enTerms from './locales/en/terms.json'
+import enVip from './locales/en/vip.json'
 import ruAdmin from './locales/ru/admin.json'
 import ruCommon from './locales/ru/common.json'
 import ruDashboard from './locales/ru/dashboard.json'
@@ -26,6 +38,20 @@ import ukVip from './locales/uk/vip.json'
 export const defaultNS = 'common'
 
 export const resources = {
+  en: {
+    admin: enAdmin,
+    common: enCommon,
+    dashboard: enDashboard,
+    download: enDownload,
+    errors: enErrors,
+    header: enHeader,
+    helper: enHelper,
+    home: enHome,
+    login: enLogin,
+    promo: enPromo,
+    terms: enTerms,
+    vip: enVip,
+  },
   ru: {
     admin: ruAdmin,
     common: ruCommon,

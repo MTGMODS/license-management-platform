@@ -1,0 +1,30 @@
+{
+  "warning": {
+    "title": "Wait — do you need to sign in?",
+    "body": "Sign-in is only needed for active VIP users or those who have just bought a key and want to activate it.",
+    "note": "If that does not apply to you, signing in will not change anything."
+  },
+  "card": {
+    "title": "Quick sign-in",
+    "subtitle": "No passwords or email. Sign in instantly with a service you already use."
+  },
+  "provider": {
+    "discord": "Sign in with Discord",
+    "telegram": "Sign in with Telegram",
+    "pending": "Waiting for confirmation…"
+  },
+  "back": "Back to the helper",
+  "popupBlocked": {
+    "title": "Use a regular browser",
+    "body": "Sign-in does not work in this in-app browser: it opens a blank tab instead of a sign-in window. Open this site in Chrome, Edge or Firefox and sign in there.",
+    "allow": "Try again",
+    "cancel": "Cancel"
+  },
+  "callback": {
+    "working": "Completing sign-in…",
+    "done": "Signed in. Redirecting…",
+    "empty": "No sign-in data found. Return to the sign-in page and try again.",
+    "error": "Could not complete sign-in.",
+    "backToLogin": "Back to sign-in"
+  }
+}

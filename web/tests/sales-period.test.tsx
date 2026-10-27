@@ -7,6 +7,7 @@ import { beforeEach, expect, it, vi } from 'vitest'
 import type { LicenseSaleRow, LicenseSalesStats } from '../src/shared/api/license'
 import ru from '../src/i18n/locales/ru/vip.json'
 import uk from '../src/i18n/locales/uk/vip.json'
+import en from '../src/i18n/locales/en/vip.json'
 import { SalesStats } from '../src/widgets/vip/SalesStats'
 
 const state = vi.hoisted(() => ({ data: null as LicenseSalesStats | null, pie: vi.fn(), timeline: vi.fn() }))
@@ -28,7 +29,7 @@ vi.mock('recharts', () => {
 })
 
 const i18n = createInstance()
-await i18n.init({ lng: 'ru', defaultNS: 'vip', resources: { ru: { vip: ru }, uk: { vip: uk } },
+await i18n.init({ lng: 'ru', defaultNS: 'vip', resources: { ru: { vip: ru }, uk: { vip: uk }, en: { vip: en } },
   interpolation: { escapeValue: false } })
 
 function sale(activated_at: string | null, amount: number, method: string, days: number,
@@ -211,4 +212,17 @@ it('shows dd/mm/yyyy, accepts typed dates and calendar selections, and rejects i
   }
   fireEvent.change(input, { target: { value: '29/02/2024' } })
   expect(screen.queryByRole('alert')).toBeNull()
+})
+
+it('renders the English filter, day totals and purchase types with the same UTC sales', async () => {
+  await i18n.changeLanguage('en')
+  page()
+  expect(screen.getByRole('heading', { name: en.stats.salesList.title_all })).toBeTruthy()
+  fireEvent.change(screen.getByRole('combobox', { name: 'Period' }), { target: { value: 'day' } })
+  fireEvent.change(screen.getByLabelText('Day'), { target: { value: '16/10/2026' } })
+  expect(metric('Sales for the day', 'Selected day totals').getByText('2')).toBeTruthy()
+  expect(metric('Revenue for the day', 'Selected day totals').getByText('$7')).toBeTruthy()
+  const table = within(screen.getByRole('table', { name: en.stats.salesList.title_day }))
+  expect(table.getAllByText('Renewal')).toHaveLength(2)
+  expect(table.getByText('7 days')).toBeTruthy()
 })

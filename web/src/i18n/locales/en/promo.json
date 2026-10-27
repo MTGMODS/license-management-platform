@@ -1,0 +1,69 @@
+{
+  "hub": {
+    "title": "Promotions",
+    "subtitle": "Earn an MTGVIP subscription for free",
+    "clickHint": "Click anywhere on a banner to learn more",
+    "leaders": {
+      "title": "Partnership for leaders and deputies",
+      "lead": "Help faction members enjoy the game with the helper",
+      "reward": "A 30-day subscription for meeting the requirements"
+    },
+    "smart": {
+      "title": "Smart configuration editor",
+      "lead": "Keep the helper's justice and prison configurations up to date",
+      "reward": "A 7-day subscription for each completed server"
+    }
+  },
+  "leaders": {
+    "title": "Partnership for faction leaders and deputies",
+    "lead": "Help your faction members enjoy the game with the helper",
+    "back": "Back to promotions",
+    "copyText": "Download Arizona&Rodina Helper (mtgmods.com/helper)",
+    "board": {
+      "title": "Organization notice board",
+      "body": "If you can, post this on the notice board:"
+    },
+    "promo": {
+      "title": "Rank promotion requirements",
+      "body": "You can also add this to the promotion requirements:"
+    },
+    "reward": {
+      "title": "Reward",
+      "body": "A 30-day MTGVIP subscription for meeting the requirements"
+    },
+    "claim": {
+      "title": "How to claim your MTGVIP subscription",
+      "step1": "At least 10 faction members must install the helper",
+      "step2": "Ask each of them for a screenshot of /helper + /time, and take your own screenshot of /stats + /time",
+      "step3": "Send me these 11 screenshots in a direct message"
+    },
+    "ctaTelegram": "Message on Telegram",
+    "ctaDiscord": "Message on Discord"
+  },
+  "smart": {
+    "title": "Smart configuration editor",
+    "lead": "Keep the helper's cloud configurations for justice and prison factions up to date",
+    "back": "Back to promotions",
+    "role": {
+      "title": "What an editor does",
+      "item1": "Update fines and wanted levels for justice factions",
+      "item2": "Update prison sentence extension rules",
+      "item3": "Create configurations for new servers",
+      "item4": "Address configuration issues reported to support"
+    },
+    "reward": {
+      "title": "Reward",
+      "body": "A 7-day MTGVIP subscription for each completed server (UK+PDD+RPTP)"
+    },
+    "join": {
+      "title": "How to become a Smart editor",
+      "step1": "Join our server and mention @mtgmods in chat",
+      "step2": "You will then receive access and a video guide"
+    },
+    "ctaDiscord": "Discord server"
+  },
+  "copy": {
+    "label": "Copy",
+    "done": "Copied"
+  }
+}

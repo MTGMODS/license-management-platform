@@ -1,0 +1,52 @@
+{
+  "hero": {
+    "name": "Bohdan",
+    "tagline": "I create and develop my freemium product — <product>Arizona&Rodina Helper</product>.",
+    "bio": "I develop the product, website and supporting services.\nI share the project's source code and statistics openly.",
+    "author": "Developer —",
+    "preview": "Arizona&Rodina Helper interface",
+    "productDescription": "A modification (helper) for players on PC and mobile",
+    "explore": "More about the helper"
+  },
+  "repositories": {
+    "title": "How it all works",
+    "subtitle": "The product, this website and the platform services have their source code on GitHub. Explore how each part of the project works.",
+    "helper": "The digital product for Arizona and Rodina.",
+    "installer": "Windows installer for the product.",
+    "frontend": "The website and account frontend.",
+    "launcher": "A patcher for the mobile game client that lets the product run on your phone.",
+    "usage": "Product usage analytics: launches and user activity.",
+    "user": "Accounts, authentication and the user dashboard.",
+    "license": "The paid version: VIP keys, subscriptions and devices.",
+    "distribution": "Preparing and delivering the purchased product through the user dashboard.",
+    "telegram": "Telegram Stars payments and VIP chat management.",
+    "discord": "VIP role management on the Discord server.",
+    "viewCode": "View code"
+  },
+  "groups": {
+    "product": {
+      "title": "Arizona&Rodina Helper and website",
+      "description": "The product, installer, website and tools for running the product on mobile."
+    },
+    "backend": {
+      "title": "Backend · API",
+      "description": "Four microservices that power the website and the product."
+    },
+    "bots": {
+      "title": "Bots",
+      "description": "Supporting integrations with Telegram and Discord."
+    }
+  },
+  "openData": {
+    "title": "Public statistics",
+    "description": "I openly share how people use the product and what its paid version earns. Detailed statistics are available to everyone.",
+    "usage": {
+      "title": "Product usage",
+      "description": "Launches, user activity, versions and platforms."
+    },
+    "sales": {
+      "title": "Paid product sales",
+      "description": "Subscription sales, revenue and detailed analytics."
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "nav": {
+    "label": "Main navigation",
+    "helper": "Helper",
+    "vip": "Subscription",
+    "promo": "Promotions"
+  },
+  "account": {
+    "cabinet": "My account",
+    "admin": "Admin panel",
+    "logout": "Sign out"
+  },
+  "menu": {
+    "open": "Open menu",
+    "close": "Close menu"
+  },
+  "skipToContent": "Skip to content"
+}

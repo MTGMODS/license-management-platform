@@ -1,14 +1,12 @@
-export const SUPPORTED_LOCALES = ['ru', 'uk'] as const
+export const SUPPORTED_LOCALES = ['ru', 'uk', 'en'] as const
 
 export type Locale = (typeof SUPPORTED_LOCALES)[number]
 
-/**
- * Russian is the fallback: the audience is predominantly Russian-speaking and
- * the spec treats `uk` as an opt-in for Ukrainian browsers only.
- */
+/** Used for browsers outside the explicit Ukrainian/English rules. */
 export const DEFAULT_LOCALE: Locale = 'ru'
 
-export const LOCALE_STORAGE_KEY = 'mtg.locale'
+// The old mtg.locale entry cached automatic detection, not a manual choice.
+export const LOCALE_STORAGE_KEY = 'mtg.locale.override'
 
 /** Cookie name for a manual locale override (`mtg.locale=uk`). */
 const LOCALE_COOKIE_KEY = 'mtg.locale'
@@ -33,12 +31,6 @@ export function readStoredLocale(): Locale | null {
   return null
 }
 
-/** True for any BCP-47 Ukrainian tag: `uk`, `uk-UA`, `uk-UA-u-nu-latn`, … */
-function isUkrainianLanguageTag(tag: string): boolean {
-  const normalized = tag.trim().toLowerCase()
-  return normalized === 'uk' || normalized.startsWith('uk-')
-}
-
 /** Primary browser language (`languages[0]` with `language` fallback). */
 function preferredBrowserLanguage(): string {
   const fromList = navigator.languages?.[0]
@@ -46,8 +38,9 @@ function preferredBrowserLanguage(): string {
   return navigator.language ?? ''
 }
 
-/** Browser default: Ukrainian for any `uk*` primary locale, otherwise Russian. */
+/** Use only the primary browser language, independently of location. */
 export function resolveAutoLocale(): Locale {
-  if (isUkrainianLanguageTag(preferredBrowserLanguage())) return 'uk'
-  return DEFAULT_LOCALE
+  const language = preferredBrowserLanguage().trim().toLowerCase().split('-')[0]
+  if (language === 'uk') return 'uk'
+  return language === 'en' ? 'en' : DEFAULT_LOCALE
 }

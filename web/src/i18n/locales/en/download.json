@@ -1,0 +1,65 @@
+{
+  "title": "Download Arizona&Rodina Helper",
+  "titleVersion": "Download Arizona&Rodina Helper {{version}}",
+  "device": {
+    "pc": "PC",
+    "mobile": "Mobile"
+  },
+  "pc": {
+    "auto": {
+      "title": "Automatic installation",
+      "badge": "The easiest way",
+      "action": "Download installer",
+      "steps": {
+        "download": "Click ‘Download installer’",
+        "open": "Open it once the download is complete",
+        "find": "The installer will find your game folder",
+        "install": "Click ‘Install helper’",
+        "done": "All done — you can launch the game"
+      }
+    },
+    "manual": {
+      "title": "Manual installation",
+      "badge": "For experienced users",
+      "action": "Download Lua file",
+      "guide": "Video guide",
+      "steps": {
+        "moonloader": "Install MoonLoader 0.26.5 if you have not already",
+        "download": "Click ‘Download Lua file’",
+        "open": "Open your moonloader folder",
+        "place": "Place the downloaded Lua file in this folder",
+        "done": "All done — you can launch the game"
+      }
+    }
+  },
+  "mobile": {
+    "auto": {
+      "title": "Automatic installation",
+      "badge": "The easiest way",
+      "steps": {
+        "download": "Download the modified launcher with NeomLoader",
+        "install": "Use the /mtg or /store command"
+      },
+      "action": "Download NeoMLoader launcher",
+      "guides": {
+        "mtg": "/mtg video guide",
+        "store": "/store video guide"
+      }
+    },
+    "manual": {
+      "title": "Manual installation",
+      "badge": "For experienced users",
+      "action": "Download Lua file",
+      "guide": "Video guide",
+      "steps": {
+        "download": "Click ‘Download Lua file’",
+        "open": "Open Android/media/*game*/neomloader/",
+        "place": "Place the downloaded Lua file in this folder"
+      }
+    }
+  },
+  "legalNotice": "By downloading and using Arizona Helper, you agree to the <terms>terms of use and privacy policy</terms>.",
+  "toast": {
+    "started": "Download started"
+  }
+}
