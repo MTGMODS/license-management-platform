@@ -74,7 +74,7 @@ export function AccountControl() {
       {open ? (
         <div
           role="menu"
-          className="absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-xl border border-ink-700 bg-ink-900 py-1 shadow-[0_16px_48px_-16px_rgba(0,0,0,0.75)]"
+          className="absolute top-full right-0 z-50 mt-2 w-max min-w-full overflow-hidden rounded-xl border border-ink-700 bg-ink-900 py-1 whitespace-nowrap shadow-[0_16px_48px_-16px_rgba(0,0,0,0.75)]"
         >
           {isAdmin && !onAdmin ? (
             <Link
