@@ -570,4 +570,6 @@ Source-code contributions are recorded in the [GitHub contributors graph](https:
 
 ## 📄 License
 
-Source code in this repository is available under the [MIT License](LICENSE). The external product has its own repository; private deployment assets are not included in this checkout.
+Source code in this repository is available under the [PolyForm Noncommercial License 1.0.0](LICENSE), which permits noncommercial use under its terms. See `LICENSE` for the full conditions.
+
+The external product has its own repository and license. Private deployment assets are not included in this checkout.
