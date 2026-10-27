@@ -1,7 +1,9 @@
 flowchart LR
-  %% C4 Container view: external people/systems, product boundary, runtime containers and protocols.
+  %% C4-style container view of the current production deployment.
+  %% The Helper is an existing external product. Host nginx runs outside Compose.
 
-  Player["Person: MTG MODS user / browser"]
+  Player["Person: Player<br/>Browser is the main interface"]
+  MiniApp["Client: Telegram Mini App<br/>Same web application inside Telegram"]
   Helper["External client: Arizona/Rodina Helper<br/>Free and VIP"]
   Telegram["External system: Telegram Bot API"]
   Discord["External system: Discord API"]
@@ -9,12 +11,15 @@ flowchart LR
   Nginx["Infrastructure: Nginx HTTPS gateway<br/>production host, outside Compose"]
 
   Player -->|HTTPS| Nginx
+  Player -->|Opens from Telegram| MiniApp
+  MiniApp -->|HTTPS: website and API| Nginx
   Helper -->|HTTPS: license check + usage launch| Nginx
 
   subgraph MTG["Software system: MTG MODS platform"]
     direction LR
 
-    Web["Container: React Web SPA<br/>Docker service web"]
+    Web["Container: Web nginx<br/>React SPA + static free installer"]
+    Installer[("Read-only installer directory<br/>Public base EXE only")]
 
     subgraph Backend["Backend containers · Docker Compose network"]
       direction TB
@@ -22,17 +27,17 @@ flowchart LR
       UserAPI["Container: User Service<br/>FastAPI · OAuth/JWT/profile"]
       LicenseAPI["Container: License Service<br/>FastAPI · activation/check/sales"]
       UsageAPI["Container: Usage Service<br/>FastAPI · launch telemetry/stats"]
-      DistributionAPI["Container: Distribution Service<br/>FastAPI · VIP file build/download"]
+      DistributionAPI["Container: Distribution Service<br/>FastAPI · VIP Lua / stamped EXE"]
 
-      UserDB[("Container: PostgreSQL<br/>User DB · users/sessions")]
+      UserDB[("Container: PostgreSQL<br/>Users, refresh sessions, OAuth handoffs")]
       LicenseDB[("Container: PostgreSQL<br/>License DB · licenses/devices/transactions")]
       UsageDB[("Container: PostgreSQL<br/>Usage DB · launches")]
       Rabbit["Container: RabbitMQ<br/>file-generation RPC + bot commands"]
       Redis[("Container: Redis<br/>shared public stats cache + refresh locks")]
-      Assets["Private production overlay<br/>VIP template + obfuscator library"]
-      BuildFiles[("Mounted builds volume<br/>temporary personalized files")]
-      TgBot["Container: Telegram bot"]
-      DsBot["Container: Discord bot"]
+      Assets["Private files<br/>VIP template + obfuscator"]
+      BuildFiles[("Mounted builds directory<br/>Temporary Lua / EXE / used markers")]
+      TgBot["Container: Telegram bot<br/>Stars payments + VIP chat"]
+      DsBot["Container: Discord bot<br/>VIP roles + messages"]
     end
 
     UserAPI --> UserDB
@@ -46,11 +51,14 @@ flowchart LR
     DistributionAPI -->|RPC response with download URL| Rabbit
     DistributionAPI --> Assets
     DistributionAPI --> BuildFiles
+    DistributionAPI -->|Reads base EXE for stamping| Installer
+    Web -->|Serves free EXE directly| Installer
     LicenseAPI -->|RabbitMQ · VIP expiry commands| Rabbit
     Rabbit -->|discord.#| DsBot
     Rabbit -->|telegram.#| TgBot
     TgBot -->|HTTP · bot endpoints| LicenseAPI
     DsBot -->|HTTP · bot endpoints| LicenseAPI
+    TgBot -->|Opens website / Mini App| MiniApp
   end
 
   Nginx -->|HTTP :8080| Web
@@ -68,6 +76,6 @@ flowchart LR
   classDef app fill:#e8f1ff,stroke:#2563eb,color:#111827
   classDef data fill:#ecfdf5,stroke:#059669,color:#111827
   class Player person
-  class Helper,Telegram,Discord,OAuth,Nginx external
+  class Helper,MiniApp,Telegram,Discord,OAuth,Nginx external
   class Web,UserAPI,LicenseAPI,UsageAPI,DistributionAPI,Rabbit,TgBot,DsBot app
-  class UserDB,LicenseDB,UsageDB,Redis,Assets,BuildFiles data
+  class UserDB,LicenseDB,UsageDB,Redis,Assets,BuildFiles,Installer data

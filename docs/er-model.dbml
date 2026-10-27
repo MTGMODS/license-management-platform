@@ -1,6 +1,6 @@
-Project MTG_MODS_Lab01 {
+Project MTG_MODS_Platform {
   database_type: 'PostgreSQL'
-  Note: 'One diagram contains three physically separate PostgreSQL databases. IDs crossing service boundaries are logical references only; they are not database foreign keys.'
+  Note: 'Matches the SQLAlchemy models in services/user, services/license and services/usage. The user_db, license_db and usage_db prefixes group three separate PostgreSQL databases; they are not schemas in one database. User IDs in licenses, purchases and refresh sessions are logical references without FK constraints. Distribution stores files and has no database.'
 }
 
 Enum user_db.user_status {
@@ -18,16 +18,19 @@ Enum license_db.license_status {
 
 Table user_db.users {
   id int [pk, increment]
-  telegram_id bigint [unique, null, note: 'External Telegram ID; unique index in User DB']
-  discord_id bigint [unique, null, note: 'External Discord ID; unique index in User DB']
+  telegram_id bigint [null, note: 'External Telegram ID']
+  discord_id bigint [null, note: 'External Discord ID']
   nickname varchar(50) [not null, note: 'Indexed; substring search uses ILIKE']
   avatar_url varchar [null]
   role varchar(20) [not null, note: 'ORM default: USER']
-  status user_db.user_status [null, note: 'ORM default: ACTIVE']
+  status user_db.user_status [not null, note: 'ORM default: ACTIVE']
   created_at timestamptz [null, default: `now()`]
-  last_login_at timestamptz [null]
+  last_login_at timestamptz [null, note: 'ORM onupdate: now()']
 
   Indexes {
+    id [name: 'ix_users_id']
+    telegram_id [unique, name: 'ix_users_telegram_id']
+    discord_id [unique, name: 'ix_users_discord_id']
     nickname [name: 'ix_users_nickname']
   }
 }
@@ -43,12 +46,16 @@ Table user_db.refresh_sessions {
   user_id int [not null, note: 'Logical reference to user_db.users.id; no FK constraint in current model']
   token_hash varchar(64) [unique, not null]
   expires_at timestamptz [not null]
+
+  Indexes {
+    user_id [name: 'ix_refresh_sessions_user_id']
+  }
 }
 
 Table license_db.licenses {
   id int [pk, increment]
   user_id int [null, note: 'Logical reference to user_db.users.id across services; no FK constraint']
-  key varchar [unique, not null]
+  key varchar [not null]
   duration_days int [null, note: 'NULL represents lifetime access']
   reset_limit int [not null, note: 'ORM default: 1']
   max_devices int [not null, note: 'ORM default: 2']
@@ -58,7 +65,9 @@ Table license_db.licenses {
   expires_at timestamptz [null]
 
   Indexes {
+    id [name: 'ix_licenses_id']
     user_id [name: 'ix_licenses_user_id']
+    key [unique, name: 'ix_licenses_key']
   }
 }
 
@@ -69,7 +78,11 @@ Table license_db.license_activations {
   ip_address varchar [null]
   user_agent varchar [null]
   first_used_at timestamptz [null, default: `now()`]
-  last_used_at timestamptz [null, default: `now()`]
+  last_used_at timestamptz [null, default: `now()`, note: 'ORM onupdate: now()']
+
+  Indexes {
+    id [name: 'ix_license_activations_id']
+  }
 }
 
 Table license_db.transaction_purchases {
@@ -82,6 +95,7 @@ Table license_db.transaction_purchases {
   purchased_at timestamptz [null, default: `now()`]
 
   Indexes {
+    id [name: 'ix_transaction_purchases_id']
     user_id [name: 'ix_transaction_purchases_user_id']
   }
 }
@@ -96,6 +110,7 @@ Table usage_db.launches {
   launched_at timestamptz [null, default: `now()`, note: 'Indexed']
 
   Indexes {
+    id [name: 'ix_launches_id']
     hwid [name: 'ix_launches_hwid']
     server [name: 'ix_launches_server']
     mode [name: 'ix_launches_mode']
@@ -105,4 +120,3 @@ Table usage_db.launches {
 
 Ref: license_db.license_activations.license_id > license_db.licenses.id [delete: cascade]
 Ref: license_db.licenses.id - license_db.transaction_purchases.license_id [delete: cascade]
-Ref: user_db.refresh_sessions.user_id > user_db.users.id [delete: cascade]

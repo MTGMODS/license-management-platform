@@ -1,29 +1,263 @@
-# MTG MODS platform
+# MTG MODS Platform
 
-Micro-SaaS around a freemium digital product: identity, licenses, usage analytics, protected file delivery, public web app, Telegram and Discord adapters.
+**Micro-SaaS around a freemium digital product.**
 
+Python APIs, a React website and bots that handle accounts, licenses, downloads and statistics for Arizona&Rodina Helper.
+
+[Website](https://mtgmods.com) · [Product](https://mtgmods.com/helper) · [Public sales analytics](https://mtgmods.com/vip) · [Product source](https://github.com/MTGMODS/arizona-helper)
+
+The system is used in production. It started as a Python monolith inside Telegram and Discord bots, then grew into separate backend services and a website. **Arizona&Rodina Helper already existed before this rewrite.**
+
+The helper and this platform are **two separate projects**, both owned and maintained by **Bohdan ([MTGMODS](https://github.com/MTGMODS))**. This repository contains the supporting services and website. The Lua modification and Windows installer live in [arizona-helper](https://github.com/MTGMODS/arizona-helper).
+
+**Explore:** [Background](#from-monolith-to-platform) · [Features](#features) · [Diagrams](#diagrams) · [Request flows](#request-flows) · [Public statistics](#public-statistics) · [Docker setup](#run-with-docker) · [Operations](#operations) · [Tests](#tests-and-checks)
+
+## Related projects
+
+| Project | Responsibility | Source |
+| --- | --- | --- |
+| **Arizona&Rodina Helper** | Lua modification for players and its Windows installer | [arizona-helper](https://github.com/MTGMODS/arizona-helper) |
+| **MTG MODS Platform** | Python APIs, databases, licensing, delivery, analytics, website and bot integrations | This repository |
+| **Mobile launcher patcher** | Prepares the mobile client to run the product | [arz_lua_launcher](https://github.com/MTGMODS/arz_lua_launcher) |
+
+Usage and sales statistics are public. The account dashboard and admin panel require sign-in.
+
+## From monolith to platform
+
+The original **Python monolith** handled accounts and licenses through the bots, which also accessed the database directly.
+
+The monolith worked well and served paying users. The rewrite separated backend logic from bot handlers, added an API and moved account management to a website. It was a planned change to how the system was built and used.
+
+The previous implementation is preserved in the [v0.0.0 release — Legacy MVP Monolithic Implementation](https://github.com/MTGMODS/license-management-platform/releases/tag/v0.0.0), with its source distributed as the attached [legacy_monolith.zip](https://github.com/MTGMODS/license-management-platform/releases/download/v0.0.0/legacy_monolith.zip).
+
+| Area | Earlier implementation | Current platform |
+| --- | --- | --- |
+| Application structure | Backend logic and database access inside the bots | Four Python services and a React website |
+| Main customer interface | Bot interactions | Website and browser-based account dashboard |
+| Telegram entry point | Bot interface | Mini App opens the same website inside Telegram |
+| Bot responsibilities | Account and license management | Stars payments, VIP chats/roles, notifications and supporting commands |
+
+The **website in a regular browser is the main interface**. The Mini App is another way to access it from Telegram.
+
+## Features
+
+| Area | What it does |
+| --- | --- |
+| **Accounts** | Telegram and Discord sign-in, linked social accounts, profiles, roles, JWT access tokens, refresh sessions, logout and Mini App sign-in |
+| **Licensing** | Key generation and activation, subscription expiry, legacy lifetime licenses, device binding, per-plan device limits and reset quotas, game-client license checks |
+| **Downloads** | Builds a personal VIP Lua file, returns a temporary link, optionally prepares a Windows installer and cleans up old files |
+| **Usage analytics** | Records launches and counts devices, free/VIP usage, PC/mobile split, versions, servers, factions and activity over time |
+| **Sales analytics** | Completed paid purchases, revenue, payment methods, tariffs, first/repeat purchases, buyer retention and transitions between subscription plans |
+| **Web application** | Product and download pages, public analytics, customer dashboard, administration, responsive layouts and Russian/Ukrainian/English translations |
+| **Bots** | Telegram Stars checkout, VIP-chat admission/removal, Discord VIP roles and expiry notifications |
+
+Telegram Stars payments are handled in the bot. The website also links to external marketplaces and gives instructions for manual payments.
+
+## Architecture
+
+The backend has **four Python/FastAPI services**. User, License and Usage each have their own PostgreSQL database. Distribution works with files in a mounted directory.
+
+### Diagrams
+
+| File | Contents |
+| --- | --- |
+| [**architecture-c4.mmd**](docs/architecture-c4.mmd) | C4-style container diagram: external product, browser/Mini App, services, bots, databases, Redis, RabbitMQ and installer files |
+| [**er-model.dbml**](docs/er-model.dbml) | Database model: all tables, columns, indexes and foreign keys across the three service databases |
+
+The overview below renders directly on GitHub. The files above contain the full diagrams.
+
+```mermaid
+flowchart TB
+    Browser["Browser / Telegram Mini App"] --> Gateway["Host nginx · HTTPS gateway"]
+    Product["External product · Arizona&Rodina Helper"] --> Gateway
+    Gateway --> Web["React SPA · nginx container"]
+    Gateway --> User["User Service"]
+    Gateway --> License["License Service"]
+    Gateway --> Usage["Usage Service"]
+    Gateway --> Distribution["Distribution Service"]
+    User --> UserDB[("User PostgreSQL")]
+    License --> LicenseDB[("License PostgreSQL")]
+    Usage --> UsageDB[("Usage PostgreSQL")]
+    License -->|"HTTP · profiles / social IDs"| User
+    License --> Redis[("Redis · statistics / refresh locks")]
+    Usage --> Redis
+    License <-->|"File-generation request / reply"| Rabbit["RabbitMQ"]
+    Rabbit <-->|"Build task / download URL"| Distribution
+    Distribution --> Files[("Private templates / temporary builds")]
+    Web -->|"Static download"| Installer[("Public installer template")]
+    Distribution -->|"Reads base EXE"| Installer
+    Rabbit -->|"VIP expiry commands"| Bots["Telegram / Discord bots"]
+    Bots -->|"Internal HTTP"| License
 ```
-├── services/user/           # OAuth, JWT, profiles
-├── services/license/        # keys, HWID, tariffs, sales, bot API
-├── services/usage/          # launch telemetry, public stats
-├── services/distribution/   # one-shot VIP file download
-├── web/                     # SPA (cabinet, open stats, admin)
-├── bots/telegram/           # Stars, VIP chat, Mini App entry
-├── bots/discord/            # VIP role / DMs
-└── docker-compose.yml
+
+- **HTTP** handles browser/game-client requests and service-to-service lookups.
+- **RabbitMQ** carries personalized-build requests and replies, plus bot commands.
+- **Redis** caches statistics and coordinates refreshes between processes. Accounts, licenses and purchases stay in PostgreSQL.
+- **Host nginx** terminates HTTPS and routes public traffic. It runs outside Compose; its configuration is in `gateway/`.
+- The **web container's nginx** serves the compiled SPA and the public Windows installer.
+
+<details>
+<summary><strong>Database overview</strong> — tables and foreign keys</summary>
+
+User Service stores users, refresh sessions and OAuth handoffs. License Service stores licenses, device activations and purchases. Usage Service stores launches. The full [DBML model](docs/er-model.dbml) includes every column and index.
+
+```mermaid
+erDiagram
+    users {
+        int id PK
+        bigint telegram_id UK
+        bigint discord_id UK
+        varchar nickname
+        varchar role
+        enum status
+    }
+    refresh_sessions {
+        int id PK
+        int user_id "Logical reference, no FK"
+        varchar token_hash UK
+        timestamptz expires_at
+    }
+    oauth_handoffs {
+        varchar ticket PK
+        text payload
+        timestamptz expires_at
+    }
+    licenses {
+        int id PK
+        int user_id "Logical reference, no FK"
+        varchar key UK
+        int duration_days "NULL = lifetime"
+        enum status
+        timestamptz expires_at
+    }
+    license_activations {
+        int id PK
+        int license_id FK
+        varchar device
+        timestamptz first_used_at
+        timestamptz last_used_at
+    }
+    transaction_purchases {
+        int id PK
+        int user_id "Logical reference, no FK"
+        int license_id FK,UK
+        float amount
+        varchar payment_method
+        timestamptz purchased_at
+    }
+    launches {
+        int id PK
+        varchar hwid
+        varchar version
+        varchar device
+        int server
+        varchar mode
+        timestamptz launched_at
+    }
+    licenses |o--o{ license_activations : license_id
+    licenses |o--o| transaction_purchases : license_id
 ```
 
-APIs talk over HTTP and RabbitMQ. Bots and license↔user stay on the **Docker network** (not through public nginx). The browser and Telegram Mini App still use `https://api.mtgmods.com` / `https://mtgmods.com`.
+Only real database foreign keys are drawn. User IDs in licenses, purchases and refresh sessions are logical references; the ORM does not define foreign keys for them. The prefixes in the DBML file group separate databases, not schemas in one database.
 
-## Stack
+</details>
 
-Python 3.12, FastAPI, PostgreSQL 16 (one database per service), Redis 7.4, RabbitMQ 3.13, React 19 + Vite, Docker Compose.
+### Services
 
-## Run
+| Component | Location | What it handles |
+| --- | --- | --- |
+| **User Service** | [`services/user`](services/user/) | Users, social identities, refresh sessions and short-lived OAuth handoffs |
+| **License Service** | [`services/license`](services/license/) | Licenses, purchases, device activations, tariffs and expiry processing |
+| **Usage Service** | [`services/usage`](services/usage/) | Launch records and public usage aggregates |
+| **Distribution Service** | [`services/distribution`](services/distribution/) | Personalized file generation and temporary Lua/EXE delivery |
+| **Web** | [`web`](web/) | React client for public pages, accounts and administration |
+| **Telegram / Discord** | [`bots`](bots/) | Payment and community adapters around the license API |
+| **Gateway** | [`gateway`](gateway/) | Host nginx configuration, public routing and request limits |
 
-Each unit has `.env.example`. Copy and align secrets **before** `up`:
+Python services separate HTTP handlers, application logic, domain schemas and infrastructure under `app/api`, `app/application`, `app/domain`, `app/infrastructure` and `app/shared`.
 
-```bash
+### Technology stack
+
+| Layer | Technologies |
+| --- | --- |
+| Backend | Python 3.12, FastAPI, Pydantic, async SQLAlchemy, asyncpg, HTTPX |
+| Persistent data | PostgreSQL 16; SQLite for isolated regression tests |
+| Shared cache | Redis 7.4, `redis.asyncio`, Lua scripts for ownership-checked cache publication and lock release |
+| Messaging | RabbitMQ 3.13, aio-pika |
+| Frontend | TypeScript, React 19, Vite, Tailwind CSS, TanStack Query, Zustand, Recharts, i18next |
+| Runtime | Docker Compose, nginx; Node.js 22 for the web image build |
+| Verification | pytest, fakeredis, Vitest, Testing Library, TypeScript checks and Oxlint |
+
+## Request flows
+
+### Sign in and manage a subscription
+
+1. A user signs in through Telegram or Discord, or opens the Telegram Mini App.
+2. User Service resolves the account and issues access/refresh tokens. Refresh-session hashes and OAuth handoffs are stored in its database.
+3. The dashboard uses the access token to request license information, activate a purchased key, reset a personal device or request a download.
+4. License Service checks ownership and subscription rules in its database; profile/social information comes from User Service over internal HTTP.
+
+The tariff catalog lives in [`services/license/app/shared/tariffs.json`](services/license/app/shared/tariffs.json). It supplies website prices, Stars amounts and device/reset limits. It is cached per process; catalog changes require rebuilding/restarting the affected service.
+
+### Generate and deliver the paid product
+
+1. License Service verifies that the account has an active license.
+2. It sends a file-generation request to RabbitMQ with a correlation ID and a reply queue.
+3. Distribution generates the personalized Lua file and replies with its temporary download URL.
+4. On Windows, the user can choose the Lua file or an installer stamped with that same Lua URL.
+5. Downloaded and abandoned artifacts are removed according to the lifecycle below.
+
+The HTTP request waits up to **30 seconds** for the RabbitMQ reply with the download URL.
+
+### Expire community access
+
+The expiry worker checks subscriptions every **60 seconds**, commits status changes, resolves linked social IDs and publishes Telegram/Discord commands. The bots perform the corresponding chat/role actions.
+
+## Public statistics
+
+Anyone can view usage and sales statistics. The same public pages are used by the maintainer.
+
+| Page | Scope | Public API |
+| --- | --- | --- |
+| [`/helper`](https://mtgmods.com/helper) | Usage, platforms, versions, servers, factions and activity | [`/v1/usage/stats/public`](https://api.mtgmods.com/v1/usage/stats/public) |
+| [`/vip`](https://mtgmods.com/vip) | Paid subscriptions, revenue and buyer analytics | [`/v1/license/stats/public`](https://api.mtgmods.com/v1/license/stats/public) |
+| [`/vip/legacy`](https://mtgmods.com/vip/legacy) | Legacy lifetime-license totals, payment/price breakdowns and activation counts | [`/v1/license/stats/old`](https://api.mtgmods.com/v1/license/stats/old) |
+
+Usage “users” are distinct device identifiers (HWIDs), not verified individual people. Public sales rows omit buyer identities, license keys and device identifiers. Time-limited subscriptions and lifetime licenses are calculated separately; legacy figures reflect records still present in the database.
+
+### Cache behavior
+
+Statistics use **stale-while-revalidate**: results remain fresh for **5 minutes** and are retained for up to **24 hours**. A request for stale data returns it immediately and starts a background refresh with its own database session.
+
+| Dataset | Redis key | Generation timeout | Lock timeout |
+| --- | --- | --- | --- |
+| Subscription sales | `mtgmods:license:public_stats:v2` | 90 seconds | 120 seconds |
+| Legacy lifetime sales | `mtgmods:license:old_stats:v3` | 90 seconds | 120 seconds |
+| Usage | `mtgmods:usage:public_stats:v2` | 300 seconds | 330 seconds |
+
+The lock coordinates refreshes across processes. Redis scripts check ownership before publishing or releasing a lock. Refreshes are request-driven, without a periodic refresh scheduler.
+
+On a cold cache, one request computes the result. Other requests wait up to **4 seconds**, then return **503** with `Retry-After: 2` if it is not ready. The browser uses a **2-second first attempt and one immediate 1-second retry**, so a cold dataset can initially appear unavailable while generation continues.
+
+`updated_at` is the computation time, not the latest cache-hit time. Redis's internal `{data, fresh_until}` envelope is not exposed by the statistics APIs. If Redis is unavailable, services fall back to database computation, increasing database load. Redis persistence is disabled in Compose because these values can be rebuilt.
+
+## Run with Docker
+
+Run the application with **Docker Compose**. You need Docker with Linux containers and Compose v2; Python and Node.js run inside the containers.
+
+### 1. Clone and configure
+
+```sh
+git clone https://github.com/MTGMODS/license-management-platform.git
+cd license-management-platform
+```
+
+Copy these files once, then edit the resulting `.env` files:
+
+<details>
+<summary>Linux / macOS shell</summary>
+
+```sh
 cp services/user/.env.example services/user/.env
 cp services/license/.env.example services/license/.env
 cp services/usage/.env.example services/usage/.env
@@ -32,181 +266,197 @@ cp bots/telegram/.env.example bots/telegram/.env
 cp bots/discord/.env.example bots/discord/.env
 ```
 
-Must match across files:
+</details>
 
-- `JWT_SECRET` — user + license
-- `INTERNAL_SECRET_TOKEN` — user + license
-- `BOT_SECRET_TOKEN` — license + both bots
-- RabbitMQ user/password — license `.env` (broker) + `RABBITMQ_URL` in license, distribution, bots (`@rabbitmq`)
+<details>
+<summary>Windows PowerShell</summary>
 
-VIP template and obfuscator are **not** in git. On the server, overlay:
-
-`services/distribution/app/builds/vip/` and `services/distribution/app/tools/`
-
-then rebuild `distribution-service`.
-
-### Windows installer template
-
-The free installer is served directly by the web container's nginx at
-`https://mtgmods.com/helper/download/installer`, with the download name
-`Arizona&Rodina Helper.exe`. Python, RabbitMQ and VIP generation are not involved.
-Place its already-built template in the existing builds directory (not Git):
-
-```bash
-mkdir -p services/distribution/app/builds/installer
-curl -fL 'https://github.com/MTGMODS/arizona-helper/releases/download/windows-installer/Arizona.Rodina.Helper.exe' -o 'services/distribution/app/builds/installer/Arizona&Rodina Helper.exe'
-docker compose up --build -d distribution-service web
+```powershell
+Copy-Item services/user/.env.example services/user/.env
+Copy-Item services/license/.env.example services/license/.env
+Copy-Item services/usage/.env.example services/usage/.env
+Copy-Item services/distribution/.env.example services/distribution/.env
+Copy-Item bots/telegram/.env.example bots/telegram/.env
+Copy-Item bots/discord/.env.example bots/discord/.env
 ```
 
-Download the template **before** deploying the web change. Compose mounts only
-the `installer/` subdirectory read-only into web; VIP builds are not exposed.
-The existing host nginx configuration needs no changes: it proxies the website
-to the web container, where an exact static location handles the download.
-Missing templates return 404, not the SPA page. Byte-range downloads and ETag /
-Last-Modified validation are handled by nginx; browser cache lifetime is one hour.
-The old API download URL redirects to the new website address for compatibility.
-Update the template only when the installer changes; it must support the
-`MTGPAY01` URL overlay. The same template is used for VIP stamping.
+</details>
 
-After deployment, verify with:
+Examples contain placeholders, not production credentials. Configure these values consistently:
 
-```bash
-curl -sSI https://mtgmods.com/helper/download/installer
-curl -sS -D - -H 'Range: bytes=0-1' https://mtgmods.com/helper/download/installer -o /dev/null
+| Setting | Where it must agree |
+| --- | --- |
+| `JWT_SECRET` | User and License services |
+| `INTERNAL_SECRET_TOKEN` | User and License services |
+| `BOT_SECRET_TOKEN` | License Service and both bots |
+| PostgreSQL credentials | Each service's database URLs and its `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` |
+| RabbitMQ credentials | Broker settings in License `.env` and every `RABBITMQ_URL` in License, Distribution and bots |
+| OAuth configuration | Provider application settings, callback URLs and User Service's `FRONTEND_URL` |
+| Public download base | Distribution's `DOWNLOAD_BASE_URL`, reachable from the browser/installer |
+
+Keep `DEBUG_MODE=False` for the PostgreSQL configuration. Internal URLs use Compose names such as `user-service`, `license-service`, `rabbitmq` and `redis`; browsers need public or host-accessible URLs.
+
+### 2. Start the core APIs
+
+This starts User, License and Usage with their databases, Redis and RabbitMQ, without the bots or private file-generation workflow:
+
+```sh
+docker compose config --quiet
+docker compose up -d --build user-service license-service usage-service
+docker compose ps
 ```
 
-Expect 200 with `Content-Disposition: attachment` for HEAD, and 206 for the
-range request. Neither request should appear in the Distribution Service logs.
+Services create missing tables on startup. This is not a versioned database-migration system.
 
-After VIP Lua generation, Windows users choose manual Lua or an automatic EXE.
-`/v1/files/downloads/vip/<token>.exe` stamps a copy with the existing Lua URL;
-the template is never overwritten. Downloading EXE deletes only that EXE: Lua must
-remain until the installer requests it. Downloading Lua deletes both token files.
-An atomic `<token>.exe.used` marker makes the EXE URL single-use, including
-parallel requests and service restarts. Repeated EXE requests return 404 even
-while Lua remains available to the installer. Preparation errors release the
-claim; the user can retry or choose Lua. Lua delivery also removes the marker.
-Unused Lua/EXE/temp/marker files are removed by the hourly one-hour-age cleanup; template
-subdirectories are excluded. Keep the installer online and run it before the
-temporary Lua link expires. A downloaded installer is not an offline backup.
+| Component | Local address | API explorer |
+| --- | --- | --- |
+| User | [localhost:8001/health](http://localhost:8001/health) | [localhost:8001/docs](http://localhost:8001/docs) |
+| License | [localhost:8002/health](http://localhost:8002/health) | [localhost:8002/docs](http://localhost:8002/docs) |
+| Usage | [localhost:8003/health](http://localhost:8003/health) | [localhost:8003/docs](http://localhost:8003/docs) |
+| Distribution, when started | [localhost:8005/health](http://localhost:8005/health) | [localhost:8005/docs](http://localhost:8005/docs) |
+| Web, when started | [localhost:8080](http://localhost:8080) | — |
+| RabbitMQ management | [localhost:15672](http://localhost:15672) | Configured broker credentials |
 
-```bash
-docker compose up --build
+PostgreSQL and Redis have no published host ports. PostgreSQL data lives in three named volumes; the fixed Compose project name `mtgmods_backend` also determines their names.
+
+### 3. Connect the website to the API
+
+**The compiled web image defaults to `https://api.mtgmods.com`. Starting it locally does not automatically connect it to your local APIs.**
+
+For an independent deployment, create a root `.env` containing your gateway address before building:
+
+```dotenv
+VITE_API_URL=https://api.example.com
 ```
 
-The Compose project name stays `mtgmods_backend` so existing Postgres volumes keep their names.
-
-| Service | URL |
-|---------|-----|
-| User | http://localhost:8001/health |
-| License | http://localhost:8002/health |
-| Usage | http://localhost:8003/health |
-| Distribution | http://localhost:8005/health |
-| Web | http://localhost:8080 |
-| RabbitMQ UI | http://localhost:15672 |
-
-OAuth redirect URIs for local compose use host port **8001**. Production callbacks: `https://api.mtgmods.com/v1/users/auth/...` (see comments in `services/user/.env.example`).
-
-Bots call `http://license-service:8000/api/v1/license/...`. After switching from standalone bot containers, stop the old ones — two processes with the same Telegram token will fight.
-
-`web` bakes `VITE_API_URL` at **image build** (default `https://api.mtgmods.com`). Override: `VITE_API_URL=... docker compose build web`.
-
-## Local API without Docker
-
-License and Usage use `REDIS_URL` (default `redis://redis:6379/0` in Compose).
-For a locally installed Redis, use `redis://127.0.0.1:6379/0`.
-Without Redis, public statistics are computed from the database on each request.
-
-```bash
-cd services/user   # or license / usage / distribution
-python -m venv venv
-venv/Scripts/activate   # Linux: source venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env    # set DEBUG_MODE=True and SQLite URLs
-fastapi dev main.py --port 8001
+```sh
+docker compose up -d --build web
 ```
 
-Ports: **8001 / 8002 / 8003 / 8005**. Vite for the SPA: `cd web && npm ci && npm run dev` (port 5173; optional `VITE_DEV_*_TARGET` in `web/.env.example`).
+`VITE_API_URL` is embedded at **build time**; restarting a container does not change it. The browser uses one gateway with `/v1/users`, `/v1/license`, `/v1/usage` and `/v1/files` prefixes. A single service's `:8001` port cannot replace that gateway.
 
-## Public statistics cache
+Direct service routes include an additional `/api` prefix: for example, `http://localhost:8002/api/v1/license/stats/public` corresponds to `https://api.mtgmods.com/v1/license/stats/public` through the production gateway.
 
-License and Usage share Redis with separate keys:
+The checked-in [`gateway/`](gateway/) configuration is the production host-nginx setup for `mtgmods.com` and `api.mtgmods.com`, not a local gateway container. Adapt domains, certificates and upstreams for your deployment, together with backend CORS allowlists, `FRONTEND_URL` and OAuth callback registrations. Production-mode OAuth uses secure cookies and expects HTTPS.
 
-- `mtgmods:license:public_stats:v2`
-- `mtgmods:license:old_stats:v2`
-- `mtgmods:usage:public_stats:v1`
+### 4. Enable delivery and integrations
 
-All statistics endpoints return their statistics directly. Redis stores an internal
-JSON envelope with `data` and `fresh_until`; this envelope is not exposed by the API.
-`GET /api/v1/license/stats/public` contains only `updated_at` and `subscriptions`.
-Legacy lifetime statistics are available separately at `GET /api/v1/license/stats/old`
-as `{ "updated_at": "...Z", "forever": { "overview": ..., "by_method": ..., "by_price": ... } }`.
-`updated_at` records when statistics were computed and stays unchanged on cache hits.
-The legacy endpoint uses the same Redis cache mechanism, with its own key and lock.
-It reports paid, completed purchases for lifetime licenses still in the database;
-deleting a license removes its purchase from these figures on the next refresh.
-Results are fresh for 5 minutes and retained for up to 24 hours. A request for
-stale statistics returns the previous result immediately and schedules a refresh
-in the serving FastAPI process, with a separate database session.
+You can read the code and run tests from a fresh clone. Building the actual VIP product also requires these files and credentials:
 
-A per-key Redis lock coordinates both background refreshes and cold starts across
-processes. The lock lasts 120 seconds; computation is limited to 90 seconds.
-Publication and release check the owner's token atomically, so an old worker
-cannot overwrite a newer result or release another worker's lock. If a process
-dies, the lock expires and a later request retries the refresh.
+| File / setting | Location |
+| --- | --- |
+| VIP Lua templates | `services/distribution/app/builds/vip/` |
+| Obfuscator tooling | `services/distribution/app/tools/` |
+| Public Windows installer template | `services/distribution/app/builds/installer/Arizona&Rodina Helper.exe` |
+| Telegram / Discord credentials and chat/role IDs | The corresponding bot `.env` files |
 
-On a cold cache, the lock owner computes the first response. Other requests wait
-up to 4 seconds, then receive HTTP 503 with `Retry-After: 2` if data is still
-unavailable. The web client has a 5-second stats timeout, so the first visit after
-a cache reset can require a retry. Failed background refreshes preserve old data.
-Redis connection/command timeouts are 0.5 seconds with no automatic retries;
-when Redis is unavailable, statistics fall back to uncached DB reads. This keeps
-the endpoint usable but can increase DB load during a Redis outage.
+Private build assets and local `.env` files are excluded from Git. Place templates/tools before building Distribution. Download the public installer template from the [product's Windows installer release](https://github.com/MTGMODS/arizona-helper/releases/download/windows-installer/Arizona.Rodina.Helper.exe) and save it under the exact filename above.
 
-Redis has no published host port or configured persistence; restarting it clears
-this rebuildable cache. API container restarts keep using the existing Redis data.
-Health endpoints do not require Redis. There is no timer: refreshes are driven by
-requests. Lifetime aggregates are excluded from the cached subscription query.
-The license key is versioned as `v2` so previous combined responses are not reused.
+Once credentials, assets and public routing are configured:
 
-Existing production deployment (PostgreSQL and the other services already running):
+```sh
+docker compose up -d --build
+docker compose ps
+```
 
-```bash
-docker compose up -d redis
-docker compose up -d --build --no-deps license-service usage-service
+Use separate bot credentials for development; only one polling process should run with a given Telegram bot token.
+
+## File-delivery lifecycle
+
+**Free installer:** [`/helper/download/installer`](https://mtgmods.com/helper/download/installer) is served by the web container's nginx. Compose mounts only the public `installer/` subdirectory read-only into web. Free downloads bypass Python, RabbitMQ and personalized-build processing. The old API installer route redirects to this URL.
+
+**VIP Lua:** `/v1/files/downloads/vip/<token>` serves a temporary personalized file and schedules its associated artifacts for removal after delivery.
+
+**VIP installer:** `/v1/files/downloads/vip/<token>.exe` stamps a copy of the base installer with the Lua URL. An atomic `.exe.used` marker prevents repeated installer generation for that token. The EXE is removed after delivery, while Lua remains until the installer fetches it. The base installer is never overwritten.
+
+Cleanup runs **hourly**, removing top-level generated Lua/EXE/temp/marker files older than **one hour**; template subdirectories are excluded. This is age-based cleanup, not an exact one-hour download deadline. A personalized installer needs its Lua link to remain available when it runs.
+
+## Operations
+
+Run from the repository root:
+
+```sh
+# Container state and recent API logs
+docker compose ps
+docker compose logs --since=10m --tail=200 user-service license-service usage-service distribution-service
+
+# Redis availability and statistics keys
 docker compose exec -T redis redis-cli ping
-curl -fsS http://127.0.0.1:8002/api/v1/license/stats/public
-curl -fsS http://127.0.0.1:8003/api/v1/usage/stats/public
 docker compose exec -T redis redis-cli --scan --pattern 'mtgmods:*:*stats:v*'
+
+# Queue backlog and active consumers
+docker compose exec -T rabbitmq rabbitmqctl list_queues name messages_ready messages_unacknowledged consumers
+
+# Rebuild a changed service without restarting its dependencies
+docker compose up -d --build --no-deps license-service
+
+# Stop containers while keeping named database volumes
+docker compose down
 ```
 
-The default Redis URL works with existing service `.env` files; set `REDIS_URL`
-in both files only to override it. No database migration is needed.
+Compose checks container health. OAuth, bot permissions, queue delivery and VIP generation still need their own checks. Host nginx runs outside Compose and must be reloaded separately when its configuration changes.
 
-## Automated tests
+## Tests and checks
 
-Regression tests cover all four backend services, both bots and the web client.
-Python tests use isolated SQLite databases, temporary files, fakeredis with Lua
-support and mocked external APIs; no production credentials or running Docker
-are required. Install test dependencies in a virtual environment:
+Tests cover business rules and error handling without production credentials. Python tests use temporary SQLite databases, files, fakeredis and mocked external services. Web tests cover API responses, sign-in/session handling, protected routes, checkout, translations and analytics controls.
 
-```bash
-python -m pip install -r tests/requirements.txt
-python -m pytest tests -q
+Run in disposable containers from the repository root. The checkout is read-only; web dependencies use a separate temporary `node_modules` volume, avoiding host dependencies. The commands work in a POSIX shell or PowerShell:
+
+```sh
+# Four Python services and both bots
+docker run --rm --mount "type=bind,source=.,target=/workspace,readonly" --workdir /workspace --env PYTHONDONTWRITEBYTECODE=1 python:3.12-slim sh -c "pip install --no-cache-dir -r tests/requirements.txt && python -m pytest tests -q -p no:cacheprovider"
+
+# Web type checks, component tests and lint
+docker run --rm --mount "type=bind,source=.,target=/workspace,readonly" --mount type=volume,target=/workspace/web/node_modules --workdir /workspace/web node:22-alpine sh -c "npm ci && npm test && npm run lint"
 ```
 
-Web tests (HTTP/auth/session logic, API contracts and React route guards):
+| Suite | Examples of covered behavior |
+| --- | --- |
+| User | Social linking, JWT validation, refresh rotation/replay/logout, one-use OAuth handoffs, Mini App signatures and admin access |
+| License | Activation/replacement, expiry/ban/inactive states, device limits/resets, purchase statistics, ownership and download authorization |
+| Usage | Launch validation, distinct-HWID aggregation, time windows, empty datasets and database writes |
+| Distribution and bots | File delivery/cleanup, installer behavior, payment validation, queue dispatch, chat admission and role actions |
+| Shared statistics cache | Fresh/stale reads, cold starts, concurrent refresh, lock ownership, failed refresh, timeouts and Redis outages |
+| Web | Errors/timeouts, auth state, protected routes, purchase flows, sales filters/pagination, formatting and locale rules |
 
-```bash
-cd web
-npm ci
-npm test
+The suites do not cover every production integration. PostgreSQL concurrency, live RabbitMQ delivery, Telegram/Discord APIs, the private obfuscator and real-browser behavior need separate checks. See [`tests/README.md`](tests/README.md) for details.
+
+## Repository guide
+
+```text
+├── services/
+│   ├── user/              # Accounts, OAuth and sessions
+│   ├── license/           # Licenses, purchases, devices and tariffs
+│   ├── usage/             # Launch logging and statistics
+│   └── distribution/      # Personal VIP files and installers
+├── bots/
+│   ├── telegram/          # Stars payments, VIP chat and Mini App entry
+│   └── discord/           # VIP roles and messages
+├── web/                   # React website, UI tests and web nginx
+├── gateway/               # Host nginx configuration
+├── tests/                 # Python tests
+├── docs/
+│   ├── architecture-c4.mmd # Service/container diagram
+│   └── er-model.dbml       # Tables, indexes and foreign keys
+└── docker-compose.yml     # Services, databases, Redis and RabbitMQ
 ```
 
-See [tests/README.md](tests/README.md) for setup, per-component commands, covered
-scenarios and explicit limitations. These tests do not replace live
-PostgreSQL/RabbitMQ integration or real-browser end-to-end testing.
+## Author and development approach
+
+**Bohdan / MTGMODS** owns and maintains both projects: the helper and this platform. He designs the backend, decides how the product works and runs the production system.
+
+| Area | Author's work and use of AI |
+| --- | --- |
+| **Architecture** | The author analysed the old monolith, designed the services, chose where data belongs and planned deployment. |
+| **Python backend and bots** | Written by the author, then refined with help from Cursor and Codex. He reviewed AI changes and is responsible for the code. |
+| **React frontend** | Fully generated through prompts in Cursor and Codex. The author set requirements, directed UI changes and checked the result in the browser; he did not write the frontend source by hand. |
+
+AI assistance is also used for tests, refactoring and documentation, including this README.
+
+Acknowledgements: **Cursor** and **ChatGPT / Codex by OpenAI** for development assistance.
+
+Source-code contributions are recorded in the [GitHub contributors graph](https://github.com/MTGMODS/license-management-platform/graphs/contributors).
 
 ## License
 
-MIT — see `LICENSE` in the repository root.
+Source code in this repository is available under the [MIT License](LICENSE). The external product has its own repository; private deployment assets are not included in this checkout.
