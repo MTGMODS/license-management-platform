@@ -46,9 +46,18 @@ Usage and sales statistics are public. Personal subscriptions require sign-in; a
 
 ## 🔄 From monolith to platform
 
-The original **Python monolith** handled accounts and licenses through the bots, which also accessed the database directly.
+The helper had an audience and paying users before this platform existed. Its supporting infrastructure developed in stages:
 
-The monolith worked well and served paying users. The rewrite was a deliberate redesign: separate business logic from bot handlers, expose it through APIs and move account management to a website. Arizona&Rodina Helper was already an established product at that point.
+| When | Milestone |
+| --- | --- |
+| **2023** | Development of Arizona&Rodina Helper and growth of its user community. |
+| **2024** | Monetization began through a VIP chat with file access, without a database. |
+| **September 2025** | Development of the Python monolith: bots handled accounts, licenses and direct database access. |
+| **Spring 2026** | A university microservices course prompted experiments with splitting the existing monolith into services. |
+| **Summer 2026** | Continued backend redesign beyond the coursework, while the working monolith remained in production. |
+| **Autumn 2026** | Launch of the React website, followed by incremental backend and UI improvements. |
+
+The monolith worked well and served paying users. The redesign separated business logic from bot handlers, exposed it through APIs and moved account management to a website. Existing users, licenses and purchase history carried over into the new system.
 
 The previous implementation is preserved in the [v0.0.0 release](https://github.com/MTGMODS/license-management-platform/releases/tag/v0.0.0). Its source is in the attached [legacy_monolith.zip](https://github.com/MTGMODS/license-management-platform/releases/download/v0.0.0/legacy_monolith.zip).
 
@@ -276,6 +285,8 @@ The expiry worker checks subscriptions every **60 seconds**, commits status chan
 ## 📊 Public statistics
 
 Usage and sales figures are open to everyone. The maintainer uses these same pages rather than a separate private analytics dashboard.
+
+**The sales history spans the monolith and the current platform.** These totals describe purchases of the helper, not revenue created solely by the new website or microservices. Seven-day subscriptions were introduced with the rebuild; other plans already existed before it.
 
 | Page | Scope | Public API |
 | --- | --- | --- |
