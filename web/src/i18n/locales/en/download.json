@@ -15,7 +15,7 @@
         "open": "Open it once the download is complete",
         "find": "The installer will find your game folder",
         "install": "Click ‘Install helper’",
-        "done": "All done — you can launch the game"
+        "done": "All done — use <command>/helper</command> in the game"
       }
     },
     "manual": {
@@ -28,22 +28,24 @@
         "download": "Click ‘Download Lua file’",
         "open": "Open your moonloader folder",
         "place": "Place the downloaded Lua file in this folder",
-        "done": "All done — you can launch the game"
+        "done": "All done — use <command>/helper</command> in the game"
       }
     }
   },
   "mobile": {
+    "done": "All done — use <command>/helper</command> in the game",
     "auto": {
       "title": "Automatic installation",
       "badge": "The easiest way",
       "steps": {
-        "download": "Download the modified launcher with NeomLoader",
-        "install": "Use the /mtg or /store command"
+        "download": "Download the modified launcher",
+        "install": "Install it and download the game resources",
+        "command": "In the game, enter <mtg>/mtg</mtg> or <store>/store</store>"
       },
-      "action": "Download NeoMLoader launcher",
+      "action": "Download NeoMLoader",
       "guides": {
-        "mtg": "/mtg video guide",
-        "store": "/store video guide"
+        "mtg": "/mtg",
+        "store": "/store"
       }
     },
     "manual": {

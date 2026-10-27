@@ -15,7 +15,7 @@
         "open": "После скачивания откройте его",
         "find": "Установщик найдет папку с игрой",
         "install": "Нажмите «Установить хелпер»",
-        "done": "Готово, можете заходить в игру"
+        "done": "Готово, используйте <command>/helper</command> в игре"
       }
     },
     "manual": {
@@ -28,22 +28,24 @@
         "download": "Нажмите «Скачать Lua-файл»",
         "open": "Откройте вашу папку moonloader",
         "place": "Положите туда скачанный Lua-файл",
-        "done": "Готово, можете заходить в игру"
+        "done": "Готово, используйте <command>/helper</command> в игре"
       }
     }
   },
   "mobile": {
+    "done": "Готово, используйте <command>/helper</command> в игре",
     "auto": {
       "title": "Автоматическая установка",
       "badge": "Проще всего",
       "steps": {
-        "download": "Скачайте модифицированный лаунчер с NeomLoader",
-        "install": "Используйте команду /mtg или /store"
+        "download": "Скачайте модифицированный лаунчер",
+        "install": "Установите его и скачайте ресурсы игры",
+        "command": "В игре введите команду <mtg>/mtg</mtg> или <store>/store</store>"
       },
-      "action": "Скачать лаунчер NeoMLoader",
+      "action": "Скачать NeoMLoader",
       "guides": {
-        "mtg": "Видеогайд /mtg",
-        "store": "Видеогайд /store"
+        "mtg": "/mtg",
+        "store": "/store"
       }
     },
     "manual": {

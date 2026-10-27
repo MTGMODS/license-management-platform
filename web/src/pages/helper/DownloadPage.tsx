@@ -89,11 +89,10 @@ function GuideLink({ href, children }: { href: string; children: ReactNode }) {
       href={href}
       target="_blank"
       rel="noreferrer"
-      className={buttonStyles({ variant: 'secondary', size: 'lg', fullWidth: true })}
+      className={buttonStyles({ variant: 'secondary', size: 'lg', fullWidth: true, className: 'gap-1.5 px-3 text-sm' })}
     >
       <PlayCircle aria-hidden className="size-4" />
       {children}
-      <ExternalLink aria-hidden className="size-3.5 opacity-60" />
     </a>
   )
 }
@@ -181,7 +180,7 @@ function PcInstall() {
             t('pc.auto.steps.open'),
             t('pc.auto.steps.find'),
             t('pc.auto.steps.install'),
-            t('pc.auto.steps.done'),
+            <Trans key="done" ns="download" i18nKey="pc.auto.steps.done" components={{ command: <strong className="font-semibold text-fg" /> }} />,
           ]}
         />
       </InstallCard>
@@ -220,7 +219,7 @@ function PcInstall() {
             t('pc.manual.steps.download'),
             t('pc.manual.steps.open'),
             t('pc.manual.steps.place'),
-            t('pc.manual.steps.done'),
+            <Trans key="done" ns="download" i18nKey="pc.manual.steps.done" components={{ command: <strong className="font-semibold text-fg" /> }} />,
           ]}
         />
       </InstallCard>
@@ -233,27 +232,24 @@ function MobileInstall() {
   const downloadLua = useLuaDownload()
 
   return (
-    <div className="space-y-6">
+    <div className="grid min-w-0 grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
       <InstallCard
-        icon={<Smartphone aria-hidden className="size-5" />}
+        icon={<Wand2 aria-hidden className="size-5" />}
         title={t('mobile.auto.title')}
         badge={t('mobile.auto.badge')}
         actions={
-          <div className="flex min-w-0 flex-col gap-2.5">
+          <div className="grid min-w-0 grid-cols-2 gap-2.5 lg:grid-cols-4">
             <a
               href={NEOMLOADER_URL}
               target="_blank"
               rel="noreferrer"
-              className={buttonStyles({ size: 'lg', fullWidth: true })}
+              className={buttonStyles({ size: 'lg', fullWidth: true, className: 'col-span-2 gap-1.5 px-3 text-sm' })}
             >
               <Download aria-hidden className="size-4" />
               {t('mobile.auto.action')}
-              <ExternalLink aria-hidden className="size-3.5 opacity-70" />
             </a>
-            <div className="grid min-w-0 gap-2.5 sm:grid-cols-2">
-              <GuideLink href={MOBILE_MTG_GUIDE_URL}>{t('mobile.auto.guides.mtg')}</GuideLink>
-              <GuideLink href={MOBILE_STORE_GUIDE_URL}>{t('mobile.auto.guides.store')}</GuideLink>
-            </div>
+            <GuideLink href={MOBILE_MTG_GUIDE_URL}>{t('mobile.auto.guides.mtg')}</GuideLink>
+            <GuideLink href={MOBILE_STORE_GUIDE_URL}>{t('mobile.auto.guides.store')}</GuideLink>
           </div>
         }
       >
@@ -261,6 +257,13 @@ function MobileInstall() {
           items={[
             t('mobile.auto.steps.download'),
             t('mobile.auto.steps.install'),
+            <Trans
+              key="command"
+              ns="download"
+              i18nKey="mobile.auto.steps.command"
+              components={{ mtg: <strong className="font-semibold text-fg" />, store: <strong className="font-semibold text-fg" /> }}
+            />,
+            <Trans key="done" ns="download" i18nKey="mobile.done" components={{ command: <strong className="font-semibold text-fg" /> }} />,
           ]}
         />
       </InstallCard>
@@ -298,6 +301,7 @@ function MobileInstall() {
             t('mobile.manual.steps.download'),
             t('mobile.manual.steps.open'),
             t('mobile.manual.steps.place'),
+            <Trans key="done" ns="download" i18nKey="mobile.done" components={{ command: <strong className="font-semibold text-fg" /> }} />,
           ]}
         />
       </InstallCard>
