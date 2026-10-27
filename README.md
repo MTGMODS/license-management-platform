@@ -2,13 +2,13 @@
 
 **Micro-SaaS around a freemium digital product.**
 
-Python APIs, a React website and bots that handle accounts, licenses, downloads and statistics for Arizona&Rodina Helper.
+Python APIs, a React website and Telegram/Discord bots for **Arizona&Rodina Helper**: accounts, paid subscriptions, file delivery and public analytics.
 
 [Website](https://mtgmods.com) · [Product](https://mtgmods.com/helper) · [Public sales analytics](https://mtgmods.com/vip) · [Product source](https://github.com/MTGMODS/arizona-helper)
 
-The system is used in production. It started as a Python monolith inside Telegram and Discord bots, then grew into separate backend services and a website. **Arizona&Rodina Helper already existed before this rewrite.**
+This platform runs in production and supports an existing product. It replaces an earlier bot-based Python monolith with separate APIs and a website; it is not the source code of the helper itself.
 
-The helper and this platform are **two separate projects**, both owned and maintained by **Bohdan ([MTGMODS](https://github.com/MTGMODS))**. This repository contains the supporting services and website. The Lua modification and Windows installer live in [arizona-helper](https://github.com/MTGMODS/arizona-helper).
+**Bohdan ([MTGMODS](https://github.com/MTGMODS))** is the sole owner and maintainer of both projects. The Lua modification and Windows installer live in [arizona-helper](https://github.com/MTGMODS/arizona-helper); this repository contains the infrastructure around them.
 
 **Explore:** [Background](#from-monolith-to-platform) · [Features](#features) · [Diagrams](#diagrams) · [Request flows](#request-flows) · [Public statistics](#public-statistics) · [Docker setup](#run-with-docker) · [Operations](#operations) · [Tests](#tests-and-checks)
 
@@ -20,15 +20,15 @@ The helper and this platform are **two separate projects**, both owned and maint
 | **MTG MODS Platform** | Python APIs, databases, licensing, delivery, analytics, website and bot integrations | This repository |
 | **Mobile launcher patcher** | Prepares the mobile client to run the product | [arz_lua_launcher](https://github.com/MTGMODS/arz_lua_launcher) |
 
-Usage and sales statistics are public. The account dashboard and admin panel require sign-in.
+Usage and sales statistics are public. Personal subscriptions require sign-in; administration requires an admin role.
 
 ## From monolith to platform
 
 The original **Python monolith** handled accounts and licenses through the bots, which also accessed the database directly.
 
-The monolith worked well and served paying users. The rewrite separated backend logic from bot handlers, added an API and moved account management to a website. It was a planned change to how the system was built and used.
+The monolith worked well and served paying users. The rewrite was a deliberate redesign: separate business logic from bot handlers, expose it through APIs and move account management to a website. Arizona&Rodina Helper was already an established product at that point.
 
-The previous implementation is preserved in the [v0.0.0 release — Legacy MVP Monolithic Implementation](https://github.com/MTGMODS/license-management-platform/releases/tag/v0.0.0), with its source distributed as the attached [legacy_monolith.zip](https://github.com/MTGMODS/license-management-platform/releases/download/v0.0.0/legacy_monolith.zip).
+The previous implementation is preserved in the [v0.0.0 release](https://github.com/MTGMODS/license-management-platform/releases/tag/v0.0.0). Its source is in the attached [legacy_monolith.zip](https://github.com/MTGMODS/license-management-platform/releases/download/v0.0.0/legacy_monolith.zip).
 
 | Area | Earlier implementation | Current platform |
 | --- | --- | --- |
@@ -46,7 +46,7 @@ The **website in a regular browser is the main interface**. The Mini App is anot
 | **Accounts** | Telegram and Discord sign-in, linked social accounts, profiles, roles, JWT access tokens, refresh sessions, logout and Mini App sign-in |
 | **Licensing** | Key generation and activation, subscription expiry, legacy lifetime licenses, device binding, per-plan device limits and reset quotas, game-client license checks |
 | **Downloads** | Builds a personal VIP Lua file, returns a temporary link, optionally prepares a Windows installer and cleans up old files |
-| **Usage analytics** | Records launches and counts devices, free/VIP usage, PC/mobile split, versions, servers, factions and activity over time |
+| **Usage analytics** | Launch counts, unique device identifiers, free/VIP usage, PC/mobile split, versions, servers, factions and activity over time |
 | **Sales analytics** | Completed paid purchases, revenue, payment methods, tariffs, first/repeat purchases, buyer retention and transitions between subscription plans |
 | **Web application** | Product and download pages, public analytics, customer dashboard, administration, responsive layouts and Russian/Ukrainian/English translations |
 | **Bots** | Telegram Stars checkout, VIP-chat admission/removal, Discord VIP roles and expiry notifications |
@@ -64,7 +64,7 @@ The backend has **four Python/FastAPI services**. User, License and Usage each h
 | [**architecture-c4.mmd**](docs/architecture-c4.mmd) | C4-style container diagram: external product, browser/Mini App, services, bots, databases, Redis, RabbitMQ and installer files |
 | [**er-model.dbml**](docs/er-model.dbml) | Database model: all tables, columns, indexes and foreign keys across the three service databases |
 
-The overview below renders directly on GitHub. The files above contain the full diagrams.
+The overview below renders directly on GitHub. The linked files provide the detailed architecture and database model.
 
 ```mermaid
 flowchart TB
@@ -79,7 +79,7 @@ flowchart TB
     License --> LicenseDB[("License PostgreSQL")]
     Usage --> UsageDB[("Usage PostgreSQL")]
     License -->|"HTTP · profiles / social IDs"| User
-    License --> Redis[("Redis · statistics / refresh locks")]
+    License --> Redis[("Redis · statistics cache / locks")]
     Usage --> Redis
     License <-->|"File-generation request / reply"| Rabbit["RabbitMQ"]
     Rabbit <-->|"Build task / download URL"| Distribution
@@ -171,18 +171,18 @@ Only real database foreign keys are drawn. User IDs in licenses, purchases and r
 | **Usage Service** | [`services/usage`](services/usage/) | Launch records and public usage aggregates |
 | **Distribution Service** | [`services/distribution`](services/distribution/) | Personalized file generation and temporary Lua/EXE delivery |
 | **Web** | [`web`](web/) | React client for public pages, accounts and administration |
-| **Telegram / Discord** | [`bots`](bots/) | Payment and community adapters around the license API |
+| **Telegram / Discord** | [`bots`](bots/) | Stars payments, VIP chats, roles and messages through the license API |
 | **Gateway** | [`gateway`](gateway/) | Host nginx configuration, public routing and request limits |
 
-Python services separate HTTP handlers, application logic, domain schemas and infrastructure under `app/api`, `app/application`, `app/domain`, `app/infrastructure` and `app/shared`.
+Each Python service keeps routes in `app/api`, business logic in `app/application`, schemas in `app/domain` and database/messaging code in `app/infrastructure`. Configuration and shared helpers live in `app/shared`.
 
 ### Technology stack
 
 | Layer | Technologies |
 | --- | --- |
 | Backend | Python 3.12, FastAPI, Pydantic, async SQLAlchemy, asyncpg, HTTPX |
-| Persistent data | PostgreSQL 16; SQLite for isolated regression tests |
-| Shared cache | Redis 7.4, `redis.asyncio`, Lua scripts for ownership-checked cache publication and lock release |
+| Persistent data | PostgreSQL 16 in production; SQLite in debug mode and isolated tests |
+| Shared cache | Redis 7.4, `redis.asyncio`, Lua scripts that check lock ownership before writing or releasing |
 | Messaging | RabbitMQ 3.13, aio-pika |
 | Frontend | TypeScript, React 19, Vite, Tailwind CSS, TanStack Query, Zustand, Recharts, i18next |
 | Runtime | Docker Compose, nginx; Node.js 22 for the web image build |
@@ -193,11 +193,11 @@ Python services separate HTTP handlers, application logic, domain schemas and in
 ### Sign in and manage a subscription
 
 1. A user signs in through Telegram or Discord, or opens the Telegram Mini App.
-2. User Service resolves the account and issues access/refresh tokens. Refresh-session hashes and OAuth handoffs are stored in its database.
+2. User Service finds or creates the account and issues access/refresh tokens. It stores refresh-token hashes and short-lived OAuth handoffs in its database.
 3. The dashboard uses the access token to request license information, activate a purchased key, reset a personal device or request a download.
 4. License Service checks ownership and subscription rules in its database; profile/social information comes from User Service over internal HTTP.
 
-The tariff catalog lives in [`services/license/app/shared/tariffs.json`](services/license/app/shared/tariffs.json). It supplies website prices, Stars amounts and device/reset limits. It is cached per process; catalog changes require rebuilding/restarting the affected service.
+The plan catalog lives in [`services/license/app/shared/tariffs.json`](services/license/app/shared/tariffs.json). It supplies website prices, Stars amounts and device/reset limits. Each License process caches it after the first read. Rebuild and recreate License Service after changing the file in this checkout.
 
 ### Generate and deliver the paid product
 
@@ -205,7 +205,7 @@ The tariff catalog lives in [`services/license/app/shared/tariffs.json`](service
 2. It sends a file-generation request to RabbitMQ with a correlation ID and a reply queue.
 3. Distribution generates the personalized Lua file and replies with its temporary download URL.
 4. On Windows, the user can choose the Lua file or an installer stamped with that same Lua URL.
-5. Downloaded and abandoned artifacts are removed according to the lifecycle below.
+5. The API cleans up files after sending them; a scheduled worker removes abandoned builds. See [File-delivery lifecycle](#file-delivery-lifecycle).
 
 The HTTP request waits up to **30 seconds** for the RabbitMQ reply with the download URL.
 
@@ -215,7 +215,7 @@ The expiry worker checks subscriptions every **60 seconds**, commits status chan
 
 ## Public statistics
 
-Anyone can view usage and sales statistics. The same public pages are used by the maintainer.
+Usage and sales figures are open to everyone. The maintainer uses these same pages rather than a separate private analytics dashboard.
 
 | Page | Scope | Public API |
 | --- | --- | --- |
@@ -223,11 +223,18 @@ Anyone can view usage and sales statistics. The same public pages are used by th
 | [`/vip`](https://mtgmods.com/vip) | Paid subscriptions, revenue and buyer analytics | [`/v1/license/stats/public`](https://api.mtgmods.com/v1/license/stats/public) |
 | [`/vip/legacy`](https://mtgmods.com/vip/legacy) | Legacy lifetime-license totals, payment/price breakdowns and activation counts | [`/v1/license/stats/old`](https://api.mtgmods.com/v1/license/stats/old) |
 
-Usage “users” are distinct device identifiers (HWIDs), not verified individual people. Public sales rows omit buyer identities, license keys and device identifiers. Time-limited subscriptions and lifetime licenses are calculated separately; legacy figures reflect records still present in the database.
+Usage “users” are **distinct device identifiers (HWIDs)**, not verified individual people. Public sales rows omit buyer identities, license keys and device identifiers.
+
+Time-limited subscriptions and lifetime licenses are calculated separately. Legacy totals describe records still present in the database, not a complete history of deleted licenses.
 
 ### Cache behavior
 
-Statistics use **stale-while-revalidate**: results remain fresh for **5 minutes** and are retained for up to **24 hours**. A request for stale data returns it immediately and starts a background refresh with its own database session.
+Statistics use **stale-while-revalidate**: a cached result is fresh for **5 minutes** and remains available for up to **24 hours**. Once it becomes stale, a request returns the existing result immediately and, if it acquires the Redis lock, starts a background refresh. Refreshes are triggered by requests, not by a timer.
+
+`updated_at` reports when the statistics were calculated. A cold cache can take longer to populate, so the page may initially report that statistics are unavailable.
+
+<details>
+<summary>Cache keys, timeouts and failure handling</summary>
 
 | Dataset | Redis key | Generation timeout | Lock timeout |
 | --- | --- | --- | --- |
@@ -235,11 +242,13 @@ Statistics use **stale-while-revalidate**: results remain fresh for **5 minutes*
 | Legacy lifetime sales | `mtgmods:license:old_stats:v3` | 90 seconds | 120 seconds |
 | Usage | `mtgmods:usage:public_stats:v2` | 300 seconds | 330 seconds |
 
-The lock coordinates refreshes across processes. Redis scripts check ownership before publishing or releasing a lock. Refreshes are request-driven, without a periodic refresh scheduler.
+The lock coordinates refreshes across processes. Redis scripts check ownership before publishing a result or releasing the lock. Background refreshes use their own database sessions.
 
 On a cold cache, one request computes the result. Other requests wait up to **4 seconds**, then return **503** with `Retry-After: 2` if it is not ready. The browser uses a **2-second first attempt and one immediate 1-second retry**, so a cold dataset can initially appear unavailable while generation continues.
 
-`updated_at` is the computation time, not the latest cache-hit time. Redis's internal `{data, fresh_until}` envelope is not exposed by the statistics APIs. If Redis is unavailable, services fall back to database computation, increasing database load. Redis persistence is disabled in Compose because these values can be rebuilt.
+Redis's internal `{data, fresh_until}` wrapper is not exposed by the APIs. If Redis fails, a result already read from the cache can still be returned; otherwise the service computes directly from the database. This fallback can increase database load. Compose disables Redis persistence because the cached results can be rebuilt.
+
+</details>
 
 ## Run with Docker
 
@@ -252,7 +261,7 @@ git clone https://github.com/MTGMODS/license-management-platform.git
 cd license-management-platform
 ```
 
-Copy these files once, then edit the resulting `.env` files:
+On a fresh clone, copy the examples below and edit the resulting `.env` files. Create all six files even when starting only the core APIs: Compose reads the configuration for the whole project.
 
 <details>
 <summary>Linux / macOS shell</summary>
@@ -294,7 +303,7 @@ Examples contain placeholders, not production credentials. Configure these value
 | OAuth configuration | Provider application settings, callback URLs and User Service's `FRONTEND_URL` |
 | Public download base | Distribution's `DOWNLOAD_BASE_URL`, reachable from the browser/installer |
 
-Keep `DEBUG_MODE=False` for the PostgreSQL configuration. Internal URLs use Compose names such as `user-service`, `license-service`, `rabbitmq` and `redis`; browsers need public or host-accessible URLs.
+Keep `DEBUG_MODE=False` to use PostgreSQL. Internal URLs use Compose names such as `user-service`, `license-service`, `rabbitmq` and `redis`; browsers need public or host-accessible URLs.
 
 ### 2. Start the core APIs
 
@@ -306,7 +315,7 @@ docker compose up -d --build user-service license-service usage-service
 docker compose ps
 ```
 
-Services create missing tables on startup. This is not a versioned database-migration system.
+Services create missing tables on startup. Existing tables are not automatically migrated when ORM models change.
 
 | Component | Local address | API explorer |
 | --- | --- | --- |
@@ -339,9 +348,9 @@ Direct service routes include an additional `/api` prefix: for example, `http://
 
 The checked-in [`gateway/`](gateway/) configuration is the production host-nginx setup for `mtgmods.com` and `api.mtgmods.com`, not a local gateway container. Adapt domains, certificates and upstreams for your deployment, together with backend CORS allowlists, `FRONTEND_URL` and OAuth callback registrations. Production-mode OAuth uses secure cookies and expects HTTPS.
 
-### 4. Enable delivery and integrations
+### 4. Enable file delivery and bots
 
-You can read the code and run tests from a fresh clone. Building the actual VIP product also requires these files and credentials:
+Tests run without private product assets or production credentials. To generate real VIP files and enable the bots, provide the following:
 
 | File / setting | Location |
 | --- | --- |
@@ -350,7 +359,7 @@ You can read the code and run tests from a fresh clone. Building the actual VIP 
 | Public Windows installer template | `services/distribution/app/builds/installer/Arizona&Rodina Helper.exe` |
 | Telegram / Discord credentials and chat/role IDs | The corresponding bot `.env` files |
 
-Private build assets and local `.env` files are excluded from Git. Place templates/tools before building Distribution. Download the public installer template from the [product's Windows installer release](https://github.com/MTGMODS/arizona-helper/releases/download/windows-installer/Arizona.Rodina.Helper.exe) and save it under the exact filename above.
+Private build assets and local `.env` files are excluded from Git. Place the templates and tools before building Distribution. Download the public installer template from the [product's Windows installer release](https://github.com/MTGMODS/arizona-helper/releases/download/windows-installer/Arizona.Rodina.Helper.exe) and save it under the exact filename above. Without that template, free installer downloads and VIP installer generation are unavailable.
 
 Once credentials, assets and public routing are configured:
 
@@ -365,11 +374,11 @@ Use separate bot credentials for development; only one polling process should ru
 
 **Free installer:** [`/helper/download/installer`](https://mtgmods.com/helper/download/installer) is served by the web container's nginx. Compose mounts only the public `installer/` subdirectory read-only into web. Free downloads bypass Python, RabbitMQ and personalized-build processing. The old API installer route redirects to this URL.
 
-**VIP Lua:** `/v1/files/downloads/vip/<token>` serves a temporary personalized file and schedules its associated artifacts for removal after delivery.
+**VIP Lua:** `/v1/files/downloads/vip/<token>` serves a temporary personalized file. Response cleanup removes the Lua file, associated EXE files and installer-use marker.
 
-**VIP installer:** `/v1/files/downloads/vip/<token>.exe` stamps a copy of the base installer with the Lua URL. An atomic `.exe.used` marker prevents repeated installer generation for that token. The EXE is removed after delivery, while Lua remains until the installer fetches it. The base installer is never overwritten.
+**VIP installer:** `/v1/files/downloads/vip/<token>.exe` stamps a copy of the base installer with the Lua URL. An atomic `.exe.used` marker prevents repeated installer generation for that token. Response cleanup removes the generated EXE, while the Lua file remains available for the installer to fetch. The base installer is never overwritten.
 
-Cleanup runs **hourly**, removing top-level generated Lua/EXE/temp/marker files older than **one hour**; template subdirectories are excluded. This is age-based cleanup, not an exact one-hour download deadline. A personalized installer needs its Lua link to remain available when it runs.
+The cleanup worker runs **hourly** and removes top-level generated Lua/EXE/temp/marker files older than **one hour**. It leaves template subdirectories untouched. This is not an exact one-hour expiry: a file becomes eligible after one hour and is removed on a later sweep. A personalized installer must run while its Lua link is still available.
 
 ## Operations
 
@@ -394,7 +403,7 @@ docker compose up -d --build --no-deps license-service
 docker compose down
 ```
 
-Compose checks container health. OAuth, bot permissions, queue delivery and VIP generation still need their own checks. Host nginx runs outside Compose and must be reloaded separately when its configuration changes.
+Container health checks confirm basic availability, not a complete payment or download flow. OAuth, bot permissions, queue delivery and VIP generation need integration checks. Reload host nginx separately after changing its configuration.
 
 ## Tests and checks
 
@@ -407,7 +416,7 @@ Run in disposable containers from the repository root. The checkout is read-only
 docker run --rm --mount "type=bind,source=.,target=/workspace,readonly" --workdir /workspace --env PYTHONDONTWRITEBYTECODE=1 python:3.12-slim sh -c "pip install --no-cache-dir -r tests/requirements.txt && python -m pytest tests -q -p no:cacheprovider"
 
 # Web type checks, component tests and lint
-docker run --rm --mount "type=bind,source=.,target=/workspace,readonly" --mount type=volume,target=/workspace/web/node_modules --workdir /workspace/web node:22-alpine sh -c "npm ci && npm test && npm run lint"
+docker run --rm --mount "type=bind,source=.,target=/workspace,readonly" --mount type=volume,target=/workspace/web/node_modules --workdir /workspace/web node:22-alpine sh -c "npm ci && npm run typecheck && npm test && npm run lint"
 ```
 
 | Suite | Examples of covered behavior |
@@ -443,7 +452,7 @@ The suites do not cover every production integration. PostgreSQL concurrency, li
 
 ## Author and development approach
 
-**Bohdan / MTGMODS** owns and maintains both projects: the helper and this platform. He designs the backend, decides how the product works and runs the production system.
+This is a solo-maintained project. **Bohdan / MTGMODS** designs the backend, defines product behavior and operates the production system. AI tools were used differently across the codebase:
 
 | Area | Author's work and use of AI |
 | --- | --- |
@@ -451,9 +460,7 @@ The suites do not cover every production integration. PostgreSQL concurrency, li
 | **Python backend and bots** | Written by the author, then refined with help from Cursor and Codex. He reviewed AI changes and is responsible for the code. |
 | **React frontend** | Fully generated through prompts in Cursor and Codex. The author set requirements, directed UI changes and checked the result in the browser; he did not write the frontend source by hand. |
 
-AI assistance is also used for tests, refactoring and documentation, including this README.
-
-Acknowledgements: **Cursor** and **ChatGPT / Codex by OpenAI** for development assistance.
+**Cursor** and **ChatGPT / Codex by OpenAI** also assist with tests, refactoring and documentation, including this README.
 
 Source-code contributions are recorded in the [GitHub contributors graph](https://github.com/MTGMODS/license-management-platform/graphs/contributors).
 
