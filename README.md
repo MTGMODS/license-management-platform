@@ -114,13 +114,13 @@ The backend has **four Python/FastAPI services**. User, License and Usage each h
 
 | File | Contents |
 | --- | --- |
-| [**architecture.md**](docs/architecture.md) | Current C4 Levels 1–3 with SVG previews, source references and implementation boundaries |
+| [**architecture.md**](docs/architecture.md) | Current C4 Levels 1–3 in Mermaid, source references and implementation boundaries |
 | [**architecture-context.mmd**](docs/architecture-context.mmd) | System context: people, existing product and external integrations |
 | [**architecture-c4.mmd**](docs/architecture-c4.mmd) | Container view: gateway, web, four services, bots, databases, Redis, RabbitMQ and files |
 | [**architecture-license-components.mmd**](docs/architecture-license-components.mmd) | Actual License Service components and concrete dependencies |
 | [**er-model.dbml**](docs/er-model.dbml) | Database model: all tables, columns, indexes and foreign keys across the three service databases |
 
-The overview below uses GitHub's Mermaid renderer. The [detailed architecture](docs/architecture.md) also includes SVG previews and editable Mermaid sources.
+The overview below uses GitHub's Mermaid renderer. The [detailed architecture](docs/architecture.md) includes all three levels and editable Mermaid sources.
 
 ```mermaid
 flowchart TB
