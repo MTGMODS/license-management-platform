@@ -1,0 +1,25 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Arial, sans-serif","fontSize":"16px","lineColor":"#64748b","clusterBkg":"#f8fafc","clusterBorder":"#cbd5e1","edgeLabelBackground":"#ffffff"},"flowchart":{"htmlLabels":true,"curve":"linear","nodeSpacing":35,"rankSpacing":65,"wrappingWidth":220}}}%%
+flowchart LR
+  %% C4 Level 1: current implementation.
+  Visitor["Person: Visitor<br/>Public pages, free downloads, analytics"]
+  Customer["Person: Customer<br/>Browser or Telegram Mini App"]
+  Admin["Person: Administrator<br/>Keys, purchases, subscriptions"]
+  Platform["Software system: MTG MODS micro-SaaS platform<br/>Distribution, licensing, accounts and analytics"]
+  Product["External software: Arizona/Rodina Helper<br/>Existing freemium SA-MP product and installer"]
+  Telegram["External system: Telegram<br/>OAuth, Mini App, Bot API, Stars"]
+  Discord["External system: Discord<br/>OAuth, roles and messages"]
+  Market["External systems: Marketplaces / manual payment channels"]
+  Visitor -->|"HTTPS: browse / download / public statistics"| Platform
+  Customer -->|"HTTPS: sign in / activate / devices / VIP downloads"| Platform
+  Admin -->|"HTTPS: administration"| Platform
+  Product -->|"HTTPS: license check / launch telemetry / file download"| Platform
+  Platform -->|"HTTPS: OAuth / Bot API / Stars"| Telegram
+  Platform -->|"HTTPS: OAuth / Discord API"| Discord
+  Customer -->|"External purchase, reached from website instructions"| Market
+  Admin -->|"Manual purchase verification"| Market
+  classDef person fill:#ffffff,stroke:#374151,color:#111827
+  classDef external fill:#f3f4f6,stroke:#6b7280,color:#111827
+  classDef system fill:#e8f1ff,stroke:#2563eb,color:#111827
+  class Visitor,Customer,Admin person
+  class Product,Telegram,Discord,Market external
+  class Platform system

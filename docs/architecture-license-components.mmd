@@ -1,0 +1,57 @@
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Arial, sans-serif","fontSize":"16px","lineColor":"#64748b","clusterBkg":"#f8fafc","clusterBorder":"#cbd5e1","edgeLabelBackground":"#ffffff"},"flowchart":{"htmlLabels":true,"curve":"linear","nodeSpacing":35,"rankSpacing":65,"wrappingWidth":220}}}%%
+flowchart TB
+  %% C4 Level 3: actual concrete dependencies in services/license/app.
+  Caller["Other containers: Host gateway / bots"]
+  UserAPI["Other container: User Service"]
+  PG[("Other container: License PostgreSQL")]
+  Redis[("Other container: Redis")]
+  MQ["Other container: RabbitMQ"]
+  subgraph License["Container boundary: License Service / Python FastAPI"]
+    Routes["Component: REST routers<br/>client / user / admin / bot / stats"]
+    DTO["Component: Pydantic DTOs<br/>domain/schemas.py"]
+    Guards["Component: Route-specific guards<br/>JWT access / ADMIN / x-bot-token"]
+    Service["Component: LicenseService<br/>Activation / validity / devices / purchases"]
+    Stats["Component: LicenseStatsService<br/>Public / legacy sales aggregates"]
+    Worker["Component: Expiry task<br/>Status updates / social lookup / commands"]
+    Repo["Component: LicenseRepository / TransactionRepository<br/>Concrete SQLAlchemy repositories and ORM models"]
+    Client["Component: UserServiceClient<br/>Concrete HTTPX client"]
+    Messaging["Component: Messaging functions<br/>aio-pika RPC / topic publisher"]
+    Cache["Component: PublicStatsCache<br/>Redis / loader callback / refresh lock"]
+    DB["Component: Database session factory<br/>get_db / AsyncSessionLocal"]
+    Bootstrap["Component: FastAPI app / lifespan<br/>Router registration / caches / expiry task"]
+    Errors["Cross-cutting: Error handlers<br/>DomainException / RequestValidationError"]
+  end
+  Caller -->|"HTTP / JSON"| Routes
+  Routes -->|"FastAPI input validation"| DTO
+  Routes -->|"Depends on protected routes"| Guards
+  Routes -->|"Depends: get_db session"| DB
+  Routes -->|"Python: LicenseService(db) / methods"| Service
+  Routes -->|"Python: LicenseStatsService(app.state cache)"| Stats
+  Routes -->|"Python await: download RPC after license check"| Messaging
+  Service -->|"Constructs concrete repositories with session"| Repo
+  Service -->|"Constructs / calls concrete client"| Client
+  Service -->|"AsyncSession: flush / commit / refresh"| DB
+  Stats -->|"cache.get(loader, background_tasks)"| Cache
+  Stats -->|"Loader: own AsyncSessionLocal"| DB
+  Stats -->|"Loader: LicenseRepository(db) aggregate query"| Repo
+  Worker -->|"Own AsyncSessionLocal / commit"| DB
+  Worker -->|"Constructs / calls LicenseRepository"| Repo
+  Worker -->|"Resolves linked social IDs"| Client
+  Worker -->|"Python await: VIP expiry commands"| Messaging
+  Repo -->|"Injected AsyncSession: SQLAlchemy statements"| DB
+  DB -->|"asyncpg / SQL / PostgreSQL TCP"| PG
+  Client -->|"HTTP / JSON: x-internal-token"| UserAPI
+  Messaging -->|"AMQP / TCP: build request/reply and bot commands"| MQ
+  Cache -->|"RESP / TCP: cached aggregates / locks"| Redis
+  Bootstrap -->|"include_router"| Routes
+  Bootstrap -->|"Constructs two app.state caches / closes on shutdown"| Cache
+  Bootstrap -->|"asyncio task: start / cancel"| Worker
+  Bootstrap -->|"Registers exception handlers"| Errors
+  Routes -.->|"DomainException / validation exception dispatch"| Errors
+  Service -.->|"Raises DomainException on business errors"| Errors
+  classDef external fill:#f3f4f6,stroke:#6b7280,color:#111827
+  classDef component fill:#e8f1ff,stroke:#2563eb,color:#111827
+  classDef storage fill:#ecfdf5,stroke:#059669,color:#111827
+  class Caller,UserAPI,MQ external
+  class PG,Redis storage
+  class Routes,DTO,Guards,Service,Stats,Worker,Repo,Client,Messaging,Cache,DB,Bootstrap,Errors component

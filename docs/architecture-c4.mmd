@@ -1,81 +1,68 @@
-flowchart LR
-  %% C4-style container view of the current production deployment.
-  %% The Helper is an existing external product. Host nginx runs outside Compose.
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"Arial, sans-serif","fontSize":"16px","lineColor":"#64748b","clusterBkg":"#f8fafc","clusterBorder":"#cbd5e1","edgeLabelBackground":"#ffffff"},"flowchart":{"htmlLabels":true,"curve":"linear","nodeSpacing":35,"rankSpacing":65,"wrappingWidth":220}}}%%
+flowchart TB
+  %% C4 Level 2 with deployment annotations. Host nginx is outside Compose.
+  Browser["Client: Browser / Telegram Mini App<br/>Same React application"]
+  Helper["External software: Arizona/Rodina Helper<br/>Free / VIP game client and installer"]
+  Telegram["External system: Telegram<br/>OAuth / Bot API / Stars"]
+  Discord["External system: Discord<br/>OAuth / API"]
+  Market["External systems: Marketplaces / manual payments"]
 
-  Player["Person: Player<br/>Browser is the main interface"]
-  MiniApp["Client: Telegram Mini App<br/>Same web application inside Telegram"]
-  Helper["External client: Arizona/Rodina Helper<br/>Free and VIP"]
-  Telegram["External system: Telegram Bot API"]
-  Discord["External system: Discord API"]
-  OAuth["External systems: Telegram / Discord OAuth"]
-  Nginx["Infrastructure: Nginx HTTPS gateway<br/>production host, outside Compose"]
-
-  Player -->|HTTPS| Nginx
-  Player -->|Opens from Telegram| MiniApp
-  MiniApp -->|HTTPS: website and API| Nginx
-  Helper -->|HTTPS: license check + usage launch| Nginx
-
-  subgraph MTG["Software system: MTG MODS platform"]
-    direction LR
-
-    Web["Container: Web nginx<br/>React SPA + static free installer"]
-    Installer[("Read-only installer directory<br/>Public base EXE only")]
-
-    subgraph Backend["Backend containers · Docker Compose network"]
-      direction TB
-
-      UserAPI["Container: User Service<br/>FastAPI · OAuth/JWT/profile"]
-      LicenseAPI["Container: License Service<br/>FastAPI · activation/check/sales"]
-      UsageAPI["Container: Usage Service<br/>FastAPI · launch telemetry/stats"]
-      DistributionAPI["Container: Distribution Service<br/>FastAPI · VIP Lua / stamped EXE"]
-
-      UserDB[("Container: PostgreSQL<br/>Users, refresh sessions, OAuth handoffs")]
-      LicenseDB[("Container: PostgreSQL<br/>License DB · licenses/devices/transactions")]
-      UsageDB[("Container: PostgreSQL<br/>Usage DB · launches")]
-      Rabbit["Container: RabbitMQ<br/>file-generation RPC + bot commands"]
-      Redis[("Container: Redis<br/>shared public stats cache + refresh locks")]
-      Assets["Private files<br/>VIP template + obfuscator"]
-      BuildFiles[("Mounted builds directory<br/>Temporary Lua / EXE / used markers")]
-      TgBot["Container: Telegram bot<br/>Stars payments + VIP chat"]
-      DsBot["Container: Discord bot<br/>VIP roles + messages"]
+  subgraph MTG["Software system: MTG MODS micro-SaaS platform"]
+    Nginx["Infrastructure: Host nginx<br/>HTTPS gateway / rate limits, outside Compose"]
+    subgraph Compose["Docker Compose deployment"]
+      Web["Container: Web nginx<br/>React SPA / public installer"]
+      UserAPI["Container: User Service<br/>FastAPI: OAuth / JWT / profiles / sessions"]
+      LicenseAPI["Container: License Service<br/>FastAPI: licenses / devices / sales"]
+      UsageAPI["Container: Usage Service<br/>FastAPI: launch telemetry / aggregates"]
+      DistributionAPI["Container: Distribution Service<br/>FastAPI: VIP Lua / stamped EXE"]
+      UserDB[("Container: User PostgreSQL<br/>Users / refresh sessions / OAuth handoffs")]
+      LicenseDB[("Container: License PostgreSQL<br/>Licenses / devices / purchases")]
+      UsageDB[("Container: Usage PostgreSQL<br/>Launch records")]
+      Rabbit["Container: RabbitMQ<br/>Build request/reply / bot commands"]
+      Redis[("Container: Redis<br/>Public statistics / refresh locks")]
+      TgBot["Container: Telegram bot<br/>Stars checkout / VIP chat"]
+      DsBot["Container: Discord bot<br/>VIP roles / messages"]
     end
-
-    UserAPI --> UserDB
-    LicenseAPI --> LicenseDB
-    UsageAPI --> UsageDB
-    LicenseAPI -->|Redis protocol · sales stats| Redis
-    UsageAPI -->|Redis protocol · usage stats| Redis
-    LicenseAPI -->|HTTP · profile/social ID lookup| UserAPI
-    LicenseAPI -->|RabbitMQ · file request and RPC wait| Rabbit
-    Rabbit -->|file_generation_queue| DistributionAPI
-    DistributionAPI -->|RPC response with download URL| Rabbit
-    DistributionAPI --> Assets
-    DistributionAPI --> BuildFiles
-    DistributionAPI -->|Reads base EXE for stamping| Installer
-    Web -->|Serves free EXE directly| Installer
-    LicenseAPI -->|RabbitMQ · VIP expiry commands| Rabbit
-    Rabbit -->|discord.#| DsBot
-    Rabbit -->|telegram.#| TgBot
-    TgBot -->|HTTP · bot endpoints| LicenseAPI
-    DsBot -->|HTTP · bot endpoints| LicenseAPI
-    TgBot -->|Opens website / Mini App| MiniApp
+    Installer[("File store: Public installer directory<br/>Read-only mount in Web")]
+    Assets["Private assets: VIP template / obfuscator<br/>Used by Distribution only"]
+    Builds[("File store: Mounted builds directory<br/>Temporary Lua / EXE / used markers")]
   end
 
-  Nginx -->|HTTP :8080| Web
-  Nginx -->|HTTP :8001| UserAPI
-  Nginx -->|HTTP :8002| LicenseAPI
-  Nginx -->|HTTP :8003| UsageAPI
-  Nginx -->|HTTP :8005| DistributionAPI
+  Browser -->|"HTTPS: website / API / downloads"| Nginx
+  Helper -->|"HTTPS: check / launch / VIP file fetch"| Nginx
+  Browser -->|"External purchase via website links / instructions"| Market
+  Nginx -->|"HTTP :8080: SPA / free installer"| Web
+  Nginx -->|"HTTP :8001: /v1/users to /api/v1/users"| UserAPI
+  Nginx -->|"HTTP :8002: /v1/license to /api/v1/license"| LicenseAPI
+  Nginx -->|"HTTP :8003: /v1/usage to /api/v1/usage"| UsageAPI
+  Nginx -->|"HTTP :8005: /v1/files to /api/v1/files"| DistributionAPI
+  UserAPI -->|"SQL / PostgreSQL TCP"| UserDB
+  LicenseAPI -->|"SQL / PostgreSQL TCP"| LicenseDB
+  UsageAPI -->|"SQL / PostgreSQL TCP"| UsageDB
+  LicenseAPI -->|"RESP / TCP: sales statistics"| Redis
+  UsageAPI -->|"RESP / TCP: usage statistics"| Redis
+  LicenseAPI -->|"HTTP / JSON: profiles / social IDs, x-internal-token"| UserAPI
+  LicenseAPI -->|"AMQP: build request, correlation_id / reply_to"| Rabbit
+  Rabbit -->|"AMQP: file_generation_queue"| DistributionAPI
+  DistributionAPI -->|"AMQP: download URL to reply queue"| Rabbit
+  Rabbit -->|"AMQP: matching reply"| LicenseAPI
+  LicenseAPI -->|"AMQP: mtgmods.bot.commands topic exchange"| Rabbit
+  Rabbit -->|"AMQP: telegram.#"| TgBot
+  Rabbit -->|"AMQP: discord.#"| DsBot
+  TgBot -->|"HTTP / JSON: bot endpoints, x-bot-token"| LicenseAPI
+  DsBot -->|"HTTP / JSON: bot endpoints, x-bot-token"| LicenseAPI
+  UserAPI -->|"HTTPS: OAuth code exchange"| Telegram
+  UserAPI -->|"HTTPS: OAuth / profile API"| Discord
+  TgBot -->|"HTTPS: Bot API / Stars / chat access"| Telegram
+  DsBot -->|"HTTPS: Discord API / roles / messages"| Discord
+  Web -->|"Filesystem read: static free EXE"| Installer
+  DistributionAPI -->|"Filesystem read: base EXE for stamping"| Installer
+  DistributionAPI -->|"Local read / tool execution"| Assets
+  DistributionAPI -->|"Filesystem read / write / unlink"| Builds
 
-  UserAPI -->|HTTPS · OAuth login| OAuth
-  TgBot -->|HTTPS| Telegram
-  DsBot -->|HTTPS| Discord
-
-  classDef person fill:#ffffff,stroke:#374151,color:#111827
   classDef external fill:#f3f4f6,stroke:#6b7280,color:#111827
   classDef app fill:#e8f1ff,stroke:#2563eb,color:#111827
   classDef data fill:#ecfdf5,stroke:#059669,color:#111827
-  class Player person
-  class Helper,MiniApp,Telegram,Discord,OAuth,Nginx external
-  class Web,UserAPI,LicenseAPI,UsageAPI,DistributionAPI,Rabbit,TgBot,DsBot app
-  class UserDB,LicenseDB,UsageDB,Redis,Assets,BuildFiles,Installer data
+  class Browser,Helper,Telegram,Discord,Market external
+  class Nginx,Web,UserAPI,LicenseAPI,UsageAPI,DistributionAPI,Rabbit,TgBot,DsBot app
+  class UserDB,LicenseDB,UsageDB,Redis,Assets,Builds,Installer data
