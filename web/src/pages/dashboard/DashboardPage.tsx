@@ -270,27 +270,29 @@ function LicenseKeyReveal({ value }: { value: string }) {
       <span className="tabular font-mono text-xs tracking-wide text-fg sm:text-sm sm:tracking-wider">
         {visible ? value : maskLicenseKey(value)}
       </span>
-      <button
-        type="button"
-        aria-label={t('vip.copyKey')}
-        title={t('vip.copyKey')}
-        className="grid size-8 shrink-0 place-items-center rounded-lg text-fg-subtle transition-colors hover:bg-accent-500/15 hover:text-fg"
-        onClick={() => void copyText(value).then((ok) => {
-          if (ok) toast.success(t('actions.copied', { ns: 'common' }))
-          else toast.error(t('actions.copyFailed', { ns: 'common' }))
-        })}
-      >
-        <Copy aria-hidden className="size-4" />
-      </button>
-      <button
-        type="button"
-        aria-label={visible ? t('vip.hideKey') : t('vip.showKey')}
-        aria-pressed={visible}
-        className="grid size-8 shrink-0 place-items-center rounded-lg text-fg-subtle transition-colors hover:bg-accent-500/15 hover:text-fg"
-        onClick={() => setVisible((current) => !current)}
-      >
-        {visible ? <EyeOff aria-hidden className="size-4" /> : <Eye aria-hidden className="size-4" />}
-      </button>
+      <div className="flex shrink-0 items-center gap-0">
+        <button
+          type="button"
+          aria-label={t('vip.copyKey')}
+          title={t('vip.copyKey')}
+          className="grid size-8 shrink-0 place-items-center rounded-lg text-fg-subtle transition-colors hover:bg-accent-500/15 hover:text-fg"
+          onClick={() => void copyText(value).then((ok) => {
+            if (ok) toast.success(t('actions.copied', { ns: 'common' }))
+            else toast.error(t('actions.copyFailed', { ns: 'common' }))
+          })}
+        >
+          <Copy aria-hidden className="size-4" />
+        </button>
+        <button
+          type="button"
+          aria-label={visible ? t('vip.hideKey') : t('vip.showKey')}
+          aria-pressed={visible}
+          className="grid size-8 shrink-0 place-items-center rounded-lg text-fg-subtle transition-colors hover:bg-accent-500/15 hover:text-fg"
+          onClick={() => setVisible((current) => !current)}
+        >
+          {visible ? <EyeOff aria-hidden className="size-4" /> : <Eye aria-hidden className="size-4" />}
+        </button>
+      </div>
     </div>
   )
 }

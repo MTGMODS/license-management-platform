@@ -91,7 +91,7 @@
     "linkAction": "Link",
     "linkSuccess": "Social account linked",
     "unlinkAction": "Unlink",
-    "unlinkConfirm": "Unlink the {{provider}} account?",
+    "unlinkConfirm": "Unlink {{provider}}?",
     "unlinkSuccess": "Social account unlinked",
     "telegramChatTitle": "Our Telegram chat",
     "telegramChatText": "VIP subscriber chat",

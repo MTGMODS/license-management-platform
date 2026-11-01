@@ -91,7 +91,7 @@
     "linkAction": "Прив’язати",
     "linkSuccess": "Соцмережу прив’язано",
     "unlinkAction": "Відв’язати",
-    "unlinkConfirm": "Відв’язати акаунт {{provider}}?",
+    "unlinkConfirm": "Відв’язати {{provider}}?",
     "unlinkSuccess": "Соцмережу відв’язано",
     "telegramChatTitle": "Наш Telegram-чат",
     "telegramChatText": "Чат VIP-підписників",

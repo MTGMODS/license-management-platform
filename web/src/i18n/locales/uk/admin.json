@@ -23,7 +23,7 @@
     "telegram": "Telegram",
     "discord": "Discord",
     "unlink": "Відв'язати",
-    "unlinkConfirm": "Відв’язати акаунт {{provider}}?",
+    "unlinkConfirm": "Відв’язати {{provider}}?",
     "save": "Зберегти",
     "saved": "Користувача оновлено",
     "licenses": "Ключі користувача",
