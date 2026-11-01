@@ -1,4 +1,4 @@
-import { Crown, Eye, EyeOff, KeyRound, Link2, Loader2, LogIn, Monitor, Plus, Smartphone, Trash2, Unlink, UserRound } from 'lucide-react'
+import { Copy, Crown, Eye, EyeOff, KeyRound, Link2, Loader2, LogIn, Monitor, Plus, Smartphone, Trash2, Unlink, UserRound } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -27,6 +27,7 @@ import {
 } from '@/shared/api/license'
 import { unlinkSocialAccount, type OAuthProvider, type User } from '@/shared/api/user'
 import { DISCORD_SERVER_URL, TELEGRAM_CHAT_URL } from '@/shared/config/product'
+import { copyText } from '@/shared/lib/clipboard'
 import { cn } from '@/shared/lib/cn'
 import { millisecondsUntil, remainingTickMs, remainingTimeParts } from '@/shared/lib/datetime'
 import { useFormatters } from '@/shared/lib/format'
@@ -263,12 +264,24 @@ function LicenseKeyReveal({ value }: { value: string }) {
   return (
     <div
       aria-label={t('vip.key')}
-      className="inline-flex h-11 items-center gap-2.5 rounded-xl border border-accent-500/20 bg-accent-500/10 px-3"
+      className="inline-flex h-11 max-w-full items-center gap-1.5 rounded-xl border border-accent-500/20 bg-accent-500/10 px-2 sm:gap-2.5 sm:px-3"
     >
       <KeyRound aria-hidden className="size-4 shrink-0 text-accent-300" />
-      <span className="tabular font-mono text-sm tracking-wider text-fg">
+      <span className="tabular font-mono text-xs tracking-wide text-fg sm:text-sm sm:tracking-wider">
         {visible ? value : maskLicenseKey(value)}
       </span>
+      <button
+        type="button"
+        aria-label={t('vip.copyKey')}
+        title={t('vip.copyKey')}
+        className="grid size-8 shrink-0 place-items-center rounded-lg text-fg-subtle transition-colors hover:bg-accent-500/15 hover:text-fg"
+        onClick={() => void copyText(value).then((ok) => {
+          if (ok) toast.success(t('actions.copied', { ns: 'common' }))
+          else toast.error(t('actions.copyFailed', { ns: 'common' }))
+        })}
+      >
+        <Copy aria-hidden className="size-4" />
+      </button>
       <button
         type="button"
         aria-label={visible ? t('vip.hideKey') : t('vip.showKey')}
@@ -517,11 +530,12 @@ function SocialStatus({
   onUnlink: () => void
 }) {
   const { t } = useTranslation('dashboard')
+  const [confirming, setConfirming] = useState(false)
   const linked = Boolean(value)
   const ActionIcon = linked ? Unlink : Link2
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl bg-ink-800/70 px-4 py-3.5">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-ink-800/70 px-4 py-3.5">
       <div className="flex min-w-0 items-center gap-3">
         <Icon className={`size-5 ${color}`} />
         <div className="min-w-0">
@@ -531,14 +545,27 @@ function SocialStatus({
       </div>
       {linked && !canUnlink ? (
         <Badge tone="positive">{t('account.linked')}</Badge>
+      ) : linked && confirming ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-fg-muted">{t('account.unlinkConfirm', { provider: label })}</span>
+          <Button size="sm" disabled={disabled || unlinking} loading={unlinking} onClick={() => {
+            setConfirming(false)
+            onUnlink()
+          }}>
+            {t('actions.confirm', { ns: 'common' })}
+          </Button>
+          <Button size="sm" variant="ghost" disabled={disabled || unlinking} onClick={() => setConfirming(false)}>
+            {t('actions.cancel', { ns: 'common' })}
+          </Button>
+        </div>
       ) : (
         <Button
           size="sm"
           variant={linked ? 'ghost' : 'secondary'}
           className="shrink-0"
           loading={linked ? unlinking : linking}
-          disabled={disabled}
-          onClick={linked ? onUnlink : onLink}
+          disabled={disabled || unlinking || linking}
+          onClick={linked ? () => setConfirming(true) : onLink}
         >
           <ActionIcon aria-hidden className="size-3.5" />
           {t(linked ? 'account.unlinkAction' : 'account.linkAction')}

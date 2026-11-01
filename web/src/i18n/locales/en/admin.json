@@ -23,6 +23,7 @@
     "telegram": "Telegram",
     "discord": "Discord",
     "unlink": "Unlink",
+    "unlinkConfirm": "Unlink the {{provider}} account?",
     "save": "Save",
     "saved": "User updated",
     "licenses": "User's keys",

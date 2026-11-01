@@ -205,6 +205,7 @@ function UserEditor({
   const { t } = useTranslation('admin')
   const [role, setRole] = useState(user.role)
   const [status, setStatus] = useState(user.status)
+  const [confirmUnlink, setConfirmUnlink] = useState<'telegram_id' | 'discord_id' | null>(null)
 
   useEffect(() => {
     setRole(user.role)
@@ -264,7 +265,7 @@ function UserEditor({
             <dd className="tabular mt-0.5">{user.telegram_id ?? '—'}</dd>
           </div>
           {user.telegram_id ? (
-            <Button size="sm" variant="ghost" disabled={saving} onClick={() => onUnlink(user, 'telegram_id')}>
+            <Button size="sm" variant="ghost" disabled={saving} onClick={() => setConfirmUnlink('telegram_id')}>
               <Unlink aria-hidden className="size-3.5" />
               {t('users.unlink')}
             </Button>
@@ -276,13 +277,30 @@ function UserEditor({
             <dd className="tabular mt-0.5">{user.discord_id ?? '—'}</dd>
           </div>
           {user.discord_id ? (
-            <Button size="sm" variant="ghost" disabled={saving} onClick={() => onUnlink(user, 'discord_id')}>
+            <Button size="sm" variant="ghost" disabled={saving} onClick={() => setConfirmUnlink('discord_id')}>
               <Unlink aria-hidden className="size-3.5" />
               {t('users.unlink')}
             </Button>
           ) : null}
         </div>
       </dl>
+
+      {confirmUnlink ? (
+        <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl bg-ink-800/70 p-3">
+          <span className="text-sm text-fg-muted">
+            {t('users.unlinkConfirm', { provider: confirmUnlink === 'telegram_id' ? 'Telegram' : 'Discord' })}
+          </span>
+          <Button size="sm" disabled={saving} onClick={() => {
+            onUnlink(user, confirmUnlink)
+            setConfirmUnlink(null)
+          }}>
+            {t('actions.confirm', { ns: 'common' })}
+          </Button>
+          <Button size="sm" variant="ghost" disabled={saving} onClick={() => setConfirmUnlink(null)}>
+            {t('actions.cancel', { ns: 'common' })}
+          </Button>
+        </div>
+      ) : null}
 
       <div className="mt-6 flex flex-wrap gap-2">
         <Button loading={saving} disabled={!dirty} onClick={() => onSave(user, { role, status })}>
