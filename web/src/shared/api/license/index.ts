@@ -26,6 +26,23 @@ export const LICENSE_KEY_LENGTH = 19
 
 export const LICENSE_KEY_PATTERN = /^[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$/
 
+export interface GameAccount {
+  server_id: number
+  nickname: string
+}
+
+export function getGameAccount(signal?: AbortSignal): Promise<GameAccount | null> {
+  return request({ service: 'license', path: '/me/game-account', auth: true, signal })
+}
+
+export function saveGameAccount(account: GameAccount): Promise<GameAccount> {
+  return request({ service: 'license', path: '/me/game-account', method: 'PUT', auth: true, body: account })
+}
+
+export function deleteGameAccount(): Promise<void> {
+  return request({ service: 'license', path: '/me/game-account', method: 'DELETE', auth: true })
+}
+
 /** Normalize typed/pasted keys for both the account and admin forms. */
 export function formatLicenseKey(raw: string): string {
   return (raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16).match(/.{1,4}/g) ?? []).join('-')

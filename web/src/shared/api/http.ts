@@ -2,7 +2,7 @@ import { REQUEST_TIMEOUT_MS, serviceUrl, type ServiceName } from './config'
 import { ApiError, NetworkError, TimeoutError, parseErrorPayload } from './errors'
 import { clearTokens, getTokens, setTokens } from './tokens'
 
-type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE'
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
 type QueryValue = string | number | boolean | null | undefined
 

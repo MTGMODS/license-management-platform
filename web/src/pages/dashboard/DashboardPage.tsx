@@ -47,6 +47,7 @@ import {
   type ActivateSuccessMode,
 } from '@/widgets/dashboard/ActivateSuccessOverlay'
 import { PremiumDownloadButton } from '@/widgets/dashboard/PremiumDownloadButton'
+import { GameAccountCard } from '@/widgets/dashboard/GameAccountCard'
 
 type DashboardTab = 'vip' | 'account'
 
@@ -729,6 +730,8 @@ function AccountPanel({ user }: { user: User }) {
           </div>
         </div>
       </Card>
+
+      <GameAccountCard />
 
       {blockedProvider ? (
         <AuthPopupBlockedDialog

@@ -93,6 +93,8 @@ const SERVERS = new Map<number, ServerInfo>([
  */
 export const UNKNOWN_SERVER_ID = 0
 
+export const GAME_SERVERS = [...SERVERS.entries()].map(([id, info]) => ({ id, ...info }))
+
 export function getServer(id: number): ServerInfo | null {
   return SERVERS.get(id) ?? null
 }

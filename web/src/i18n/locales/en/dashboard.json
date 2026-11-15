@@ -99,5 +99,18 @@
     "discordServerTitle": "Our Discord server",
     "discordServerText": "VIP role (/role command) and subscriber chat",
     "discordServerAction": "Join"
+  },
+  "gameAccount": {
+    "title": "Game account",
+    "description": "Set your server and nickname for VIP highlighting in game chat. They will appear in the public VIP list while your license is valid. Your settings remain saved after it expires.",
+    "server": "Server",
+    "chooseServer": "Select a server",
+    "nickname": "In-game nickname",
+    "nicknameHint": "3–50 characters: Latin letters, digits and _. Start with a letter.",
+    "save": "Save",
+    "remove": "Remove from list",
+    "saved": "Game account updated",
+    "loadError": "Could not load your game account",
+    "retry": "Retry"
   }
 }
