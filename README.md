@@ -155,7 +155,7 @@ flowchart TB
 <details>
 <summary>🗃️ <strong>Database overview</strong> — expand tables and foreign keys</summary>
 
-User Service stores users, refresh sessions and OAuth handoffs. License Service stores licenses, device activations and purchases. Usage Service stores launches. The full [DBML model](docs/er-model.dbml) includes every column and index.
+User Service stores users, refresh sessions and OAuth handoffs. License Service stores licenses, device activations, purchases and game accounts. Usage Service stores launches. The full [DBML model](docs/er-model.dbml) includes every column and index. See [game accounts and the public VIP list](docs/game-accounts.md) for the API, caching and deployment details.
 
 ```mermaid
 erDiagram

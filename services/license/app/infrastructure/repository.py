@@ -25,6 +25,14 @@ class LicenseModel(Base):
     devices = relationship("DeviceModel", back_populates="license", cascade="all, delete-orphan")
     transaction = relationship("TransactionModel", back_populates="license", uselist=False, cascade="all, delete-orphan")
 
+class GameAccountModel(Base):
+    __tablename__ = "game_accounts"
+
+    user_id = Column(Integer, primary_key=True)
+    server_id = Column(Integer, nullable=False)
+    nickname = Column(String(50), nullable=False)
+
+
 class DeviceModel(Base):
     __tablename__ = "license_activations"
 

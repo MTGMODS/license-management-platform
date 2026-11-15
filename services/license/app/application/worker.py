@@ -3,6 +3,7 @@ from app.shared.database import AsyncSessionLocal
 from app.infrastructure.repository import LicenseRepository
 from app.infrastructure.messaging import publish_bot_command
 from app.infrastructure.external_clients import UserServiceClient
+from app.infrastructure.vip_list_cache import vip_list_cache
 
 EXPIRED_LICENSE_CHECK_INTERVAL_SECONDS = 60
 
@@ -17,6 +18,7 @@ async def check_expired_licenses_task():
                 
                 if expired_licenses:
                     await db.commit()
+                    await vip_list_cache.invalidate()
                     
                     for lic in expired_licenses:
                         user_id = lic.get("user_id")

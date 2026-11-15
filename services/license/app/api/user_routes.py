@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.shared.database import get_db
-from app.domain.schemas import ActivateKeyDTO
+from app.domain.schemas import ActivateKeyDTO, GameAccountDTO
 from app.application.service import LicenseService
 from app.shared.exceptions import DomainException
 from app.infrastructure.messaging import publish_file_generation_event
@@ -9,6 +9,22 @@ from app.application.jwt_utils import get_current_user_id
 from app.shared.datetime_utils import format_utc
 
 router = APIRouter(prefix="/api/v1/license", tags=["User Dashboard"])
+
+
+@router.get("/me/game-account", response_model=GameAccountDTO | None)
+async def get_game_account(user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
+    return await LicenseService(db).get_game_account(user_id)
+
+
+@router.put("/me/game-account", response_model=GameAccountDTO)
+async def save_game_account(payload: GameAccountDTO, user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
+    return await LicenseService(db).save_game_account(user_id, payload)
+
+
+@router.delete("/me/game-account", status_code=204)
+async def delete_game_account(user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
+    await LicenseService(db).delete_game_account(user_id)
+    return Response(status_code=204)
 
 @router.post("/activate", description="Activate a license key for a user")
 async def activate_key(payload: ActivateKeyDTO, user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):

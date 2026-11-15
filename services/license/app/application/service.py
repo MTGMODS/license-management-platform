@@ -3,13 +3,16 @@ import string
 import logging
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, delete, or_
+from sqlalchemy.exc import IntegrityError
 from fastapi import BackgroundTasks, HTTPException
 
 from app.shared.database import AsyncSessionLocal
 from app.shared.datetime_utils import format_utc, to_utc
 from app.domain.models import LicenseStatus
-from app.domain.schemas import GeneratePurchaseDTO, ActivateKeyDTO, UpdateLicenseDTO
-from app.infrastructure.repository import LicenseRepository, TransactionRepository, LicenseModel, TransactionModel
+from app.domain.schemas import GeneratePurchaseDTO, ActivateKeyDTO, UpdateLicenseDTO, GameAccountDTO
+from app.infrastructure.repository import LicenseRepository, TransactionRepository, LicenseModel, TransactionModel, GameAccountModel
+from app.infrastructure.vip_list_cache import vip_list_cache
 from app.shared.exceptions import DomainException
 from app.infrastructure.external_clients import UserServiceClient
 from app.infrastructure.stats_cache import PublicStatsCache
@@ -20,6 +23,47 @@ class LicenseService:
         self.license_repo = LicenseRepository(db)
         self.tx_repo = TransactionRepository(db)
         self.user_client = UserServiceClient()
+
+    async def get_game_account(self, user_id: int) -> dict | None:
+        row = await self.db.get(GameAccountModel, user_id)
+        return {"server_id": row.server_id, "nickname": row.nickname} if row else None
+
+    async def save_game_account(self, user_id: int, payload: GameAccountDTO) -> dict:
+        row = await self.db.get(GameAccountModel, user_id)
+        if row is None:
+            row = GameAccountModel(user_id=user_id)
+            self.db.add(row)
+        row.server_id = payload.server_id
+        row.nickname = payload.nickname
+        try:
+            await self.db.commit()
+        except IntegrityError as exc:
+            await self.db.rollback()
+            raise DomainException("Game account changed concurrently. Please retry.", status_code=409, error_code="GAME_ACCOUNT_CONFLICT") from exc
+        await vip_list_cache.invalidate()
+        return {"server_id": row.server_id, "nickname": row.nickname}
+
+    async def delete_game_account(self, user_id: int):
+        await self.db.execute(delete(GameAccountModel).where(GameAccountModel.user_id == user_id))
+        await self.db.commit()
+        await vip_list_cache.invalidate()
+
+    async def get_vip_list(self) -> list[str]:
+        return await vip_list_cache.get(self._load_vip_list)
+
+    async def _load_vip_list(self) -> tuple[list[str], float | None]:
+        rows = (await self.db.execute(
+            select(GameAccountModel.server_id, GameAccountModel.nickname, LicenseModel.expires_at)
+            .join(LicenseModel, LicenseModel.user_id == GameAccountModel.user_id)
+            .where(
+                LicenseModel.status == LicenseStatus.ACTIVE,
+                or_(LicenseModel.expires_at.is_(None), LicenseModel.expires_at > datetime.now(timezone.utc)),
+            )
+            .order_by(GameAccountModel.server_id, GameAccountModel.nickname)
+        )).all()
+        data = list(dict.fromkeys(f"[{row.server_id}]{row.nickname}" for row in rows))
+        expiries = [to_utc(row.expires_at).timestamp() for row in rows if row.expires_at is not None]
+        return data, min(expiries) if expiries else None
 
     async def check_for_client(self, key: str, device: str, ip_address: str, user_agent: str) -> tuple[int, dict]:
         license_row = await self.license_repo.get_by_key(key)
@@ -229,6 +273,7 @@ class LicenseService:
         db_sub.expires_at = expires_at
         
         await self.db.commit()
+        await vip_list_cache.invalidate()
         return db_sub.id
 
     async def complete_purchase(self, license_id: int, user_id: int):
@@ -369,6 +414,7 @@ class LicenseService:
                 other.expires_at = datetime.now(timezone.utc)
 
         await self.db.commit()
+        await vip_list_cache.invalidate()
         updated = await self.license_repo.get_by_id(license_id)
         if not updated:
             raise DomainException(message="License not found", status_code=404, error_code="NOT_FOUND")
@@ -378,6 +424,7 @@ class LicenseService:
         deleted = await self.license_repo.delete_license(license_id)
         if not deleted:
             raise DomainException(message="License not found", status_code=404, error_code="NOT_FOUND")
+        await vip_list_cache.invalidate()
 
 class LicenseStatsService:
     def __init__(self, cache: PublicStatsCache):

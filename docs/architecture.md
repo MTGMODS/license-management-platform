@@ -117,7 +117,7 @@ flowchart TB
 
 - **Host nginx** terminates HTTPS and proxies to the published Web/API ports. It belongs to the platform deployment but runs outside Docker Compose. The web container has a separate nginx serving the SPA and the public installer.
 - **User, License and Usage** each own a PostgreSQL database. Cross-service user IDs are logical references, not cross-database foreign keys. License obtains user profiles and social IDs from User over internal HTTP.
-- **Redis** holds rebuildable public statistics and refresh locks for License and Usage. Accounts, licenses and purchases remain in PostgreSQL.
+- **Redis** holds rebuildable public statistics and refresh locks for License and Usage, plus the event-invalidated public VIP game-account list. Accounts, licenses and purchases remain in PostgreSQL.
 - **RabbitMQ** carries VIP-build requests and correlated replies. License waits for the reply containing a download URL, so the browser's download request waits for this workflow. The same broker delivers expiry commands through the `mtgmods.bot.commands` topic exchange to `telegram.#` and `discord.#` consumers.
 - **Distribution** generates personalized files and serves temporary downloads without a relational database. Only Distribution accesses private templates, the obfuscator and personalized builds. Web mounts only the public installer subdirectory read-only.
 
@@ -194,6 +194,8 @@ The component view groups related Python functions and classes; each box is not 
 3. **Download orchestration** is in `user_routes.request_download`: it checks the active license through `LicenseService`, then calls `publish_file_generation_event` directly. There is no separate injected Download use-case class.
 4. **Sales statistics** use two caches created in FastAPI lifespan: current subscriptions and legacy lifetime licenses. `LicenseStatsService` supplies loader callbacks; each loader creates its own database session and queries `LicenseRepository`, including when a refresh runs after the HTTP response.
 5. **Expiry processing** is an asyncio task started in lifespan. It opens its own session, updates expired licenses, commits, resolves social IDs through `UserServiceClient`, and publishes bot commands. It runs within the License container.
+
+The License Service also stores one game account per user in `game_accounts` and exposes a public VIP list. `VipListCache` is invalidated after game-account or license changes, including the expiry worker, and expires no later than the next included license expiry (with a five-minute safety TTL). See [game accounts](game-accounts.md) for the API contract and deployment.
 6. **Error handling** registers `DomainException` and `RequestValidationError` handlers. `HTTPException` uses FastAPI's standard handler; the client-check route also has its own catch/response branch. Diagnostics use Python logging in the cache and stdout messages in integrations/expiry processing. The diagram does not assert a universal sanitized error boundary or distributed tracing.
 
 ## Operational boundaries

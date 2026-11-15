@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,6 +7,12 @@ from app.domain.schemas import CheckRequestDTO
 from app.shared.database import get_db
 
 router = APIRouter(prefix="/api/v1/license", tags=["Client"])
+
+
+@router.get("/game-accounts/list", response_model=list[str])
+async def get_vip_list(response: Response, db: AsyncSession = Depends(get_db)):
+    response.headers["Cache-Control"] = "no-store"
+    return await LicenseService(db).get_vip_list()
 
 _INTERNAL_ERROR = {"valid": False, "error": "Internal server error"}
 

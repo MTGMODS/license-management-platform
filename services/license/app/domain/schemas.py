@@ -1,10 +1,23 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from app.domain.models import LicenseStatus, PaymentMethod
 from typing import Optional, Literal
 
 class CheckRequestDTO(BaseModel):
     key: str = Field(..., min_length=19, max_length=19, pattern=r"^[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$", description="VIP Key")
     device: str = Field(..., min_length=2, max_length=100, description="HWID")
+
+class GameAccountDTO(BaseModel):
+    server_id: int = Field(..., strict=True)
+    nickname: str = Field(..., min_length=3, max_length=50, pattern=r"^[A-Za-z][A-Za-z0-9_]{2,49}$")
+
+    @field_validator("server_id")
+    @classmethod
+    def validate_server(cls, value: int) -> int:
+        valid = set(range(1, 34)) | {101, 102, 103, 200} | set(range(301, 308)) | {401, 402}
+        if value not in valid:
+            raise ValueError("Unknown game server")
+        return value
+
 
 class ActivateKeyDTO(BaseModel):
     key: str = Field(..., min_length=19, max_length=19, description="VIP Key")

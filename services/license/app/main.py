@@ -6,6 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from app.shared.database import engine, Base
 from app.shared.config import settings
 from app.infrastructure.stats_cache import PublicStatsCache
+from app.infrastructure.vip_list_cache import vip_list_cache
 from app.shared import datetime_utils as _datetime_utils
 from app.shared.exceptions import DomainException, global_exception_handler, validation_exception_handler
 from app.application.worker import check_expired_licenses_task
@@ -36,6 +37,7 @@ async def lifespan(app: FastAPI):
         await asyncio.gather(
             app.state.public_stats_cache.aclose(),
             app.state.old_stats_cache.aclose(),
+            vip_list_cache.redis.aclose(),
         )
         await engine.dispose()
 
