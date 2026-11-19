@@ -236,12 +236,12 @@ Each Python service keeps routes in `app/api`, business logic in `app/applicatio
 
 | Layer | Technologies |
 | --- | --- |
-| Backend | Python 3.12, FastAPI, Pydantic, async SQLAlchemy, asyncpg, HTTPX |
+| Backend | Python 3.15, FastAPI, Pydantic, async SQLAlchemy, asyncpg, HTTPX |
 | Persistent data | PostgreSQL 16 in production; SQLite in debug mode and isolated tests |
-| Shared cache | Redis 7.4, `redis.asyncio`, Lua scripts that check lock ownership before writing or releasing |
+| Shared cache | Redis 8.10, `redis.asyncio`, Lua scripts that check lock ownership before writing or releasing |
 | Messaging | RabbitMQ 3.13, aio-pika |
 | Frontend | TypeScript, React 19, Vite, Tailwind CSS, TanStack Query, Zustand, Recharts, i18next |
-| Runtime | Docker Compose, nginx; Node.js 22 for the web image build |
+| Runtime | Docker Compose, nginx; Node.js 26 for the web image build |
 | Verification | pytest, fakeredis, Vitest, Testing Library, TypeScript checks and Oxlint |
 
 ---

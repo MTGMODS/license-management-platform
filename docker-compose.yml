@@ -2,7 +2,7 @@ name: mtgmods_backend
 
 services:
   redis:
-    image: redis:7.4-alpine
+    image: redis:8.10.3-alpine
     restart: unless-stopped
     command: ["redis-server", "--save", "", "--appendonly", "no"]
     healthcheck:
@@ -12,7 +12,7 @@ services:
       retries: 10
 
   user-postgres:
-    image: postgres:16-alpine
+    image: postgres:16.16-alpine
     restart: unless-stopped
     env_file:
       - ./services/user/.env
@@ -25,7 +25,7 @@ services:
       retries: 10
 
   license-postgres:
-    image: postgres:16-alpine
+    image: postgres:16.16-alpine
     restart: unless-stopped
     env_file:
       - ./services/license/.env
@@ -38,7 +38,7 @@ services:
       retries: 10
 
   usage-postgres:
-    image: postgres:16-alpine
+    image: postgres:16.16-alpine
     restart: unless-stopped
     env_file:
       - ./services/usage/.env

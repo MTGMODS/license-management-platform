@@ -5,7 +5,7 @@ They do not require production credentials, Docker or running services.
 
 ## Python: four services and two bots
 
-Use Python 3.12 (the version used to verify this suite), in an isolated environment:
+Use an isolated environment for local tests (Python 3.12 remains supported). The updated dependency set was also verified on Linux with the Docker runtime, Python 3.15.2:
 
 ```bash
 python -m venv .venv
@@ -25,6 +25,8 @@ python -m pytest tests/system -m integration  # Real DB/files/API, external serv
 python -m pytest tests/system -m unit         # Bot handlers and expiration publisher
 python -m pytest tests --junitxml=test-results/python.xml
 ```
+
+On Python 3.15, the test-only `lupa` dependency may need a source build. On Debian/Ubuntu, install `build-essential` before installing test requirements. Production service images do not install `lupa`.
 
 The test requirements include each component's pinned runtime dependencies. Tests
 live outside Docker build contexts and do not add dependencies to production images.
