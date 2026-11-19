@@ -33,8 +33,8 @@ async def seed(component, db, user_id=42, status="ACTIVE", expires_at=None):
 
 async def test_account_api_owner_isolation_and_public_list(component, api, db, cache):
     path = "/api/v1/license/me/game-account"
-    public = "/api/v1/license/game-accounts/list"
-    assert "/api/v1/license/vip-list" not in component("app.main").app.openapi()["paths"]
+    public = "/api/v1/license/game-accounts/public-list"
+    assert "/api/v1/license/game-accounts/list" not in component("app.main").app.openapi()["paths"]
     assert (await api.get(path)).status_code in (401, 403)
     assert (await api.put(path, json={"server_id": 20, "nickname": "Test_Player"})).status_code in (401, 403)
     assert (await api.delete(path)).status_code in (401, 403)

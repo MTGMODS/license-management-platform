@@ -1,4 +1,4 @@
-import { Copy, Crown, Eye, EyeOff, KeyRound, Link2, Loader2, LogIn, Monitor, Plus, Smartphone, Trash2, Unlink, UserRound } from 'lucide-react'
+import { Copy, Crown, Eye, EyeOff, Gamepad2, KeyRound, Link2, Loader2, LogIn, Monitor, Plus, Smartphone, Trash2, Unlink, UserRound } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -49,7 +49,7 @@ import {
 import { PremiumDownloadButton } from '@/widgets/dashboard/PremiumDownloadButton'
 import { GameAccountCard } from '@/widgets/dashboard/GameAccountCard'
 
-type DashboardTab = 'vip' | 'account'
+type DashboardTab = 'vip' | 'game-account' | 'account'
 
 function headlineKey(
   status: LicenseInfo['license']['status'],
@@ -452,9 +452,9 @@ function LicenseHistory() {
   return <PastSubscriptions items={data ?? []} />
 }
 
-function VipColumn() {
+function VipColumn({ licenseInfo }: { licenseInfo: ReturnType<typeof useLicenseInfo> }) {
   const { t } = useTranslation(['dashboard', 'common'])
-  const { data, isPending, isError, refetch, isFetching } = useLicenseInfo(true)
+  const { data, isPending, isError, refetch, isFetching } = licenseInfo
 
   if (isPending) {
     return (
@@ -731,8 +731,6 @@ function AccountPanel({ user }: { user: User }) {
         </div>
       </Card>
 
-      <GameAccountCard />
-
       {blockedProvider ? (
         <AuthPopupBlockedDialog
           onRetry={() => void retryAfterAllowingPopups()}
@@ -748,6 +746,32 @@ export function DashboardPage() {
   const status = useAuthStore((state) => state.status)
   const user = useAuthStore((state) => state.user)
   const [tab, setTab] = useState<DashboardTab>('vip')
+  const licenseInfo = useLicenseInfo(Boolean(user) && status !== 'initialising')
+  const license = licenseInfo.data?.license
+  const expiry = license?.status === 'ACTIVE' ? license.expires_at : null
+  const [expiredAt, setExpiredAt] = useState<string | null>(null)
+  const hasVip = !licenseInfo.isError && license?.status === 'ACTIVE' && (
+    expiry == null || (expiry !== expiredAt && millisecondsUntil(expiry) > 0)
+  )
+  const currentTab = tab === 'game-account' && !hasVip ? 'vip' : tab
+
+  useEffect(() => {
+    if (!hasVip || expiry == null) return
+
+    let timer: number
+    const checkExpiry = () => {
+      const remaining = millisecondsUntil(expiry)
+      if (remaining <= 0) {
+        setExpiredAt(expiry)
+        setTab((selected) => selected === 'game-account' ? 'vip' : selected)
+        return
+      }
+      // Long subscriptions can exceed the browser's maximum timeout.
+      timer = window.setTimeout(checkExpiry, Math.min(remaining, 2 ** 31 - 1))
+    }
+    checkExpiry()
+    return () => window.clearTimeout(timer)
+  }, [expiry, hasVip])
 
   if (status === 'initialising' || !user) {
     return (
@@ -764,19 +788,22 @@ export function DashboardPage() {
         <p className="mx-auto mt-4 max-w-xl text-fg-muted">{t('subtitle')}</p>
       </section>
 
-      <SegmentedControl
+      <SegmentedControl<DashboardTab>
         fullWidth
         label={t('title')}
-        value={tab}
+        value={currentTab}
         onChange={setTab}
         className="p-1.5"
         options={[
           { id: 'vip', label: t('sections.vip'), icon: Crown },
+          ...(hasVip ? [{ id: 'game-account' as const, label: t('gameAccount.title'), icon: Gamepad2 }] : []),
           { id: 'account', label: t('sections.account'), icon: UserRound },
         ]}
       />
 
-      {tab === 'vip' ? <VipColumn /> : <AccountPanel user={user} />}
+      {currentTab === 'vip' && <VipColumn licenseInfo={licenseInfo} />}
+      {currentTab === 'game-account' && <GameAccountCard />}
+      {currentTab === 'account' && <AccountPanel user={user} />}
     </div>
   )
 }

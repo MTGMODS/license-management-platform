@@ -11,11 +11,15 @@ import { deleteGameAccount, getGameAccount, saveGameAccount, type GameAccount } 
 import { GAME_SERVERS } from '@/shared/config/servers'
 import { Button, Card, Skeleton } from '@/shared/ui'
 
+const SELECTABLE_SERVERS = GAME_SERVERS.filter(({ id }) => id < 200)
+
 function GameAccountForm({ account, owner }: { account: GameAccount | null; owner: string }) {
   const { t } = useTranslation('dashboard')
   const { t: te } = useTranslation('errors')
   const queryClient = useQueryClient()
-  const [serverId, setServerId] = useState(account?.server_id ?? 0)
+  const [serverId, setServerId] = useState(() => (
+    SELECTABLE_SERVERS.find(({ id }) => id === account?.server_id)?.id ?? 0
+  ))
   const [nickname, setNickname] = useState(account?.nickname ?? '')
   const mutation = useMutation({
     mutationFn: (next: GameAccount | null) => next ? saveGameAccount(next) : deleteGameAccount().then(() => null),
@@ -25,7 +29,7 @@ function GameAccountForm({ account, owner }: { account: GameAccount | null; owne
     },
     onError: (error) => toast.error(te(apiErrorTranslationKey(error), { defaultValue: te('unexpected') })),
   })
-  const valid = serverId > 0 && /^[A-Za-z][A-Za-z0-9_]{2,49}$/.test(nickname)
+  const valid = SELECTABLE_SERVERS.some(({ id }) => id === serverId) && /^[A-Za-z][A-Za-z0-9_]{2,49}$/.test(nickname)
   const unchanged = account?.server_id === serverId && account.nickname === nickname
   const fieldClass = 'w-full rounded-xl border border-white/8 bg-ink-800 px-4 py-3 text-sm text-fg outline-none focus:border-accent-500/40'
 
@@ -47,7 +51,7 @@ function GameAccountForm({ account, owner }: { account: GameAccount | null; owne
             required
           >
             <option value={0} disabled>{t('gameAccount.chooseServer')}</option>
-            {GAME_SERVERS.map(server => (
+            {SELECTABLE_SERVERS.map(server => (
               <option key={server.id} value={server.id}>[{server.id}] {server.name}</option>
             ))}
           </select>
@@ -104,6 +108,8 @@ export function GameAccountCard() {
         {t('gameAccount.title')}
       </h2>
       <p className="mt-2 text-sm text-fg-muted">{t('gameAccount.description')}</p>
+      <p className="mt-3 text-sm font-medium text-caution">{t('gameAccount.publicNotice')}</p>
+      <p className="mt-1 text-sm text-fg-muted">{t('gameAccount.privacyHint')}</p>
       {query.isPending ? <Skeleton className="mt-5 h-28" /> : query.isError ? (
         <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-fg-muted">
           <span>{t('gameAccount.loadError')}</span>

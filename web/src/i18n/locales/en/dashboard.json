@@ -102,7 +102,9 @@
   },
   "gameAccount": {
     "title": "Game account",
-    "description": "Set your server and nickname for VIP highlighting in game chat. They will appear in the public VIP list while your license is valid. Your settings remain saved after it expires.",
+    "description": "If you like, enter your nickname and server to be highlighted in game chat.",
+    "publicNotice": "If you enter them, they will become public!",
+    "privacyHint": "Leave them blank if you want to stay anonymous.",
     "server": "Server",
     "chooseServer": "Select a server",
     "nickname": "In-game nickname",
