@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
 import { cn } from '@/shared/lib/cn'
-import { Badge, Card, buttonStyles } from '@/shared/ui'
+import { Card, buttonStyles } from '@/shared/ui'
 
 const BENEFITS = [
   { icon: InfinityIcon, titleKey: 'benefits.limitsTitle', textKey: 'benefits.limits',
@@ -55,14 +55,8 @@ export function VipBenefits() {
                 <Icon aria-hidden className="size-5" />
               </span>
               <div className="min-w-0">
-                <h3 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold leading-snug lg:text-[clamp(0.875rem,1.5vh,1rem)]">
-                  <span>{t(titleKey)}</span>
-                  {titleKey === 'benefits.chatTitle' ? (
-                    <>
-                      {' '}
-                      <Badge tone="neutral" className="px-2 py-0.5 text-[0.625rem] font-semibold">{t('benefits.soon')}</Badge>
-                    </>
-                  ) : null}
+                <h3 className="text-sm font-semibold leading-snug lg:text-[clamp(0.875rem,1.5vh,1rem)]">
+                  {t(titleKey)}
                 </h3>
                 <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-fg-muted lg:text-[clamp(0.8125rem,1.35vh,0.875rem)]">{t(textKey)}</p>
               </div>

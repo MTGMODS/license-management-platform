@@ -52,5 +52,4 @@ License startup creates the new table through the existing SQLAlchemy
 No existing tables or records are rewritten. Existing nginx prefix routing
 already forwards these endpoints.
 
-The game client's parsing and highlighting are implemented separately. The
-website's “coming soon” badge stays until that client feature is released.
+The game client's parsing and highlighting are implemented separately.
