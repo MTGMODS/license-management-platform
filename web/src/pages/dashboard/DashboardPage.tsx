@@ -796,7 +796,7 @@ export function DashboardPage() {
         className="p-1.5"
         options={[
           { id: 'vip', label: t('sections.vip'), icon: Crown },
-          ...(hasVip ? [{ id: 'game-account' as const, label: t('gameAccount.title'), icon: Gamepad2 }] : []),
+          ...(hasVip ? [{ id: 'game-account' as const, label: t('sections.game'), icon: Gamepad2 }] : []),
           { id: 'account', label: t('sections.account'), icon: UserRound },
         ]}
       />

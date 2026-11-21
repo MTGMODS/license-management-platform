@@ -30,13 +30,13 @@ it.each([
   expect(section.className).not.toMatch(/border|glass/)
   const copy = (lng === 'ru' ? ru : uk).benefits
   expect(within(section).getAllByRole('heading', { level: 3 }).map(el => el.textContent)).toEqual([
-    copy.goldTitle, copy.limitsTitle, copy.adsTitle, copy.communityTitle, `${copy.chatTitle} ${copy.soon}`,
+    copy.goldTitle, copy.limitsTitle, copy.adsTitle, copy.communityTitle, copy.chatTitle,
   ])
   expect(items[1]!.className).toContain('lg:col-start-2 lg:row-start-1')
   expect(items[2]!.className).toContain('lg:col-start-2 lg:row-start-2')
   expect(items[3]!.className).toContain('lg:col-start-3 lg:row-start-1')
   expect(items[4]!.className).toContain('lg:col-start-3 lg:row-start-2')
-  expect(within(items[4]!).getByText(copy.soon)).toBeTruthy()
+  expect(within(items[4]!).queryByText(/^(СКОРО|НЕЗАБАРОМ)$/)).toBeNull()
   const limitsText = within(items[1]!).getByText(copy.limits.replace('\n', ' '))
   expect(limitsText.textContent).toBe(copy.limits)
   expect(limitsText.className).toContain('whitespace-pre-line')

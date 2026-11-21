@@ -3,6 +3,7 @@
   "subtitle": "Your subscription, downloads and devices in one place.",
   "sections": {
     "vip": "MTGVIP",
+    "game": "Game",
     "account": "Account"
   },
   "activate": {

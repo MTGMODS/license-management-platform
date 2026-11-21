@@ -48,12 +48,13 @@ const activeLicense: LicenseInfo = {
 it('puts the game account between MTGVIP and Account for active VIP', async () => {
   mocks.getLicense.mockResolvedValue(activeLicense)
   show(<DashboardPage />)
-  const gameTab = await screen.findByRole('button', { name: 'Игровой аккаунт' })
+  const gameTab = await screen.findByRole('button', { name: 'Игра' })
   const vipTab = screen.getByRole('button', { name: 'MTGVIP' })
   const accountTab = screen.getByRole('button', { name: 'Аккаунт' })
   expect(vipTab.nextElementSibling).toBe(gameTab)
   expect(gameTab.nextElementSibling).toBe(accountTab)
   fireEvent.click(gameTab)
+  expect(screen.getByRole('heading', { name: 'Игровой аккаунт' })).toBeTruthy()
   expect(await screen.findByLabelText('Игровой никнейм')).toBeTruthy()
   expect(screen.getByText('Если укажете, они станут публичными!')).toBeTruthy()
   fireEvent.click(accountTab)
@@ -66,7 +67,7 @@ it.each([null, { ...activeLicense, license: { ...activeLicense.license, expires_
     mocks.getLicense.mockResolvedValue(license)
     show(<DashboardPage />)
     await screen.findByRole('heading', { name: i18n.t('dashboard:activate.title') })
-    expect(screen.queryByRole('button', { name: 'Игровой аккаунт' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Игра' })).toBeNull()
     expect(mocks.get).not.toHaveBeenCalled()
   },
 )
