@@ -72,7 +72,7 @@ server {
         include /etc/nginx/snippets/proxy_api.conf;
     }
 
-    location = /v1/ai_editor/ {
+    location /v1/ai_editor/ {
         proxy_pass http://127.0.0.1:8006/api/v1/ai_editor/;
         include /etc/nginx/snippets/proxy_api.conf;
     }
