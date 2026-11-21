@@ -419,7 +419,7 @@ docker compose up -d --build ai-editor-service
 
 The Helper posts to `https://api.mtgmods.com/v1/ai_editor/smi`. Host nginx forwards it to `http://127.0.0.1:8006/api/v1/ai_editor/smi`. Apply the production gateway config when deploying this route.
 
-The request contains `api_key`, `text` and optional `ai_provider` (defaults to `gemini`). The service returns `{ "success": true, "msg": "…" }` with the edited announcement, or `{ "success": false, "msg": "…" }` on a generation failure. The service requires no `.env`, database, cache or queue.
+The request contains `api_key`, `text` and optional `ai_provider` (defaults to `gemini`). A non-empty `pro_rules` string replaces the built-in editing rules for that request. The service returns `{ "success": true, "msg": "…" }` with the edited announcement, or `{ "success": false, "msg": "…" }` on a generation failure. The service requires no `.env`, database, cache or queue.
 
 ### 3. Connect the website to the API
 
