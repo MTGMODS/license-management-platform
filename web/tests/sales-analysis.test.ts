@@ -33,7 +33,7 @@ it('keeps cents, separates purchase kinds, and does not classify old cache rows 
 })
 
 it('groups the same selected sales by payment method and tariff, preserving cents and period shares', () => {
-  const data = [sale({ amount: 0.1 }), sale({ amount: 0.2 }),
+  const data = [sale({ amount: 0.1 }), sale({ amount: 0.2, status: 'EXPIRED' }),
     sale({ amount: 2.45, method: 'FunPay', duration_days: 30 }),
     sale({ amount: 100, method: 'PayPal', duration_days: 365, activated_at: '2026-10-17T00:00:00Z' })]
   const result = groupSales(filterSales(data, { from: '2026-10-16', to: '2026-10-16' }))
@@ -42,8 +42,8 @@ it('groups the same selected sales by payment method and tariff, preserving cent
     { method: 'Stars', count: 2, sum: 0.3, count_share: 66.7, money_share: 10.9 },
   ])
   expect(result.durations.filter(item => item.count > 0)).toEqual([
-    { days: 7, count: 2, sum: 0.3, count_share: 66.7, money_share: 10.9 },
-    { days: 30, count: 1, sum: 2.45, count_share: 33.3, money_share: 89.1 },
+    { days: 7, count: 2, active: 1, sum: 0.3, count_share: 66.7, money_share: 10.9 },
+    { days: 30, count: 1, active: 1, sum: 2.45, count_share: 33.3, money_share: 89.1 },
   ])
   expect(data).toHaveLength(4)
 })
@@ -52,6 +52,7 @@ it('keeps every standard legend bucket at zero for an empty period without NaN o
   const empty = groupSales([])
   expect(empty.payments.map(item => item.method)).toEqual(['FunPay', 'Stars', 'Card', 'Crypto', 'PayPal'])
   expect(empty.durations.map(item => item.days)).toEqual([7, 30, 90, 365])
+  expect(empty.durations.map(item => item.active)).toEqual([0, 0, 0, 0])
   for (const item of [...empty.payments, ...empty.durations]) {
     expect(item).toMatchObject({ count: 0, sum: 0, count_share: 0, money_share: 0 })
   }

@@ -53,11 +53,15 @@ beforeEach(async () => {
       by_duration: [{ days: 365, count: 999, sum: 9999, active: 999, count_share: 100, money_share: 100 }],
       retention: { buyers: 432, repeat_buyers: 15, repeat_rate: 3.47, avg_subscriptions_per_buyer: 1.25,
         avg_check: 5.5, avg_revenue_per_buyer: 6.875, by_purchases: [], tariff_transitions: [] },
-      timeline: { daily: [{ date: '2026-10-16', count: 2, sum: 7 }],
+      timeline: { daily: [
+        { date: '2026-10-15', count: 1, sum: 3 },
+        { date: '2026-10-16', count: 2, sum: 7 },
+        { date: '2026-10-17', count: 1, sum: 15 },
+      ],
         monthly: [{ month: '2026-10', count: 5, sum: 27.5 }] },
       sales: [sale('2026-10-15T23:59:59.999Z', 3, 'FunPay', 30, 'first'),
         sale('2026-10-16T00:00:00Z', 1, 'Stars', 7, 'repeat'),
-        sale('2026-10-16T23:59:59.999Z', 6, 'FunPay', 90, 'repeat'),
+        { ...sale('2026-10-16T23:59:59.999Z', 6, 'FunPay', 90, 'repeat'), status: 'EXPIRED' },
         sale('2026-10-17T00:00:00Z', 15, 'PayPal', 365, 'first'),
         sale(null, 2.5, 'Crypto', 30, null)],
     },
@@ -93,7 +97,7 @@ it('defaults to all time with one shared filter and matching chart/table totals'
   expect(pie('method').reduce((sum, row) => sum + Number(row.sum), 0)).toBe(27.5)
   expect(pie('days').reduce((sum, row) => sum + Number(row.count), 0)).toBe(5)
   expect(screen.queryByText('OLD CACHE')).toBeNull()
-  expect(screen.queryByText(/Активных:/)).toBeNull()
+  expect(chart('Продажи по тарифам').getByText(ru.stats.durations.activeHint)).toBeTruthy()
 })
 
 it('updates both charts, summaries and table for one UTC day without changing historical data', () => {
@@ -120,6 +124,10 @@ it('updates both charts, summaries and table for one UTC day without changing hi
     { method: 'Stars', count: 1, sum: 1, count_share: 50, money_share: 14.3 },
   ])
   expect(pie('days').map(row => row.days)).toEqual([7, 90])
+  const durations = chart('Продажи по тарифам')
+  expect(durations.getByText('7 дней').nextElementSibling?.textContent).toBe('1 (1)')
+  expect(durations.getByText('90 дней').nextElementSibling?.textContent).toBe('1 (0)')
+  expect(durations.getByText('365 дней').nextElementSibling?.textContent).toBe('0 (0)')
   expect(screen.getByRole('region', { name: ru.stats.historyTitle })).toBe(history)
   expect(within(history).getByText('432')).toBeTruthy()
   expect(within(history).getByText(ru.stats.historySubtitle)).toBeTruthy()
@@ -127,12 +135,27 @@ it('updates both charts, summaries and table for one UTC day without changing hi
   expect(state.timeline.mock.lastCall?.[0]).toBe(originalTimeline)
 })
 
-it('supports inclusive custom ranges and restores undated sales when returning to all time', () => {
+it('defaults to month-to-date, supports inclusive custom ranges and restores undated sales in all time', () => {
   page()
   fireEvent.change(screen.getByRole('combobox', { name: 'Период' }), { target: { value: 'range' } })
+  expect((screen.getByLabelText('по') as HTMLInputElement).value).toBe('18/10/2026')
+  expect((screen.getByLabelText('с') as HTMLInputElement).value).toBe('01/10/2026')
+  expect(metric('Продаж за период', ru.stats.salesList.results).getByText('4')).toBeTruthy()
+  fireEvent.change(screen.getByLabelText('с'), { target: { value: '' } })
+  expect((screen.getByLabelText('с') as HTMLInputElement).value).toBe('')
   expect(screen.getByRole('heading', { name: ru.stats.salesList.title_range })).toBeTruthy()
+  expect(screen.getByText(ru.stats.salesList.emptyFilter)).toBeTruthy()
+  expect(screen.queryByRole('row')).toBeNull()
+  expect(metric('Продаж за период', ru.stats.salesList.results).getByText('0')).toBeTruthy()
+  expect(metric('Доход за период', ru.stats.salesList.results).getByText('$0')).toBeTruthy()
+  expect(metric('Первые покупки', ru.stats.salesList.results).getByText('0')).toBeTruthy()
+  expect(metric('Повторные покупки', ru.stats.salesList.results).getByText('0')).toBeTruthy()
+  expect(chart('Способы оплаты').getAllByText('$0')).toHaveLength(6)
+  expect(chart(ru.stats.durations.title).getByText('7 дней').nextElementSibling?.textContent).toBe('0 (0)')
   fireEvent.change(screen.getByLabelText('с'), { target: { value: '2026-10-15' } })
+  expect(metric('Продаж за период', 'Итоги выбранного периода').getByText('4')).toBeTruthy()
   fireEvent.change(screen.getByLabelText('по'), { target: { value: '2026-10-16' } })
+  expect(screen.getByRole('heading', { name: ru.stats.salesList.title_range })).toBeTruthy()
   expect(metric('Продаж за период', 'Итоги выбранного периода').getByText('3')).toBeTruthy()
   expect(metric('Доход за период', 'Итоги выбранного периода').getByText('$10')).toBeTruthy()
   expect(pie('days').map(row => row.days)).toEqual([7, 30, 90])
@@ -140,6 +163,33 @@ it('supports inclusive custom ranges and restores undated sales when returning t
   expect(metric('Продаж за всё время', 'Итоги за всё время').getByText('5')).toBeTruthy()
   expect(chart('Способы оплаты').getByText('Crypto')).toBeTruthy()
   expect(screen.getAllByRole('row')).toHaveLength(6)
+})
+
+it('applies the custom range only to the daily revenue chart and hides it until the range is complete', () => {
+  page()
+  const history = within(screen.getByRole('region', { name: ru.stats.historyTitle }))
+  const monthly = state.timeline.mock.lastCall?.[0]
+  const keys = () => state.timeline.mock.lastCall?.[0]?.map((point: { key: string }) => point.key)
+  const period = screen.getByRole('combobox', { name: 'Период' })
+
+  fireEvent.change(period, { target: { value: 'range' } })
+  expect(state.timeline.mock.lastCall?.[0]).toBe(monthly)
+  fireEvent.click(history.getByRole('button', { name: ru.stats.timeline.daily }))
+  expect(keys()).toEqual(['2026-10-15', '2026-10-16', '2026-10-17'])
+  state.timeline.mockClear()
+  fireEvent.change(screen.getByLabelText('с'), { target: { value: '' } })
+  expect(state.timeline).not.toHaveBeenCalled()
+
+  fireEvent.change(screen.getByLabelText('с'), { target: { value: '2026-10-16' } })
+  expect(keys()).toEqual(['2026-10-16', '2026-10-17'])
+  fireEvent.change(screen.getByLabelText('по'), { target: { value: '2026-10-16' } })
+  expect(keys()).toEqual(['2026-10-16'])
+
+  fireEvent.click(history.getByRole('button', { name: ru.stats.timeline.monthly }))
+  expect(state.timeline.mock.lastCall?.[0]).toEqual(monthly)
+  fireEvent.click(history.getByRole('button', { name: ru.stats.timeline.daily }))
+  fireEvent.change(period, { target: { value: 'all' } })
+  expect(keys()).toEqual(['2026-10-15', '2026-10-16', '2026-10-17'])
 })
 
 it('draws one full slice for a single category while keeping the complete zero legend', () => {

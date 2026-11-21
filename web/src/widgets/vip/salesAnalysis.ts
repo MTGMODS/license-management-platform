@@ -3,9 +3,12 @@ import { utcCalendarDayKey } from '@/shared/lib/datetime'
 
 export type SalesRange = { from: string; to: string }
 export type SalesRangeMode = 'all' | 'day' | 'range'
-export type SalesDurationBucket = Omit<LicenseDurationStat, 'active'>
 const PAYMENT_METHODS = ['FunPay', 'Stars', 'Card', 'Crypto', 'PayPal']
 const TARIFF_DAYS = [7, 30, 90, 365]
+
+export function isSaleActive(status: string): boolean {
+  return status.toUpperCase() === 'ACTIVE'
+}
 
 export function saleDate(row: LicenseSaleRow): string | null {
   return row.activated_at ?? row.purchased_at
@@ -44,12 +47,12 @@ export function summarizeSales(rows: LicenseSaleRow[]) {
 /** Both charts use the same selected rows, not the unfiltered API aggregates. */
 export function groupSales(rows: LicenseSaleRow[]): {
   payments: LicensePaymentStat[]
-  durations: SalesDurationBucket[]
+  durations: LicenseDurationStat[]
 } {
   const methods = new Map<string, { method: string; count: number; cents: number }>()
-  const tariffs = new Map<number, { days: number; count: number; cents: number }>()
+  const tariffs = new Map<number, { days: number; count: number; cents: number; active: number }>()
   PAYMENT_METHODS.forEach(method => methods.set(method, { method, count: 0, cents: 0 }))
-  TARIFF_DAYS.forEach(days => tariffs.set(days, { days, count: 0, cents: 0 }))
+  TARIFF_DAYS.forEach(days => tariffs.set(days, { days, count: 0, cents: 0, active: 0 }))
   let totalCents = 0
   for (const row of rows) {
     const cents = Math.round(row.amount * 100)
@@ -59,9 +62,10 @@ export function groupSales(rows: LicenseSaleRow[]): {
     method.cents += cents
     methods.set(row.method, method)
     if (row.duration_days != null) {
-      const tariff = tariffs.get(row.duration_days) ?? { days: row.duration_days, count: 0, cents: 0 }
+      const tariff = tariffs.get(row.duration_days) ?? { days: row.duration_days, count: 0, cents: 0, active: 0 }
       tariff.count += 1
       tariff.cents += cents
+      if (isSaleActive(row.status)) tariff.active += 1
       tariffs.set(row.duration_days, tariff)
     }
   }
@@ -74,6 +78,6 @@ export function groupSales(rows: LicenseSaleRow[]): {
     payments: [...methods.values()]
       .map(item => ({ method: item.method, ...bucket(item) })),
     durations: [...tariffs.values()].sort((a, b) => a.days - b.days)
-      .map(item => ({ days: item.days, ...bucket(item) })),
+      .map(item => ({ days: item.days, active: item.active, ...bucket(item) })),
   }
 }

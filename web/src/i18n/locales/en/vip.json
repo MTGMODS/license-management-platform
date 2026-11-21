@@ -141,7 +141,7 @@
     "periodSubtitle": "For totals, charts and the sales list",
     "periodEmpty": "No sales during the selected time",
     "historyTitle": "Sales history and buyers",
-    "historySubtitle": "All-time figures. Not affected by the selected period above.",
+    "historySubtitle": "The daily chart follows the selected date range. Monthly revenue and buyer retention cover all time.",
     "title": "MTGVIP in numbers",
     "subtitle": "Public subscription sales statistics",
     "sales": "Total sales",
@@ -170,6 +170,7 @@
     },
     "durations": {
       "title": "Sales by plan",
+      "activeHint": "Active subscriptions in parentheses",
       "moneyShare": "Revenue share"
     },
     "payments": {
@@ -231,8 +232,8 @@
       "firstPurchases": "First purchases",
       "repeatPurchases": "Repeat purchases",
       "purchaseRevenue": "Revenue: {{sum}}",
-      "ofAllSales": "Out of {{total}} paid sales for all time",
-      "paidOnly": "Completed paid subscriptions only",
+      "ofAllSales": "Out of {{total}} all-time sales",
+      "ofAllRevenue": "Of {{total}} in all-time revenue",
       "unclassified": "First/repeat purchase data is unavailable for {{count}} sales. These sales are included in the total.",
       "invalidRange": "The start date must not be later than the end date",
       "emptyFilter": "No sales during the selected period",

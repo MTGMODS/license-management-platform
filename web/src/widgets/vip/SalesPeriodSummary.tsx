@@ -9,10 +9,11 @@ import { summarizeSales, type SalesRangeMode } from './salesAnalysis'
 import { usdAmount } from './salesStatsFormat'
 
 export const SalesPeriodSummary = memo(function SalesPeriodSummary({
-  rows, total, mode,
+  rows, total, totalRevenue, mode,
 }: {
   rows: LicenseSaleRow[]
   total: number
+  totalRevenue: number
   mode: SalesRangeMode
 }) {
   const { t } = useTranslation('vip')
@@ -29,7 +30,7 @@ export const SalesPeriodSummary = memo(function SalesPeriodSummary({
     {
       label: t('stats.salesList.selectedRevenue', { context: mode }), value: usdAmount(format, summary.sum),
       icon: Coins, color: 'text-emerald-400',
-      detail: t('stats.salesList.paidOnly'),
+      detail: t('stats.salesList.ofAllRevenue', { total: usdAmount(format, totalRevenue) }),
     },
     ...(showKinds ? (['first', 'repeat'] as const).map((kind) => ({
       label: t(`stats.salesList.${kind}Purchases`), value: format.number(summary[kind].count),

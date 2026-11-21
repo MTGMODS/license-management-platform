@@ -1,5 +1,5 @@
 import { CalendarDays, CalendarRange, ChevronDown, Infinity as InfinityIcon, Repeat2 } from 'lucide-react'
-import { useDeferredValue, useMemo, useState } from 'react'
+import { memo, useDeferredValue, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Area,
@@ -16,9 +16,11 @@ import {
 
 import { useSalesStats } from '@/features/license/useSalesStats'
 import type {
+  LicenseDurationStat,
   LicensePurchaseBucket,
   LicenseRetentionStats,
   LicenseSaleRow,
+  LicenseSalesStats,
   LicenseTimelineDay,
   LicenseTimelineMonth,
 } from '@/shared/api/license'
@@ -31,7 +33,7 @@ import { ChartTooltip } from '@/widgets/analytics/ChartTooltip'
 
 import { PaymentsChart } from './SalesStatCards'
 import { SalesPeriodSummary } from './SalesPeriodSummary'
-import { filterSales, groupSales, saleDate, type SalesDurationBucket, type SalesRangeMode } from './salesAnalysis'
+import { filterSales, groupSales, isSaleActive, saleDate, summarizeSales, type SalesRange, type SalesRangeMode } from './salesAnalysis'
 import { usdAmount, usdWhole } from './salesStatsFormat'
 
 const DURATION_COLOR: Record<number, string> = {
@@ -49,20 +51,25 @@ function durationColor(days: number, index: number): string {
   return DURATION_COLOR[days] ?? DURATION_FALLBACK[index % DURATION_FALLBACK.length] ?? '#0fb0fa'
 }
 
-export function RevenueTimeline({
+export const RevenueTimeline = memo(function RevenueTimeline({
   daily,
   monthly,
+  dailyRange,
 }: {
   daily: LicenseTimelineDay[]
   monthly: LicenseTimelineMonth[]
+  dailyRange?: SalesRange | null
 }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const [grain, setGrain] = useState<TimelineGrain>('monthly')
+  const visibleDays = grain === 'daily' ? dailyRange : undefined
 
   const points = useMemo(() => {
     if (grain === 'daily') {
-      return daily.map((point) => ({
+      if (visibleDays === null) return []
+      const days = visibleDays ? daily.filter(({ date }) => date >= visibleDays.from && date <= visibleDays.to) : daily
+      return days.map((point) => ({
         key: point.date,
         axis: format.dayMonth(point.date),
         label: format.fullDate(point.date),
@@ -87,7 +94,7 @@ export function RevenueTimeline({
         sum: point.sum,
       }
     })
-  }, [daily, format, grain, monthly])
+  }, [daily, format, grain, monthly, visibleDays])
   const axisLabels = useMemo(
     () => new Map(points.map(({ key, axis }) => [key, axis])),
     [points],
@@ -113,7 +120,7 @@ export function RevenueTimeline({
         />
       </div>
 
-      {points.length === 0 ? (
+      {visibleDays === null ? null : points.length === 0 ? (
         <p className="mt-8 text-sm text-fg-subtle">{t('stats.empty')}</p>
       ) : (
         <div className="mt-6 h-72">
@@ -164,6 +171,7 @@ export function RevenueTimeline({
                 stroke={CHART.launches}
                 fill="url(#sales-revenue)"
                 strokeWidth={2}
+                dot={points.length === 1}
                 isAnimationActive={false}
               />
             </AreaChart>
@@ -172,9 +180,9 @@ export function RevenueTimeline({
       )}
     </Card>
   )
-}
+})
 
-function DurationsChart({ durations }: { durations: SalesDurationBucket[] }) {
+function DurationsChart({ durations }: { durations: LicenseDurationStat[] }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const rows = [...durations].sort((a, b) => a.days - b.days)
@@ -185,6 +193,7 @@ function DurationsChart({ durations }: { durations: SalesDurationBucket[] }) {
   return (
     <Card className="flex h-full flex-col p-6">
       <h3 className="text-lg font-semibold tracking-tight">{t('stats.durations.title')}</h3>
+      <p className="mt-1 text-sm text-fg-muted">{t('stats.durations.activeHint')}</p>
 
       {rows.length === 0 ? (
         <p className="mt-8 text-sm text-fg-subtle">{t('stats.periodEmpty')}</p>
@@ -239,7 +248,8 @@ function DurationsChart({ durations }: { durations: SalesDurationBucket[] }) {
                         {t('pricing.days', { count: item.days })}
                       </p>
                       <p className="tabular text-xs text-fg-subtle">
-                        {format.number(item.count)}
+                        {format.number(item.count)}{' '}
+                        <span className="text-amber-300">({format.number(item.active)})</span>
                       </p>
                     </div>
                   </div>
@@ -260,7 +270,7 @@ function DurationsChart({ durations }: { durations: SalesDurationBucket[] }) {
 }
 
 
-export function RetentionBlock({ retention }: { retention: LicenseRetentionStats }) {
+export const RetentionBlock = memo(function RetentionBlock({ retention }: { retention: LicenseRetentionStats }) {
   const { t } = useTranslation('vip')
   const format = useFormatters()
   const buckets = [...retention.by_purchases].sort((a, b) => a.purchases - b.purchases)
@@ -368,20 +378,20 @@ export function RetentionBlock({ retention }: { retention: LicenseRetentionStats
         </div>
     </Card>
   )
-}
+})
 
 const SALES_PAGE_SIZE = 10
 
-function isSaleActive(status: string): boolean {
-  return status.toUpperCase() === 'ACTIVE'
-}
-
-export function SalesPeriodBlock({ sales }: { sales: LicenseSaleRow[] }) {
+export function SalesPeriodBlock({ sales, history }: {
+  sales: LicenseSaleRow[]
+  history?: Pick<LicenseSalesStats['subscriptions'], 'timeline' | 'retention'>
+}) {
   const { t } = useTranslation('vip')
   const [mode, setMode] = useState<SalesRangeMode>('all')
   const [day, setDay] = useState(() => utcTodayKey())
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
+  const totalRevenue = useMemo(() => summarizeSales(sales).sum, [sales])
 
   const sorted = useMemo(
     () =>
@@ -399,19 +409,22 @@ export function SalesPeriodBlock({ sales }: { sales: LicenseSaleRow[] }) {
   )
   const invalidRange = Boolean(range.from && range.to && range.from > range.to)
   const missingDay = mode === 'day' && !day
+  const missingRange = mode === 'range' && (!from || !to)
   const invalidDate = Boolean((range.from && !isCalendarDate(range.from)) || (range.to && !isCalendarDate(range.to)))
-  const rows = useMemo(() => invalidDate ? [] : filterSales(sorted, range), [invalidDate, range, sorted])
+  const hasDateError = invalidRange || missingDay || invalidDate
+  const canFilterSales = !hasDateError && !missingRange
+  const rows = useMemo(() => canFilterSales ? filterSales(sorted, range) : [], [canFilterSales, range, sorted])
   const summaryInput = useMemo(
-    () => ({ rows, total: sales.length, mode }),
-    [rows, sales.length, mode],
+    () => hasDateError ? null : { rows, total: sales.length, mode },
+    [hasDateError, rows, sales.length, mode],
   )
   // Commit the controls and bounded table first. Never show totals from an old filter.
-  const deferredSummary = useDeferredValue<typeof summaryInput | null>(summaryInput, null)
-  const summaryPending = deferredSummary !== summaryInput
-  const breakdown = useMemo(() => deferredSummary ? groupSales(deferredSummary.rows) : null, [deferredSummary])
+  const deferredSummary = useDeferredValue(summaryInput, null)
+  const summary = missingRange || deferredSummary === summaryInput ? summaryInput : null
+  const breakdown = useMemo(() => summary ? groupSales(summary.rows) : null, [summary])
   const RangeIcon = mode === 'all' ? InfinityIcon : mode === 'day' ? CalendarDays : CalendarRange
 
-  return (
+  const period = (
     <section aria-labelledby="sales-period-title" className="space-y-4">
       <Card className="p-4 sm:p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -424,7 +437,15 @@ export function SalesPeriodBlock({ sales }: { sales: LicenseSaleRow[] }) {
             <div className="relative w-full sm:w-auto">
               <RangeIcon aria-hidden className="pointer-events-none absolute left-3 top-2.5 size-4 text-accent-300" />
               <select aria-label={t('stats.salesList.range')} value={mode}
-                onChange={event => setMode(event.target.value as SalesRangeMode)}
+                onChange={event => {
+                  const nextMode = event.target.value as SalesRangeMode
+                  if (nextMode === 'range' && (!from || !to)) {
+                    const today = utcTodayKey()
+                    if (!from) setFrom(`${today.slice(0, 7)}-01`)
+                    if (!to) setTo(today)
+                  }
+                  setMode(nextMode)
+                }}
                 className="w-full appearance-none rounded-lg border border-white/10 bg-ink-800 py-2 pl-10 pr-10 text-sm text-fg outline-none focus-visible:border-accent-400/50 focus-visible:ring-2 focus-visible:ring-accent-400/15 sm:w-48 [color-scheme:dark]">
                 <option value="all">{t('stats.salesList.allTime')}</option>
                 <option value="day">{t('stats.salesList.oneDay')}</option>
@@ -470,20 +491,20 @@ export function SalesPeriodBlock({ sales }: { sales: LicenseSaleRow[] }) {
         </div>
       </Card>
 
-      {invalidRange || missingDay || invalidDate ? (
+      {hasDateError ? (
         <p role="alert" className="text-sm text-negative">
           {t(invalidDate ? 'stats.salesList.invalidDate' : missingDay ? 'stats.salesList.chooseDay' : 'stats.salesList.invalidRange')}
         </p>
       ) : (
         <>
-          {summaryPending || !deferredSummary ? (
+          {!summary ? (
               <div role="status" aria-label={t('stats.salesList.summaryLoading')} aria-busy="true"
                 className="grid grid-cols-2 gap-3 xl:grid-cols-4">
                 {Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-28 rounded-xl" />)}
               </div>
-            ) : <SalesPeriodSummary {...deferredSummary} />}
+            ) : <SalesPeriodSummary {...summary} totalRevenue={totalRevenue} />}
 
-          {summaryPending || !breakdown ? (
+          {!breakdown ? (
             <div role="status" aria-label={t('stats.salesList.chartsLoading')} aria-busy="true" className="grid gap-4 lg:grid-cols-2">
               <Skeleton className="h-72 rounded-2xl" />
               <Skeleton className="h-72 rounded-2xl" />
@@ -499,6 +520,26 @@ export function SalesPeriodBlock({ sales }: { sales: LicenseSaleRow[] }) {
         </>
       )}
     </section>
+  )
+
+  return (
+    <>
+      {period}
+      {history && (
+        <section aria-labelledby="sales-history-title" className="space-y-4 border-t border-white/8 pt-8 sm:pt-10">
+          <div>
+            <h3 id="sales-history-title" className="text-xl font-semibold tracking-tight sm:text-2xl">{t('stats.historyTitle')}</h3>
+            <p className="mt-2 text-sm text-fg-muted">{t('stats.historySubtitle')}</p>
+          </div>
+          <RevenueTimeline
+            daily={history.timeline.daily}
+            monthly={history.timeline.monthly}
+            dailyRange={mode === 'range' ? canFilterSales ? range : null : undefined}
+          />
+          <RetentionBlock retention={history.retention} />
+        </section>
+      )}
+    </>
   )
 }
 
@@ -639,15 +680,7 @@ export function SalesStats() {
       <p className="mt-2 text-fg-muted">{t('stats.detailsSubtitle')}</p>
 
       <div className="mt-8 space-y-4">
-        <SalesPeriodBlock sales={subs.sales} />
-        <section aria-labelledby="sales-history-title" className="space-y-4 border-t border-white/8 pt-8 sm:pt-10">
-          <div>
-            <h3 id="sales-history-title" className="text-xl font-semibold tracking-tight sm:text-2xl">{t('stats.historyTitle')}</h3>
-            <p className="mt-2 text-sm text-fg-muted">{t('stats.historySubtitle')}</p>
-          </div>
-          <RevenueTimeline daily={subs.timeline.daily} monthly={subs.timeline.monthly} />
-          <RetentionBlock retention={subs.retention} />
-        </section>
+        <SalesPeriodBlock sales={subs.sales} history={subs} />
       </div>
     </section>
   )
