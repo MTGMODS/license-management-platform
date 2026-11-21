@@ -106,7 +106,7 @@ Telegram Stars payments are handled in the bot. The website also links to extern
 
 ## 🏗️ Architecture
 
-The backend has **four Python/FastAPI services**. User, License and Usage each have their own PostgreSQL database. Distribution works with files in a mounted directory.
+The backend has **five Python/FastAPI services**. User, License and Usage each have their own PostgreSQL database. Distribution works with files in a mounted directory. AI Editor forwards in-game ad editing requests to Gemini using the player's API key.
 
 <a id="diagrams"></a>
 
@@ -116,7 +116,7 @@ The backend has **four Python/FastAPI services**. User, License and Usage each h
 | --- | --- |
 | [**architecture.md**](docs/architecture.md) | Current C4 Levels 1–3 in Mermaid, source references and implementation boundaries |
 | [**architecture-context.mmd**](docs/architecture-context.mmd) | System context: people, existing product and external integrations |
-| [**architecture-c4.mmd**](docs/architecture-c4.mmd) | Container view: gateway, web, four services, bots, databases, Redis, RabbitMQ and files |
+| [**architecture-c4.mmd**](docs/architecture-c4.mmd) | Container view: gateway, web, services, bots, databases, Redis, RabbitMQ and files |
 | [**architecture-license-components.mmd**](docs/architecture-license-components.mmd) | Actual License Service components and concrete dependencies |
 | [**er-model.dbml**](docs/er-model.dbml) | Database model: all tables, columns, indexes and foreign keys across the three service databases |
 
@@ -131,6 +131,8 @@ flowchart TB
     Gateway --> License["License Service"]
     Gateway --> Usage["Usage Service"]
     Gateway --> Distribution["Distribution Service"]
+    Gateway --> AIEditor["AI Editor Service"]
+    AIEditor --> Gemini["Google Gemini API"]
     User --> UserDB[("User PostgreSQL")]
     License --> LicenseDB[("License PostgreSQL")]
     Usage --> UsageDB[("Usage PostgreSQL")]
@@ -226,11 +228,12 @@ Only real database foreign keys are drawn. User IDs in licenses, purchases and r
 | **License Service** | [`services/license`](services/license/) | Licenses, purchases, device activations, tariffs and expiry processing |
 | **Usage Service** | [`services/usage`](services/usage/) | Launch records and public usage aggregates |
 | **Distribution Service** | [`services/distribution`](services/distribution/) | Personalized file generation and temporary Lua/EXE delivery |
+| **AI Editor Service** | [`services/ai_editor`](services/ai_editor/) | Stateless Gemini proxy for in-game announcements |
 | **Web** | [`web`](web/) | React client for public pages, accounts and administration |
 | **Telegram / Discord** | [`bots`](bots/) | Stars payments, VIP chats, roles and messages through the license API |
 | **Gateway** | [`gateway`](gateway/) | Host nginx configuration, public routing and request limits |
 
-Each Python service keeps routes in `app/api`, business logic in `app/application`, schemas in `app/domain` and database/messaging code in `app/infrastructure`. Configuration and shared helpers live in `app/shared`.
+Services keep routes in `app/api`, business logic in `app/application`, schemas in `app/domain` and external integrations in `app/infrastructure`. Configuration and shared helpers live in `app/shared`.
 
 ### Technology stack
 
@@ -402,10 +405,21 @@ Services create missing tables on startup. Existing tables are not automatically
 | License | [localhost:8002/health](http://localhost:8002/health) | [localhost:8002/docs](http://localhost:8002/docs) |
 | Usage | [localhost:8003/health](http://localhost:8003/health) | [localhost:8003/docs](http://localhost:8003/docs) |
 | Distribution, when started | [localhost:8005/health](http://localhost:8005/health) | [localhost:8005/docs](http://localhost:8005/docs) |
+| AI Editor, when started | [127.0.0.1:8006/health](http://127.0.0.1:8006/health) | [127.0.0.1:8006/docs](http://127.0.0.1:8006/docs) |
 | Web, when started | [localhost:8080](http://localhost:8080) | — |
 | RabbitMQ management | [localhost:15672](http://localhost:15672) | Configured broker credentials |
 
 PostgreSQL and Redis have no published host ports. PostgreSQL data lives in three named volumes; the fixed Compose project name `mtgmods_backend` also determines their names.
+
+#### AI Editor
+
+```sh
+docker compose up -d --build ai-editor-service
+```
+
+The Helper posts to `https://api.mtgmods.com/v1/ai_editor/smi`. Host nginx forwards it to `http://127.0.0.1:8006/api/v1/ai_editor/smi`. Apply the production gateway config when deploying this route.
+
+The request contains `api_key`, `text` and optional `ai_provider` (defaults to `gemini`). The service returns `{ "success": true, "msg": "…" }` with the edited announcement, or `{ "success": false, "msg": "…" }` on a generation failure. The service requires no `.env`, database, cache or queue.
 
 ### 3. Connect the website to the API
 
@@ -538,7 +552,8 @@ The suites do not cover every production integration. PostgreSQL concurrency, li
 │   ├── user/              # Accounts, OAuth and sessions
 │   ├── license/           # Licenses, purchases, devices and tariffs
 │   ├── usage/             # Launch logging and statistics
-│   └── distribution/      # Personal VIP files and installers
+│   ├── distribution/      # Personal VIP files and installers
+│   └── ai_editor/         # Gemini proxy for in-game announcements
 ├── bots/
 │   ├── telegram/          # Stars payments, VIP chat and Mini App entry
 │   └── discord/           # VIP roles and messages

@@ -5,6 +5,7 @@ flowchart TB
   Helper["External software: Arizona/Rodina Helper<br/>Free / VIP game client and installer"]
   Telegram["External system: Telegram<br/>OAuth / Bot API / Stars"]
   Discord["External system: Discord<br/>OAuth / API"]
+  Gemini["External system: Google Gemini API"]
   Market["External systems: Marketplaces / manual payments"]
 
   subgraph MTG["Software system: MTG MODS micro-SaaS platform"]
@@ -15,6 +16,7 @@ flowchart TB
       LicenseAPI["Container: License Service<br/>FastAPI: licenses / devices / sales"]
       UsageAPI["Container: Usage Service<br/>FastAPI: launch telemetry / aggregates"]
       DistributionAPI["Container: Distribution Service<br/>FastAPI: VIP Lua / stamped EXE"]
+      AIEditor["Container: AI Editor Service<br/>FastAPI: stateless ad editor"]
       UserDB[("Container: User PostgreSQL<br/>Users / refresh sessions / OAuth handoffs")]
       LicenseDB[("Container: License PostgreSQL<br/>Licenses / devices / purchases")]
       UsageDB[("Container: Usage PostgreSQL<br/>Launch records")]
@@ -29,13 +31,15 @@ flowchart TB
   end
 
   Browser -->|"HTTPS: website / API / downloads"| Nginx
-  Helper -->|"HTTPS: check / launch / VIP file fetch"| Nginx
+  Helper -->|"HTTPS: check / launch / VIP file fetch / ad editing"| Nginx
   Browser -->|"External purchase via website links / instructions"| Market
   Nginx -->|"HTTP :8080: SPA / free installer"| Web
   Nginx -->|"HTTP :8001: /v1/users to /api/v1/users"| UserAPI
   Nginx -->|"HTTP :8002: /v1/license to /api/v1/license"| LicenseAPI
   Nginx -->|"HTTP :8003: /v1/usage to /api/v1/usage"| UsageAPI
   Nginx -->|"HTTP :8005: /v1/files to /api/v1/files"| DistributionAPI
+  Nginx -->|"HTTP :8006: /v1/ai_editor/smi"| AIEditor
+  AIEditor -->|"HTTPS: generate with the player's API key"| Gemini
   UserAPI -->|"SQL / PostgreSQL TCP"| UserDB
   LicenseAPI -->|"SQL / PostgreSQL TCP"| LicenseDB
   UsageAPI -->|"SQL / PostgreSQL TCP"| UsageDB
@@ -63,6 +67,6 @@ flowchart TB
   classDef external fill:#f3f4f6,stroke:#6b7280,color:#111827
   classDef app fill:#e8f1ff,stroke:#2563eb,color:#111827
   classDef data fill:#ecfdf5,stroke:#059669,color:#111827
-  class Browser,Helper,Telegram,Discord,Market external
-  class Nginx,Web,UserAPI,LicenseAPI,UsageAPI,DistributionAPI,Rabbit,TgBot,DsBot app
+  class Browser,Helper,Telegram,Discord,Gemini,Market external
+  class Nginx,Web,UserAPI,LicenseAPI,UsageAPI,DistributionAPI,AIEditor,Rabbit,TgBot,DsBot app
   class UserDB,LicenseDB,UsageDB,Redis,Assets,Builds,Installer data
