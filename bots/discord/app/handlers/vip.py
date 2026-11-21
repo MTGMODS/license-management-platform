@@ -82,7 +82,7 @@ def register_vip_handlers(bot):
         )
         vip_access = format_vip_access(license_info.get("expires_at"))
         method = license_info.get("purchase_method")
-        price = license_info.get("purchase_price")
+        price = str(license_info.get("purchase_price")).removesuffix(".0")
 
         text = (
             f"📅 **Покупка VIP:** {purchased_at}\n"
