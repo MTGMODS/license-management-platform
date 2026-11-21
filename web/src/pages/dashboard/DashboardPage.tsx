@@ -1,4 +1,4 @@
-import { Copy, Crown, Eye, EyeOff, Gamepad2, KeyRound, Link2, Loader2, LogIn, Monitor, Plus, Smartphone, Trash2, Unlink, UserRound } from 'lucide-react'
+import { Copy, Crown, Eye, EyeOff, Gamepad2, KeyRound, Link2, Loader2, LogIn, Monitor, MonitorSmartphone, Smartphone, Trash2, Unlink, UserRound } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -189,7 +189,7 @@ function DeviceSlot({
     return (
       <div className="flex items-center gap-3 rounded-xl border border-dashed border-white/12 px-4 py-3.5">
         <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-ink-800 text-fg-subtle">
-          <Plus aria-hidden className="size-4" />
+          <MonitorSmartphone aria-hidden className="size-4" />
         </span>
         <div className="min-w-0">
           <p className="text-sm font-medium">{t('vip.slotFreeTitle')}</p>
